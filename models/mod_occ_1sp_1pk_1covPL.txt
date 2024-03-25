@@ -1,0 +1,42 @@
+	
+model {	
+  # Priors	
+
+  for(t in 1:nyrM){ # year t
+    beta0[t] ~ dnorm(0, 0.3676)       # Abundance intercepts for each year	
+  }  	
+
+  beta1 ~ dnorm(0, 0.3676)                      # Abundance slope for forest area	
+ 
+  alpha0 ~ dnorm(0, 0.3676)                     # Detection intercept
+  alpha1 ~ dnorm(0, 0.3676)                     # Detection slope 	
+  alpha2 ~ dnorm(0, 0.3676)                     # Detection slope 	
+  alpha3 ~ dnorm(0, 0.3676)                     # Detection slope 
+
+
+  scales_beta1 ~ dcat(c(0.2, 0.2, 0.2, 0.2, 0.2))	
+
+
+  for(j in 1:nsiteM){       # site j	
+    for(t in 1:nyrM){       # year t	
+      # Occupancy	
+      Z[t] ~ dbern(psi[t])	
+
+      # Covariate effects on the ecological process	
+      logit(psi[t]) <- beta0[t] + 	
+                         beta1 * x1[scales_beta1]	
+
+      # Observation model for replicated counts	
+      for(k in 1:nintervalM){  # interval k
+     
+        logit(p[j,t,k]) <- alpha0 + 
+                           alpha1 * day[j,t] + 
+                           alpha2 * (day[j,t]^2) + 
+                           alpha3 * time[j,t,k]
+     
+        y[j,t,k] ~ dbern(p[j,t,k] * Z[t])
+      }
+    }	
+  }
+}	
+

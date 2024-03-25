@@ -1,0 +1,59 @@
+# two part model - occupancy at the two different levels
+# detection covariates
+
+model {	
+  # Priors
+  for(r in 1:n_pkM){	   # park r
+    for(t in 1:nyrM) {
+      beta0[r,t] ~ dnorm(mu.beta0, tau.beta0)	
+    }
+    
+    alpha0[r] ~ dnorm(mu.alpha0, tau.alpha0)	
+    
+  }
+  
+  for(j in 1:n_bs){     # number of betas
+    beta[j] ~ dnorm(0, 0.36)
+  }
+     
+  for(j in 1:n_as){     # number of alphas
+    alpha[j] ~ dnorm(0, 0.36)
+  }
+
+  # Hyperpriors for community hyperparameters - hey put this in loops.	
+  # Ecological process	
+  
+  mu.beta0 ~ dnorm(0, 0.36)
+  tau.beta0 ~ dgamma(0.1,0.1) 
+  
+  # Sampling process	
+  mu.alpha0 ~ dnorm(0, 0.36)
+  tau.alpha0 ~ dgamma(0.1,0.1) 
+  
+  ## super vector loop -------------------------------
+  for(a in 1:nrowy){	                
+    # Occupancy	
+    # occupancy for a species, in a site, in year, 
+    Z[y[a,2],y[a,3],y[a,4]] ~ dbern(psi[y[a,2],y[a,3],y[a,4]])	
+    
+    # Covariate effects on the ecological process
+    logit(psi[y[a,2],y[a,3],y[a,4]]) <-        # parkey, site_n, year_n
+      beta0[y[a,2],y[a,4]] +                   # parkey, year_n
+      # site level
+      beta[1] * X[a,2] +                       # coefficients by park
+      # park level  
+      beta[2] * X[a,4] +
+      # county level
+      beta[3] * X[a,6] +
+      # park size
+      beta[4] * X[a,7]
+    
+    logit(p[y[a,2],y[a,3],y[a,4],y[a,5]]) <-   # parkey, site_n, year_n, interval_n
+      alpha0[y[a,2]] +                         # intercept - parkey
+      alpha[1] * X[a,8] +                      # day - spskey
+      alpha[2] * (X[a,8])^2 +                  # day squared - spskey,
+      alpha[3] * X[a,9]                        # time - spskey
+    
+    y[a,1] ~ dbern(p[y[a,2],y[a,3],y[a,4],y[a,5]] * Z[y[a,2],y[a,3],y[a,4]])
+  }
+}

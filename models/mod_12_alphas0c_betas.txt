@@ -1,0 +1,79 @@
+# two part model - occupancy at the two different levels
+# detection covariates
+
+model {	
+  # Priors
+  for(r in 1:n_pkM){	# park r
+    beta0[r] ~ dnorm(mu.beta0, tau.beta0)            # Abundance intercepts for each species and year	
+    # beta1[r] ~ dnorm(mu.beta1, tau.beta1)            # Abundance slope for each species	
+    # beta2[r] ~ dnorm(mu.beta2, tau.beta2)            # Abundance slope for each species	
+
+    alpha0[r] ~ dnorm(mu.alpha0, tau.alpha0)         # Detection intercepts  for each species	
+    alpha1[r] ~ dnorm(mu.alpha1, tau.alpha1)         # Detection slope for each species	
+    alpha2[r] ~ dnorm(mu.alpha2, tau.alpha2)         # Detection slope for each species	
+    alpha3[r] ~ dnorm(mu.alpha3, tau.alpha3)         # Detection slope for each species	
+
+  }	
+  
+  beta1 ~ dnorm(0, 0.3676)
+  beta2 ~ dnorm(0, 0.3676)
+
+  # Hyperpriors for community hyperparameters - hey put this in loops.	
+  # Ecological process	
+  mu.beta0 ~ dnorm(0, tau.beta0)	
+  tau.beta0 <- 1/pow(sd.beta0, -2)	
+  sd.beta0 ~ dgamma(0.3676,0.3676) 
+
+  mu.beta1 ~ dnorm(0, tau.beta1)	
+  tau.beta1 <- 1/pow(sd.beta1, -2)	
+  sd.beta1 ~ dgamma(0.01,0.01) 
+  
+  mu.beta2 ~ dnorm(0, tau.beta2)	
+  tau.beta2 <- 1/pow(sd.beta2, -2)	
+  sd.beta2 ~ dgamma(0.01,0.01) 
+
+  # Sampling process	
+  mu.alpha0 ~ dnorm(0, tau.alpha0)	
+  tau.alpha0 <- 1/pow(sd.alpha0, -2)	
+  sd.alpha0 ~ dgamma(0.01,0.01) 
+
+  mu.alpha1 ~ dnorm(0, tau.alpha1)	
+  tau.alpha1 <- 1/pow(sd.alpha0, -2)	
+  sd.alpha1 ~ dgamma(0.01,0.01) 
+   	
+  mu.alpha2 ~ dnorm(0, tau.alpha2)	
+  tau.alpha2 <- 1/pow(sd.alpha0, -2)	
+  sd.alpha2 ~ dgamma(0.01,0.01) 
+   	
+  mu.alpha3 ~ dnorm(0, tau.alpha3)	
+  tau.alpha3 <- 1/pow(sd.alpha0, -2)	
+  sd.alpha3 ~ dgamma(0.01,0.01) 
+
+  ## Site level occupancy -------------------------------
+  for(r in 1:n_pkM){	# park r
+    for(j in 1:n_siteM[r]){                              # site j
+      
+      # Occupancy	
+      Z[r,j] ~ dbern(psi[r,j])	
+      
+      # Covariate effects on the ecological process	at site level
+      logit(psi[r,j]) <- beta0[r] +                      # intercept
+                         beta1 * for_s[r,1,j] +          # 50m around the site
+                         beta2 * for_s[r,2,j]            # 300m around the site
+                         
+      for(t in 1:n_yrsM[r]){                             # year t	
+        # Observation model for replicated counts	
+        for(k in 1:n_intM){  # interval k
+       
+          logit(p[r,j,t,k]) <- alpha0[r] +
+                               alpha1[r] * day[r,j,t] + 
+                               alpha2[r] * (day[r,j,t]^2) + 
+                               alpha3[r] * time[r,j,t,k]
+       
+       
+          y[r,j,t,k] ~ dbern(p[r,j,t,k] * Z[r,j])
+        }
+      }	
+    }
+  }
+}

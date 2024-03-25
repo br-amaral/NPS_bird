@@ -1,0 +1,43 @@
+	
+model {	
+  for(t in 1:nyrM){ # year y
+    beta0[t] ~ dnorm(0, 0.3676)      # Abundance intercepts for each species and year	
+  }  	
+
+  beta1 ~ dnorm(0, 0.3676)            # Abundance slope for each species	
+  # beta2 ~ dnorm(0, 0.3676)            # Abundance slope for each species	
+  # beta3 ~ dnorm(0, 0.3676)            # Abundance slope for each species	
+  # beta4 ~ dnorm(0, 0.3676)            # Abundance slope for each species	
+
+  alpha0 ~ dnorm(0, 0.3676)         # Detection intercepts  for each species	
+  alpha1 ~ dnorm(0, 0.3676)        # Detection slope for each species	
+  alpha2 ~ dnorm(0, 0.3676)         # Detection slope for each species	
+  alpha3 ~ dnorm(0, 0.3676)         # Detection slope for each species	
+
+ # indicator variable for scales	
+  for (j in 1:nsiteM){  # site j	
+    scales_beta1[j] ~ dcat(c(0.25, 0.25, 0.25, 0.25))	
+  }
+
+  # Likelihood	
+  for (j in 1:nsiteM){      # site j	
+    for(t in 1:nyrM){       # year t	
+      # Occupancy	
+      Z[j,t] ~ dbern(psi[j,t])	
+
+      # Covariate effects on the ecological process	
+      logit(psi[j,t]) <- beta0[t] + 	
+                         beta1 * x[j, scales_beta1[j]]	
+
+      # Observation model for replicated counts	
+      for(k in 1:nintervalM){  # interval k
+     
+        logit(p[j,t,k]) <- alpha0 + alpha1 * day[j,t] + alpha2 * (day[j,t]^2) + alpha3 * time[j,t,k]
+     
+        y[j,t,k] ~ dbern(p[j,t,k] * Z[j,t])
+
+      }	
+    }	
+  }	
+}	
+

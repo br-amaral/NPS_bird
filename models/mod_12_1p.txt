@@ -1,0 +1,94 @@
+# two part model - occupancy at the two different levels
+
+model {	
+  # Community priors (with hyperparameters) for species-specific (i) parameters	
+
+    for(t in 1:n_yrsM){                              # year t	
+
+      beta0[t] ~ dnorm(mu.beta0, tau.beta0)          # Abundance intercepts for each year
+    }
+    
+  # gamma0[r] ~ dnorm(mu.gamma0, tau.gamma0)
+    
+    alpha0 ~ dnorm(0, 0.3676)                        # Detection intercept	
+  # alpha1[r] ~ dnorm(mu.alpha1, tau.alpha1)         # Detection slope for each species	
+  # alpha2[r] ~ dnorm(mu.alpha2, tau.alpha2)         # Detection slope for each species	
+  # alpha3[r] ~ dnorm(mu.alpha3, tau.alpha3)         # Detection slope for each species
+    
+  # gamma1[r] ~ dnorm(mu.gamma1, tau.gamma1)
+  # gamma2[r] ~ dnorm(mu.gamma2, tau.gamma2)
+  # gamma3[r] ~ dnorm(mu.gamma3, tau.gamma3)
+
+  ## Ecological process -------------------------------------------------------	
+  ### Site-level occupancy priors ---------------------------------------------
+  mu.beta0 ~ dnorm(0, 0.3676)	
+  tau.beta0 <- pow(sd.beta0, -2)	
+  sd.beta0 ~ dgamma(0.3676,0.3676) 
+  
+  ### Park-level occupancy priors ---------------------------------------------
+  # mu.gamma0 ~ dnorm(0, 0.3676)	
+  # tau.gamma0 <- pow(sd.gamma0, -2)	
+  # sd.gamma0 ~ dgamma(0.3676,0.3676) 
+
+  # mu.gamma1 ~ dnorm(0, 0.3676)	
+  # tau.gamma1 <- pow(sd.gamma1, -2)	
+  # sd.gamma1 ~ dgamma(0.3676,0.3676) 
+ 
+  # mu.gamma2 ~ dnorm(0, 0.3676)	
+  # tau.gamma2 <- pow(sd.gamma2, -2)	
+  # sd.gamma2 ~ dgamma(0.3676,0.3676) 
+ 
+  # mu.gamma3 ~ dnorm(0, 0.3676)	
+  # tau.gamma3 <- pow(sd.gamma3, -2)	
+  # sd.gamma3 ~ dgamma(0.3676,0.3676) 
+
+  ## Sampling process	---------------------------------------------
+  # mu.alpha0 ~ dnorm(0, 0.3676)	
+  # tau.alpha0 <- pow(sd.alpha0, -2)	
+  # sd.alpha0 ~ dgamma(0.01,0.01) 
+  
+  # mu.alpha1 ~ dnorm(0, 0.3676)	
+  # tau.alpha1 <- pow(sd.alpha0, -2)	
+  # sd.alpha1 ~ dgamma(0.01,0.01) 
+ 
+  # mu.alpha2 ~ dnorm(0, 0.3676)	
+  # tau.alpha2 <- pow(sd.alpha0, -2)	
+  # sd.alpha2 ~ dgamma(0.01,0.01) 
+
+  # mu.alpha3 ~ dnorm(0, 0.3676)	
+  # tau.alpha3 <- pow(sd.alpha0, -2)	
+  # sd.alpha3 ~ dgamma(0.01,0.01) 
+
+  # Likelihood
+  # park level occupancy
+  # logit(omega[r]) <- gamma0[r] + 	
+  #                    gamma1[r] * park_size[r] +    # park size
+  #                    gamma2[r] * for_p[r,1] +      # percentage of forest in 100m
+  #                    gamma3[r] * for_p[r,2]        # percentage of forest in 1000m
+                               
+  # W[r] ~ dbern(omega[r])
+  
+  ## Site level occupancy -------------------------------
+    for(j in 1:n_siteM){                             # site j	
+      for(t in 1:n_yrsM){                            # year t	
+        # Occupancy	
+        Z[j,t] ~ dbern(psi[j,t]) # * W[r])	
+        
+        # Covariate effects on the ecological process	at site level
+        logit(psi[j,t]) <- beta0[t] #+                      # park level intercept for each year
+                          # beta1[r] * for_s[j,1] +         # 50m around the site
+                          # beta2[r] * for_s[j,2]           # 300m around the site
+                             
+        # Observation model for replicated counts	
+        for(k in 1:n_intM){  # interval k
+       
+          logit(p[j,t,k]) <- alpha0 #+
+                             # alpha1[r] * day[r,j,pk_yrs[t,r]] +           # effect of day of the year
+                             # alpha2[r] * (day[r,j,pk_yrs[t,r]]^2) +       # quadratic effect of day of the year
+                             # alpha3[r] * time[r,j,pk_yrs[t,r],k]          # effect of time of day 
+       
+          y[j,t,k] ~ dbern(p[j,t,k] * Z[j,t])
+        }
+      }	
+    }		
+}

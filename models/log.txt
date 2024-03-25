@@ -1,0 +1,8 @@
+Check - scripts to format birds data are all the same?
+1_ImportData.R
+2_format_data.R
+B1_ImportData.R
+B2_LongTibbles.R
+
+
+Why individual park boundary script park is not working, or saving the {park}_pb.rds in folder

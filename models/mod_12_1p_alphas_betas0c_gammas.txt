@@ -1,0 +1,96 @@
+model {	
+  # Priors
+  # Sampling process	
+  alpha0 ~ dnorm(0, 0.3676)                          # Detection intercept
+  alpha1 ~ dnorm(0, 0.3676)	
+  alpha2 ~ dnorm(0, 0.3676)	
+  alpha3 ~ dnorm(0, 0.3676)	
+  
+  # alpha1[r] ~ dnorm(mu.alpha1, tau.alpha1)         # Detection slope for each species	
+  # alpha2[r] ~ dnorm(mu.alpha2, tau.alpha2)         # Detection slope for each species	
+  # alpha3[r] ~ dnorm(mu.alpha3, tau.alpha3)         # Detection slope for each species
+  
+  # Ecological process
+  beta0 ~ dnorm(0, 0.3676)	
+  beta1 ~ dnorm(0, 0.3676)	
+  beta2 ~ dnorm(0, 0.3676)	
+
+  gamma0 ~ dnorm(0, 0.3676)	
+  gamma1 ~ dnorm(0, 0.3676)	
+  # gamma0[r] ~ dnorm(mu.gamma0, tau.gamma0)
+  # gamma1[r] ~ dnorm(mu.gamma1, tau.gamma1)
+  # gamma2[r] ~ dnorm(mu.gamma2, tau.gamma2)
+  # gamma3[r] ~ dnorm(mu.gamma3, tau.gamma3)
+
+  # Hyperpriors for park hyperparameters
+  # Ecological process	
+  # mu.beta0 ~ dnorm(0, tau.beta0)	
+  # tau.beta0 <- pow(sd.beta0, -2)	
+  # sd.beta0 ~ dgamma(0.3676,0.3676) 
+
+  # gamma0 ~ dnorm(0, tau.gamma0)	
+  # tau.gamma0 <- pow(sd.gamma0, -2)	
+  # sd.gamma0 ~ dgamma(0.3676,0.3676) 
+ 
+  # gamma1 ~ dnorm(0, tau.gamma1)	
+  # tau.gamma1 <- pow(sd.gamma1, -2)	
+  # sd.gamma1 ~ dgamma(0.3676,0.3676) 
+
+  # gamma2 ~ dnorm(0, tau.gamma2)	
+  # tau.gamma2 <- pow(sd.gamma2, -2)	
+  # sd.gamma2 ~ dgamma(0.3676,0.3676) 
+ 
+  # gamma3 ~ dnorm(0,tau.gamma3)	
+  # tau.gamma3 <- pow(sd.gamma3, -2)	
+  # sd.gamma3 ~ dgamma(0.3676,0.3676) 
+
+  # Sampling process	
+  # mu.alpha0 ~ dnorm(0, tau.alpha0)	
+  # tau.alpha0 <- pow(sd.alpha0, -2)	
+  # sd.alpha0 ~ dgamma(0.01,0.01) 
+  
+  # tau.alpha1 <- pow(sd.alpha0, -2)	
+  # sd.alpha1 ~ dgamma(0.01,0.01) 
+ 
+  # tau.alpha2 <- pow(sd.alpha0, -2)	
+  # sd.alpha2 ~ dgamma(0.01,0.01) 
+ 
+  # tau.alpha3 <- pow(sd.alpha0, -2)	
+  # sd.alpha3 ~ dgamma(0.01,0.01) 
+
+  # Likelihood
+
+     logit(omega) <- gamma0 + 	
+                     gamma1 * park_size #+    # park size
+                     # gamma2 * for_p[1] +      # percentage of forest in 100m
+                     # gamma3 * for_p[2]        # percentage of forest in 1000m
+                     # gamma4 * for_p[3]        # percentage of forest in 3000m
+                               
+    W ~ dbern(omega)
+
+    for(j in 1:n_siteM){       # site j	
+      # Occupancy	
+      Z[j] ~ dbern(psi[j] * W )
+        
+      # Park level occupancy
+  
+      # Covariate effects on the ecological process	
+      logit(psi[j]) <- beta0 +                   # intercept
+                       beta1 * for_s[j,1] +      # 50m around the site
+                       beta2 * for_s[j,2]        # 300m around the site
+                      
+      for(t in 1:n_yrsM){       # year t	
+                     
+        # Observation model for replicated counts	
+        for(k in 1:n_intM){  # interval k
+       
+          logit(p[j,t,k]) <- alpha0 +
+                             alpha1 * day[j,t] + 
+                             alpha2 * (day[j,t]^2) + 
+                             alpha3 * time[j,t,k]
+       
+          y[j,t,k] ~ dbern(p[j,t,k] * Z[j])
+        }
+      }	
+    }		
+}

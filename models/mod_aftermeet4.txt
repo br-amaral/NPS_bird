@@ -1,0 +1,125 @@
+
+model {
+
+  # Community priors (with hyperparameters) for species-specific parameters
+  # priors
+  for(i in 1:nspecM){
+      for(t in 1:nyrM){ 
+        beta0[i,t] ~ dnorm(mu.beta0, tau.beta0)      # Abundance intercepts for each species and year
+      }  
+
+    alpha0[i] ~ dnorm(mu.alpha0, tau.alpha0)         # Detection intercepts  for each species
+    alpha1[i] ~ dnorm(mu.alpha1, tau.alpha1)         # Detection slope for each species
+    alpha2[i] ~ dnorm(mu.alpha2, tau.alpha2)         # Detection slope for each species
+    alpha3[i] ~ dnorm(mu.alpha3, tau.alpha3)         # Detection slope for each species
+
+    beta1[i] ~ dnorm(mu.beta1, tau.beta1)            # Abundance slope for each species
+    beta2[i] ~ dnorm(mu.beta2, tau.beta2)            # Abundance slope for each species
+    beta3[i] ~ dnorm(mu.beta3, tau.beta3)            # Abundance slope for each species
+    beta4[i] ~ dnorm(mu.beta4, tau.beta4)            # Abundance slope for each species
+
+    # negative binomial priors
+    #r1[i] ~ dunif(0, 50)
+    #r2[i] ~ dunif(0, 50)
+  }
+
+  # Overdispersion prior
+  r.N~dunif(0,100)
+
+  # Hyperpriors for community hyperparameters - hey put this in loops.
+  # abundance
+  mu.beta0 ~ dnorm(0, 0.1)
+  tau.beta0 <- pow(sd.beta0, -2)
+  sd.beta0 ~ dgamma(0.01,0.01) #dunif(0, 10)
+
+  mu.beta1 ~ dnorm(0, 0.1)
+  tau.beta1 <- pow(sd.beta1, -2)
+  sd.beta1 ~ dgamma(0.01,0.01) #dunif(0, 10)
+
+  mu.beta2 ~ dnorm(0, 0.1)
+  tau.beta2 <- pow(sd.beta2, -2)
+  sd.beta2 ~ dunif(0, 10)
+
+  mu.beta3 ~ dnorm(0, 0.1)
+  tau.beta3 <- pow(sd.beta3, -2)
+  sd.beta3 ~ dunif(0, 10)
+
+  mu.beta4 ~ dnorm(0, 0.1)
+  tau.beta4 <- pow(sd.beta4, -2)
+  sd.beta4 ~ dunif(0, 10)
+
+  # detection
+  mu.alpha0 ~ dnorm(0, 0.1)
+  tau.alpha0 <- pow(sd.alpha0, -2)
+  sd.alpha0 ~ dgamma(0.01,0.01) #dunif(0, 10)
+
+  mu.alpha1 ~ dnorm(0, 0.1)
+  tau.alpha1 <- pow(sd.alpha0, -2)
+  sd.alpha1 ~ dgamma(0.01,0.01) #dunif(0, 10)
+
+  mu.alpha2 ~ dnorm(0, 0.1)
+  tau.alpha2 <- pow(sd.alpha0, -2)
+  sd.alpha2 ~ dgamma(0.01,0.01) #dunif(0, 10)
+
+  mu.alpha3 ~ dnorm(0, 0.1)
+  tau.alpha3 <- pow(sd.alpha0, -2)
+  sd.alpha3 ~ dgamma(0.01,0.01) #dunif(0, 10)
+
+  # likelihood
+  for(i in 1:nspecM){         # species i
+    for (j in 1:nsiteM){      # site j
+      for(t in 1:nyrM){       # year t
+      #  for(p in 1:npkM){    # park p (not yet)
+          # Ecological model for true abundance (process model)
+          
+          # negative binomial - failure :( bad mixing
+          #N[i,j,t] ~ dnegbin(Q1[i,j,t], r1[i]) 
+          #Q1[i,j,t] <- r1[i] / (r1[i] + lambda[i,j,t])
+          
+          # only poisson
+          #N[i,j,t] ~ dpois(lambda[i,j,t])
+
+          # poisson gamma mixture
+          
+          ##Latent abundance  (negative binomial)
+          N[i,j,t] ~ dpois(lambda.star[i,j,t])
+    
+          #Expected abundance
+          lambda.star[i,j,t] <- rh[i,j,t] * lambda[i,j,t] 
+    
+          # Overdispersion parameter for Expected abundance
+          rh[i,j,t] ~ dgamma(r.N, r.N)
+
+          # covariate effects on abundance
+          log(lambda[i,j,t]) <- beta0[i,t] + beta1[i] * x1[j,t] + beta2[i] * x2[j,t] + beta3[i] * x3[j,t] + beta4[i] * x4[j,t] 
+    
+          # Observation model for replicated counts
+          # covariate effects on detection
+          logit(p[i,j,t]) <- alpha0[i] + alpha1[i] * day[j,t] + alpha2[i] * (day[j,t]^2) + alpha3[i] * time[j,t]
+          
+          for(k in 1:nintervalM){  # intervals
+
+             # Negative binomial 
+             # y[i,j,t,k] ~ dnegbin(Q2[i,j,t,k], r2[i])  ### CHECK THIISSSS!!!!
+             # Q2[i,j,t,k] <- r2[i] / (r2[i] + pi[i,j,t,k])
+
+             # Poisson
+             # y[i,j,t,k] ~ dpois(pi[i,j,t,k])
+ 
+             # poisson gamma-mixture
+             # Observed counts  (N-mixture)
+             y[i,j,t,k] ~ dbin(pi[i,j,t,k], N[i,j,t])
+
+             pi[i,j,t,k] <- (p[i,j,t] * (1 - p[i,j,t])^(k-1)) * lambda[i,j,t] # check if this should be lambda star
+
+          # check HOW WELL poisson FITs FITS THE DATA; maybe just poisson is ok.... Poisson gamma mixture – if mixingis your issue!
+          }
+      # number of each species
+      # Nsp[i,t] <- sum(N[i,,t]) # ?? why error
+        }
+
+      }
+    }
+  #}
+}
+

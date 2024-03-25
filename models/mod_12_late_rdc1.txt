@@ -1,0 +1,65 @@
+# two part model - occupancy at the two different levels
+# detection covariates
+
+model {	
+  # Priors
+  for(i in 1:n_spsM){	# sps i
+   
+    alpha0[i] ~ dnorm(mu.alpha0, tau.alpha0)         # Detection intercepts  for each species	
+
+    beta1[i] ~ dnorm(mu.beta1, tau.beta1)
+      
+    beta0[i] ~ dnorm(mu.beta0, tau.beta0)            # Abundance intercepts for each species and year	
+    
+  }
+  alpha1 ~ dnorm(0, 0.3676)      # Detection slope 
+  alpha2 ~ dnorm(0, 0.3676)      # Detection slope 
+  alpha3 ~ dnorm(0, 0.3676)      # Detection slope 
+
+  # Hyperpriors for community hyperparameters - hey put this in loops.	
+  # Ecological process	
+  mu.beta0 ~ dnorm(0, tau.beta0)	
+  tau.beta0 <- 1/pow(sd.beta0, -2)	
+  sd.beta0 ~ dgamma(0.3676,0.3676) 
+  
+  mu.beta1 ~ dnorm(0, tau.beta1)	
+  tau.beta1 <- 1/pow(sd.beta1, -2)	
+  sd.beta1 ~ dgamma(0.3676,0.3676) 
+
+  # Sampling process	
+  mu.alpha0 ~ dnorm(0, tau.alpha0)	
+  tau.alpha0 <- 1/pow(sd.alpha0, -2)	
+  sd.alpha0 ~ dgamma(0.3676,0.3676) 
+
+  ## Site level occupancy -------------------------------
+  for(i in 1:n_spsM){	            # sps i
+    for(r in 1:n_pkM){	          # park r 
+      for(t in 1:n_yrsM[r]){         # year t	
+        for(j in 1:n_siteM[r]){      # site j
+        
+          # Occupancy	
+          Z[i,j] ~ dbern(psi[i,j])	
+        
+          # Covariate effects on the ecological process	at site level
+          logit(psi[i,j]) <- beta0[i] +                      # intercept
+                             beta1[i] * park_size[r] # +
+                            # beta2[i] * basare[r,j] +
+                            # beta3[i] * perfor[r,j] +
+                            # beta4[i] * regen[r,j]
+                    
+          # Observation model for replicated counts	
+          for(k in 1:n_intM){  # interval k
+       
+            logit(p[i,r,j,t,k]) <- alpha0[i] +
+                                 alpha1 * day[r,j,t] + 
+                                 alpha2 * (day[r,j,t]^2) + 
+                                 alpha3 * time[r,j,t,k]
+       
+       
+            y[i,r,j,t,k] ~ dbern(p[i,r,j,t,k] * Z[i,j])
+          }
+        }
+      }	
+    }
+  }
+}
