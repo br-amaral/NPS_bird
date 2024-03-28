@@ -79,10 +79,10 @@ y_dat6 <- y_dat6 %>%
 
 nrow(X10) == nrow(y_dat6)
 
-y_dat6 <- y_dat6 %>% 
+y_dat6 <- y_dat6 %>%
    filter(sps_it %in% sps_filt_list)
 
-X10 <- X10 %>% 
+X10 <- X10 %>%  # nolint: object_name_linter.
    filter(unique_index %in% y_dat6$unique_index)
 
 nrow(X10) == nrow(y_dat6)
@@ -385,12 +385,12 @@ samples_jags <- coda.samples(
 cat("\n\n\n third done \n\n\n\n")
 
 # code to check the data and initial values
-r <- 10   # what is the deal with 7 versus 10? (they both have the same values and 10 does not work)
-j <- 1
-t <- 1
-Zst %>% filter(parkey == r, site_n == j, year_s == t)
-y_dat6 %>% filter(parkey == r, site_n == j, year_s == t)
-Zst2[r,j,t]
+# r <- 10   # what is the deal with 7 versus 10? (they both have the same values and 10 does not work)
+# j <- 1
+# t <- 1
+# Zst %>% filter(parkey == r, site_n == j, year_s == t)
+# y_dat6 %>% filter(parkey == r, site_n == j, year_s == t)
+# Zst2[r,j,t]
 # row 73 has the values in the loop
 
 #################################################################################################################
