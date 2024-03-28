@@ -30,6 +30,6 @@ module load JAGS/4.3.0
 R --no-environ
 
 # run R script
-Rscript code/code/fit_model/back2d_covs_scales 3_comm.R --vanilla
+Rscript code/fit_model/back2d_covs_scales 3_comm.R --vanilla
 
 scontrol show job $SLURM_JOB_ID
