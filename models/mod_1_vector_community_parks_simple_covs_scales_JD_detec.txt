@@ -56,19 +56,20 @@ model {
       # beta[y2[b,3],2] * X2[b,scales_beta2[y2[b,3]]] +     # spskey
       # park size
       # beta[y2[b,3],3] * X3[b]                             # spskey_p                 
-  }
   
-  # JWD: comment stuff out for testing.
-  # longer interval loop, all intervals of the removal sampling (not the first)
-  # for(a in 1:nrowy){
-  #   logit(p[y[a,3],y[a,6],y[a,9],y[a,12],y[a,14]]) <-    # spskey, parkey, site_n, yearkey, interval_n
-  #     alpha0[y[a,4],y[a,7]] +                            # intercept - spskey_p, parkey_s
-  #     alpha[y[a,3],1] * Xa[a] +                          # day - spskey
-  #     alpha[y[a,3],2] * (Xa[a])^2 +                      # day squared - spskey,
-  #     alpha[y[a,3],3] * Xb[a]                            # time - spskey
-  # 
-  #   y[a,1] ~ dbern(p[y[a,3],y[a,6],y[a,9],y[a,12],y[a,14]] * Z[y2[b,3],y2[b,6],y2[b,9],y2[b,12]])
-  # }
+  
+     # longer interval loop, all intervals of the removal sampling (not the first)
+     for(a in 1:nrowy){
+       logit(p[y[a,3],y[a,6],y[a,9],y[a,12],y[a,14]]) <-    # spskey, parkey, site_n, yearkey, interval_n
+         alpha0[y[a,4],y[a,7]] #+                            # intercept - spskey_p, parkey_s
+     #     alpha[y[a,3],1] * Xa[a] +                          # day - spskey
+     #     alpha[y[a,3],2] * (Xa[a])^2 +                      # day squared - spskey,
+     #     alpha[y[a,3],3] * Xb[a]                            # time - spskey
+     # 
+       y[a,1] ~ dbern(p[y[a,3],y[a,6],y[a,9],y[a,12],y[a,14]] * Z[y2[b,3],y2[b,6],y2[b,9],y2[b,12]])
+       
+     }
+  }
 }
 
 
