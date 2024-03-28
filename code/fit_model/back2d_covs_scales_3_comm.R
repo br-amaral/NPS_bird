@@ -339,11 +339,12 @@ burnin <- 5
 nchains <- 1
 print(niterations)
 
-cat("\n\n\n running jags \n\n\n\n")
 params <- c("beta0","beta", "alpha0", "alpha", "scales_beta1", "scales_beta2",
             "mu.beta0", "tau.beta0", "mu.alpha0", "tau.alpha0") # Z, psi
 
 col_namesy
+
+cat(glue("\n\n\n running jags with {niterations} iterations \n\n\n\n"))
 
 ## initialize JAGS
 jags_model <- rjags::jags.model(
