@@ -1,4 +1,4 @@
-# three part model - occupancy at the three different levels - site, park, county
+0# three part model - occupancy at the three different levels - site, park, county
 # mod_1_vector1spsparks_simple_covs_scales
 
 model {	
