@@ -74,7 +74,7 @@ if(setequal(y_dat6$unique_index, X10$unique_index) != "TRUE")
    stop("ah wrong indexing!!!!")
 
 y_dat6 <- y_dat6 %>% 
-   filter(sps_it == "AMGO")
+   filter(sps_it == sps_loop)
 
 X10 <- X10 %>% 
    filter(unique_index %in% y_dat6$unique_index)
