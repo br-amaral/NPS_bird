@@ -311,17 +311,17 @@ write_rds(samples_jags,
 #################################################################################################################
 
 MCMCsummary(samples_jags,
-            params = params[c(2,4,5,7)],
+            #params = params[c(2,4,5,7)],
             round = 2) 
 
 MCMCtrace(samples_jags,
-          params = params[c(2,4,5,7)],
+          #params = params[c(2,4,5,7)],
           ind = TRUE,
           pdf = FALSE)
 
 par(mfrow = c(1,1))
 MCMCplot(samples_jags,
-         params = params[c(2,4,5,7)],
+         #params = params[c(2,4,5,7)],
          ref_ovl = TRUE)
 
 
