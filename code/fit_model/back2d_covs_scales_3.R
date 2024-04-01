@@ -17,8 +17,8 @@
 
 
 # detach packages and clear workspace
-if(!require(freshr)){install.packages("freshr")}
-freshr::freshr()
+#if(!require(freshr)){install.packages("freshr")}
+#freshr::freshr()
 
 # Load packages --------------------------------------
 library(conflicted)
@@ -296,14 +296,17 @@ samples_jags <- coda.samples(
 
 cat("\n\n\n third done \n\n\n\n")
 
+write_rds(samples_jags,
+          file = glue("data/model_res/jags_res_{sps_loop}.rds"))
+
 # code to check the data and initial values
-r <- 10   # what is the deal with 7 versus 10? (they both have the same values and 10 does not work)
-j <- 1
-t <- 1
-Zst %>% filter(parkey == r, site_n == j, year_s == t)
-y_dat6 %>% filter(parkey == r, site_n == j, year_s == t)
-Zst2[r,j,t]
-# row 73 has the values in the loop
+# r <- 10   # what is the deal with 7 versus 10? (they both have the same values and 10 does not work)
+# j <- 1
+# t <- 1
+# Zst %>% filter(parkey == r, site_n == j, year_s == t)
+# y_dat6 %>% filter(parkey == r, site_n == j, year_s == t)
+# Zst2[r,j,t]
+# # row 73 has the values in the loop
 
 #################################################################################################################
 
@@ -320,3 +323,5 @@ par(mfrow = c(1,1))
 MCMCplot(samples_jags,
          params = params[c(2,4,5,7)],
          ref_ovl = TRUE)
+
+
