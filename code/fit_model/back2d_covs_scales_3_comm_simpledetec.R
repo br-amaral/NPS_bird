@@ -20,8 +20,8 @@ if(!require(freshr)){install.packages("freshr")}
 freshr::freshr()
 
 # Print script file name
-context <- rstudioapi::getSourceEditorContext()
-cat("\n", "\n", "\n", "Current script: ", basename(context$path), "\n", "\n", "\n", "\n")
+#context <- rstudioapi::getSourceEditorContext()
+#cat("\n", "\n", "\n", "Current script: ", basename(context$path), "\n", "\n", "\n", "\n")
 
 # Load packages --------------------------------------
 library(conflicted)
