@@ -30,6 +30,6 @@ module load JAGS/4.3.0
 R --no-environ
 
 # run R script
-Rscript multiple_single_sps.r --vanilla
+Rscript code/fit_model/multiple_single_sps.R --vanilla
 
 scontrol show job $SLURM_JOB_ID
