@@ -15,6 +15,9 @@
 #           - :
 #           - :
 
+# Print script file name
+context <- rstudioapi::getSourceEditorContext()
+cat("\n", "\n", "\n", "Current script: ", basename(context$path), "\n", "\n", "\n", "\n")
 
 # detach packages and clear workspace
 if(!require(freshr)){install.packages("freshr")}
@@ -58,10 +61,11 @@ pk <- read_rds(PARK_PATH) %>%
 
 # Filter for species and park ---------------------------------------
 sps_UNfilt_len <- length(sort(unique(y_dat4$sps_it)))
-sps_filt_list <- c("GCFL", "AMGO", "DOWO", "NOCA", "SCTA", "SOSP", "GRCA", "RBWO", "COYE", "WOTH", "RWBL",
-                   "WBNU", "BTNW", "EAWP", "BCCH", "BLJA", "TUTI", "AMRO", "REVI", "OVEN", "BTBW", "YBSA", 
-                   "BOBO", "YRWA", "PIWA", "CEDW", "CHSP", "NOFL", "HAWO", "BRCR", "RBGR", "DEJU", "AMCR", 
-                   "BAOR", "RBNU", "BHVI", "GCKI", "EATO", "FISP", "HETH", "VEER", "MODO", "BLBW")
+sps_filt_list <- c(#"GCFL", "AMGO", "DOWO", "NOCA", "SCTA", "SOSP", "GRCA", "RBWO", "COYE", "WOTH", "RWBL",
+                   #"WBNU", "BTNW", "EAWP", "BCCH", "BLJA", "TUTI", "AMRO", "REVI", "OVEN", "BTBW", "YBSA", 
+                   #"BOBO", "YRWA", "PIWA", "CEDW", "CHSP", "NOFL", "HAWO", "BRCR", "RBGR", "DEJU", "AMCR", 
+                   #"BAOR", "RBNU", "BHVI", "GCKI", "EATO", 
+                   "FISP", "HETH", "VEER", "MODO", "BLBW")
 
 y_dat4$unique_index <- seq(1,nrow(y_dat4),1)
 
@@ -100,7 +104,7 @@ if(sps_UNfilt_len == lenght(sps_filt_list)) {spsglue <- "All species"
 } 
 parkglue <- paste(shQuote(sort(unique(y_dat6$park))), collapse=", ")
 parkglue <- str_replace_all(parkglue, "'", "")
-paste(glue1, spsglue, glue2, parkglue)  
+cat("\n", "\n", glue1, spsglue, glue2, parkglue, "\n", "\n", "\n")  
 
 ## add a step here to fix parkey
 
@@ -344,7 +348,7 @@ params <- c("beta0","beta", "alpha0", "alpha", "scales_beta1", "scales_beta2",
 
 col_namesy
 
-cat(glue("\n\n\n running jags with {niterations} iterations \n\n\n\n"))
+cat(glue("\n\n\n running jags with {niterations} iterations (first) \n\n\n\n"))
 
 ## initialize JAGS
 jags_model <- rjags::jags.model(
