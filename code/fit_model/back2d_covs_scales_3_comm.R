@@ -338,13 +338,15 @@ str(jags.data <- list(y = y,
 inits <- function()list(Z = Zst2#, beta0 = rnorm(10,0.6), beta1 = rnorm(10,0.6)
 )
 
-niterations <- 10
-burnin <- 5
+niterations <- 3
+burnin <- 1
 nchains <- 1
 print(niterations)
 
+
 params <- c("beta0","beta", "alpha0", "alpha", "scales_beta1", "scales_beta2",
-            "mu.beta0", "tau.beta0", "mu.alpha0", "tau.alpha0") # Z, psi
+            "mu.beta0", "tau.beta0", #"mu.alpha0", "tau.alpha0"
+            ) # Z, psi
 
 col_namesy
 
@@ -352,7 +354,7 @@ cat(glue("\n\n\n running jags with {niterations} iterations (first) \n\n\n\n"))
 
 ## initialize JAGS
 jags_model <- rjags::jags.model(
-  file = "models/mod_1_vector_community_parks_simple_covs_scales_JD_detec.txt",
+  file = "models/mod_1_vector_community_parks_simple_covs_scales_JD_detec_simpler.txt",
   data = jags.data,
   inits = inits, 
   n.chains = nchains,
