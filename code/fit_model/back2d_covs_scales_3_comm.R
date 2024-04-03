@@ -16,8 +16,8 @@
 #           - :
 
 # Print script file name
-context <- rstudioapi::getSourceEditorContext()
-cat("\n", "\n", "\n", "Current script: ", basename(context$path), "\n", "\n", "\n", "\n")
+#context <- rstudioapi::getSourceEditorContext()
+#cat("\n", "\n", "\n", "Current script: ", basename(context$path), "\n", "\n", "\n", "\n")
 
 # detach packages and clear workspace
 if(!require(freshr)){install.packages("freshr")}
@@ -64,8 +64,8 @@ sps_UNfilt_len <- length(sort(unique(y_dat4$sps_it)))
 sps_filt_list <- c(#"GCFL", "AMGO", "DOWO", "NOCA", "SCTA", "SOSP", "GRCA", "RBWO", "COYE", "WOTH", "RWBL",
                    #"WBNU", "BTNW", "EAWP", "BCCH", "BLJA", "TUTI", "AMRO", "REVI", "OVEN", "BTBW", "YBSA", 
                    #"BOBO", "YRWA", "PIWA", "CEDW", "CHSP", "NOFL", "HAWO", "BRCR", "RBGR", "DEJU", "AMCR", 
-                   #"BAOR", "RBNU", "BHVI", "GCKI", "EATO", 
-                   "FISP", "HETH", "VEER", "MODO", "BLBW")
+                   #"BAOR", "RBNU", "BHVI", "GCKI", "EATO", "FISP", "HETH", 
+                   "VEER", "MODO", "BLBW")
 
 y_dat4$unique_index <- seq(1,nrow(y_dat4),1)
 
