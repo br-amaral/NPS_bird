@@ -61,7 +61,7 @@ lenght <- length
 
 # Source code -----------------------------------------
 ## Create empty matrix with all parks, species, years, sites and intervals --------------------------
-source("code/format_bird_data/2_format_data.R")
+source("code/format_bird_data/format_data.R")
 
 # Import data -----------------------------------------
 ## file paths
@@ -77,13 +77,6 @@ PATH_TREE_STR_PARK <- "data/NETN-forest/stand_struc_tab_park.rds"
 PATH_TREE_BA_COUN <- "data/FIA/out/bas_area_tot_import.rds"
 PATH_TREE_DEN_COUN <- "data/FIA/out/tree_acre_tot_import.rds"
 PATH_TREE_STR_COUN <- "data/FIA/out/stand_struc_import.rds"
-
-
-## read files
-
-
-
-
 
 ## parks -------------------------------------------------------------------------------------------
 pk_list <- visits %>% 
