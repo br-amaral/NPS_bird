@@ -220,7 +220,7 @@ for(jj in 1:ncol(yrs_st)){
 
 yrs_st_long <- pivot_longer(yrs_st, everything(), names_to = "Point_Name", values_to = "Year")
 yrs_st_long <- na.omit(yrs_st_long)
-
+table(yrs_st_long$Point_Name)
 # site year park
 
 for(j in 1:nrow(sit_mer2)) {
