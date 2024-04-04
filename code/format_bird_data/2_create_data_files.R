@@ -63,6 +63,9 @@ lenght <- length
 ## Create empty matrix with all parks, species, years, sites and intervals --------------------------
 source("code/format_bird_data/format_data.R")
 
+#
+yog <- y1
+
 # Import data -----------------------------------------
 ## file paths
 
@@ -80,14 +83,16 @@ PATH_TREE_STR_COUN <- "data/FIA/out/stand_struc_import.rds"
 
 ## parks -------------------------------------------------------------------------------------------
 pk_list <- visits %>% 
-  select(Admin_Unit_Code) %>% 
-  distinct() %>% 
-  arrange(Admin_Unit_Code) %>% 
-  pull()
+   select(Admin_Unit_Code) %>% 
+   distinct() %>%  
+   arrange(Admin_Unit_Code) %>% 
+   pull()
 
 npk <- length(pk_list)
 
 ## years -------------------------------------------------------------------------------------------
+# year_n gives an ordinal number for each calendar year, while year_n_gap jumps years 
+#  that have no sampling: year = 2007, 2009 ; year_n = 1, 2 ; year_n_gap = 1,3
 yr_pk <- yr_pk %>% 
   arrange(Admin_Unit_Code,Year)
 
@@ -111,9 +116,9 @@ for(i in 1:lenght(nyr_pk)) {
   }
 }
 
-y1 <- y1 %>% 
+y1 <- yog %>% 
   left_join(., yr_pk_min, by = c("park", "Admin_Unit_Code")) %>% 
-  mutate(year_s = (Year - (year_min - 1))) %>% 
+  mutate(year_n_gap = (Year - (year_min - 1))) %>% 
   left_join(., yr_pk_nth, by = c("Year", "Admin_Unit_Code"))
 
 ## sites --------------------------------------------------------------------------------------
