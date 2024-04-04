@@ -2,8 +2,13 @@
 # input:    - data/src/NETNtib.rds
 #           - 
 # output:   - data/src/sites_park_tib.rds:
+#           - y1
+#           - yr_pk
 #           - 
-
+#           - 
+#           - 
+#           - 
+#           - 
 
 # Load libraries -------------------------------------------------------------------------------------
 library("stringr")
