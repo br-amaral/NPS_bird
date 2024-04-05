@@ -9,6 +9,9 @@
 #           - code/format_bird_data/2_format_data.R:
 #
 # Input ----------------------------------------------
+#           - y1: table of ones and zeros for sps detections
+#           - visits:
+
 #           - from code/2_format_data.R:
 #             -- y1: table of ones and zeros for sps detections
 #             -- nsite_pk: number of sites sampled in each park
@@ -177,7 +180,7 @@ for(ii in 1:npk) {
     sit_mer2 <- rbind(sit_mer2, sit_mer)
   }
 }
-
+sit_mer2 <- as_tibble(sit_mer2)
 ##### write file: data/src/site_n_key.rds ------
 write_rds(sit_mer2, file = "data/out/site_n_key.rds")
 
@@ -221,22 +224,24 @@ for(jj in 1:ncol(yrs_st)){
 yrs_st_long <- pivot_longer(yrs_st, everything(), names_to = "Point_Name", values_to = "Year")
 yrs_st_long <- na.omit(yrs_st_long)
 table(yrs_st_long$Point_Name)
-# site year park
 
+# site year park WITHOUT and WITH gap
 for(j in 1:nrow(sit_mer2)) {
   
   st_pk_nth2 <- sit_mer2[j,]
   
   nth_syp <- yrs_st_long %>% 
     filter(Point_Name == st_pk_nth2$Point_Name) %>% 
-    mutate(yr_st = seq(1, nrow(.), 1))
+    mutate(year_n_site = seq(1, nrow(.), 1),
+           year_n_gap_site = Year + 1 - min(Year))
   
-  if(j == 1){
+  if(j == 1){ ## create the new file here inside the loop
     sps_syp_nth <- nth_syp
   } else {
     sps_syp_nth <- rbind(sps_syp_nth, nth_syp)
   }
 }
+
 ## intervals --------------------------------------------------------------------------------------------------------
 ninterval <- 10
 interval <- seq(1, ninterval, 1)
@@ -261,19 +266,15 @@ sps_pk <- y1 %>%
   dplyr::select(Admin_Unit_Code, AOU_Code) %>% 
   distinct() %>% 
   left_join(., sps_key, by = "AOU_Code") %>% 
-  arrange(Admin_Unit_Code, AOU_Code)
+  arrange(Admin_Unit_Code, AOU_Code) %>% 
+  as_tibble()
 
 (nsps_pk <- table(sps_pk$Admin_Unit_Code) %>% as.vector())
-
-sps_pk2 <- sps_pk %>% 
-  nest(sps = AOU_Code,
-       spskey = spskey) 
-sps_pk2$nsps <- nsps_pk
 
 for(i in 1:lenght(nsps_pk)) {
   nth_sps <- sps_pk %>% 
     filter(Admin_Unit_Code == pk[i]) %>% 
-    mutate(sps_n = seq(1, nrow(.),1))
+    mutate(spskey_p = seq(1, nrow(.),1))
   
   if(i == 1){
     sps_pk_nth <- nth_sps
@@ -282,25 +283,40 @@ for(i in 1:lenght(nsps_pk)) {
   }
 }
 
+sps_pk2 <- sps_pk_nth %>% 
+   nest(sps = AOU_Code,
+        spskey = spskey,
+        spskey_p = spskey_p) 
+sps_pk2$nsps <- nsps_pk
+
+y1 <- y1 %>% 
+   left_join(., sps_pk_nth, by = c("Admin_Unit_Code", "AOU_Code"))
+
 ## create for each park all combinations
 ## species, park, year, site, interval
 
 yrs_st_long2 <- yrs_st_long %>% 
   mutate(park = substr(Point_Name, 1, 4))
 
-# all possibe combinations
+# all possible combinations - those are the y_dat objects (WITH zeros),
+#   versus the y objects (detections only - only ONES)
 ## expand grid for species in a site in years that site was sampled
 for(ii in 1:npk) { 
+   if((lenght(unique(yrs_st_long2$park)) == nrow(sps_pk2)) != TRUE) {
+      stop("  missing some park somewhere!!!")
+   }
+   # get site and year combs for each park
    st_yr_it <- yrs_st_long2 %>% 
     filter(park == pk_list[ii]) %>% 
     select(-park)
    
+   # get species list for that same park
    sps_it <- pull(sps_pk2$sps[ii][[1]])
    
    pk_it <- expand_grid(st_yr_it, sps_it)
   
    if((length(sps_it) * nrow(st_yr_it) == nrow(pk_it)) == FALSE){
-     stop(pk_list[ii])
+     stop(glue("{pk_list[ii]} has some problem in the dimentions of site and species and year"))
    }
    
    y_dat1 <- pk_it
@@ -314,99 +330,119 @@ for(ii in 1:npk) {
    }
 }
 
+## merge with site numbers and add removal sampling intervals
 y_dat2 <- y_dat %>% 
   mutate(park = substr(Point_Name, 1, 4),
          interval_n = 10) %>% 
   left_join(., sit_mer2, by = "Point_Name") 
 
-## add removal sampling intervals
 y_dat3 <- splitstackshape::expandRows(y_dat2, "interval_n") 
 y_dat3$interval_n <- rep(seq(1,10,1), nrow(y_dat2))
 
+nrow(y_dat3)/nrow(y_dat) == 10
+
 ## fill array with bird detections
-dim(y_dat3)
-dim(y1)
-
 y2 <- y1 %>% 
-  select(Point_Name, Year, AOU_Code, Interval_n, Bird_Count) 
+  select(park, Point_Name, site_n, 
+         Year, year_min, year_n, year_n_gap,
+         AOU_Code, spskey, spskey_p, 
+         Interval_n, 
+         Bird_Count, 
+         StartTime, EventDate) 
 
-y2_indx <- y1 %>% 
+# select only this combinations because now there are still several detections in the same 
+#   occasions (same species in the same site and year, but in different intervals)
+y2_indx <- y2 %>% 
   select(Point_Name, Year, AOU_Code) %>% 
   distinct()
+nrow(y2_indx) == nrow(y2 %>% select(-Interval_n) %>% distinct())
 
+janitor::get_dupes(y2)
+
+y2 %>% select(-Interval_n) %>% nrow()
+y2 %>% select(-Interval_n) %>% distinct() %>% nrow()
+nrow(y2_indx)
+# there is something else repeated rather than interval
+ytest <- y2 %>% select(-Interval_n) %>% distinct() %>% duplicated() %>% table()
+
+
+# populate y_dat3 with info from y2 - add ot only detections, but zeros in both intervals and occasions
+
+# y_dat3 is the dataset with all occasions and intervals that HAPPENED/EXIST - non-detections! true zeros
 y_dat3$bird_detec <- as.numeric(NA)
 
-# options(warn=2)
-# for(ii in 1:nrow(y2_indx)){
-#   #print(ii)
-#   
-#   y_loop_inx <- y2_indx[ii,]
-# 
-#   y_loop <- y2 %>%
-#     filter(Point_Name == y_loop_inx$Point_Name,
-#            Year == y_loop_inx$Year,
-#            AOU_Code == y_loop_inx$AOU_Code)
-# 
-#   y_loop <- y_loop[!duplicated(y_loop[,c('Point_Name', 'Year', 'AOU_Code', 'Interval_n')]),]
-# 
-#   ## single first occasion
-#   if(nrow(y_loop) == 1 & min(y_loop$Interval_n) == 1){
-#     # put a one there
-#     y_dat3[which(y_dat3$Point_Name == y_loop$Point_Name &
-#                  y_dat3$sps_it == y_loop$AOU_Code &
-#                  y_dat3$Year == y_loop$Year &
-#                  y_dat3$interval_n == y_loop$Interval_n), "bird_detec"] <- 1
-#     # no zeros before
-#   }
-# 
-#   ## single not first occasion
-#   if(nrow(y_loop) == 1 & min(y_loop$Interval_n) != 1){
-#     # put a one there
-#     y_dat3[which(y_dat3$Point_Name == y_loop$Point_Name &
-#                    y_dat3$sps_it == y_loop$AOU_Code &
-#                    y_dat3$Year == y_loop$Year &
-#                    y_dat3$interval_n == y_loop$Interval_n), "bird_detec"] <- 1
-#     # zeros before
-#     y_dat3[which(y_dat3$Point_Name == y_loop$Point_Name &
-#                    y_dat3$sps_it == y_loop$AOU_Code &
-#                    y_dat3$Year == y_loop$Year &
-#                    y_dat3$interval_n < as.numeric(y_loop$Interval_n)),"bird_detec"] <- 0
-#     
-#     # NA after
-#     # zeros before
-#     y_dat3[which(y_dat3$Point_Name == y_loop$Point_Name &
-#                    y_dat3$sps_it == y_loop$AOU_Code &
-#                    y_dat3$Year == y_loop$Year &
-#                    y_dat3$interval_n > as.numeric(y_loop$Interval_n)),"bird_detec"] <- NA
-#   }
-# 
-#   if(nrow(y_loop) > 1){
-#   # ACAD3001     5      GCKI
-#     # put a one in the first, keep only first detect
-#     first_detec <- as.numeric(min(y_loop$Interval_n))
-# 
-#     y_loop2 <- y_loop %>% filter(Interval_n == first_detec) %>%
-#       distinct()
-# 
-#     y_dat3[which(y_dat3$Point_Name == y_loop2$Point_Name &
-#                    y_dat3$sps_it == y_loop2$AOU_Code &
-#                    y_dat3$Year == y_loop2$Year &
-#                    y_dat3$interval_n == first_detec), "bird_detec"] <- 1
-# 
-#     # add zeros before
-#     if(first_detec > 1){
-#       y_dat3[which(y_dat3$Point_Name == y_loop2$Point_Name &
-#                      y_dat3$sps_it == y_loop2$AOU_Code &
-#                      y_dat3$Year == y_loop2$Year &
-#                      y_dat3$interval_n < first_detec),"bird_detec"] <- 0
-#     }
-#   }
-# }
-# 
-# options(warn=1)
-# 
-#  ##### write file: data/out/y_dat3.rds ------
-# write_rds(y_dat3, file = "data/out/y_dat3.rds")
+# fill it!!!
+options(warn=2)
+for(ii in 1:nrow(y2_indx)){
+  #print(ii)
+
+  y_loop_inx <- y2_indx[ii,]
+
+  y_loop <- y2 %>%
+    filter(Point_Name == y_loop_inx$Point_Name,
+           Year == y_loop_inx$Year,
+           AOU_Code == y_loop_inx$AOU_Code)
+
+  y_loop <- y_loop[!duplicated(y_loop[,c('Point_Name', 'Year', 'AOU_Code', 'Interval_n')]),]
+
+  ## single first occasion
+  if(nrow(y_loop) == 1 & min(y_loop$Interval_n) == 1){
+    # put a one there
+    y_dat3[which(y_dat3$Point_Name == y_loop$Point_Name &
+                 y_dat3$sps_it == y_loop$AOU_Code &
+                 y_dat3$Year == y_loop$Year &
+                 y_dat3$interval_n == y_loop$Interval_n), "bird_detec"] <- 1
+    # no zeros before
+  }
+
+  ## single not first occasion
+  if(nrow(y_loop) == 1 & min(y_loop$Interval_n) != 1){
+    # put a one there
+    y_dat3[which(y_dat3$Point_Name == y_loop$Point_Name &
+                   y_dat3$sps_it == y_loop$AOU_Code &
+                   y_dat3$Year == y_loop$Year &
+                   y_dat3$interval_n == y_loop$Interval_n), "bird_detec"] <- 1
+    # zeros before
+    y_dat3[which(y_dat3$Point_Name == y_loop$Point_Name &
+                   y_dat3$sps_it == y_loop$AOU_Code &
+                   y_dat3$Year == y_loop$Year &
+                   y_dat3$interval_n < as.numeric(y_loop$Interval_n)),"bird_detec"] <- 0
+
+    # NA after
+    # zeros before
+    y_dat3[which(y_dat3$Point_Name == y_loop$Point_Name &
+                   y_dat3$sps_it == y_loop$AOU_Code &
+                   y_dat3$Year == y_loop$Year &
+                   y_dat3$interval_n > as.numeric(y_loop$Interval_n)),"bird_detec"] <- NA
+  }
+
+  if(nrow(y_loop) > 1){
+  # ACAD3001     5      GCKI
+    # put a one in the first, keep only first detect
+    first_detec <- as.numeric(min(y_loop$Interval_n))
+
+    y_loop2 <- y_loop %>% filter(Interval_n == first_detec) %>%
+      distinct()
+
+    y_dat3[which(y_dat3$Point_Name == y_loop2$Point_Name &
+                   y_dat3$sps_it == y_loop2$AOU_Code &
+                   y_dat3$Year == y_loop2$Year &
+                   y_dat3$interval_n == first_detec), "bird_detec"] <- 1
+
+    # add zeros before
+    if(first_detec > 1){
+      y_dat3[which(y_dat3$Point_Name == y_loop2$Point_Name &
+                     y_dat3$sps_it == y_loop2$AOU_Code &
+                     y_dat3$Year == y_loop2$Year &
+                     y_dat3$interval_n < first_detec),"bird_detec"] <- 0
+    }
+  }
+}
+
+options(warn=1)
+
+ ##### write file: data/out/y_dat3.rds ------
+write_rds(y_dat3, file = "data/out/y_dat3.rds")
 
 ##### load file: data/out/y_dat3.rds ------
 y_dat3 <- read_rds(file = "data/out/y_dat3.rds")
