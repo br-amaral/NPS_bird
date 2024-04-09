@@ -357,15 +357,16 @@ y2_indx <- y2 %>%
   distinct()
 nrow(y2_indx) == nrow(y2 %>% select(-Interval_n) %>% distinct())
 
-janitor::get_dupes(y2)
+janitor::get_dupes(y2) %>% dim()
+dim(y2)
+janitor::get_dupes(y2) %>% view()
 
 y2 %>% select(-Interval_n) %>% nrow()
 y2 %>% select(-Interval_n) %>% distinct() %>% nrow()
 nrow(y2_indx)
 # there is something else repeated rather than interval
 ytest <- y2 %>% select(-Interval_n) %>% distinct() %>% duplicated() %>% table()
-
-
+ 
 # populate y_dat3 with info from y2 - add ot only detections, but zeros in both intervals and occasions
 
 # y_dat3 is the dataset with all occasions and intervals that HAPPENED/EXIST - non-detections! true zeros
