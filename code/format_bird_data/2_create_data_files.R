@@ -1,4 +1,3 @@
-
 # *********************************************************************************
 # ----------------------------- 3_create_bird_data.R ------------------------------
 # *********************************************************************************
@@ -330,18 +329,14 @@ for(ii in 1:npk) {
    }
 }
 
-## merge with site numbers and add removal sampling intervals
+## merge with site numbers
 y_dat2 <- y_dat %>% 
   mutate(park = substr(Point_Name, 1, 4),
          interval_n = 10) %>% 
   left_join(., sit_mer2, by = "Point_Name") 
 
-y_dat3 <- splitstackshape::expandRows(y_dat2, "interval_n") 
-y_dat3$interval_n <- rep(seq(1,10,1), nrow(y_dat2))
-
-nrow(y_dat3)/nrow(y_dat) == 10
-
 ## fill array with bird detections
+# y2 is a subset with less columns
 y2 <- y1 %>% 
   select(park, Point_Name, site_n, 
          Year, year_min, year_n, year_n_gap,
@@ -350,16 +345,85 @@ y2 <- y1 %>%
          Bird_Count, 
          StartTime, EventDate) 
 
+# First keep the first detection minute - regardless if it is audio or visual detection
+y2
+
+
+
+
+# Then remove repeated detections in the same interval that are auditory or visual
+y1$unID <- y2$unID <- seq(1,nrow(y1),1)
+table(y1$unID == y2$unID)
+dupy1 <- y1[!duplicated(y1 %>% select(-unID)),] #%>% select(-unID)
+dim(dupy1) ; dim(y1)
+dupy2 <- y2[!duplicated(y2 %>% select(-unID)),]
+dim(dupy2) ; dim(y2)
+
+nrow(dupy1) ; nrow(dupy2)
+find_why <- dupy1[which(dupy1$unID %!in% dupy2$unID),]
+dim(find_why)
+
+nrow(find_why) + nrow(dupy2) == nrow(dupy1)
+## there are some parks with DOUBLE occasion recording for a bird: one for visual, one for auditory :(
+##  keep only one - remove ID method
+y3 <- y1 %>% 
+   select(-c(ID_Method_Code, ID_Method)) %>% 
+   distinct()
+nrow(y3) == nrow(dupy2)
+nrow(y3) == nrow(y1)
+
+# check - still have duplicates - lets see why!
+y3_indx <- y3 %>% 
+   select(Point_Name, Year, AOU_Code) %>% 
+   distinct()
+nrow(y3_indx) == nrow(y3 %>% select(-c(Interval_n, unID)) %>% distinct())
+
+##  keep only one - remove several intervals for same occasion
+y3_indx <- y3 %>% 
+   select(Point_Name, Year, AOU_Code) 
+y3 <- y3 %>% 
+   select(-unID)
+
+y3$unID <- y3_indx$unID <- seq(1,nrow(y3),1)
+table(y3$unID == y3_indx$unID)
+
+table(y3$unID == y3_indx$unID)
+dupy3 <- y3[!duplicated(y3[,-43]),]
+dupy3_indx <- y3_indx[!duplicated(y3_indx[,-4]),]
+nrow(dupy3) ; nrow(dupy2)
+find_why2 <- dupy3[which(dupy3$unID %!in% dupy3_indx$unID),]
+
+## remove the occasions when birds were detected twice (more than one intervals)
+y4 <- y3 %>% 
+   select(-c(Initial_Three_Min_Cnt,
+             Interval_n,
+             Interval,
+             Interval_Length, 
+             unID)) %>% 
+   distinct()
+dim(y4) ; dim(y3) ; dim(dupy3) ; dim(dupy2)
+
+
 # select only this combinations because now there are still several detections in the same 
 #   occasions (same species in the same site and year, but in different intervals)
-y2_indx <- y2 %>% 
+y3_indx <- y3 %>% 
   select(Point_Name, Year, AOU_Code) %>% 
   distinct()
-nrow(y2_indx) == nrow(y2 %>% select(-Interval_n) %>% distinct())
+nrow(y3_indx) == nrow(y3 %>% select(-Interval_n) %>% distinct())
+
+dupes <- janitor::get_dupes(y2) 
+dim(dupes)
+dim(distinct(dupes))
+View(distinct(dupes))
+length(unique(dupes$dupe_count))
 
 janitor::get_dupes(y2) %>% dim()
 dim(y2)
 janitor::get_dupes(y2) %>% view()
+dim(unique(y2))
+table(duplicated(y2))
+
+nrow(y2_indx) == nrow(y2 %>% select(-Interval_n) %>% distinct())
 
 y2 %>% select(-Interval_n) %>% nrow()
 y2 %>% select(-Interval_n) %>% distinct() %>% nrow()
@@ -441,6 +505,11 @@ for(ii in 1:nrow(y2_indx)){
 }
 
 options(warn=1)
+
+## add removal sampling intervals
+y_dat3 <- splitstackshape::expandRows(y_dat2, "interval_n") 
+y_dat3$interval_n <- rep(seq(1,10,1), nrow(y_dat2))
+nrow(y_dat3)/nrow(y_dat) == 10
 
  ##### write file: data/out/y_dat3.rds ------
 write_rds(y_dat3, file = "data/out/y_dat3.rds")
