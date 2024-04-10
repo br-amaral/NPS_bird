@@ -8,6 +8,12 @@ MCMCsummary(samples_jags,
                         "mu.alpha0","alpha1","alpha2","alpha3",
                         "scales_beta1","scales_beta2"),
                         round = 2)
+
+MCMCsummary(samples_jags,
+             params = c("mu.beta0","beta",
+                        "mu.alpha0","alpha",
+                        "scales_beta1","scales_beta2"),
+                        round = 2)
  MCMCtrace(samples_jags,
            #params = params[c(2,4,5,7)],
            ind = TRUE,
