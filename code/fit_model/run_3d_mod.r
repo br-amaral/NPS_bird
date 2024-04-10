@@ -39,8 +39,6 @@ years <- y_dat4 %>%
   pull() %>% 
   sort()
 
-X10$sps_it <- y_dat4$spskey_p
-
 X10$spskey <- y_dat4$spskey
 
 X10$year_n <- y_dat4$Year - (min(X10$Year) + 1)
