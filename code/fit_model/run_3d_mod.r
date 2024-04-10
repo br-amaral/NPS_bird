@@ -1,3 +1,4 @@
+
 if(!require(freshr)){install.packages("freshr")}
 freshr::freshr()
 
@@ -19,7 +20,20 @@ lenght <- length
 # Import data -----------------------------------------
 ## file paths
 Y_DATA_PATH <- "data/y_dat8.rds"
+pkey <- y_dat6 %>% 
+  select(park, parkey) %>% 
+  distinct() %>% 
+  arrange()
 
+X11 <- read_rds(file = "data/X10.rds") %>% 
+  left_join(., pkey, by = "park")
+
+pk <- read_rds("data/src/key_park.rds") %>% 
+  select(parks) %>% 
+  pull() %>% 
+  sort()
+
+sps_pk_nth <- read_rds(file = "data/sps_pk_nth.rds")
 ## read files
 y_dat6 <- read_rds(file = Y_DATA_PATH)
 
