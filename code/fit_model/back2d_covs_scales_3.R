@@ -248,9 +248,9 @@ str(jags.data <- list(y = y,
 inits <- function()list(Z = Zst2#, beta0 = rnorm(10,0.6), beta1 = rnorm(10,0.6)
 )
 
-niterations <- 10000
-burnin <- 5000
-nchains <- 5
+niterations <- 5000
+burnin <- 1000
+nchains <- 3
 print(niterations)
 
 cat("\n\n\n running jags \n\n\n\n")
