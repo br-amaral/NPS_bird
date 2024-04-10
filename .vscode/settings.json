@@ -32,3 +32,6 @@
 
 }
 
+{
+    "r.plot.useHttpgd": true
+}
