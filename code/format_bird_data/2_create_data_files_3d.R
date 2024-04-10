@@ -33,7 +33,7 @@ lenght <- length
 
 # Import data -----------------------------------------
 ## file paths
-Y_DATA_PATH <- "data/y_dat6.rds"
+Y_DATA_PATH <- "data/y_dat8.rds"
 
 ## read files
 y_dat6 <- read_rds(file = Y_DATA_PATH)
@@ -72,12 +72,12 @@ X10$sps_it <- y_dat4$sps_it
 X10$spskey <- y_dat4$spskey
 
 y_dat4 <- y_dat4 %>% 
-  filter(parkey == 1,      #change###################################################
-  spskey == 87)            #change###################################################
+  filter(#parkey == 1,      #change###################################################
+  spskey == 4)            #change###################################################
 
 X10 <- X10 %>% 
-  filter(park == "ACAD",   #change###################################################
-         spskey == 87)     #change###################################################
+  filter(#park == "ACAD",   #change###################################################
+         spskey == 4)     #change###################################################
 
 dim(X10)
 dim(y_dat4)
@@ -218,9 +218,9 @@ str(jags.data <- list(y = yyy3,                    # bird detection array
 inits <- function()list(Z = Zst,#, beta0 = rnorm(10,0.6), 
                         beta2 = rnorm(0,0.6))
 
-niterations <- 10
-burnin <- 2
-nchains <- 2
+niterations <- 4000
+burnin <- 1000
+nchains <- 3
 print(niterations)
 
 cat("\n\n\n running jags \n\n\n\n")
@@ -471,6 +471,7 @@ xs2 <- simplify2array(list(xxx2, xxx4, xxx6))
 Zst <- apply(yyy3, c(1, 2, 3), function(x) ifelse(all(is.na(x)), NA, max(x, na.rm = TRUE)))
 
 str(jags.data <- list(y = yyy3,                    # bird detection array
+                      xs1 = xs1,
                       xs2 = xs2,
                       xxx7 = xxx7,
                       xxx8 = xxx8,
@@ -616,11 +617,14 @@ years <- y_dat4 %>%
   select(Year) %>% 
   distinct() %>% 
   arrange() %>% 
-  pull()
+  pull() %>% 
+  sort()
 
-X10$sps_it <- y_dat4$sps_it
+X10$sps_it <- y_dat4$spskey_p
 
 X10$spskey <- y_dat4$spskey
+
+X10$year_n <- y_dat4$Year - (min(X10$Year) + 1)
 
 y_select_sps <- y_dat4 %>% filter(bird_detec>0)
 sps_tab <- table(y_select_sps$spskey, y_select_sps$Admin_Unit_Code) 
@@ -637,9 +641,9 @@ dim(X10)
 dim(y_dat4)
 
 # make sure all my covariates are the same dimentions as
-(n_spsM <- y_dat4$sps_it %>% unique() %>% length())
+(n_spsM <- y_dat4$spskey %>% unique() %>% length())
 n_spsM == length(sps_sel)
-sps_list <- y_dat4$sps_it %>% unique() %>% sort()
+sps_list <- y_dat4$spskey %>% unique() %>% sort()
 
 (n_pkM <- y_dat4$park %>% unique() %>% length())
 (pk <- y_dat4$parkey %>% unique() %>% as.numeric() %>% sort())
@@ -783,6 +787,10 @@ round((X10$time_jul %>% sum(na.rm = T)),5) == round((xxx8 %>% sum(na.rm = T)),5)
 xs1 <- simplify2array(list(xxx1, xxx3, xxx5))
 xs2 <- simplify2array(list(xxx2, xxx4, xxx6))
 
+# select only 2018
+xs1 <- xs1[,,13,]
+xs2 <- xs2[,,13,]
+
 park_size <- NA
 
 (pk2 <- y_dat4$park %>% unique() %>% sort())
@@ -802,8 +810,10 @@ y_dat4$bird_detec %>% sum(na.rm = T)
 # initial values
 Zst <- apply(yyy3, c(1, 2, 3), function(x) ifelse(all(is.na(x)), NA, max(x, na.rm = TRUE)))
 
-str(jags.data <- list(y = yyy3,                    # bird detection array
+str(jags.data <- list(y = yyy3,    # bird detection array
+                      xs1 = xs1,                
                       xs2 = xs2,
+                      park_size = park_size,
                       xxx7 = xxx7,
                       xxx8 = xxx8,
                       n_pkM = dim(yyy3)[1],
@@ -815,17 +825,17 @@ str(jags.data <- list(y = yyy3,                    # bird detection array
 inits <- function()list(Z = Zst#, beta0 = rnorm(10,0.6), beta1 = rnorm(10,0.6)
 )
 
-niterations <- 5000
-burnin <- 1000
-nchains <- 6
+niterations <- 50
+burnin <- 10
+nchains <- 1
 print(niterations)
 
 cat("\n\n\n running jags \n\n\n\n")
-params <- c("beta0", "beta2",
+params <- c("beta0", "beta1", "beta2", "beta3",
             "alpha0", "alpha1", "alpha2", "alpha3", 
             "mu.beta0",  
             "mu.alpha0",
-            "scales_beta2",
+            "scales_beta1","scales_beta2",
             "Z")
 
 # save workspace for running model in the HPCC
@@ -833,7 +843,9 @@ params <- c("beta0", "beta2",
 
 ## initialize JAGS
 jags_model <- rjags::jags.model(
-  file = "models/mod_12_late_rdc9_scales4.txt",
+  file = 
+  "models/mod_1_vector1spsparks_simple_covs_scales3D.txt",
+  #"models/mod_12_late_rdc9_scales4.txt",
   data = jags.data,
   inits = inits,
   n.chains = nchains,
