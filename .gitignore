@@ -30,6 +30,8 @@ data/._.DS_Store
 samples_*.rds
 jags_*.rds
 models/._*.txt
+data/NETN-forest/
+data/FIA/
 
 # OS generated files #
 ######################
