@@ -28,10 +28,7 @@
 }
 
 {"editor.acceptSuggestionOnEnter": false,
-"GitHub.copilot.editor.enableCodeActions": false
+"GitHub.copilot.editor.enableCodeActions": false,
+"r.plot.useHttpgd": true,
 
-}
-
-{
-    "r.plot.useHttpgd": true
 }
