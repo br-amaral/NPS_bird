@@ -19,6 +19,8 @@
 # detach packages and clear workspace
 #if(!require(freshr)){install.packages("freshr")}
 #freshr::freshr()
+print()
+print(paste0("back2d_covs_scales_3.R"))
 
 # Load packages --------------------------------------
 library(conflicted)
