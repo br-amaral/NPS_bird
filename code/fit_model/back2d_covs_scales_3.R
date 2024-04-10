@@ -248,9 +248,9 @@ str(jags.data <- list(y = y,
 inits <- function()list(Z = Zst2#, beta0 = rnorm(10,0.6), beta1 = rnorm(10,0.6)
 )
 
-niterations <- 5000
-burnin <- 1000
-nchains <- 3
+niterations <- 20000
+burnin <- 5000
+nchains <- 5
 print(niterations)
 
 cat("\n\n\n running jags \n\n\n\n")
@@ -296,7 +296,7 @@ samples_jags <- coda.samples(
 cat("\n\n\n third done \n\n\n\n")
 
 write_rds(samples_jags,
-          file = glue("data/model_res/jags_res_{sps_loop}.rds"))
+          file = glue("data/model_res/jags_res_{sps_loop}2d.rds"))
 
 # code to check the data and initial values
 # r <- 10   # what is the deal with 7 versus 10? (they both have the same values and 10 does not work)
