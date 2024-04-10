@@ -37,7 +37,7 @@ model {
           
           # Covariate effects on the ecological process	at site level
           logit(psi[j,t]) <- beta0[t] +                      # intercept
-                               beta2 * xs2[j,t,scales_beta2] 
+                               beta2 * xs2[j,scales_beta2] 
                                
           # Observation model for replicated counts	
           for(k in 1:n_intM){  # interval k
