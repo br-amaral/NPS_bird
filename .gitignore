@@ -32,6 +32,7 @@ jags_*.rds
 models/._*.txt
 data/NETN-forest/
 data/FIA/
+.smbdeleteAAA10d0c48b8
 
 # OS generated files #
 ######################
