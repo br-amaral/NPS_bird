@@ -17,8 +17,8 @@
 
 
 # detach packages and clear workspace
-#if(!require(freshr)){install.packages("freshr")}
-#freshr::freshr()
+if(!require(freshr)){install.packages("freshr")}
+freshr::freshr()
 
 # Load packages --------------------------------------
 library(conflicted)
@@ -40,7 +40,7 @@ lenght <- length
 
 # Import data -----------------------------------------
 ## file paths
-YDAT_PATH <- "data/y_dat6.rds"
+YDAT_PATH <- "data/y_dat8.rds"
 XDAT_PATH <- "data/X10.rds"
 SITE_PK_PATH <- "data/out/nsite_pk.rds"
 PARK_PATH <- "data/src/key_park.rds"
@@ -58,22 +58,23 @@ pk <- read_rds(PARK_PATH) %>%
 
 # Filter for species and park ---------------------------------------
 ## 1 sps several parks
-y_dat6 <- y_dat4
+y_dat5 <- y_dat4
 # _n means that the 1 is the first occasion for that sps, year, loc, etc, not the first calendar one
 
-y_dat6 <- y_dat6 %>%
-  mutate(parkey = as.numeric(parkey))
+y_dat5 <- y_dat5 %>%
+  mutate(parkey = as.numeric(parkey),
+         sps_it = AOU_Code)
 
-nrow(X10) == nrow(y_dat6)
+nrow(X10) == nrow(y_dat5)
 
-y_dat6$unique_index <- seq(1,nrow(y_dat6),1)
+y_dat5$unique_index <- seq(1,nrow(y_dat5),1)
 
-X10$unique_index <- seq(1,nrow(y_dat6),1)
+X10$unique_index <- seq(1,nrow(y_dat5),1)
 
-if(setequal(y_dat6$unique_index, X10$unique_index) != "TRUE") 
+if(setequal(y_dat5$unique_index, X10$unique_index) != "TRUE") 
    stop("ah wrong indexing!!!!")
 
-y_dat6 <- y_dat6 %>% 
+y_dat6 <- y_dat5 %>% 
    filter(sps_it == sps_loop)
 
 X10 <- X10 %>% 
@@ -81,7 +82,7 @@ X10 <- X10 %>%
 
 nrow(X10) == nrow(y_dat6)
 
-spsglue <- glue("the species are {paste(shQuote(sort(unique(y_dat6$sps_it))), collapse=", ")}, and parks are")
+spsglue <- paste("the species are ", paste(shQuote(sort(unique(y_dat6$sps_it))), collapse=", "), "and parks are")
 parkglue <- paste(shQuote(sort(unique(y_dat6$park))), collapse=", ")
 paste(spsglue,parkglue)  
 
@@ -98,13 +99,11 @@ y_dat6 <- y_dat6 %>%
    left_join(., parkey_right, by = "Admin_Unit_Code")
 
 y <- y_dat6 %>% 
-  select(bird_detec, parkey, site_n, year_s, interval_n, #year_n,
-         yr_st, Year) %>% 
-  arrange(parkey, site_n, yr_st, interval_n)
+  select(bird_detec, parkey, site_n, year_n, interval_n, Year) %>% 
+  arrange(parkey, site_n, year_n, interval_n)
 
 ##
 colnames(y)
-
 
 ## trick for coding = only interval one
 y2 <- y %>% 
@@ -141,8 +140,8 @@ Xa <- X %>%
 
 # initial values
 Zst <- y %>% 
-  select(bird_detec, parkey, site_n, year_s, interval_n) %>% 
-  group_by(parkey, site_n, year_s) %>% 
+  select(bird_detec, parkey, site_n, year_n, interval_n) %>% 
+  group_by(parkey, site_n, year_n) %>% 
   mutate(z = ifelse(sum(bird_detec, na.rm = T) == 0, 0, 1)) %>% 
   ungroup() %>% 
   filter(interval_n == 1) 
@@ -174,7 +173,7 @@ for(a in 1:nrow(Zst)){
   
   r <- as.numeric(zl$parkey)
   j <- zl$site_n 
-  t <- zl$year_s
+  t <- zl$year_n
 
   Zst2[r,j,t] <- as.numeric(zl$z)
   
@@ -249,9 +248,9 @@ str(jags.data <- list(y = y,
 inits <- function()list(Z = Zst2#, beta0 = rnorm(10,0.6), beta1 = rnorm(10,0.6)
 )
 
-niterations <- 30000
-burnin <- 10000
-nchains <- 10
+niterations <- 3
+burnin <- 1
+nchains <- 1
 print(niterations)
 
 cat("\n\n\n running jags \n\n\n\n")
