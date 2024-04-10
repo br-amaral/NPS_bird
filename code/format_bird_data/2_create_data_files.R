@@ -336,8 +336,28 @@ y_dat2 <- y_dat %>%
   left_join(., sit_mer2, by = "Point_Name") 
 
 ## fill array with bird detections
-# y2 is a subset with less columns
+# unique combination of all columns minus interval crazy uniqueID
 y2 <- y1 %>% 
+   mutate(cunID = paste(park, Point_Name, site_n, 
+                        Year, year_min, year_n, year_n_gap,
+                        AOU_Code, spskey, spskey_p, 
+                        StartTime, EventDate,
+                        sep = "_"))  %>%
+   arrange(Interval_n)%>% 
+   group_by(cunID) %>%
+   arrange(Interval_n) %>% 
+   slice(1) %>% 
+   ungroup()
+   
+y2$cunID %>% lenght()
+y2$cunID %>% unique() %>% lenght()
+dim(y1) ; dim(y2)
+
+y2 <- y2 %>% 
+   select(-cunID)
+
+# y3 is y2 with less columns
+y3 <- y2 %>% 
   select(park, Point_Name, site_n, 
          Year, year_min, year_n, year_n_gap,
          AOU_Code, spskey, spskey_p, 
@@ -345,273 +365,163 @@ y2 <- y1 %>%
          Bird_Count, 
          StartTime, EventDate) 
 
-# First keep the first detection minute - regardless if it is audio or visual detection
-y2
-
-
-
-
 # Then remove repeated detections in the same interval that are auditory or visual
-y1$unID <- y2$unID <- seq(1,nrow(y1),1)
-table(y1$unID == y2$unID)
-dupy1 <- y1[!duplicated(y1 %>% select(-unID)),] #%>% select(-unID)
-dim(dupy1) ; dim(y1)
-dupy2 <- y2[!duplicated(y2 %>% select(-unID)),]
+y2$unID <- y3$unID <- seq(1,nrow(y2),1)
+table(y3$unID == y2$unID)
+# bird count is in here so if there is a 3 birds detected at interval 1 and 3 at 2 there are still THE SAME
+dupy2 <- y2[!duplicated(y2 %>% select(-unID, -Bird_Count)),] #%>% select(-unID)
 dim(dupy2) ; dim(y2)
+dupy3 <- y3[!duplicated(y3 %>% select(-unID, -Bird_Count)),]
+dim(dupy3) ; dim(y3)
 
-nrow(dupy1) ; nrow(dupy2)
-find_why <- dupy1[which(dupy1$unID %!in% dupy2$unID),]
+nrow(dupy3) ; nrow(dupy2)
+find_why <- dupy2[which(dupy2$unID %!in% dupy3$unID),]
 dim(find_why)
+if((nrow(dupy2) == nrow(dupy3)) == FALSE) {stop("there are repeated detections in the same interval!")}
+if((nrow(find_why) + nrow(dupy3) == nrow(dupy2)) == FALSE) {stop("dimention mismatch!!")}
 
-nrow(find_why) + nrow(dupy2) == nrow(dupy1)
-## there are some parks with DOUBLE occasion recording for a bird: one for visual, one for auditory :(
+## there can be some parks with DOUBLE occasion recording for a bird: one for visual, one for auditory :(
 ##  keep only one - remove ID method
-y3 <- y1 %>% 
-   select(-c(ID_Method_Code, ID_Method)) %>% 
-   distinct()
-nrow(y3) == nrow(dupy2)
-nrow(y3) == nrow(y1)
+## not the case here
 
-# check - still have duplicates - lets see why!
+# check if still have duplicates - lets see why!
 y3_indx <- y3 %>% 
    select(Point_Name, Year, AOU_Code) %>% 
    distinct()
-nrow(y3_indx) == nrow(y3 %>% select(-c(Interval_n, unID)) %>% distinct())
+if((nrow(y3_indx) == nrow(y3 %>% select(-c(Interval_n, unID)) %>% distinct())) == FALSE) {stop("there are repeated detections in the same interval!")}
+# are there duplicates?
+y3 %>% select(-Interval_n) %>% distinct() %>% duplicated() %>% table() 
 
-##  keep only one - remove several intervals for same occasion
-y3_indx <- y3 %>% 
-   select(Point_Name, Year, AOU_Code) 
-y3 <- y3 %>% 
-   select(-unID)
+# dupy3 %>% filter(Point_Name == "ACAD3107", Year == 2018, AOU_Code =="RBNU")
 
-y3$unID <- y3_indx$unID <- seq(1,nrow(y3),1)
-table(y3$unID == y3_indx$unID)
-
-table(y3$unID == y3_indx$unID)
-dupy3 <- y3[!duplicated(y3[,-43]),]
-dupy3_indx <- y3_indx[!duplicated(y3_indx[,-4]),]
-nrow(dupy3) ; nrow(dupy2)
-find_why2 <- dupy3[which(dupy3$unID %!in% dupy3_indx$unID),]
-
-## remove the occasions when birds were detected twice (more than one intervals)
-y4 <- y3 %>% 
-   select(-c(Initial_Three_Min_Cnt,
-             Interval_n,
-             Interval,
-             Interval_Length, 
-             unID)) %>% 
-   distinct()
-dim(y4) ; dim(y3) ; dim(dupy3) ; dim(dupy2)
-
-
-# select only this combinations because now there are still several detections in the same 
-#   occasions (same species in the same site and year, but in different intervals)
-y3_indx <- y3 %>% 
-  select(Point_Name, Year, AOU_Code) %>% 
-  distinct()
-nrow(y3_indx) == nrow(y3 %>% select(-Interval_n) %>% distinct())
-
-dupes <- janitor::get_dupes(y2) 
-dim(dupes)
-dim(distinct(dupes))
-View(distinct(dupes))
-length(unique(dupes$dupe_count))
-
-janitor::get_dupes(y2) %>% dim()
-dim(y2)
-janitor::get_dupes(y2) %>% view()
-dim(unique(y2))
-table(duplicated(y2))
-
-nrow(y2_indx) == nrow(y2 %>% select(-Interval_n) %>% distinct())
-
-y2 %>% select(-Interval_n) %>% nrow()
-y2 %>% select(-Interval_n) %>% distinct() %>% nrow()
-nrow(y2_indx)
-# there is something else repeated rather than interval
-ytest <- y2 %>% select(-Interval_n) %>% distinct() %>% duplicated() %>% table()
- 
+## add removal sampling intervals ------------------------------------------------------------
 # populate y_dat3 with info from y2 - add ot only detections, but zeros in both intervals and occasions
-
 # y_dat3 is the dataset with all occasions and intervals that HAPPENED/EXIST - non-detections! true zeros
+y3 <- y3 %>% 
+   mutate(interval_n = 10)
+y_dat3 <- splitstackshape::expandRows(y3, "interval_n") 
+y_dat3$interval_n <- rep(seq(1,10,1), nrow(y3))
+nrow(y_dat3)/nrow(y3) == 10
+
 y_dat3$bird_detec <- as.numeric(NA)
-
-# fill it!!!
-options(warn=2)
-for(ii in 1:nrow(y2_indx)){
-  #print(ii)
-
-  y_loop_inx <- y2_indx[ii,]
-
-  y_loop <- y2 %>%
-    filter(Point_Name == y_loop_inx$Point_Name,
-           Year == y_loop_inx$Year,
-           AOU_Code == y_loop_inx$AOU_Code)
-
-  y_loop <- y_loop[!duplicated(y_loop[,c('Point_Name', 'Year', 'AOU_Code', 'Interval_n')]),]
-
-  ## single first occasion
-  if(nrow(y_loop) == 1 & min(y_loop$Interval_n) == 1){
-    # put a one there
-    y_dat3[which(y_dat3$Point_Name == y_loop$Point_Name &
-                 y_dat3$sps_it == y_loop$AOU_Code &
-                 y_dat3$Year == y_loop$Year &
-                 y_dat3$interval_n == y_loop$Interval_n), "bird_detec"] <- 1
-    # no zeros before
-  }
-
-  ## single not first occasion
-  if(nrow(y_loop) == 1 & min(y_loop$Interval_n) != 1){
-    # put a one there
-    y_dat3[which(y_dat3$Point_Name == y_loop$Point_Name &
-                   y_dat3$sps_it == y_loop$AOU_Code &
-                   y_dat3$Year == y_loop$Year &
-                   y_dat3$interval_n == y_loop$Interval_n), "bird_detec"] <- 1
-    # zeros before
-    y_dat3[which(y_dat3$Point_Name == y_loop$Point_Name &
-                   y_dat3$sps_it == y_loop$AOU_Code &
-                   y_dat3$Year == y_loop$Year &
-                   y_dat3$interval_n < as.numeric(y_loop$Interval_n)),"bird_detec"] <- 0
-
-    # NA after
-    # zeros before
-    y_dat3[which(y_dat3$Point_Name == y_loop$Point_Name &
-                   y_dat3$sps_it == y_loop$AOU_Code &
-                   y_dat3$Year == y_loop$Year &
-                   y_dat3$interval_n > as.numeric(y_loop$Interval_n)),"bird_detec"] <- NA
-  }
-
-  if(nrow(y_loop) > 1){
-  # ACAD3001     5      GCKI
-    # put a one in the first, keep only first detect
-    first_detec <- as.numeric(min(y_loop$Interval_n))
-
-    y_loop2 <- y_loop %>% filter(Interval_n == first_detec) %>%
-      distinct()
-
-    y_dat3[which(y_dat3$Point_Name == y_loop2$Point_Name &
-                   y_dat3$sps_it == y_loop2$AOU_Code &
-                   y_dat3$Year == y_loop2$Year &
-                   y_dat3$interval_n == first_detec), "bird_detec"] <- 1
-
-    # add zeros before
-    if(first_detec > 1){
-      y_dat3[which(y_dat3$Point_Name == y_loop2$Point_Name &
-                     y_dat3$sps_it == y_loop2$AOU_Code &
-                     y_dat3$Year == y_loop2$Year &
-                     y_dat3$interval_n < first_detec),"bird_detec"] <- 0
-    }
-  }
+for(ii in 1:nrow(y_dat3)){
+   if(as.numeric(y_dat3$Interval_n[ii]) == y_dat3$interval_n[ii]) {y_dat3$bird_detec[ii] <- 1} else {
+      if(as.numeric(y_dat3$Interval_n[ii]) > y_dat3$interval_n[ii]) {y_dat3$bird_detec[ii] <- 0} else {print(round(ii/nrow(y_dat3),2))}}
 }
-
-options(warn=1)
-
-## add removal sampling intervals
-y_dat3 <- splitstackshape::expandRows(y_dat2, "interval_n") 
-y_dat3$interval_n <- rep(seq(1,10,1), nrow(y_dat2))
-nrow(y_dat3)/nrow(y_dat) == 10
 
  ##### write file: data/out/y_dat3.rds ------
 write_rds(y_dat3, file = "data/out/y_dat3.rds")
 
-##### load file: data/out/y_dat3.rds ------
-y_dat3 <- read_rds(file = "data/out/y_dat3.rds")
+# This has all the zeros for all intervals, but I'm still missing an occasion for a species that was not detected in year X in site Y, but was detected ther on year X-1 or X+1
+# for each species, in a park, for the years the park was sampled
+for(ii in 1:length(pk)) {
+   pk_loop <- pk[ii]
+   yrs_st_long2_loop <- yrs_st_long2 %>% 
+      filter(park == pk_loop)
+   
+   sps_pk_loop <- sps_pk %>% 
+      filter(Admin_Unit_Code == pk_loop) %>% 
+      select(AOU_Code) %>% 
+      pull()
+   
+   grid_loop <- expand_grid(yrs_st_long2_loop, sps_pk_loop)
+   if(ii == 1) {
+      spy_grid <-grid_loop} else {
+      spy_grid <- rbind(spy_grid, grid_loop)
+      }
+   rm(grid_loop)
+}
+spy_grid <- spy_grid %>% 
+   rename(AOU_Code = sps_pk_loop)
+# check which ones already exist (1 at the occasion, and add only the zeros)
+spy_grid_yesdetec <- y_dat3 %>% 
+   select(Point_Name, Year, park, AOU_Code) %>% 
+   distinct()
+spy_grid_zero <- setdiff(spy_grid, spy_grid_yesdetec)
+# remember that I need covariates for this!!!
+spy_grid_yesdetec_cov <- spy_grid_zero %>% 
+   left_join(., 
+             y_dat3 %>% 
+                select(-unID, -interval_n, -Interval_n, 
+                               -Bird_Count, -bird_detec, -AOU_Code, -spskey, -spskey_p) %>% 
+                distinct(),
+             by = c("Point_Name", "Year", "park"))
+dim(spy_grid_yesdetec_cov) ; dim(spy_grid_zero)
+# add the missing columns and rename the y_dat3 column
+# bird_detec is the detection for that interval, while detec_occ is if it was detected that occasion (site-year)
+y_dat3 <- y_dat3 %>% 
+   rename(detec_occ = Bird_Count)
 
+# the NAs and zeros
+spy_grid_yesdetec_cov2 <- spy_grid_yesdetec_cov %>% 
+   mutate(unID = NA,
+          bird_detec = 0, 
+          detec_occ = 0,
+          Admin_Unit_Code = park)
+# add the codes for species and sps in park
+spy_grid_yesdetec_cov2 <- left_join(
+   spy_grid_yesdetec_cov2, 
+   sps_pk_nth, 
+   by = c("Admin_Unit_Code", "AOU_Code"))
+
+# expand intervals for spy_grid_yesdetec_cov2
+spy_grid_yesdetec_cov2$Interval_n <- 10
+spy_grid_yesdetec_cov3 <- splitstackshape::expandRows(spy_grid_yesdetec_cov2, "Interval_n") 
+spy_grid_yesdetec_cov3$interval_n <- rep(seq(1,10,1), nrow(spy_grid_yesdetec_cov2))
+spy_grid_yesdetec_cov3 <- spy_grid_yesdetec_cov3 %>% 
+   mutate(Interval_n = NA)
+nrow(spy_grid_yesdetec_cov3)/nrow(spy_grid_yesdetec_cov2) == 10
+
+# sort the columns in the same order as y_dat3, and rbind everything!
+y_dat3 <- y_dat3 %>% 
+   mutate(Admin_Unit_Code = park) 
+
+colnmaes(spy_grid_yesdetec_cov3) %>% sort() == colnames(y_dat3) %>% sort()
+
+spy_grid_yesdetec_cov4 <- spy_grid_yesdetec_cov3 %>% 
+   relocate(colnames(y_dat3))
+
+colnmaes(spy_grid_yesdetec_cov4)  == colnames(y_dat3) 
+
+y_dat4 <- rbind(y_dat3,
+                spy_grid_yesdetec_cov4)
 ## remember: I have only one one per row, all zeros before one, and all NA after one
 
 yr_pk <- yr_pk %>% 
   mutate(park = Admin_Unit_Code)
 
-# join with the year, species and site indexes
-
-# year in a site
-# add zero rows for species that were not detected in a previous site year
-site_key <- y_dat3 %>% 
-  select(Point_Name, site_n, park) %>% 
-  distinct()
-
-y_dat4 <- y_dat3 %>%
-  group_by(sps_it,Year, Point_Name) %>%
-  filter(!all(is.na(bird_detec))) %>% 
-  ungroup()
-
-miss_sps_syp <- y_dat4 %>% 
-  select(Point_Name, Year, sps_it) %>% 
-  distinct() %>% 
-  arrange(sps_it, Point_Name, Year) %>% 
-  rename(AOU_Code = sps_it) %>% 
-  mutate(bird_detec = 1)
-
-for(ii in 1:length(pk)) {
-  
-  pkloop <- pk[ii]
-  
-  sps_syp_nth2 <- sps_syp_nth %>% 
-    filter(substr(Point_Name, 1, 4) == pkloop)
-  
-  sps_pk2 <- sps_pk %>% 
-    filter(Admin_Unit_Code == pkloop) %>% 
-    select(AOU_Code)
-  
-  sps_syp_nth3 <- expand_grid(sps_pk2, sps_syp_nth2)
-  
-  if(ii == 1) {
-    sps_syp_nth4 <- sps_syp_nth3
-  } else {
-    sps_syp_nth4 <- rbind(sps_syp_nth4, sps_syp_nth3)
-  }
-}
-
-sps_syp_nth5 <- left_join(sps_syp_nth4, miss_sps_syp, by = c("Point_Name", "Year", "AOU_Code"))
-# check:
-sps_syp_nth5$bird_detec %>% is.na() %>% table() ; miss_sps_syp %>% dim()
-
-sps_syp_nth6 <- sps_syp_nth5 %>% 
-  filter(is.na(bird_detec)) %>% 
-  mutate(bird_detec = 0,
-         park = substr(Point_Name, 1, 4)) %>% 
-  rename(sps_it = AOU_Code) %>% 
-  left_join(., site_key %>% select(Point_Name, site_n), by = "Point_Name", "site_n") %>% 
-  expand_grid(., seq(1,10,1))
-colnames(sps_syp_nth6)[8] <- "interval_n"
-
-sps_syp_nth6 <- sps_syp_nth6 %>% 
-  select(Point_Name, Year, sps_it, park, site_n, interval_n, bird_detec)
-
-sps_syp_nth6$bird_detec %>% table()
-
-y_dat4 %>% colnames() 
-sps_syp_nth6 %>% colnames()
-
-y_dat5 <- rbind(y_dat4, sps_syp_nth6) %>% 
-  left_join(., sps_syp_nth, by = c("Year", "Point_Name"))
-
-# year and species
+# park and species - ops, hopefully last index!
 pk_key <- cbind(pk, seq(1,length(pk), 1)) %>% 
   as_tibble() %>% 
   rename(park = pk, parkey = V2)
 
+y_dat5 <- y_dat4 %>% 
+   left_join(., pk_key, by = "park")
+
+pk_key_sps <- y_dat5 %>% 
+   select(AOU_Code, park, parkey) %>% 
+   distinct() %>% 
+   group_by(AOU_Code) %>% 
+   mutate(parkey_s = row_number()) %>% 
+   ungroup()
+
 y_dat6 <- y_dat5 %>% 
-  select(bird_detec, sps_it, park, site_n, Year, interval_n, Point_Name, yr_st) %>% 
-  left_join(., yr_pk, by = c("park", "Year")) %>% 
-  left_join(., sps_pk_nth %>% 
-              rename(sps_it  = AOU_Code, park = Admin_Unit_Code, spskey_p = sps_n), 
-            by = c("sps_it", "park")) %>% 
-  left_join(., pk_key, by = "park") %>% 
-  relocate(bird_detec, spskey, parkey, site_n, year_s, interval_n, #year_n
-           yr_st, spskey_p) 
+  left_join(., pk_key_sps, by = c("AOU_Code", "park", "parkey"))
 
 # get covariate data ----------------------------------------------------------------------------------
 X <- y_dat6 %>% 
   select(park, site_n, Year, Point_Name, interval_n, Year)
 
+# no year so far in covariates
+site_key <- y_dat6 %>% 
+   select(Point_Name, site_n, park) %>% 
+   distinct()
+
 ## site ------------
 ## no data for all years, chosing 2018 for now
 tree_ba_tab_site <- read_rds(PATH_TREE_BA_SITE) %>% 
   mutate(park = substr(Point_Name, 1, 4)) %>% 
-  select(Point_Name, park, site_n, Year, total_BA) #%>% 
-  #filter(Year == 2018)
-table(tree_ba_tab_site[,c(1,4)])
+  select(Point_Name, park, site_n, Year, total_BA) 
 
 tree_ba_tab_site <- tree_ba_tab_site %>% 
   na.omit() %>% 
@@ -631,7 +541,7 @@ tree_den_tab_site <- read_rds(PATH_TREE_DEN_SITE) %>%
   left_join(., site_key, by = "Point_Name") %>% 
   rename(siteDEN = mean_tot_den)
 
-X2 <- left_join(X1, tree_den_tab_site %>% select(-Point_Name), by = c("park", "site_n"))
+X2 <- left_join(X1, tree_den_tab_site, by = c("park", "site_n", "Point_Name"))
 
 stand_struc_tab_site <- read_rds(PATH_TREE_STR_SITE) %>% 
   mutate(park = substr(Point_Name, 1, 4)) %>% 
@@ -644,7 +554,7 @@ stand_struc_tab_site <- read_rds(PATH_TREE_STR_SITE) %>%
             mean_high = mean(Pct_Understory_High)) %>% 
   left_join(., site_key, by = "Point_Name") 
 
-X3 <- left_join(X2, stand_struc_tab_site %>% select(-Point_Name), by = c("park", "site_n"))
+X3 <- left_join(X2, stand_struc_tab_site, by = c("park", "site_n", "Point_Name"))
 
 ## park --------------------------------------------------------------------------------
 tree_ba_tab_park <- read_rds(PATH_TREE_BA_PARK) %>% 
@@ -703,46 +613,41 @@ if(length(park_size) > 1) {
 X8 <- left_join(X7, park_size, by = "park")
 
 # get detection covariates! 
+inte_key <- y1 %>% 
+   select(Interval_Length, Interval_n) %>% 
+   rename(interval_n = Interval_n) %>% 
+   mutate(interval_n = as.numeric(interval_n)) %>% 
+   distinct()
+y_dat7 <- left_join(y_dat6, inte_key, by = "interval_n")
+y_dat8 <- y_dat7 %>% 
+   mutate(StartTime2 = as.period(seconds(StartTime) + minutes(substr(Interval_Length,1,1) %>%
+                                                                       as.numeric() %>% 
+                                                                       as_hms()), unit = "hours") %>% 
+                              as.numeric(),
+          EventDate2 = yday(EventDate)) 
 
-y3 <- y1 %>% 
-  mutate(Interval = as.numeric(Interval))
-# ordinal day and time
-y3$EventDate2 <- scale(yday(y3$EventDate))
-y3$StartTime2 <- scale(as.period(seconds(y3$StartTime) + minutes(substr(y3$Interval_Length,1,1) %>%
-                                                                   as.numeric() %>% 
-                                                                   as_hms()), unit = "hours") %>% 
-                         as.numeric())
+table(X8$park == y_dat8$park)
+table(X8$site_n == y_dat8$site_n)
+table(X8$Year == y_dat8$Year)
+table(X8$Point_Name == y_dat8$Point_Name) 
 
-detec_tab <- y3 %>% 
-  select(Point_Name, Admin_Unit_Code, site_n, Year, EventDate, StartTime, Interval_n) %>% 
-  rename(park = Admin_Unit_Code,
-         interval_n = Interval_n) %>% 
-  distinct() %>% 
-  mutate(interval_n = as.numeric(interval_n)) %>% 
-  select(-interval_n) %>% 
-  distinct() %>% 
-  left_join(.,yr_pk, by = c("park", "Year"))
+X9 <- X8
 
-X9 <- left_join(X8, detec_tab, by = c("park", "site_n", "Year", "Point_Name"))
+X9$EventDate2 <- y_dat8$EventDate2 ; X9$StartTime2 <- y_dat8$StartTime2
 
 X10 <- X9 %>% 
-  mutate(date_jul = scale(yday(EventDate)),
-         time_jul = scale(period_to_seconds(lubridate::hms(StartTime))/60),
-         siteBA_s = scale(siteBA),
-         siteDEN_s = scale(siteDEN),
-         parkBA_s = scale(parkBA),
-         parkDEN_s = scale(parkDEN),
-         counBA_s = scale(counBA),
-         counDEN_s = scale(counDEN),
-         area_s = scale(area)) 
-
-X11 <- X10 %>% 
-  select(park, site_n, year_s, Point_Name, interval_n,
-         siteBA_s, siteDEN_s, parkBA_s, parkDEN_s, counBA_s, counDEN_s, area_s, 
-         date_jul,time_jul)
+  mutate(date_jul = as.numeric(scale(EventDate2)),
+         time_jul = as.numeric(scale(StartTime2)),
+         siteBA_s = as.numeric(scale(siteBA)),
+         siteDEN_s = as.numeric(scale(siteDEN)),
+         parkBA_s = as.numeric(scale(parkBA)),
+         parkDEN_s = as.numeric(scale(parkDEN)),
+         counBA_s = as.numeric(scale(counBA)),
+         counDEN_s = as.numeric(scale(counDEN)),
+         area_s = as.numeric(scale(area))) 
 
 ##### write files  ------
-write_rds(y_dat6, file = "data/y_dat6.rds")
+write_rds(y_dat8, file = "data/y_dat8.rds")
 write_rds(X10, file = "data/X10.rds")
 write_rds(sps_pk_nth, file = "data/sps_pk_nth.rds")
 
