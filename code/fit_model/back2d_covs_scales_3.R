@@ -17,8 +17,8 @@
 
 
 # detach packages and clear workspace
-if(!require(freshr)){install.packages("freshr")}
-freshr::freshr()
+#if(!require(freshr)){install.packages("freshr")}
+#freshr::freshr()
 
 # Load packages --------------------------------------
 library(conflicted)
