@@ -15,19 +15,18 @@
 #           - :
 #           - :
 
-# Print script file name
-#context <- rstudioapi::getSourceEditorContext()
-#cat("\n", "\n", "\n", "Current script: ", basename(context$path), "\n", "\n", "\n", "\n")
 
 # detach packages and clear workspace
 if(!require(freshr)){install.packages("freshr")}
 freshr::freshr()
 
+print(paste0("back2d_covs_scales_3_comm2.R"))
+
 # Load packages --------------------------------------
 library(conflicted)
 library(tidyverse)
 library(glue)
-#library(jagsUI)
+library(jagsUI)
 library(tidyverse)
 library(rjags)
 library(MCMCvis)
@@ -37,7 +36,7 @@ conflicts_prefer(dplyr::filter)
 # conflicts_prefer(scales::alpha)
 
 # Make functions --------------------------------------
-colanmes <- colnames
+colanmes <- colnmaes <- colnames
 lenght <- length
 `%!in%` <- Negate(`%in%`)
 
@@ -50,7 +49,7 @@ PARK_PATH <- "data/src/key_park.rds"
 
 ## read files
 y_dat4 <- read_rds(file = YDAT_PATH)
-X9 <- read_rds(file = XDAT_PATH)
+X10 <- read_rds(file = XDAT_PATH)
 nsite_pk <- read_rds(SITE_PK_PATH)
 pk <- read_rds(PARK_PATH) %>%
   select(parks) %>%
@@ -60,57 +59,55 @@ pk <- read_rds(PARK_PATH) %>%
 # load("data/datJDnov2023.RData")
 
 # Filter for species and park ---------------------------------------
-sps_UNfilt_len <- length(sort(unique(y_dat4$AOU_Code)))
-sps_filt_list <- c(#"GCFL", "AMGO", "DOWO", "NOCA", "SCTA", "SOSP", "GRCA", "RBWO", "COYE", "WOTH", "RWBL",
-                   #"WBNU", "BTNW", "EAWP", "BCCH", "BLJA", "TUTI", "AMRO", "REVI", "OVEN", "BTBW", "YBSA", 
-                   #"BOBO", "YRWA", "PIWA", "CEDW", "CHSP", "NOFL", "HAWO", "BRCR", "RBGR", "DEJU", "AMCR", 
-                   #"BAOR", "RBNU", "BHVI", "GCKI", "EATO", "FISP", "HETH", 
-                   "VEER", "MODO", "BLBW")
+## 1 sps several parks
+y_dat5 <- y_dat4
+# _n means that the 1 is the first occasion for that sps, year, loc, etc, not the first calendar one
 
-y_dat4$unique_index <- seq(1,nrow(y_dat4),1)
+y_dat5 <- y_dat5 %>%
+  mutate(parkey = as.numeric(parkey),
+         sps_it = AOU_Code)
 
-X10 <- X9
+nrow(X10) == nrow(y_dat5)
 
-X10$unique_index <- seq(1,nrow(y_dat4),1)
+y_dat5$unique_index <- seq(1,nrow(y_dat5),1)
 
-if(setequal(y_dat4$unique_index, X10$unique_index) != "TRUE") 
+X10$unique_index <- seq(1,nrow(y_dat5),1)
+
+if(setequal(y_dat5$unique_index, X10$unique_index) != "TRUE") 
    stop("ah wrong indexing!!!!")
 
-y_dat6 <- y_dat4
+sps_loop <- c("AMGO", "DOWO", "GCFL")
 
-y_dat6 <- y_dat6 %>%
-  mutate(parkey = as.numeric(parkey))
+y_dat6 <- y_dat5 %>% 
+   filter(AOU_Code %in% sps_loop)
 
-nrow(X10) == nrow(y_dat6)
-
-y_dat6 <- y_dat6 %>%
-   filter(AOU_Code %in% sps_filt_list)
-
-X10 <- X10 %>%  # nolint: object_name_linter.
+X10 <- X10 %>% 
    filter(unique_index %in% y_dat6$unique_index)
 
 nrow(X10) == nrow(y_dat6)
 
-if(setequal(y_dat6$unique_index, X10$unique_index) != "TRUE") 
-   stop("ah wrong indexing!!!!")
+## remove this #############################################
+spskey_fix <- sort(unique(y_dat6$spskey)) %>% as_tibble()
+spskey_fix$spskey2 <- seq(1, nrow(spskey_fix), 1)
+colnames(spskey_fix)[1] <- 'spskey'
 
-## What am I analyzing?
-glue1 <- glue("the species are ")
-glue2 <- glue(", and parks are")
-if(sps_UNfilt_len == lenght(sps_filt_list)) {spsglue <- "All species"
-} else {
-   spsglue <- paste(shQuote(sort(unique(y_dat6$AOU_Code))), collapse=", ")
-   spsglue <- str_replace_all(spsglue, "'", "")
-} 
+y_dat6 <- y_dat6 %>%
+  left_join(., spskey_fix, by = "spskey") %>%
+  select(-spskey, -spskey_p) %>%
+  rename(spskey = spskey2) %>%
+  mutate(spskey_p = spskey)
+###########################
+
+# check!
+spsglue <- paste("the species are ", paste(shQuote(sort(unique(y_dat6$sps_it))), collapse=", "), "and parks are")
 parkglue <- paste(shQuote(sort(unique(y_dat6$park))), collapse=", ")
-parkglue <- str_replace_all(parkglue, "'", "")
-cat("\n", "\n", glue1, spsglue, glue2, parkglue, "\n", "\n", "\n")  
+paste(spsglue,parkglue)  
 
 ## add a step here to fix parkey
 
 parkey_right <- y_dat6 %>% 
-   select(Admin_Unit_Code) %>% 
-   arrange(Admin_Unit_Code) %>% 
+   select(Admin_Unit_Code, parkey) %>% 
+   arrange(parkey) %>% 
    distinct() %>% 
    mutate(parkey = seq(1, nrow(.)))
 
@@ -118,73 +115,16 @@ y_dat6 <- y_dat6 %>%
    select(-parkey) %>% 
    left_join(., parkey_right, by = "Admin_Unit_Code")
 
-spskey_right <- y_dat6 %>% 
-   select(AOU_Code) %>% 
-   arrange(AOU_Code) %>% 
-   distinct() %>% 
-   mutate(spskey = seq(1, nrow(.)))
-
-y_dat6 <- y_dat6 %>% 
-   select(-spskey) %>% 
-   left_join(., spskey_right, by = "AOU_Code")
-
-yearkey_right <- y_dat6 %>% 
-   select(Year) %>% 
-   arrange(Year) %>% 
-   distinct() %>% 
-   mutate(yearkey = seq(1, nrow(.)))
-
-y_dat6 <- y_dat6 %>% 
-   left_join(., yearkey_right, by = "Year")
-
-# sub-indexes
-# get species key and key_p for s subset of species - what is the number of each species in each park
-if(length(unique(y_dat4$AOU_Code)) > length(unique(y_dat6$AOU_Code))) {
-   # which species number in each park 
-   sps_pk_key <- y_dat6 %>% 
-      dplyr::select(parkey, AOU_Code) %>% 
-      arrange(AOU_Code) %>% 
-      distinct() %>% 
-      group_by(parkey) %>% 
-      mutate(spskey_p = seq(1,n(),1)) %>%
-      ungroup()
-   
-   y_dat6 <- y_dat6 %>% 
-      select(-spskey_p) %>% 
-      left_join(., sps_pk_key, by = c("AOU_Code", "parkey"))
-   
-} else { 
-   print("All good!!!")}
-
-# what is the number of my park for each species
-parkey_s <- y_dat6 %>% 
-   dplyr::select(parkey, AOU_Code) %>% 
-   arrange(parkey) %>% 
-   distinct() %>% 
-   group_by(AOU_Code) %>% 
-   mutate(parkey_s = seq(1,n(),1))
-
-y_dat6 <- y_dat6 %>% 
-   select(-parkey_s)%>%
-   left_join(., parkey_s, by = c("AOU_Code", "parkey"))
-
-# what is the number of years for each park
-y_dat6 <- y_dat6 %>% 
-   mutate(yearkey_p = Year - year_min + 1)
-
-# view(y_dat6 %>% select(Admin_Unit_Code, Year, year_min, yearkey_p) %>% distinct())
-# select the columns that I want
-y <- y_dat6 %>%
-  select(bird_detec, 
-         AOU_Code, spskey, spskey_p,
-         Admin_Unit_Code, parkey, parkey_s,
-         Point_Name, site_n, 
-         Year, year_min, year_n, yearkey_p,
+# keep all the key names for the fancy model :)
+y <- y_dat6 %>% 
+  select(bird_detec, spskey, spskey_p, 
+         park, parkey, parkey_s, 
+         site_n, 
+         Year, year_n, year_n_gap, year_min,
          interval_n) %>% 
-rename(yearke = year_n) %>%
-  arrange(parkey, site_n, Year, interval_n)
+  arrange(parkey, site_n, year_n, interval_n)
 
-## keys that I need
+##
 colnames(y)
 
 ## trick for coding = only interval one
@@ -198,6 +138,7 @@ X <- X10 %>%
          area_s, 
          date_jul,time_jul)
 
+# make sure I have no NAs
 table(is.na(X$siteBA_s))
 table(is.na(X$siteDEN_s))
 table(is.na(X$parkBA_s))
@@ -222,32 +163,31 @@ Xa <- X %>%
 
 # initial values
 Zst <- y %>% 
-  select(bird_detec, spskey, parkey, site_n, yearkey, interval_n) %>% 
-  group_by(spskey, parkey, site_n, yearkey) %>% 
+  select(bird_detec, spskey, parkey, site_n, year_n, interval_n) %>% 
+  group_by(spskey, parkey, site_n, year_n) %>% 
   mutate(z = ifelse(sum(bird_detec, na.rm = T) == 0, 0, 1)) %>% 
   ungroup() %>% 
   filter(interval_n == 1) 
 
+(sps_list <- sort(unique(y$spskey)))
 site_vec <- seq(1,max(nsite_pk),1)
-(npk <- length(unique(y$parkey)))
-(pk <- sort(unique(y$parkey)))
-(years <- y %>% 
-      select(Year) %>% 
-      distinct() %>% 
-      pull() %>% 
-      sort())
+(npk <- length(unique(y_dat6$parkey)))
+(pk <- sort(unique(y_dat6$parkey)))
+years <- y_dat6 %>% 
+  select(Year) %>% 
+  distinct() %>% 
+  arrange() %>% 
+  pull()
 ninterval <- 10
-(n_spsM <- length(unique(y$AOU_Code)))
-spskey <- sort(unique(y$spskey))
 
 Zst2 <- 
   array(NA, 
-        dim = c(n_spsM,
+        dim = c(length(sps_list),
                 npk,
                 max(nsite_pk),
                 length(years)
         ),
-        dimnames = list(spskey,
+        dimnames = list(sps_list,
                         pk,
                         site_vec,
                         years
@@ -257,22 +197,20 @@ for(a in 1:nrow(Zst)){
   #   a <- which(Zst$parkey == 10 & Zst$site_n == 1 & Zst$year_s == 1, arr.ind = T)
   zl <- Zst[a,]
   
-  s <- zl$spskey
+  s <- as.numeric(zl$spskey)
   r <- as.numeric(zl$parkey)
   j <- zl$site_n 
-  t <- zl$yearkey
+  t <- zl$year_n
 
   Zst2[s,r,j,t] <- as.numeric(zl$z)
   
 }
 
-sum(Zst2, na.rm = T) == sum(Zst$z)
-
-col_namesy <- as_tibble(cbind(colnames(y), seq(1,ncol(y),1)))
+colnames(y) <- c("bird_detec", "parkey", "sitekey", "yearkey", "intervalkey","year_site","Year")
 
 y <- data.matrix(y)
 y2 <- data.matrix(y2)
-# y_ind <- sort(rep(seq(1, nrow(y2),1),10))
+y_ind <- sort(rep(seq(1, nrow(y2),1),10))
 nrow(y_dat6)
 nrow(y)
 nrow(y2)*ninterval
@@ -312,14 +250,13 @@ nrow(X)
 dim(X1)
 dim(X2)
 length(X3)
-nrow(X) == nrow(y)
 
 # number of alphas and betas
 n_bs <- 3
 n_as <- 3
 
 # model
-str(jags_data <- list(y = y,
+str(jags.data <- list(y = y,
                       y2 = y2,
                       n_bs = n_bs,
                       n_as = n_as,
@@ -331,53 +268,31 @@ str(jags_data <- list(y = y,
                       Xa = Xa,
                       Xb = Xb,
                       n_yrM = length((unique(y[,4]))),
-                      n_pkM = length((unique(y[,2]))),
-                      n_spsM = n_spsM
+                      n_pkM = length((unique(y[,2])))
                       #y_ind = y_ind
 ))
 
 inits <- function()list(Z = Zst2#, beta0 = rnorm(10,0.6), beta1 = rnorm(10,0.6)
 )
 
-niterations <- 3
-burnin <- 1
-nchains <- 1
+niterations <- 20000
+burnin <- 5000
+nchains <- 5
 print(niterations)
 
-
+cat("\n\n\n running jags \n\n\n\n")
 params <- c("beta0","beta", "alpha0", "alpha", "scales_beta1", "scales_beta2",
-            "mu.beta0", "tau.beta0", #"mu.alpha0", "tau.alpha0"
-            ) # Z, psi
-
-col_namesy
-
-cat(glue("\n\n\n running jags with {niterations} iterations (first) \n\n\n\n"))
+            "mu.beta0", "tau.beta0", "mu.alpha0", "tau.alpha0") # Z, psi
 
 ## initialize JAGS
 jags_model <- rjags::jags.model(
-  file = "models/mod_1_vector_community_parks_simple_covs_scales_JD_detec_simpler.txt",
+  file = "models/mod_1_vector1spsparks_simple_covs_scales.txt",
   data = jags.data,
   inits = inits, 
   n.chains = nchains,
   n.adapt = max(100, ceiling(.1 * niterations)),
   quiet = FALSE
 )
-
-## debug
-# p[1,1,1,2,1] mismatch
-y[which(y[,3] == 1 & y[,6] == 1 & y[,9] == 1 & y[,12] == 2 & y[,14] == 1),]
-Zst[which(Zst[,2] == 1 & Zst[,3] == 1 & Zst[,4] == 1 & Zst[,5] == 2 & Zst[,6] == 1),]
-
-s <- 1    # species
-r <- 1    # park
-j <- 1    # site
-t <- 2    # year
-Zst %>% filter(spskey == s, parkey == r, site_n == j, yearkey == t)
-y_dat6 %>% filter(spskey == s, parkey == r, site_n == j, yearkey == t)
-Zst2[s,r,j,t]
-
-
-
 
 cat("\n\n\n first done \n\n\n\n") 
 
@@ -407,6 +322,9 @@ samples_jags <- coda.samples(
 
 cat("\n\n\n third done \n\n\n\n")
 
+write_rds(samples_jags,
+          file = glue("data/model_res/jags_res_{sps_loop}2d.rds"))
+
 # code to check the data and initial values
 # r <- 10   # what is the deal with 7 versus 10? (they both have the same values and 10 does not work)
 # j <- 1
@@ -414,25 +332,22 @@ cat("\n\n\n third done \n\n\n\n")
 # Zst %>% filter(parkey == r, site_n == j, year_s == t)
 # y_dat6 %>% filter(parkey == r, site_n == j, year_s == t)
 # Zst2[r,j,t]
-# row 73 has the values in the loop
+# # row 73 has the values in the loop
 
 #################################################################################################################
-samples_jags <- read_rds(file = "data/model_res/jags_res_AMGO.rds")
-samples_jags <- read_rds(file = "data/model_res/jags_res_GCFL.rds")
 
-MCMCsummary(samples_jags,
-params = c("mu.alpha0", "alpha", "mu.beta0", "beta",
-         "scales_beta1", "scales_beta2"),
-          round = 2) 
+# MCMCsummary(samples_jags,
+#             #params = params[c(2,4,5,7)],
+#             round = 2) 
 
-MCMCtrace(samples_jags,
-          params = c("mu.alpha0", "alpha", "mu.beta0", "beta",
-         "scales_beta1", "scales_beta2"),
-          ind = TRUE,
-          pdf = FALSE)
+# MCMCtrace(samples_jags,
+#           #params = params[c(2,4,5,7)],
+#           ind = TRUE,
+#           pdf = FALSE)
 
-par(mfrow = c(1,1))
-MCMCplot(samples_jags,
-         params = c("mu.alpha0", "alpha", "mu.beta0", "beta",
-         "scales_beta1", "scales_beta2"),
-         ref_ovl = TRUE)
+# par(mfrow = c(1,1))
+# MCMCplot(samples_jags,
+#          #params = params[c(2,4,5,7)],
+#          ref_ovl = TRUE)
+
+
