@@ -318,4 +318,4 @@ cat("\n\n\n third done \n\n\n\n")
 (sps_loop <- y_dat4$AOU_Code %>% unique() )
 
 write_rds(samples_jags,
-          file = glue("data/model_res/jags_res_{sps_loop}3d.rds"))
+          file = glue("data/model_res/jags_res_{sps_loop}3d2.rds"))
