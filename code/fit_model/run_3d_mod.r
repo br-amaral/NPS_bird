@@ -227,7 +227,7 @@ xs2 <- xs2[,,13,]
 
 park_size <- NA
 
-(pk2 <- y_dat4$park %>% unique() %>% sort())
+(pk2 <- tolower(y_dat4$park %>% unique() %>% sort()))
 
 for(i in 1:length(pk)) {
   pb <- read_rds(file = glue("data/park_raster/{pk2[i]}_pb.rds"))
