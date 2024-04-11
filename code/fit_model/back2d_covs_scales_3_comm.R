@@ -406,7 +406,7 @@ cat("\n\n\n third done \n\n\n\n")
 
 
 write_rds(samples_jags,
-          file = glue("data/model_res/jags_res_commu.rds"))
+          file = glue("data/model_res/jags_res_commu2.rds"))
 
 # code to check the data and initial values
 # r <- 10   # what is the deal with 7 versus 10? (they both have the same values and 10 does not work)
