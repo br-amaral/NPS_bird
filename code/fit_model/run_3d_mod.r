@@ -259,9 +259,9 @@ str(jags.data <- list(y = yyy3,    # bird detection array
 inits <- function()list(Z = Zst#, beta0 = rnorm(10,0.6), beta1 = rnorm(10,0.6)
 )
 
-niterations <- 20000
-burnin <- 5000
-nchains <- 5
+niterations <- 5
+burnin <- 1
+nchains <- 1
 print(niterations)
 
 cat("\n\n\n running jags \n\n\n\n")
