@@ -50,10 +50,10 @@ model {
           # Observation model for replicated counts	
           for(k in 1:n_intM){  # interval k
            
-            logit(p[r,j,t,k]) <- alpha0[r] #+
-            #                     alpha1 * xxx7[r,j,t,k] + 
-             #                    alpha2 * (xxx7[r,j,t,k]^2) + 
-              #                   alpha3 * xxx8[r,j,t,k]
+            logit(p[r,j,t,k]) <- alpha0[r] +
+                                 alpha1 * xxx7[r,j,t,k] + 
+                                 alpha2 * (xxx7[r,j,t,k]^2) + 
+                                 alpha3 * xxx8[r,j,t,k]
            
             y[r,j,t,k] ~ dbern(p[r,j,t,k] * Z[r,j,t])
           }
