@@ -181,7 +181,7 @@ y <- y_dat6 %>%
          Point_Name, site_n, 
          Year, year_min, year_n, yearkey_p,
          interval_n) %>% 
-rename(yearke = year_n) %>%
+rename(yearkey = year_n) %>%
   arrange(parkey, site_n, Year, interval_n)
 
 ## keys that I need
@@ -346,7 +346,7 @@ print(niterations)
 
 
 params <- c("beta0","beta", "alpha0", "alpha", "scales_beta1", "scales_beta2",
-            "mu.beta0", "tau.beta0", #"mu.alpha0", "tau.alpha0"
+            "mu.beta0", "tau.beta0" #"mu.alpha0", "tau.alpha0"
             ) # Z, psi
 
 col_namesy
@@ -356,12 +356,13 @@ cat(glue("\n\n\n running jags with {niterations} iterations (first) \n\n\n\n"))
 ## initialize JAGS
 jags_model <- rjags::jags.model(
   file = "models/mod_1_vector_community_parks_simple_covs_scales_JD_detec_simpler.txt",
-  data = jags.data,
+  data = jags_data,
   inits = inits, 
   n.chains = nchains,
   n.adapt = max(100, ceiling(.1 * niterations)),
   quiet = FALSE
 )
+
 
 ## debug
 # p[1,1,1,2,1] mismatch
