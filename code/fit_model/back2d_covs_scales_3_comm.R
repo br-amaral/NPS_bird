@@ -363,22 +363,18 @@ jags_model <- rjags::jags.model(
   quiet = FALSE
 )
 
-
 ## debug
 # p[1,1,1,2,1] mismatch
-y[which(y[,3] == 1 & y[,6] == 1 & y[,9] == 1 & y[,12] == 2 & y[,14] == 1),]
-Zst[which(Zst[,2] == 1 & Zst[,3] == 1 & Zst[,4] == 1 & Zst[,5] == 2 & Zst[,6] == 1),]
+#y[which(y[,3] == 1 & y[,6] == 1 & y[,9] == 1 & y[,12] == 2 & y[,14] == 1),]
+#Zst[which(Zst[,2] == 1 & Zst[,3] == 1 & Zst[,4] == 1 & Zst[,5] == 2 & Zst[,6] == 1),]
 
-s <- 1    # species
-r <- 1    # park
-j <- 1    # site
-t <- 2    # year
-Zst %>% filter(spskey == s, parkey == r, site_n == j, yearkey == t)
-y_dat6 %>% filter(spskey == s, parkey == r, site_n == j, yearkey == t)
-Zst2[s,r,j,t]
-
-
-
+#s <- 1    # species
+#r <- 1    # park
+#j <- 1    # site
+#t <- 2    # year
+#Zst %>% filter(spskey == s, parkey == r, site_n == j, yearkey == t)
+#y_dat6 %>% filter(spskey == s, parkey == r, site_n == j, yearkey == t)
+#Zst2[s,r,j,t]
 
 cat("\n\n\n first done \n\n\n\n") 
 
@@ -408,6 +404,10 @@ samples_jags <- coda.samples(
 
 cat("\n\n\n third done \n\n\n\n")
 
+
+write_rds(samples_jags,
+          file = glue("data/model_res/jags_res_commu.rds"))
+
 # code to check the data and initial values
 # r <- 10   # what is the deal with 7 versus 10? (they both have the same values and 10 does not work)
 # j <- 1
@@ -416,24 +416,3 @@ cat("\n\n\n third done \n\n\n\n")
 # y_dat6 %>% filter(parkey == r, site_n == j, year_s == t)
 # Zst2[r,j,t]
 # row 73 has the values in the loop
-
-#################################################################################################################
-samples_jags <- read_rds(file = "data/model_res/jags_res_AMGO.rds")
-samples_jags <- read_rds(file = "data/model_res/jags_res_GCFL.rds")
-
-MCMCsummary(samples_jags,
-params = c("mu.alpha0", "alpha", "mu.beta0", "beta",
-         "scales_beta1", "scales_beta2"),
-          round = 2) 
-
-MCMCtrace(samples_jags,
-          params = c("mu.alpha0", "alpha", "mu.beta0", "beta",
-         "scales_beta1", "scales_beta2"),
-          ind = TRUE,
-          pdf = FALSE)
-
-par(mfrow = c(1,1))
-MCMCplot(samples_jags,
-         params = c("mu.alpha0", "alpha", "mu.beta0", "beta",
-         "scales_beta1", "scales_beta2"),
-         ref_ovl = TRUE)
