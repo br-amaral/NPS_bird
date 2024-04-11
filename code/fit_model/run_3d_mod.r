@@ -23,9 +23,6 @@ lenght <- length
 ## file paths
 Y_DATA_PATH <- "data/y_dat8.rds"
 
-X11 <- read_rds(file = "data/X10.rds") %>% 
-  left_join(., pkey, by = "park")
-
 pk <- read_rds("data/src/key_park.rds") %>% 
   select(parks) %>% 
   pull() %>% 
@@ -39,6 +36,9 @@ pkey <- y_dat6 %>%
   select(park, parkey) %>% 
   distinct() %>% 
   arrange()
+
+X11 <- read_rds(file = "data/X10.rds") %>% 
+  left_join(., pkey, by = "park")
 
 ## for one species and several parks ------------------------------------------------------------------------------------------
 y_dat4 <- y_dat6
@@ -300,10 +300,6 @@ if (burnin > 0) {
   )
 }
 
-write_rds(samples_jags,
-          file = glue("data/model_res/jags_res_{sps_loop}3d.rds"))
-
-
 # write_rds(jags_model,
 #           file = glue("data/model_res/M12.rds"))
 
@@ -318,3 +314,8 @@ samples_jags <- coda.samples(
 )
 
 cat("\n\n\n third done \n\n\n\n")
+
+(sps_loop <- y_dat4$AOU_Code %>% unique() )
+
+write_rds(samples_jags,
+          file = glue("data/model_res/jags_res_{sps_loop}3d.rds"))
