@@ -325,4 +325,53 @@ write_rds(samples_jags,
 #          #params = params[c(2,4,5,7)],
 #          ref_ovl = TRUE)
 
+library(ggplot2)
+library(viridis)
 
+X2 <- X10 %>% dplyr::filter(park != "ACAD") %>% 
+  select(park, Year, siteDEN_s, parkDEN_s, counDEN_s) %>% 
+  mutate(siteDEN_s = as.numeric(siteDEN_s), 
+         parkDEN_s = as.numeric(parkDEN_s), 
+         counDEN_s = as.numeric(counDEN_s))
+
+X1 <- X10 %>% dplyr::filter(park != "ACAD") %>% 
+  select(park, Year, siteBA_s, parkBA_s, counBA_s) %>% 
+  mutate(siteBA_s = as.numeric(siteBA_s), 
+         parkBA_s = as.numeric(parkBA_s), 
+         counBA_s = as.numeric(counBA_s))
+
+ggplot(X1 %>% select(park, Year, siteBA_s) %>% distinct(), 
+  aes(Year, park, fill= siteBA_s)) + 
+    geom_tile() +
+  scale_fill_viridis(discrete=FALSE) +
+    theme_bw()
+
+ggplot(X1 %>% select(park, Year, parkBA_s) %>% distinct(), 
+  aes(Year, park, fill= parkBA_s)) + 
+    geom_tile() +
+  scale_fill_viridis(discrete=FALSE) +
+    theme_bw()
+
+ggplot(X1 %>% select(park, Year, counBA_s) %>% distinct(), 
+  aes(Year, park, fill= counBA_s)) + 
+    geom_tile() +
+  scale_fill_viridis(discrete=FALSE) +
+    theme_bw()
+
+ggplot(X2 %>% select(park, Year, siteDEN_s) %>% distinct(), 
+  aes(Year, park, fill= siteDEN_s)) + 
+    geom_tile() +
+  scale_fill_viridis(discrete=FALSE) +
+    theme_bw()
+
+ggplot(X2 %>% select(park, Year, parkDEN_s) %>% distinct(), 
+  aes(Year, park, fill= parkDEN_s)) + 
+    geom_tile() +
+  scale_fill_viridis(discrete=FALSE) +
+    theme_bw()
+
+ggplot(X2 %>% select(park, Year, counDEN_s) %>% distinct(), 
+  aes(Year, park, fill= counDEN_s)) + 
+    geom_tile() +
+  scale_fill_viridis(discrete=FALSE) +
+    theme_bw()
