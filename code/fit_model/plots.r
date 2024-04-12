@@ -57,5 +57,7 @@ MCMCplot(samples_jags,
                     "scales_beta1","scales_beta2"),
          ref_ovl = TRUE)
          
-#TODO 
+#TODO:
 summary(samples_jags)
+
+#NOTE:
