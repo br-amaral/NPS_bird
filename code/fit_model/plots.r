@@ -2,7 +2,7 @@ library(tidyverse)
 library(MCMCvis)
 library(rjags)
 
-samples_jags <- read_rds("data/model_res/jags_res_NOCA2d.rds")
+samples_jags <- read_rds("data/model_res/jags_res_SOSP2d.rds")
 
 MCMCsummary(samples_jags,
             round = 2)
@@ -57,5 +57,5 @@ MCMCplot(samples_jags,
                     "scales_beta1","scales_beta2"),
          ref_ovl = TRUE)
          
-
+#TODO 
 summary(samples_jags)
