@@ -1,26 +1,31 @@
 # *********************************************************************************
 # -------------------------------   Amazing Title   -------------------------------
 # *********************************************************************************
-# Code to ...
-#
+# Code to run model to estimate the effect of different environmental
+#   covariates on bird occupancy in several national parks and on three
+#   different spatial scales
 #
 # Input ----------------------------------------------
 #           - data/y_dat4.rds: tibble with bird data
 #           - data/X10.rds: tibble with covariate data
 #           - data/out/nsite_pk.rds: vector with number of sites in each park
 #           - data/src/key_park.rds: vector of all parks being analyzed
-#           - :
 #
 # Output ---------------------------------------------
-#           - :
-#           - :
+#           - data/model_res/jags_res_{sps}_{park}_run{run_number}.rds: file with result of jags model
+
 
 
 # detach packages and clear workspace
 #if(!require(freshr)){install.packages("freshr")}
 #freshr::freshr()
 
-print(paste0("back2d_covs_scales_3.R"))
+script_name <- 'back2d_covs_scales_3.R'
+paste('\n ************************************** \n \n \n Running scrip', script_name, '\n \n \n',
+      '**************************************
+      ') %>% cat
+
+system_time1 <- Sys.time()
 
 # Load packages --------------------------------------
 library(conflicted)
@@ -34,6 +39,8 @@ library(MCMCvis)
 conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::filter)
 # conflicts_prefer(scales::alpha)
+
+if("sps_loop" %in% ls() == FALSE){stop("No species selected #38")}
 
 # Make functions --------------------------------------
 colanmes <- colnames
@@ -74,10 +81,16 @@ y_dat5$unique_index <- seq(1,nrow(y_dat5),1)
 X10$unique_index <- seq(1,nrow(y_dat5),1)
 
 if(setequal(y_dat5$unique_index, X10$unique_index) != "TRUE") 
-   stop("ah wrong indexing!!!!")
+   stop("ah wrong indexing!!!! #82")
 
 y_dat6 <- y_dat5 %>% 
    filter(sps_it == sps_loop)
+
+if(length(sps_loop) == 1){
+  print(glue("analazing one species {sps_loop}"))
+  } else {
+  print('analazing a community: {sps_loop}')
+}
 
 X10 <- X10 %>% 
    filter(unique_index %in% y_dat6$unique_index)
@@ -86,7 +99,7 @@ nrow(X10) == nrow(y_dat6)
 
 spsglue <- paste("the species are ", paste(shQuote(sort(unique(y_dat6$sps_it))), collapse=", "), "and parks are")
 parkglue <- paste(shQuote(sort(unique(y_dat6$park))), collapse=", ")
-paste(spsglue,parkglue)  
+print(paste(spsglue,parkglue))
 
 ## add a step here to fix parkey
 
@@ -105,7 +118,7 @@ y <- y_dat6 %>%
   arrange(parkey, site_n, year_n, interval_n)
 
 ##
-colnames(y)
+# colnames(y)
 
 ## trick for coding = only interval one
 y2 <- y %>% 
@@ -247,15 +260,27 @@ str(jags.data <- list(y = y,
                       #y_ind = y_ind
 ))
 
-inits <- function()list(Z = Zst2#, beta0 = rnorm(10,0.6), beta1 = rnorm(10,0.6)
+inits <- function()list(Z = Zst2
+#, beta0 = rnorm(10,0.6), beta1 = rnorm(10,0.6)
 )
 
-niterations <- 20000
-burnin <- 5000
-nchains <- 5
-print(niterations)
+niterations <- 10
+burnin <- 1
+nchains <- 1
 
-cat("\n\n\n running jags \n\n\n\n")
+if(length(sps_loop) > 1) { sps_name <- "commu"} else {sps_name <- sps_loop}
+if(length((unique(y[,2]))) == 1) { park_name <- unique(y[,2])} else {park_name <- "parks"}
+
+paste('\n ************************************** \n \n \n Running JAGS for:', '\n',
+      'Parks =', park_name, '\n',
+      'Species =', sps_name, '\n',
+      'Iterations =', niterations, '\n',
+      'Data size =', nrow(y), '\n',
+      'Started running on =', Sys.time(),  '\n \n \n',
+      '**************************************
+      ') %>% cat
+
+cat("\n\n\n running first jags \n\n\n\n")
 params <- c("beta0","beta", "alpha0", "alpha", "scales_beta1", "scales_beta2",
             "mu.beta0", "tau.beta0", "mu.alpha0", "tau.alpha0") # Z, psi
 
@@ -269,7 +294,7 @@ jags_model <- rjags::jags.model(
   quiet = FALSE
 )
 
-cat("\n\n\n first done \n\n\n\n") 
+cat("\n\n\n first done, running second \n\n\n\n") 
 
 # burn-in
 if (burnin > 0) {
@@ -285,7 +310,7 @@ if (burnin > 0) {
 # write_rds(jags_model,
 #           file = glue("data/model_res/M12.rds"))
 
-cat("\n\n\n second done \n\n\n\n")
+cat("\n\n\n second done, running third \n\n\n\n")
 
 # posterior simulation
 samples_jags <- coda.samples(
@@ -295,10 +320,45 @@ samples_jags <- coda.samples(
   thin = 5
 )
 
-cat("\n\n\n third done \n\n\n\n")
+cat("\n\n\n third done!!! \n\n\n\n")
 
-write_rds(samples_jags,
+file_name <- glue("jags_res_{sps_name}_{park_name}_")
+
+file_name2 <- paste0(file_name, 'run',
+                     length(list.files(path = file.path(getwd(),"data/model_res/"),
+                                       pattern = file_name,
+                                       full.names = FALSE)) + 1)
+
+write_rds(glue({file_name2},'.rds'),
           file = glue("data/model_res/jags_res_{sps_loop}2d.rds"))
+
+system_time2 <- Sys.time()
+if(as.numeric(system_time2 - system_time1) < 60) {
+  time_it_took <- round(difftime(system_time2, system_time1, units = c("mins")),2)
+  unit_time <- "mins"}
+if(as.numeric(system_time2 - system_time1) >= 60 & 
+      as.numeric(system_time2 - system_time1) <= 1440) {
+  time_it_took <- round(difftime(system_time2, system_time1, units = c("hours")),2)
+  unit_time <- "hours"}
+if(as.numeric(system_time2 - system_time1) > 1440) {
+  time_it_took <- round(difftime(system_time2, system_time1, units = c("days")),2)
+  unit_time <- "days"}
+
+# Print info in slurm.out file
+paste('\n ************************************** \n \n \n ---------------- DONE ----------------', '\n\n',
+      'Output File Name = ', glue('{file_name2}.rds'), '\n', 
+      'Script = ', script_name, '\n', 
+      'Parks =', park_name, '\n',
+      'Species =', sps_name, '\n',
+      'Iterations =', niterations, '\n',
+      'Run number =', str_split(file_name2, 'run', simplify = TRUE)[2], '\n',
+      'Started running on =', system_time1, '\n',
+      'Stopped running on =', system_time2, '\n',
+      'Time it took =', time_it_took , unit_time,  '\n \n \n',
+      '**************************************') %>% cat
+
+
+
 
 # code to check the data and initial values
 # r <- 10   # what is the deal with 7 versus 10? (they both have the same values and 10 does not work)
@@ -309,8 +369,7 @@ write_rds(samples_jags,
 # Zst2[r,j,t]
 # # row 73 has the values in the loop
 
-#################################################################################################################
-
+#################################################################################
 # MCMCsummary(samples_jags,
 #             #params = params[c(2,4,5,7)],
 #             round = 2) 
@@ -325,53 +384,3 @@ write_rds(samples_jags,
 #          #params = params[c(2,4,5,7)],
 #          ref_ovl = TRUE)
 
-library(ggplot2)
-library(viridis)
-
-X2 <- X10 %>% dplyr::filter(park != "ACAD") %>% 
-  select(park, Year, siteDEN_s, parkDEN_s, counDEN_s) %>% 
-  mutate(siteDEN_s = as.numeric(siteDEN_s), 
-         parkDEN_s = as.numeric(parkDEN_s), 
-         counDEN_s = as.numeric(counDEN_s))
-
-X1 <- X10 %>% dplyr::filter(park != "ACAD") %>% 
-  select(park, Year, siteBA_s, parkBA_s, counBA_s) %>% 
-  mutate(siteBA_s = as.numeric(siteBA_s), 
-         parkBA_s = as.numeric(parkBA_s), 
-         counBA_s = as.numeric(counBA_s))
-
-ggplot(X1 %>% select(park, Year, siteBA_s) %>% distinct(), 
-  aes(Year, park, fill= siteBA_s)) + 
-    geom_tile() +
-  scale_fill_viridis(discrete=FALSE) +
-    theme_bw()
-
-ggplot(X1 %>% select(park, Year, parkBA_s) %>% distinct(), 
-  aes(Year, park, fill= parkBA_s)) + 
-    geom_tile() +
-  scale_fill_viridis(discrete=FALSE) +
-    theme_bw()
-
-ggplot(X1 %>% select(park, Year, counBA_s) %>% distinct(), 
-  aes(Year, park, fill= counBA_s)) + 
-    geom_tile() +
-  scale_fill_viridis(discrete=FALSE) +
-    theme_bw()
-
-ggplot(X2 %>% select(park, Year, siteDEN_s) %>% distinct(), 
-  aes(Year, park, fill= siteDEN_s)) + 
-    geom_tile() +
-  scale_fill_viridis(discrete=FALSE) +
-    theme_bw()
-
-ggplot(X2 %>% select(park, Year, parkDEN_s) %>% distinct(), 
-  aes(Year, park, fill= parkDEN_s)) + 
-    geom_tile() +
-  scale_fill_viridis(discrete=FALSE) +
-    theme_bw()
-
-ggplot(X2 %>% select(park, Year, counDEN_s) %>% distinct(), 
-  aes(Year, park, fill= counDEN_s)) + 
-    geom_tile() +
-  scale_fill_viridis(discrete=FALSE) +
-    theme_bw()
