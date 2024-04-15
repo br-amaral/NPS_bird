@@ -146,7 +146,7 @@ for(i in 1:npk){
   rm(a)
 }
 
-write_rds(sites_park_tib, file = "data/src/sites_park_tib.rds")
+#// write_rds(sites_park_tib, file = "data/src/sites_park_tib.rds")
 
 # add numbers for site for each park
 for(i in 1:npk) {
@@ -233,5 +233,4 @@ table(y1$Visit)
 table(y1$ID_Method)
 table(y1$Distance_id)
 
-
-
+write_rds(visits2, file = "data/output/visits.rds")
