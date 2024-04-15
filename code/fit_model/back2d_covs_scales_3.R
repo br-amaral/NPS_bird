@@ -264,14 +264,14 @@ inits <- function()list(Z = Zst2
 #, beta0 = rnorm(10,0.6), beta1 = rnorm(10,0.6)
 )
 
-niterations <- 20000
+niterations <- 25000
 burnin <- 5000
 nchains <- 5
 
 if(length(sps_loop) > 1) { sps_name <- "commu"} else {sps_name <- sps_loop}
 if(length((unique(y[,2]))) == 1) { park_name <- unique(y[,2])} else {park_name <- "parks"}
 
-paste('\n ************************************** \n \n \n Running JAGS for:', '\n',
+paste('\n ************************************* \n \n \n Running JAGS for:', '\n',
       'Parks =', park_name, '\n',
       'Species =', sps_name, '\n',
       'Iterations =', niterations, '\n',
