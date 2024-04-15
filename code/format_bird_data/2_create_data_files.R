@@ -39,6 +39,9 @@
 #           - data/X10.rds: environmental variables for all scales for each occasion, same dim() as y_dat6.rds
 #           - data/sps_pk_nth.rds: species code in each park
 
+#           - from code/2_format_data.R:
+#             -- data/out/visits.rds : data from the visit files
+
 
 ## detach packages and clear workspace
 if(!require(freshr)){install.packages("freshr")}
