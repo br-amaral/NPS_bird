@@ -233,4 +233,4 @@ table(y1$Visit)
 table(y1$ID_Method)
 table(y1$Distance_id)
 
-write_rds(visits2, file = "data/output/visits.rds")
+write_rds(visits2, file = "data/out/visits.rds")
