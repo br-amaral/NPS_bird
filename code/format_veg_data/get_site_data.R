@@ -41,12 +41,18 @@ lenght <- length
 #
 # Import data -----------------------------------------
 ## file paths
-BIRD_SITE_PATH <- "data/out/NETNtib.rds"
-FOR_SITE_PATH <- "data/src/key_park.rds"
+BIRD_SITE_PATH    <- "data/out/NETNtib.rds"
+PARK_SITE_PATH    <- "data/src/key_park.rds"
+FORCOVS_SITE_PATH <- "data/veg_kateaaron/NETN_forest_data_2006-2023.rds"
+FORSPS_SITE_PATH    <- "data/veg_kateaaron/NETN_tree_dens_spp_2006-2023.rds"
+FOR_SITE_PATH     <- "data/veg_kateaaron/for_sites.rds"
 
 ## read files
 bird_sit <- read_rds(file = BIRD_SITE_PATH)
-parks <- readRDS(file = FOR_SITE_PATH) 
+parks <- read_rds(file = PARK_SITE_PATH) 
+for_sit <- read_rds(file = FORCOVS_SITE_PATH)
+fordiv_sit <- read_rds(file = FORSPS_SITE_PATH)
+for_sit_coord <- read_rds(file = FOR_SITE_PATH)
 
 # get coordinates from the bird plots
 parks <- parks %>% 
@@ -56,9 +62,9 @@ parks <- parks %>%
 
 parks <- sort(parks)
 
-for(ii in 1:length(NETN)){
+for(ii in 1:length(bird_sit$points)){
   coord_loop <- 
-    NETNtib$points[[ii]] %>% 
+    bird_sit$points[ii][[1]] %>% 
       select(Admin_Unit_Code,
             NETN_Point_Name,
             Point_Name,
