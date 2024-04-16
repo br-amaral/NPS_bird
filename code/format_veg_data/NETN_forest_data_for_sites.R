@@ -46,29 +46,31 @@ path <- glue("{getwd()}/data/veg_kateaaron") #"C:/NETN/collaborators/Bruna/"
 ## read files
 importCSV(path, zip_name = "NETN_Forest_20231106.zip")
 
-plots <- joinLocEvent() |> filter(!ParkUnit %in% "ACAD") |> 
+plots <- joinLocEvent() |> #filter(!ParkUnit %in% "ACAD") |> 
   select(Plot_Name, SampleYear, ParkUnit, X = xCoordinate, Y = yCoordinate, UTMZone = ZoneCode)
 
-tree_den_spp <- joinTreeData(status = "live") |> filter(!ParkUnit %in% "ACAD") |> 
+tree_den_spp <- joinTreeData(status = "live") |> #filter(!ParkUnit %in% "ACAD") |> 
   group_by(Plot_Name, SampleYear, ScientificName) |> 
   summarize(treeden_ha = sum(num_stems, na.rm = T)*25, # conversion to stems/ha = 10000/400
             BA_m2ha = sum(BA_cm2, na.rm = T)/400) #cm2 to m2 cancels out, so just /400m2 plot.
 
-tree_rich <- tree_den_spp |> group_by(Plot_Name, SampleYear) |> summarize(tree_rich = sum(!is.na(ScientificName)))
+tree_rich <- tree_den_spp |> group_by(Plot_Name, SampleYear) |> 
+                summarize(tree_rich = sum(!is.na(ScientificName)))
 
-tree_den <- joinTreeData(status = "live") |> filter(!ParkUnit %in% "ACAD") |> 
+tree_den <- joinTreeData(status = "live") |> #filter(!ParkUnit %in% "ACAD") |> 
   group_by(Plot_Name, SampleYear) |> 
   summarize(treeden_ha = sum(num_stems, na.rm = T)*25, # conversion to stems/ha = 10000/400
             BA_m2ha = sum(BA_cm2, na.rm = T)/400) #cm2 to m2 cancels out, so just /400m2 plot.
 
-stand <- sumStrStage() |> filter(!ParkUnit %in% "ACAD") |> select(Plot_Name, SampleYear, Stage, pctBA_pole, pctBA_mature, pctBA_large) 
+stand <- sumStrStage() |> #filter(!ParkUnit %in% "ACAD") |> 
+select(Plot_Name, SampleYear, Stage, pctBA_pole, pctBA_mature, pctBA_large) 
 
-reg <- joinRegenData(units = "sq.m") |> filter(!ParkUnit %in% "ACAD") |> 
+reg <- joinRegenData(units = "sq.m") |> #filter(!ParkUnit %in% "ACAD") |> 
   select(Plot_Name, SampleYear, sap_den) |> 
   group_by(Plot_Name, SampleYear) |> 
   summarize(sap_den_m2 = sum(sap_den, na.rm = T))
 
-shrub <- joinMicroShrubData() |> filter(!ParkUnit %in% "ACAD") |> 
+shrub <- joinMicroShrubData() |> #filter(!ParkUnit %in% "ACAD") |> 
   select(Plot_Name, SampleYear, shrub_avg_cov) |> 
   group_by(Plot_Name, SampleYear) |> 
   summarize(shrub_cov = sum(shrub_avg_cov)) 
