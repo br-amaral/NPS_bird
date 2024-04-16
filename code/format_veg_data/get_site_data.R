@@ -33,7 +33,7 @@ conflicts_prefer(dplyr::filter)
 # conflicts_prefer(scales::alpha)
 #
 # Make functions --------------------------------------
-colanmes <- colnames
+colanmes <- colnmaes <- colnames
 lenght <- length
 `%!in%` <- Negate(`%in%`)
 #
@@ -79,5 +79,22 @@ for(ii in 1:length(bird_sit$points)){
 }
 
 nrow(park_site)
+# get coordinates from bird plots
+bird_sit_coord <- park_site  %>% 
+  select(Point_Name,
+         Latitude,
+         Longitude, 
+         UTM_ZONE) %>% 
+  rename(bird_sit = Point_Name,
+         lat = Latitude,
+         lon = Longitude
+  )
 
 # get coordinates from the forest plots
+for_sit_coord <- for_sit_coord %>% 
+  rename(for_sit = Point_Name,
+         lat = Y,
+         lon = X
+  )
+
+colnmaes(for_sit_coord); colnmaes(bird_sit_coord)
