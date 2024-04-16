@@ -78,7 +78,7 @@ comb <- purrr::reduce(list(plots, tree_den, tree_rich, stand, reg, shrub), left_
 comb <- as_tibble(comb)
 
 comb_sites <- comb %>% 
-    select(Plot_Name, X, Y ) %>% 
+    select(Plot_Name, X, Y, UTMZone) %>% 
     distinct() %>% 
     arrange()
 
