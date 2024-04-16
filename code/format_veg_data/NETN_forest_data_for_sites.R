@@ -82,11 +82,6 @@ comb_sites <- comb %>%
     distinct() %>% 
     arrange()
 
-# Write to file
-write_rds(comb, paste0(path, "NETN_forest_data_2006-2023.rds"))
-write_rds(comb_sites, paste0(path, "for_sites.rds"))
-write_rds(tree_den_spp, paste0(path, "NETN_tree_dens_spp_2006-2023.rds"))
-
 # Brief metadata for each column name
 metadata <- data.frame(column = names(comb), 
                        description = c("Unique name of the plot", 
@@ -106,5 +101,9 @@ metadata <- data.frame(column = names(comb),
                                        "Average percent shrub cover. Note that we started collecting this in 2010, the start of cycle 2."
                                        ))
 
+# Write to file
+write_rds(comb, paste0(path, "NETN_forest_data_2006-2023.rds"))
+write_rds(comb_sites, paste0(path, "for_sites.rds"))
+write_rds(tree_den_spp, paste0(path, "NETN_tree_dens_spp_2006-2023.rds"))
 write.csv(metadata, paste0(path, "NETN_forest_metadata.csv"), row.names = F)
 
