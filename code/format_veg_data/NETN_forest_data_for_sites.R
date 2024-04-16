@@ -102,8 +102,8 @@ metadata <- data.frame(column = names(comb),
                                        ))
 
 # Write to file
-write_rds(comb, paste0(path, "NETN_forest_data_2006-2023.rds"))
-write_rds(comb_sites, paste0(path, "for_sites.rds"))
-write_rds(tree_den_spp, paste0(path, "NETN_tree_dens_spp_2006-2023.rds"))
-write.csv(metadata, paste0(path, "NETN_forest_metadata.csv"), row.names = F)
+write_rds(comb, paste0(path, "/", "NETN_forest_data_2006-2023.rds"))
+write_rds(comb_sites, paste0(path, "/", "for_sites.rds"))
+write_rds(tree_den_spp, paste0(path, "/", "NETN_tree_dens_spp_2006-2023.rds"))
+write.csv(metadata, paste0(path, "/", "NETN_forest_metadata.csv"), row.names = F)
 
