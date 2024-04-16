@@ -80,21 +80,21 @@ for(ii in 1:length(bird_sit$points)){
 
 nrow(park_site)
 # get coordinates from bird plots
-bird_sit_coord <- park_site  %>% 
+bird_sit_coord <- park_site %>% 
   select(Point_Name,
          Latitude,
          Longitude, 
          UTM_ZONE) %>% 
   rename(bird_sit = Point_Name,
          lat = Latitude,
-         lon = Longitude
-  )
+         lon = Longitude,
+         UTMZone = UTM_ZONE) 
 
 # get coordinates from the forest plots
 for_sit_coord <- for_sit_coord %>% 
-  rename(for_sit = Point_Name,
+  rename(for_sit = Plot_Name,
          lat = Y,
-         lon = X
-  )
+         lon = X) %>% 
+  relocate(for_sit, lat, lon, UTMZone)
 
 colnmaes(for_sit_coord); colnmaes(bird_sit_coord)
