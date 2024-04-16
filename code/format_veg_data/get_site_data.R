@@ -63,19 +63,37 @@ lenght <- length
 #
 # Import data -----------------------------------------
 ## file paths
-## read files
+BIRD_SITE_PATH <- "data/out/NETNtib.rds"
+FOR_SITE_PATH <- "data/src/key_park.rds"
 
-parks <- readRDS(file = "data/src/key_park.rds") %>% 
+## read files
+bird_sit <- read_rds(file = BIRD_SITE_PATH)
+parks <- readRDS(file = FOR_SITE_PATH) 
+
+# get coordinates from the bird plots
+parks <- parks %>% 
   dplyr::select(parks) %>% 
   distinct() %>% 
   pull()
 
 parks <- sort(parks)
 
+for(ii in 1:length(NETN)){
+  coord_loop <- 
+    NETNtib$points[[ii]] %>% 
+      select(Admin_Unit_Code,
+            NETN_Point_Name,
+            Point_Name,
+            Latitude,
+            Longitude,
+            UTM_ZONE)
+  if(ii == 1) {
+    park_site <- coord_loop
+  } else {
+    park_site <- rbind(park_site, coord_loop)
+  }
+}
 
-bird_sit <- read_rds(file = glue("data/park_raster/{parks[i]}/{parks[i]}_site.rds")) 
-bird_sit <- read_rds(file = '/Users/bamaral/Library/Mobile Documents/com~apple~CloudDocs/Documents/GitHub/NPS_birds/data/park_raster/ELRO/ELRO_site.rds')
-psit_sf <- bird_sit
-sites_n <- dim(psit_sf)[1]
-psit_sf <- st_as_sf(psit_sf)
-psit_sf <- psit_sf %>% st_set_crs(st_crs(geom))
+nrow(park_site)
+
+# get coordinates from the forest plots
