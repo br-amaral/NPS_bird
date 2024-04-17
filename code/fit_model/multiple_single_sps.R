@@ -39,6 +39,8 @@ sps_list <- read_rds("data/src/guilds.rds")  %>%
                 select(AOU_Code) %>% 
                 distinct() %>% 
                 pull()
+
+sps_list <- sps_list[-1]
 #c("GCFL", "AMGO", "DOWO", "NOCA", "SCTA", "SOSP", "GRCA", "RBWO", "COYE", "WOTH", "RWBL",
 #              "WBNU", "BTNW", "EAWP", "BCCH", "BLJA", "TUTI", "AMRO", "REVI", "OVEN", "BTBW", "YBSA", 
 #              "BOBO", "YRWA", "PIWA", "CEDW", "CHSP", "NOFL", "HAWO", "BRCR", "RBGR", "DEJU", "AMCR", 
