@@ -84,7 +84,9 @@ if(setequal(y_dat5$unique_index, X10$unique_index) != "TRUE")
    stop("ah wrong indexing!!!! #82")
 
 y_dat6 <- y_dat5 %>% 
-   filter(sps_it == sps_loop)
+   filter(sps_it == sps_loop,
+          park != "ACAD"
+   )
 
 if(length(sps_loop) == 1){
   print(glue("analazing one species {sps_loop}"))
