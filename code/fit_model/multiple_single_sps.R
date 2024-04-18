@@ -41,6 +41,8 @@ sps_list <- read_rds("data/src/guilds.rds")  %>%
                 pull()
 
 sps_list <- sps_list[-1]
+sps_list <- sps_list[-4]
+
 #c("GCFL", "AMGO", "DOWO", "NOCA", "SCTA", "SOSP", "GRCA", "RBWO", "COYE", "WOTH", "RWBL",
 #              "WBNU", "BTNW", "EAWP", "BCCH", "BLJA", "TUTI", "AMRO", "REVI", "OVEN", "BTBW", "YBSA", 
 #              "BOBO", "YRWA", "PIWA", "CEDW", "CHSP", "NOFL", "HAWO", "BRCR", "RBGR", "DEJU", "AMCR", 
