@@ -266,7 +266,7 @@ inits <- function()list(Z = Zst2
 #, beta0 = rnorm(10,0.6), beta1 = rnorm(10,0.6)
 )
 
-niterations <- 15000
+niterations <- 10000
 burnin <- 5000
 nchains <- 3
 
@@ -331,7 +331,8 @@ file_name2 <- paste0(file_name, 'run',
                                        pattern = file_name,
                                        full.names = FALSE)) + 1)
 
-write_rds(glue({file_name2},'.rds'),
+write_rds(samples_jags,
+          #file = glue({file_name2},'.rds'),
           file = glue("data/model_res/jags_res_{sps_loop}2dnoA.rds"))
 
 system_time2 <- Sys.time()
