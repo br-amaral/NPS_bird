@@ -332,7 +332,7 @@ file_name2 <- paste0(file_name, 'run',
                                        full.names = FALSE)) + 1)
 
 write_rds(glue({file_name2},'.rds'),
-          file = glue("data/model_res/jags_res_{sps_loop}2d.rds"))
+          file = glue("data/model_res/jags_res_{sps_loop}2dnoA.rds"))
 
 system_time2 <- Sys.time()
 if(as.numeric(system_time2 - system_time1) < 60) {
