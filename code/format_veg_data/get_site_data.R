@@ -111,7 +111,7 @@ par(mfrow = c(1,2))
 plot(for_sit_coord$lonutm, for_sit_coord$latutm)
 plot(bird_sit_coord$lon, bird_sit_coord$lat)
 
-#! convert all coordinates to UTM to get distances in meters
+#! convert all bird coordinates to UTM to get distances in meters
 xy <- data.frame(ID = 1:nrow(bird_sit_coord), 
                  X = bird_sit_coord$lon, 
                  Y = bird_sit_coord$lat)

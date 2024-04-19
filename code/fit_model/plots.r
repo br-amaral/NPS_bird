@@ -1,14 +1,53 @@
+# *********************************************************************************
+# -------------------------------   Amazing Title   -------------------------------
+# *********************************************************************************
+# Code to ...
+#
+#
+# Source ---------------------------------------------
+#           - :
+#           - :
+#
+# Input ----------------------------------------------
+#           - :
+#           - :
+#
+# Output ----------------------------------------------
+#           - :
+#           - :
+#
+# detach packages and clear workspace
+if(!require(freshr)){install.packages('freshr')}
+freshr::freshr()
+#
+# Load packages ---------------------------------------
+library(conflicted)
 library(tidyverse)
+library(glue)
 library(MCMCvis)
 library(rjags)
-library(glue)
+#
+conflicts_prefer(dplyr::select)
+conflicts_prefer(dplyr::filter)
+# conflicts_prefer(scales::alpha)
+#
+# Make functions --------------------------------------
+colanmes <- colnames
+lenght <- length
+`%!in%` <- Negate(`%in%`)
+#
+#! Source code -----------------------------------------
+#
+#! Import data -----------------------------------------
+## file paths and read files
 
-sps <- "COYE"
+sps <- "BRCR"
 
 samples_jags <- read_rds(glue("data/model_res/jags_res_{sps}2d.rds"))
 
-samples_jags <- read_rds(file = glue("data/model_res/jags_res_RBWO2d.rds"))
+samples_jags <- read_rds(file = glue("data/model_res/jags_res_WBNU2dnoA.rds"))
 
+#! Summary --------------------------------------------
 MCMCsummary(samples_jags,
             round = 2)
 
@@ -23,7 +62,7 @@ MCMCsummary(samples_jags,
                        "mu.alpha0","alpha",
                       "scales_beta1","scales_beta2"),
                         round = 2)
-## trace ----------------------
+##! traceplots ----------------------
 #MCMCtrace(samples_jags,
 #           #params = params[c(2,4,5,7)],
 #           ind = TRUE,
