@@ -34,14 +34,14 @@ lenght <- length
 `%!in%` <- Negate(`%in%`)
 #
 # Source code -----------------------------------------
-sps_list <- read_rds("data/src/guilds.rds")  %>% 
-                filter(Response_Guild == "InteriorForestObligate") %>% 
-                select(AOU_Code) %>% 
-                distinct() %>% 
-                pull()
+#sps_list <- read_rds("data/src/guilds.rds")  %>% 
+#                filter(Response_Guild == "InteriorForestObligate") %>% 
+#                select(AOU_Code) %>% 
+#                distinct() %>% 
+#                pull()
 
-sps_list <- sps_list[-1]
-sps_list <- sps_list[-4]
+#sps_list <- sps_list[-1]
+sps_list <- "RBWO" # sps_list[-4]
 
 #c("GCFL", "AMGO", "DOWO", "NOCA", "SCTA", "SOSP", "GRCA", "RBWO", "COYE", "WOTH", "RWBL",
 #              "WBNU", "BTNW", "EAWP", "BCCH", "BLJA", "TUTI", "AMRO", "REVI", "OVEN", "BTBW", "YBSA", 
