@@ -1,10 +1,13 @@
 library(tidyverse)
 library(MCMCvis)
 library(rjags)
+library(glue)
 
 sps <- "COYE"
 
 samples_jags <- read_rds(glue("data/model_res/jags_res_{sps}2d.rds"))
+
+samples_jags <- read_rds(file = glue("data/model_res/jags_res_RBWO2d.rds"))
 
 MCMCsummary(samples_jags,
             round = 2)
@@ -51,10 +54,15 @@ MCMCplot(samples_jags,
               #          "mu.alpha0","alpha1","alpha2","alpha3",
                #         "scales_beta1","scales_beta2"),
           ref_ovl = TRUE)
+
 MCMCplot(samples_jags,
          params = c("mu.beta0","beta", 
                     "mu.alpha0","alpha",
                     "scales_beta1","scales_beta2"),
+         ref_ovl = TRUE)
+
+MCMCplot(samples_jags,
+         params = "beta0",
          ref_ovl = TRUE)
 
 #MCMCplot(samples_jags,
