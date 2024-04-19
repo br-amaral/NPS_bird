@@ -16,30 +16,37 @@
 #           -  : tibble with site names and coordinates
 #
 #! Output ----------------------------------------------
-#           - :
+#           - data/out/close_points_f.rds : tibble with combinations of forest and bird sites, and the distances between them
 #           - :
 #
 # detach packages and clear workspace
 if(!require(freshr)){install.packages('freshr')}
 freshr::freshr()
 #
-# Load packages ---------------------------------------
+#! Load packages ---------------------------------------
 library(conflicted)
 library(tidyverse)
 library(glue)
+library(sp)
+library(rgdal)
+library(sf)
+library(reshape2)
+library(ggplot2)
+library(ggh4x)
+library("MetBrewer")
 
 conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::filter)
 # conflicts_prefer(scales::alpha)
 #
-# Make functions --------------------------------------
+#! Make functions --------------------------------------
 colanmes <- colnmaes <- colnames
 lenght <- length
 `%!in%` <- Negate(`%in%`)
 #
-# Source code -----------------------------------------
+#! Source code -----------------------------------------
 #
-# Import data -----------------------------------------
+#! Import data -----------------------------------------
 ## file paths
 BIRD_SITE_PATH    <- "data/out/NETNtib.rds"
 PARK_SITE_PATH    <- "data/src/key_park.rds"
@@ -54,7 +61,7 @@ for_sit <- read_rds(file = FORCOVS_SITE_PATH)
 fordiv_sit <- read_rds(file = FORSPS_SITE_PATH)
 for_sit_coord <- read_rds(file = FOR_SITE_PATH)
 
-# get coordinates from the bird plots
+#! get coordinates from the bird plots ------------------------------
 parks <- parks %>% 
   dplyr::select(parks) %>% 
   distinct() %>% 
@@ -90,11 +97,346 @@ bird_sit_coord <- park_site %>%
          lon = Longitude,
          UTMZone = UTM_ZONE) 
 
-# get coordinates from the forest plots
+#! get coordinates from the forest plots ------------------------------
 for_sit_coord <- for_sit_coord %>% 
   rename(for_sit = Plot_Name,
-         lat = Y,
-         lon = X) %>% 
-  relocate(for_sit, lat, lon, UTMZone)
+         latutm = Y,
+         lonutm = X) %>% 
+  relocate(for_sit, latutm, lonutm, UTMZone) %>% 
+  mutate(UTMZone = substr(UTMZone, 1 , 2))
 
 colnmaes(for_sit_coord); colnmaes(bird_sit_coord)
+
+par(mfrow = c(1,2))
+plot(for_sit_coord$lonutm, for_sit_coord$latutm)
+plot(bird_sit_coord$lon, bird_sit_coord$lat)
+
+#! convert all coordinates to UTM to get distances in meters
+xy <- data.frame(ID = 1:nrow(bird_sit_coord), 
+                 X = bird_sit_coord$lon, 
+                 Y = bird_sit_coord$lat)
+coordinates(xy) <- c("X", "Y")
+proj4string(xy) <- CRS("+proj=longlat +datum=WGS84")
+
+for(ii in 1:nrow(xy)){
+  band <- as.numeric(bird_sit_coord$UTMZone[ii])
+  y <- spTransform(xy[ii,], CRS(glue("+proj=utm +zone={band} +datum=WGS84 +units=m")))
+  y2 <- as(y, "SpatialPoints") %>% 
+        as_tibble()
+  y2$UTMZone <- band
+  
+  if(ii == 1) {
+    utm_bir <- y2
+  } else {
+    utm_bir <- rbind(utm_bir, y2)
+  }
+  rm(y)
+}
+colnames(utm_bir) <- c("lonutm", "latutm", "UTMZone")
+table(bird_sit_coord$UTMZone == utm_bir$UTMZone)
+
+bird_sit_coord <- cbind(bird_sit_coord, utm_bir[,1:2])
+
+park_plot_nam <- bird_sit_coord %>% 
+              mutate(park = substr(bird_sit, 1 , 4)) %>% 
+              group_by(park) %>% 
+              filter(row_number()==1) %>%
+              ungroup()
+ggplot() +
+  geom_point(aes(x = bird_sit_coord$lonutm, 
+                 y = bird_sit_coord$latutm),
+             size = 2,
+             color = "red") +
+  geom_point(aes(x = for_sit_coord$lonutm, 
+                 y = for_sit_coord$latutm), 
+             color = "darkgreen") +
+  #geom_text(aes(x= park_plot_nam$lonutm, y =park_plot_nam$latutm),
+  #          label = park_plot_nam$park, size = 3, vjust = -1.3) +
+  theme_bw() +
+  xlim(697200,700200) + ylim(4833300,4835000)
+
+# great - it all alligns very well; now let's get the closest 3 sites
+
+#! Connect forest sites and bird sites --------------------
+# SAIR does not have forest plots, so it is gonna be reved for now 
+bird_sit_coord2 <- bird_sit_coord %>% 
+    as_tibble() %>% 
+    mutate(park = substr(bird_sit, 1 , 4)) %>%
+    filter(park != "SAIR")
+
+band <- as.numeric(bird_sit_coord$UTMZone[1])
+y <- spTransform(xy[1,], CRS(glue("+proj=utm +zone={band} +datum=WGS84 +units=m")))
+
+for (ii in 1:nrow(bird_sit_coord2)) {
+
+  bird <- st_as_sf(bird_sit_coord2[ii,5:6], 
+                   coords=c("lonutm", "latutm"), 
+                   crs = CRS(proj4string(y)))
+
+  fore <- st_as_sf(for_sit_coord[,2:3], 
+                   coords=c("lonutm", "latutm"), 
+                   crs = CRS(proj4string(y)))
+
+  for(jj in 1:nrow(for_sit_coord)) {
+    distances <- st_distance(bird, fore[jj,], by_element = TRUE)
+ 
+    distances2 <- cbind(as.numeric(distances), for_sit_coord$for_sit[jj]) %>% 
+        as_tibble() %>% 
+        rename(dist = V1, 
+               for_sit = V2) %>% 
+        mutate(dist = as.numeric(dist))
+
+    if(jj == 1) {
+      dist <- distances2
+    } else {
+      dist <- rbind(dist, distances2)
+    }
+  }
+  dist_small <- dist %>% 
+                  arrange(dist) #%>% 
+                  #filter(dist <= 1000) 
+
+# ERROR: NOT REALLY AN ERROR
+  close_points <- head(dist_small, 1) # TODO: 
+  close_points <- close_points %>% 
+                    mutate(bird_sit = bird_sit_coord2$bird_sit[ii])
+  if(ii == 1) {
+    close_points_f <- close_points
+    } else {
+      close_points_f <- rbind(close_points_f, close_points)
+    }
+  print(ii)
+}
+
+# write_rds(close_points_f, file = "data/out/close_points_f2.rds")
+close_points_f <- read_rds(file = "data/out/close_points_f1.rds")
+
+close_points_f
+
+close_points_f  %>% filter(substr(for_sit, 1, 4) == "MABI") %>% arrange(bird_sit)
+
+table(close_points_f$bird_sit)
+
+table(for_sit$SampleYear) %>% max()
+
+#! Correlation plot ----------------------------------------------
+Modes <- function(x) {
+  ux <- unique(x)
+  tab <- tabulate(match(x, ux))
+  if(length(ux[tab == max(tab)]) > 1) {
+    sample(ux[tab == max(tab)], 1)
+    } else {
+      ux[tab == max(tab)]}
+}
+
+for_sit2 <- for_sit %>% 
+  #filter(SampleYear == 2022) %>% 
+  group_by(Plot_Name) %>% 
+  mutate(treeden_haM = mean(treeden_ha, na.rm = T),
+         BA_m2haM = mean(BA_m2ha, na.rm = T),
+         tree_richM = mean(tree_rich, na.rm = T),
+         StageM = Modes(Stage),
+         pctBA_poleM = mean(pctBA_pole, na.rm = T),
+         pctBA_matureM = mean(pctBA_mature, na.rm = T),
+         pctBA_largeM = mean(pctBA_large, na.rm = T),
+         sap_den_m2M = mean(sap_den_m2, na.rm = T),
+         shrub_covM = mean(shrub_cov, na.rm = T),
+         X_for = X,      
+         Y_for = Y,
+         UTMZone_for = UTMZone,
+         for_sit = Plot_Name)  %>% 
+  ungroup() %>% 
+  select(for_sit, ParkUnit, X_for, Y_for, UTMZone_for,
+         treeden_haM, BA_m2haM, tree_richM, StageM, pctBA_poleM, 
+         pctBA_matureM, pctBA_largeM, sap_den_m2M, shrub_covM) %>% 
+  distinct()
+  
+  
+close_points_f2 <- left_join(close_points_f, for_sit2, by = "for_sit") %>% 
+    group_by(bird_sit) %>%
+  mutate(treeden_haM = mean(treeden_haM, na.rm = T),
+         BA_m2haM = mean(BA_m2haM, na.rm = T),
+         tree_richM = mean(tree_richM, na.rm = T),
+         StageM = Modes(StageM),
+         pctBA_poleM = mean(pctBA_poleM, na.rm = T),
+         pctBA_matureM = mean(pctBA_matureM, na.rm = T),
+         pctBA_largeM = mean(pctBA_largeM, na.rm = T),
+         sap_den_m2M = mean(sap_den_m2M, na.rm = T),
+         shrub_covM = mean(shrub_covM, na.rm = T))  %>% 
+  ungroup() %>% 
+  select(bird_sit, ParkUnit,
+         treeden_haM, BA_m2haM, tree_richM, StageM, pctBA_poleM, 
+         pctBA_matureM, pctBA_largeM, sap_den_m2M, shrub_covM) %>% 
+  distinct()
+
+
+# write_rds(close_points_f2, file = "data/out/close_points_fcovs.rds")
+
+# creating correlation matrix
+corr_mat <- round(cor(close_points_f2[,c(3:5,7:11)], use="complete.obs"),2)
+
+# reduce the size of correlation matrix
+melted_corr_mat <- melt(corr_mat) %>% 
+    mutate(cov = substr(Var1,5,6))
+
+# plotting the correlation heatmap
+ggplot(data = melted_corr_mat, aes(x=Var1, y=Var2, 
+								fill=value)) + 
+geom_tile(color = "white")+
+ scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+   midpoint = 0, limit = c(-1,1), space = "Lab", 
+   name="Correlation \n") +
+   theme_minimal()+ 
+ theme(axis.text.x = element_text(vjust = 1, angle = 90),
+       axis.title.x = element_blank(),       # Change x axis title only
+       axis.title.y = element_blank() )+
+ geom_text(aes(Var1, Var2, label = value), 
+		color = "black", 
+        size = 4)  
+
+#! Variation plot for site ----------------------------------------------
+ggplot(close_points_f2, aes(x=ParkUnit, y=BA_m2haM, fill=ParkUnit)) +
+  geom_boxplot() +
+  geom_jitter(position=position_jitter(0.2), alpha = 0.5) +
+  coord_flip() +
+  theme_bw() +
+  theme(legend.position="none",
+        axis.title.y = element_blank(),
+        plot.title = element_text(hjust = 0.5)) +
+  labs(title = "Site Scale",
+       y =" \n  Basal area of live trees \n(>=10cm DBH in m2/ha)") +
+  scale_fill_manual(values = met.brewer("Morgenstern"))
+
+#! park level covs ----------------------------------------------
+park_covs <- for_sit  %>% 
+              mutate(park = substr(Plot_Name, 1, 4))  %>% 
+              group_by(park) %>% 
+              mutate(treeden_haM = mean(treeden_ha, na.rm = T),
+                    BA_m2haM = mean(BA_m2ha, na.rm = T),
+                    tree_richM = mean(tree_rich, na.rm = T),
+                    StageM = Modes(Stage),
+                    pctBA_poleM = mean(pctBA_pole, na.rm = T),
+                    pctBA_matureM = mean(pctBA_mature, na.rm = T),
+                    pctBA_largeM = mean(pctBA_large, na.rm = T),
+                    sap_den_m2M = mean(sap_den_m2, na.rm = T),
+                    shrub_covM = mean(shrub_cov, na.rm = T))  %>% 
+              ungroup() %>% 
+              select(park,
+                    treeden_haM, BA_m2haM, tree_richM, StageM, pctBA_poleM, 
+                    pctBA_matureM, pctBA_largeM, sap_den_m2M, shrub_covM) %>% 
+              distinct()
+
+#! Variation plot for park ----------------------------------------------
+for_sit %>% 
+  mutate(park = substr(Plot_Name, 1, 4))  %>% 
+  filter(park %!in% c("ELRO", "HOFR", "ROVA", "VAMA")) %>%  
+  ggplot(aes(x=park, y=BA_m2ha, fill=park))  +
+    geom_boxplot() +
+    geom_jitter(position=position_jitter(0.2), alpha = 0.3) +
+    coord_flip() +
+    theme_bw() +
+    theme(legend.position="none",
+          axis.title.y = element_blank(),
+          plot.title = element_text(hjust = 0.5)) +
+    labs(title = "Park Scale",
+        y =" \n  Basal area of live trees \n(>=10cm DBH in m2/ha)") +
+    scale_fill_manual(values = met.brewer("Morgenstern")) +
+    stat_summary(colour = "red", size = 0.75)
+
+#! Correlation plots --------------------------------------------------
+## basal area ---------------------------------------------------------
+county_covs <- read_rds(file = "data/FIA/out/tpa_fim.rds") %>% 
+  filter(park %!in% c("ELRO", "HOFR", "ROVA", "VAMA"))  %>% 
+  group_by(park) %>% 
+  mutate(BA_coun = mean(BAA, na.rm = T))  %>% 
+  ungroup() %>% 
+  select(park,
+         BA_coun) %>% 
+  distinct()
+
+park_covs
+
+all_scales_covs <- left_join(county_covs, 
+                             park_covs %>% rename(BA_park = BA_m2haM) %>% select(park, BA_park),
+                             by = "park")
+
+all_scales_covs <- left_join(close_points_f2 %>% rename(BA_site = BA_m2haM, park = ParkUnit) %>% select(park, BA_site),
+                            all_scales_covs,
+                            by = "park") %>% 
+                            distinct()
+all_scales_covs <- all_scales_covs  %>% 
+                     relocate(park, BA_site, BA_park, BA_coun)
+
+# creating correlation matrix
+corr_mat <- round(cor(all_scales_covs[,2:4], use="complete.obs"),2)
+
+# reduce the size of correlation matrix
+melted_corr_mat <- melt(corr_mat) %>% 
+    mutate(cov = substr(Var1,5,6))
+
+# plotting the correlation heatmap
+ggplot(data = melted_corr_mat, aes(x=Var1, y=Var2, 
+								fill=value)) + 
+geom_tile(color = "white")+
+ scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+   midpoint = 0, limit = c(-1,1), space = "Lab", 
+   name="Correlation \n") +
+   theme_minimal()+ 
+ theme(axis.text.x = element_text(vjust = 1, angle = 90),
+       axis.title.x = element_blank(),       # Change x axis title only
+       axis.title.y = element_blank() )+
+ geom_text(aes(Var1, Var2, label = value), 
+		color = "black", 
+        size = 4)  
+
+library("PerformanceAnalytics")
+chart.Correlation(all_scales_covs[,2:4], histogram=TRUE, pch=19)
+
+## density ---------------------------------------------------------
+county_covs <- read_rds(file = "data/FIA/out/tpa_fim.rds") %>% 
+  filter(park %!in% c("ELRO", "HOFR", "ROVA", "VAMA"))  %>% 
+  group_by(park) %>% 
+  # change from per acre to hectare
+  mutate(TPH_coun = mean(TPA*2.471, na.rm = T))  %>% 
+  ungroup() %>% 
+  select(park,
+         TPH_coun) %>% 
+  distinct()
+
+park_covs
+
+all_scales_covs <- left_join(county_covs, 
+                             park_covs %>% rename(TPH_park = treeden_haM) %>% select(park, TPH_park),
+                             by = "park")
+
+all_scales_covs <- left_join(close_points_f2 %>% rename(TPH_site = treeden_haM, park = ParkUnit) %>% select(park, TPH_site),
+                            all_scales_covs,
+                            by = "park") %>% 
+                            distinct()
+all_scales_covs <- all_scales_covs  %>% 
+                     relocate(park, TPH_site, TPH_park, TPH_coun)
+
+# creating correlation matrix
+corr_mat <- round(cor(all_scales_covs[,2:4], use="complete.obs"),2)
+
+# reduce the size of correlation matrix
+melted_corr_mat <- melt(corr_mat) %>% 
+    mutate(cov = substr(Var1,5,6))
+
+# plotting the correlation heatmap
+ggplot(data = melted_corr_mat, aes(x=Var1, y=Var2, 
+								fill=value)) + 
+geom_tile(color = "white")+
+ scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+   midpoint = 0, limit = c(-1,1), space = "Lab", 
+   name="Correlation \n") +
+   theme_minimal()+ 
+ theme(axis.text.x = element_text(vjust = 1, angle = 90),
+       axis.title.x = element_blank(),       # Change x axis title only
+       axis.title.y = element_blank() )+
+ geom_text(aes(Var1, Var2, label = value), 
+		color = "black", 
+        size = 4)  
+
+library("PerformanceAnalytics")
+chart.Correlation(all_scales_covs[,2:4], histogram=TRUE, pch=19)
