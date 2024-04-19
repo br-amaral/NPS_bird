@@ -40,7 +40,6 @@ lenght <- length
 # Import data -----------------------------------------
 ## file paths
 PATH_PARK_GDB <- "data/veg_maps/mabigeodata/mabigeodata.gdb"
-PATH_PARK_GDB <- "/Users/bamaral/Library/Mobile Documents/com~apple~CloudDocs/Documents/GitHub/NPS_birds/data/veg_maps/mabigeodata/mabigeodata.gdb"
 ## read files
 vegp_map <- st_read(PATH_PARK_GDB)
 
@@ -72,3 +71,11 @@ bird_point_veg <- st_intersection(xy_transformed, vegp_map)
 plot(xy_transformed)
 
 plot(bird_point_veg)
+
+# Plot the first variable
+plot(mtcars$mpg)
+
+# Plot the second variable
+plot(mtcars$cyl)
+
+par(mfrow = c(1,1))
