@@ -51,6 +51,11 @@ X2 <- X %>%
     select(siteBA, parkBA, counBA, 
            siteDEN, parkDEN, counDEN)
 
+X2 <- X %>% 
+    distinct() %>% 
+    select(park, parkBA, counBA) %>% 
+    distinct()
+
 # creating correlation matrix
 corr_mat <- round(cor(X2),2)
 
