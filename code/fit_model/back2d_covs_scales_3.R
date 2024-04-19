@@ -286,9 +286,12 @@ cat("\n\n\n running first jags \n\n\n\n")
 params <- c("beta0","beta", "alpha0", "alpha", "scales_beta1", "scales_beta2",
             "mu.beta0", "tau.beta0", "mu.alpha0", "tau.alpha0") # Z, psi
 
+if(yearbo == "yes") { model_file <- "models/mod_1_vector1spsparks_simple_covs_scales.txt"}
+if(yearbo == "no") { model_file <- "models/mod_1_vector1spsparks_simple_covs_scalesnoyear.txt"}
+
 ## initialize JAGS
 jags_model <- rjags::jags.model(
-  file = "models/mod_1_vector1spsparks_simple_covs_scales.txt",
+  file = model_file,
   data = jags.data,
   inits = inits, 
   n.chains = nchains,
@@ -333,7 +336,7 @@ file_name2 <- paste0(file_name, 'run',
 
 write_rds(samples_jags,
           #file = glue({file_name2},'.rds'),
-          file = glue("data/model_res/jags_res_{sps_loop}2dnoA.rds")
+          file = glue("data/model_res/jags_res_{sps_loop}2dnoA1bo.rds")
           )
 
 system_time2 <- Sys.time()

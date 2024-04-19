@@ -1,0 +1,73 @@
+# three part model - occupancy at the three different levels - site, park, county
+# mod_1_vector1spsparks_simple_covs_scales
+
+model {	
+  # Priors
+  ## Sampling process
+  for(r in 1:n_pkM){	      # park r
+    alpha0[r] ~ dnorm(mu.alpha0, tau.alpha0)	
+
+    beta0[r] ~ dnorm(mu.beta0, tau.beta0)	
+  }
+  
+  ## Ecological process
+  for(j in 1:n_bs){         # number of betas
+    beta[j] ~ dnorm(0, 0.36)
+  }
+     
+  for(j in 1:n_as){         # number of alphas
+    alpha[j] ~ dnorm(0, 0.36)
+  }
+  
+  # Hyperpriors for community hyperparameters	
+  ## Ecological process	
+  
+  mu.beta0 ~ dnorm(0, 0.36)
+  tau.beta0 ~ dgamma(0.1,0.1) 
+  
+  ## Sampling process	
+  mu.alpha0 ~ dnorm(0, 0.36)
+  tau.alpha0 ~ dgamma(0.1,0.1) 
+  
+  # Scales
+  scales_beta1 ~ dcat(c(1/3, 1/3, 1/3))	
+  scales_beta2 ~ dcat(c(1/3, 1/3, 1/3))	
+
+  ## Vector loops -------------------------------
+  # short occupancy loop; only first interval
+  for(b in 1:nrowy2){
+  # Occupancy	
+    # occupancy for a park, in a site, in year, 
+    Z[y2[b,2],y2[b,3],y2[b,4]] ~ dbern(psi[y2[b,2],y2[b,3],y2[b,4]])	 # parkey, site_n, year_n
+    
+    # Covariate effects on the ecological process
+    logit(psi[y2[b,2],y2[b,3],y2[b,4]]) <-       # parkey, site_n, year_n
+      beta0[y2[b,2],y2[b,4]] +                   # parkey, year_n
+      # site level, park level and county level BA (tree basal area)
+      beta[1] * X1[b,scales_beta1] +   
+      # site level, park level and county level DEN (tree density)
+      beta[2] * X2[b,scales_beta2] + 
+      # park size
+      beta[3] * X3[b]                   
+  }
+  
+  # longer interval loop, all intervals of the removal sampling (not the first)
+  for(a in 1:nrowy){
+    logit(p[y[a,2],y[a,3],y[a,4],y[a,5]]) <-    # parkey, site_n, year_n, interval_n
+      alpha0[y[a,2]] +                          # intercept - parkey
+      alpha[1] * Xa[a] +                        # day - spskey
+      alpha[2] * (Xa[a])^2 +                    # day squared - spskey,
+      alpha[3] * Xb[a]                          # time - spskey
+    
+    # y[a,1] ~ dbern(p[y[a,2],y[a,3],y[a,4],y[a,5]] * Z[y2[y_ind[a],2],y2[y_ind[a],3],y2[y_ind[a],4]])
+  
+    y[a,1] ~ dbern(p[y[a,2],y[a,3],y[a,4],y[a,5]] * Z[y[a,2],y[a,3],y[a,4]])
+  }
+}
+
+
+
+
+
+
+
