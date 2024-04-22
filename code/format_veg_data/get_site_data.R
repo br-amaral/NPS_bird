@@ -86,6 +86,9 @@ for(ii in 1:length(bird_sit$points)){
 }
 
 nrow(park_site)
+
+write_rds(park_site, file = "data/out/park_site.rds")
+
 # get coordinates from bird plots
 bird_sit_coord <- park_site %>% 
   select(Point_Name,
@@ -117,6 +120,8 @@ xy <- data.frame(ID = 1:nrow(bird_sit_coord),
                  Y = bird_sit_coord$lat)
 coordinates(xy) <- c("X", "Y")
 proj4string(xy) <- CRS("+proj=longlat +datum=WGS84")
+
+write_rds(xy, file = "data/out/bird_site_coords.rds")
 
 for(ii in 1:nrow(xy)){
   band <- as.numeric(bird_sit_coord$UTMZone[ii])
