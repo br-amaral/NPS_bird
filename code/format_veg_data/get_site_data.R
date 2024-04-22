@@ -138,6 +138,7 @@ for(ii in 1:nrow(xy)){
   }
   rm(y)
 }
+
 colnames(utm_bir) <- c("lonutm", "latutm", "UTMZone")
 table(bird_sit_coord$UTMZone == utm_bir$UTMZone)
 
@@ -170,10 +171,11 @@ bird_sit_coord2 <- bird_sit_coord %>%
     mutate(park = substr(bird_sit, 1 , 4)) %>%
     filter(park != "SAIR")
 
-band <- as.numeric(bird_sit_coord$UTMZone[1])
-y <- spTransform(xy[1,], CRS(glue("+proj=utm +zone={band} +datum=WGS84 +units=m")))
 
 for (ii in 1:nrow(bird_sit_coord2)) {
+
+  band <- as.numeric(bird_sit_coord$UTMZone[ii])
+  y <- spTransform(xy[1,], CRS(glue("+proj=utm +zone={band} +datum=WGS84 +units=m")))
 
   bird <- st_as_sf(bird_sit_coord2[ii,5:6], 
                    coords=c("lonutm", "latutm"), 
