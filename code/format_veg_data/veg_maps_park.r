@@ -120,50 +120,48 @@ for(ii in 1:lenght(parks_ana)){
 
     get_parkloop_veg <- get(glue("{park_loop}_vegmap"))
 
-    xy_transformed <- st_transform(xy_sf, crs = st_crs(get_parkloop_veg))
+    xy_transformed <- st_transform(xy_sf_loop, crs = st_crs(get_parkloop_veg))
 
     bird_point_veg <- st_intersection(xy_transformed, get_parkloop_veg)
 
-    plot(xy_transformed)
+    # plot(xy_transformed)
 
-    plot(bird_point_veg)
+    # plot(get_parkloop_veg)
 
-    dim(xy_transformed)
+    # plot(bird_point_veg)
 
-    dim(bird_point_veg)
+    # dim(xy_transformed)
 
-    get_parkloop_veg$MapUnit_Name %>% unique()
+    # dim(bird_point_veg)
 
-    bird_point_veg$MapUnit_Name %>% unique()
+    # get_parkloop_veg$MapUnit_Name %>% unique()
+
+    # bird_point_veg$MapUnit_Name %>% unique()
 
     assign(glue("{park_loop}_birdsite_vegmap"), bird_point_veg)
     
-    rm()
+    key_bsite_l <- bird_point_veg %>% 
+        select(park, Point_Name, UTM_ZONE, 
+               MapUnit_ID,  MapUnit_Name) %>% 
+               as_tibble()
 
-    
+    if(ii == 1){key_bsite <- key_bsite_l
+        } else {
+            key_bsite <- rbind(key_bsite, key_bsite_l)
+        }
+    print(park_loop)
+    print(nrow(key_bsite_l))
+    rm(key_bsite_l)
+    rm(bird_point_veg)
+    rm(park_loop)
+
 }
 
-class(xy)
-class(vegp_map)
+dim(key_bsite)
 
-vegp_map$geometry
-
+# OMG great! now do the same for forest plots!
 
 
-# Now you can apply the st_transform function
-xy_transformed <- st_transform(xy_sf, crs = st_crs(vegp_map))
 
-bird_point_veg <- st_intersection(xy_transformed, vegp_map)
 
-plot(xy_transformed)
-
-plot(bird_point_veg)
-
-dim(xy_transformed)
-
-dim(bird_point_veg)
-
-vegp_map$MapUnit_Name %>% unique()
-
-bird_point_veg$MapUnit_Name
 
