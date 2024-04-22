@@ -40,14 +40,17 @@ lenght <- length
 #
 # Import data -----------------------------------------
 ## file paths
-PATH_PARK_GDB  <- "data/veg_maps/"
-PARK_KEY_PATH  <- "data/src/key_park.rds"
-PARK_SITE_PATH <-  "data/out/park_site.rds"
+PATH_PARK_GDB   <- "data/veg_maps/"
+PARK_KEY_PATH   <- "data/src/key_park.rds"
+PARK_SITE_PATH  <- "data/out/park_site.rds"
+BIRD_SITE_COORD <- "data/out/bird_site_coords.rds"
+FOR_SITE_COORD  <- "data/out/for_sit_coord.rds"
 
 ## read files
 parks <- read_rds(file = PARK_KEY_PATH) 
-
 park_site <- read_rds(file = PARK_SITE_PATH) 
+xy <- read_rds(file = BIRD_SITE_COORD)
+xy2 <- read_rds(file = FOR_SITE_COORD)
 
 ## format files
 parks <- parks %>% 
@@ -96,16 +99,13 @@ for(ii in 1:lenght(parks)){
     }
 }
 
-xy <- read_rds(file = "data/out/bird_site_coords.rds")
 
+#! get park X and Y coordinates ----------------------------------
 xy$park <- park_site$Admin_Unit_Code
 xy$Point_Name <- park_site$Point_Name
 xy$UTM_ZONE <- park_site$UTM_ZONE
 
 str(xy)
-
-# ERROR: does not work, not sure if it necessary
-#xy2 <- spTransform(xy, st_crs(vegp_map))
 
 # Convert the SpatialPointsDataFrame to an sf object
 xy_sf <- st_as_sf(xy)
@@ -160,8 +160,81 @@ for(ii in 1:lenght(parks_ana)){
 dim(key_bsite)
 
 # OMG great! now do the same for forest plots!
+xy3 <- data.frame(ID = xy2$for_sit, 
+                  park = substr(xy2$for_sit, 1, 4),
+                  X =  xy2$lonutm, 
+                  Y =  xy2$latutm,
+                  zone = as.numeric(xy2$UTMZone))
+library(bcmaps)
+xy4 <- utm_convert(xy3, easting = "X", northing = "Y",
+                   zone = "zone", crs = "WGS84")
 
+projcrs <- "+proj=utm +datum=WGS84 +units=m"
+xy_sf2 <- st_as_sf(xy4)
 
+# load forest plots, add rova in the list and rova veg_map
+parks_ana2 <- c(parks_ana[which(parks_ana %in% tolower(unique(xy3$park)))],
+                "rova")
+PATH_PARK_LOOP <- glue("{PATH_PARK_GDB}rovageodata/rovageodata.gdb")
+rova_vegmap <- sf::st_read(PATH_PARK_LOOP, 
+                           layer = glue("ROVA_VegPolys"))
+
+for(ii in 1:lenght(parks_ana2)){
+    (park_loop <- tolower(parks_ana2[ii]))
+
+    # Now you can apply the st_transform function
+    xy_sf_loop2 <- xy_sf2 %>% filter(park == toupper(park_loop))
+    #st_crs(xy_sf_loop2) <- CRS("+proj=longlat +datum=WGS84")
+
+    get_parkloop_veg2 <- get(glue("{park_loop}_vegmap"))
+
+    xy_transformed2 <- sf::st_transform(xy_sf_loop2, 
+                                        crs = st_crs(get_parkloop_veg2))
+
+    # st_crs(xy_transformed2) == st_crs(xy_sf_loop2)
+    # st_crs(xy_transformed2) == st_crs(get_parkloop_veg2)
+
+    for_point_veg <- st_intersection(xy_transformed2, get_parkloop_veg2)
+
+    # plot(xy_transformed2)
+    # st_crs(xy_transformed2)
+
+    # plot(xy_sf_loop2)
+    # st_crs(xy_sf_loop2)
+
+    # plot(get_parkloop_veg2)
+    # st_crs(get_parkloop_veg2)
+
+    # plot(for_point_veg)
+
+    # dim(xy_transformed2)
+
+    # dim(for_point_veg)
+
+    # get_parkloop_veg$MapUnit_Name %>% unique()
+
+    # bird_point_veg$MapUnit_Name %>% unique()
+
+    assign(glue("{park_loop}_forsite_vegmap"), for_point_veg)
+    
+    key_fsite_l <- for_point_veg %>% 
+        select(park, ID, 
+               X, Y, zone, 
+               MapUnit_ID) %>% 
+               as_tibble()
+
+    if(ii == 1){key_fsite <- key_fsite_l
+        } else {
+            key_fsite <- rbind(key_fsite, key_fsite_l)
+        }
+    print(park_loop)
+    print(nrow(key_fsite_l))
+    rm(key_fsite_l)
+    rm(for_point_veg)
+    rm(park_loop)
+}
+
+key_fsite  %>% tail()
 
 
 

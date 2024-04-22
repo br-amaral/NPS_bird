@@ -51,7 +51,7 @@ lenght <- length
 BIRD_SITE_PATH    <- "data/out/NETNtib.rds"
 PARK_SITE_PATH    <- "data/src/key_park.rds"
 FORCOVS_SITE_PATH <- "data/veg_kateaaron/NETN_forest_data_2006-2023.rds"
-FORSPS_SITE_PATH    <- "data/veg_kateaaron/NETN_tree_dens_spp_2006-2023.rds"
+FORSPS_SITE_PATH  <- "data/veg_kateaaron/NETN_tree_dens_spp_2006-2023.rds"
 FOR_SITE_PATH     <- "data/veg_kateaaron/for_sites.rds"
 
 ## read files
@@ -109,6 +109,7 @@ for_sit_coord <- for_sit_coord %>%
   mutate(UTMZone = substr(UTMZone, 1 , 2))
 
 colnmaes(for_sit_coord); colnmaes(bird_sit_coord)
+write_rds(for_sit_coord, file = "data/out/for_sit_coord.rds")
 
 par(mfrow = c(1,2))
 plot(for_sit_coord$lonutm, for_sit_coord$latutm)
