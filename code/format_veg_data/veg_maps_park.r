@@ -234,7 +234,9 @@ for(ii in 1:lenght(parks_ana2)){
     rm(park_loop)
 }
 
-key_fsite  %>% tail()
+key_fsite %>% tail()
 
+write_rds(key_fsite, file = "data/out/key_fsite.rds")
+write_rds(key_bsite, file = "data/out/key_bsite.rds")
 
 
