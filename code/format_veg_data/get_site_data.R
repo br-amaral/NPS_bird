@@ -53,13 +53,16 @@ PARK_SITE_PATH    <- "data/src/key_park.rds"
 FORCOVS_SITE_PATH <- "data/veg_kateaaron/NETN_forest_data_2006-2023.rds"
 FORSPS_SITE_PATH  <- "data/veg_kateaaron/NETN_tree_dens_spp_2006-2023.rds"
 FOR_SITE_PATH     <- "data/veg_kateaaron/for_sites.rds"
-
+BIRD_FOR_PATH     <- "data/out/key_bsite.rds"
+FOR_FOR_PATH      <- "data/out/key_fsite.rds"
 ## read files
-bird_sit <- read_rds(file = BIRD_SITE_PATH)
-parks <- read_rds(file = PARK_SITE_PATH) 
-for_sit <- read_rds(file = FORCOVS_SITE_PATH)
-fordiv_sit <- read_rds(file = FORSPS_SITE_PATH)
+bird_sit      <- read_rds(file = BIRD_SITE_PATH)
+parks         <- read_rds(file = PARK_SITE_PATH) 
+for_sit       <- read_rds(file = FORCOVS_SITE_PATH)
+fordiv_sit    <- read_rds(file = FORSPS_SITE_PATH)
 for_sit_coord <- read_rds(file = FOR_SITE_PATH)
+key_bsite     <- read_rds(file = BIRD_FOR_PATH)
+key_fsite     <- read_rds(file = FOR_FOR_PATH)
 
 #! get coordinates from the bird plots ------------------------------
 parks <- parks %>% 
@@ -166,29 +169,49 @@ ggplot() +
 
 #! Connect forest sites and bird sites --------------------
 # SAIR does not have forest plots, so it is gonna be reved for now 
-bird_sit_coord2 <- bird_sit_coord %>% 
-    as_tibble() %>% 
-    mutate(park = substr(bird_sit, 1 , 4)) %>%
-    filter(park != "SAIR")
+#bird_sit_coord2 <- bird_sit_coord %>% 
+#    as_tibble() %>% 
+#    mutate(park = substr(bird_sit, 1 , 4)) %>%
+#    filter(park != "SAIR")
 
+# link forest types with sites
+bird_sit_coord2 <- left_join(bird_sit_coord, 
+                             key_bsite %>% 
+                                rename(bird_sit = Point_Name,
+                                       b_for = MapUnit_ID) %>% 
+                                select(bird_sit, b_for),
+                             by = "bird_sit")
+
+for_sit_coord2 <- left_join(for_sit_coord  %>% 
+                              mutate(park = substr(for_sit, 1, 4)), #%>% 
+                              #filter(park != "ACAD") %>% 
+                              #filter(park != "SAIR"), 
+                           key_fsite %>% 
+                              rename(for_sit = ID,
+                                     f_for = MapUnit_ID) %>% 
+                              select(for_sit, f_for, geometry),
+                           by = "for_sit")
 
 for (ii in 1:nrow(bird_sit_coord2)) {
 
-  band <- as.numeric(bird_sit_coord$UTMZone[ii])
-  y <- spTransform(xy[1,], CRS(glue("+proj=utm +zone={band} +datum=WGS84 +units=m")))
+  band <- as.numeric(bird_sit_coord2$UTMZone[ii])
+  y <- spTransform(xy[ii,], CRS(glue("+proj=utm +zone={band} +datum=WGS84 +units=m")))
 
   bird <- st_as_sf(bird_sit_coord2[ii,5:6], 
                    coords=c("lonutm", "latutm"), 
                    crs = CRS(proj4string(y)))
 
-  fore <- st_as_sf(for_sit_coord[,2:3], 
-                   coords=c("lonutm", "latutm"), 
-                   crs = CRS(proj4string(y)))
+  for(jj in 1:nrow(for_sit_coord2)) {
+    band2 <- as.numeric(for_sit_coord2$UTMZone[ii])
+    x <- spTransform(xy[ii,], CRS(glue("+proj=utm +zone={band2} +datum=WGS84 +units=m")))
 
-  for(jj in 1:nrow(for_sit_coord)) {
+    fore <- st_as_sf(for_sit_coord2[,2:3], 
+                   coords=c("lonutm", "latutm"), 
+                   crs = CRS(proj4string(x)))
+
     distances <- st_distance(bird, fore[jj,], by_element = TRUE)
  
-    distances2 <- cbind(as.numeric(distances), for_sit_coord$for_sit[jj]) %>% 
+    distances2 <- cbind(as.numeric(distances), for_sit_coord2$for_sit[jj]) %>% 
         as_tibble() %>% 
         rename(dist = V1, 
                for_sit = V2) %>% 
