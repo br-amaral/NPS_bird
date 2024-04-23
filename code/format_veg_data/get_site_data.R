@@ -180,7 +180,8 @@ bird_sit_coord2 <- left_join(bird_sit_coord,
                                 rename(bird_sit = Point_Name,
                                        b_for = MapUnit_ID) %>% 
                                 select(bird_sit, b_for),
-                             by = "bird_sit")
+                             by = "bird_sit") %>% 
+                   filter(!is.na(b_for))
 
 for_sit_coord2 <- left_join(for_sit_coord  %>% 
                               mutate(park = substr(for_sit, 1, 4)), #%>% 
@@ -190,7 +191,8 @@ for_sit_coord2 <- left_join(for_sit_coord  %>%
                               rename(for_sit = ID,
                                      f_for = MapUnit_ID) %>% 
                               select(for_sit, f_for, geometry),
-                           by = "for_sit")
+                           by = "for_sit") %>% 
+                   filter(!is.na(f_for))
 
 for (ii in 1:nrow(bird_sit_coord2)) {
 
@@ -202,33 +204,39 @@ for (ii in 1:nrow(bird_sit_coord2)) {
                    crs = CRS(proj4string(y)))
 
   for(jj in 1:nrow(for_sit_coord2)) {
-    band2 <- as.numeric(for_sit_coord2$UTMZone[ii])
-    x <- spTransform(xy[ii,], CRS(glue("+proj=utm +zone={band2} +datum=WGS84 +units=m")))
+    
+    if((bird_sit_coord2$b_for[ii] == for_sit_coord2$f_for[jj]) == TRUE){
 
-    fore <- st_as_sf(for_sit_coord2[,2:3], 
-                   coords=c("lonutm", "latutm"), 
-                   crs = CRS(proj4string(x)))
+      band2 <- as.numeric(for_sit_coord2$UTMZone[ii])
+      x <- spTransform(xy[ii,], CRS(glue("+proj=utm +zone={band2} +datum=WGS84 +units=m")))
 
-    distances <- st_distance(bird, fore[jj,], by_element = TRUE)
- 
-    distances2 <- cbind(as.numeric(distances), for_sit_coord2$for_sit[jj]) %>% 
-        as_tibble() %>% 
-        rename(dist = V1, 
-               for_sit = V2) %>% 
-        mutate(dist = as.numeric(dist))
+      fore <- st_as_sf(for_sit_coord2[,2:3], 
+                    coords=c("lonutm", "latutm"), 
+                    crs = CRS(proj4string(x)))
 
-    if(jj == 1) {
-      dist <- distances2
-    } else {
-      dist <- rbind(dist, distances2)
-    }
+      distances <- st_distance(bird, fore[jj,], by_element = TRUE)
+  
+      distances2 <- cbind(as.numeric(distances), for_sit_coord2$for_sit[jj]) %>% 
+          as_tibble() %>% 
+          rename(dist = V1, 
+                for_sit = V2) %>% 
+          mutate(dist = as.numeric(dist),
+                for_b = as.character(bird_sit_coord2$b_for[ii]),
+                for_f = as.character(for_sit_coord2$f_for[jj]))
+    
+      if("dist1" %!in% ls()) {
+          dist1 <- distances2
+        } else {
+          dist1 <- rbind(dist1, distances2)
+        } 
+    } 
   }
-  dist_small <- dist %>% 
+  dist_small <- dist1 %>% 
                   arrange(dist) #%>% 
                   #filter(dist <= 1000) 
 
-# ERROR: NOT REALLY AN ERROR
-  close_points <- head(dist_small, 1) # TODO: 
+# ERROR: NOT REALLY AN ERROR, just choosing how many neighbours
+  close_points <- head(dist_small, 5) # TODO: 
   close_points <- close_points %>% 
                     mutate(bird_sit = bird_sit_coord2$bird_sit[ii])
   if(ii == 1) {
