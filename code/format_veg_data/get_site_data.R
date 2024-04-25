@@ -366,7 +366,7 @@ park_covs <- for_sit  %>%
 #! Variation plot for park ----------------------------------------------
 for_sit %>% 
   mutate(park = substr(Plot_Name, 1, 4))  %>% 
-  filter(park %!in% c("ELRO", "HOFR", "ROVA", "VAMA")) %>%  
+  #filter(park %!in% c("ELRO", "HOFR", "ROVA", "VAMA")) %>%  
   ggplot(aes(x=park, y=BA_m2ha, fill=park))  +
     geom_boxplot() +
     geom_jitter(position=position_jitter(0.2), alpha = 0.3) +
@@ -397,10 +397,12 @@ all_scales_covs <- left_join(county_covs,
                              park_covs %>% rename(BA_park = BA_m2haM) %>% select(park, BA_park),
                              by = "park")
 
-all_scales_covs <- left_join(close_points_f2 %>% rename(BA_site = BA_m2haM, park = ParkUnit) %>% select(park, BA_site),
-                            all_scales_covs,
-                            by = "park") %>% 
-                            distinct()
+all_scales_covs <- left_join(close_points_f2 %>% 
+                                rename(BA_site = BA_m2haM) %>% 
+                                select(park, BA_site),
+                             all_scales_covs,
+                             by = "park") %>% 
+                             distinct()
 all_scales_covs <- all_scales_covs  %>% 
                      relocate(park, BA_site, BA_park, BA_coun)
 
@@ -443,13 +445,18 @@ county_covs <- read_rds(file = "data/FIA/out/tpa_fim.rds") %>%
 park_covs
 
 all_scales_covs <- left_join(county_covs, 
-                             park_covs %>% rename(TPH_park = treeden_haM) %>% select(park, TPH_park),
+                             park_covs %>% 
+                                rename(TPH_park = treeden_haM) %>% 
+                                select(park, TPH_park),
                              by = "park")
 
-all_scales_covs <- left_join(close_points_f2 %>% rename(TPH_site = treeden_haM, park = ParkUnit) %>% select(park, TPH_site),
-                            all_scales_covs,
-                            by = "park") %>% 
-                            distinct()
+all_scales_covs <- left_join(close_points_f2 %>% 
+                                rename(TPH_site = treeden_haM) %>% 
+                                select(park, TPH_site),
+                             all_scales_covs,
+                             by = "park") %>% 
+                             distinct()
+
 all_scales_covs <- all_scales_covs  %>% 
                      relocate(park, TPH_site, TPH_park, TPH_coun)
 
@@ -475,5 +482,4 @@ geom_tile(color = "white")+
 		color = "black", 
         size = 4)  
 
-library("PerformanceAnalytics")
 chart.Correlation(all_scales_covs[,2:4], histogram=TRUE, pch=19)
