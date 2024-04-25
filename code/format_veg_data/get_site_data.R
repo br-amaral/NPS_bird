@@ -207,7 +207,7 @@ for (ii in 1:nrow(bird_sit_coord2)) {
     
     if((bird_sit_coord2$b_for[ii] == for_sit_coord2$f_for[jj]) == TRUE){
 
-      band2 <- as.numeric(for_sit_coord2$UTMZone[ii])
+      band2 <- as.numeric(for_sit_coord2$UTMZone[jj])
       x <- spTransform(xy[ii,], CRS(glue("+proj=utm +zone={band2} +datum=WGS84 +units=m")))
 
       fore <- st_as_sf(for_sit_coord2[,2:3], 
@@ -232,8 +232,8 @@ for (ii in 1:nrow(bird_sit_coord2)) {
     } 
   }
   dist_small <- dist1 %>% 
-                  arrange(dist) #%>% 
-                  #filter(dist <= 1000) 
+                  arrange(dist) %>% 
+                  filter(dist <= 500) # diameter of the home range area of birds plus some slack if it is not circular 
 
 # ERROR: NOT REALLY AN ERROR, just choosing how many neighbours
   close_points <- head(dist_small, 5) # TODO: 
@@ -252,9 +252,7 @@ close_points_f <- read_rds(file = "data/out/close_points_f1.rds")
 
 close_points_f
 
-close_points_f  %>% filter(substr(for_sit, 1, 4) == "MABI") %>% arrange(bird_sit)
-
-table(close_points_f$bird_sit)
+table(close_points_f$bird_sit) %>% sort()
 
 table(for_sit$SampleYear) %>% max()
 
@@ -303,7 +301,8 @@ close_points_f2 <- left_join(close_points_f, for_sit2, by = "for_sit") %>%
          sap_den_m2M = mean(sap_den_m2M, na.rm = T),
          shrub_covM = mean(shrub_covM, na.rm = T))  %>% 
   ungroup() %>% 
-  select(bird_sit, ParkUnit,
+  mutate(park = substr(bird_sit, 1, 4)) %>%
+  select(bird_sit, park,
          treeden_haM, BA_m2haM, tree_richM, StageM, pctBA_poleM, 
          pctBA_matureM, pctBA_largeM, sap_den_m2M, shrub_covM) %>% 
   distinct()
@@ -334,7 +333,7 @@ geom_tile(color = "white")+
         size = 4)  
 
 #! Variation plot for site ----------------------------------------------
-ggplot(close_points_f2, aes(x=ParkUnit, y=BA_m2haM, fill=ParkUnit)) +
+ggplot(close_points_f2, aes(x=park, y=BA_m2haM, fill=park)) +
   geom_boxplot() +
   geom_jitter(position=position_jitter(0.2), alpha = 0.5) +
   coord_flip() +
@@ -343,8 +342,7 @@ ggplot(close_points_f2, aes(x=ParkUnit, y=BA_m2haM, fill=ParkUnit)) +
         axis.title.y = element_blank(),
         plot.title = element_text(hjust = 0.5)) +
   labs(title = "Site Scale",
-       y =" \n  Basal area of live trees \n(>=10cm DBH in m2/ha)") +
-  scale_fill_manual(values = met.brewer("Morgenstern"))
+       y =" \n  Basal area of live trees \n(>=10cm DBH in m2/ha)")
 
 #! park level covs ----------------------------------------------
 park_covs <- for_sit  %>% 
