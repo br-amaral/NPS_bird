@@ -42,7 +42,7 @@ model {
     
     # Covariate effects on the ecological process
     logit(psi[y2[b,2],y2[b,3],y2[b,4]]) <-       # parkey, site_n, year_n
-      beta0[y2[b,2],y2[b,4]] +                   # parkey, year_n
+      beta0[y2[b,2]] +                   # parkey, year_n
       # site level, park level and county level BA (tree basal area)
       beta[1] * X1[b,scales_beta1] +   
       # site level, park level and county level DEN (tree density)
