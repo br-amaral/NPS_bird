@@ -247,7 +247,7 @@ for (ii in 1:nrow(bird_sit_coord2)) {
   print(ii)
 }
 
-# write_rds(close_points_f, file = "data/out/close_points_f2.rds")
+# write_rds(close_points_f, file = "data/out/close_points_f1.rds")
 close_points_f <- read_rds(file = "data/out/close_points_f1.rds")
 
 close_points_f
@@ -266,6 +266,7 @@ Modes <- function(x) {
       ux[tab == max(tab)]}
 }
 
+## mean for all years
 for_sit2 <- for_sit %>% 
   #filter(SampleYear == 2022) %>% 
   group_by(Plot_Name) %>% 
@@ -288,7 +289,6 @@ for_sit2 <- for_sit %>%
          pctBA_matureM, pctBA_largeM, sap_den_m2M, shrub_covM) %>% 
   distinct()
   
-  
 close_points_f2 <- left_join(close_points_f, for_sit2, by = "for_sit") %>% 
     group_by(bird_sit) %>%
   mutate(treeden_haM = mean(treeden_haM, na.rm = T),
@@ -307,8 +307,7 @@ close_points_f2 <- left_join(close_points_f, for_sit2, by = "for_sit") %>%
          pctBA_matureM, pctBA_largeM, sap_den_m2M, shrub_covM) %>% 
   distinct()
 
-
-# write_rds(close_points_f2, file = "data/out/close_points_fcovs.rds")
+write_rds(close_points_f2, file = "data/out/close_points_fcovs.rds")
 
 # creating correlation matrix
 corr_mat <- round(cor(close_points_f2[,c(3:5,7:11)], use="complete.obs"),2)
@@ -343,6 +342,7 @@ ggplot(close_points_f2, aes(x=park, y=BA_m2haM, fill=park)) +
         plot.title = element_text(hjust = 0.5)) +
   labs(title = "Site Scale",
        y =" \n  Basal area of live trees \n(>=10cm DBH in m2/ha)")
+
 
 #! park level covs ----------------------------------------------
 park_covs <- for_sit  %>% 
