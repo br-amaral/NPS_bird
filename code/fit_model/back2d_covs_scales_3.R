@@ -14,13 +14,12 @@
 # Output ---------------------------------------------
 #           - data/model_res/jags_res_{sps}_{park}_run{run_number}.rds: file with result of jags model
 
-
-
 # detach packages and clear workspace
-#if(!require(freshr)){install.packages("freshr")}
-#freshr::freshr()
+# if(!require(freshr)){install.packages("freshr")}
+# freshr::freshr()
 
 script_name <- 'back2d_covs_scales_3.R'
+
 paste('\n ************************************** \n \n \n Running scrip', script_name, '\n \n \n',
       '**************************************
       ') %>% cat
@@ -245,6 +244,23 @@ length(X3)
 n_bs <- 3
 n_as <- 3
 
+#! TODO: for now, im putting zeros in the occasions that have no environmental data
+ for(i in 1:nrow(X1)) {
+    for(j in 1:3) {
+      if(is.na(X1[i,j])) {
+        X1[i,j] <- 0
+
+      if(is.na(X2[i,j])) {
+        X2[i,j] <- 0
+      }
+    }
+       
+    if(is.na(X3[i])) {
+      X3[i] <- 0
+    }
+  }
+ }
+
 # model
 str(jags.data <- list(y = y,
                       y2 = y2,
@@ -266,9 +282,9 @@ inits <- function()list(Z = Zst2
 #, beta0 = rnorm(10,0.6), beta1 = rnorm(10,0.6)
 )
 
-niterations <- 10000
-burnin <- 5000
-nchains <- 3
+niterations <- 20000
+burnin <- 10000
+nchains <- 5
 
 if(length(sps_loop) > 1) { sps_name <- "commu"} else {sps_name <- sps_loop}
 if(length((unique(y[,2]))) == 1) { park_name <- unique(y[,2])} else {park_name <- "parks"}
@@ -280,7 +296,7 @@ paste('\n ************************************* \n \n \n Running JAGS for:', '\n
       'Data size =', nrow(y), '\n',
       'Started running on =', Sys.time(),  '\n \n \n',
       '**************************************
-      ') %>% cat
+      ') %>% cat()
 
 cat("\n\n\n running first jags \n\n\n\n")
 params <- c("beta0","beta", "alpha0", "alpha", "scales_beta1", "scales_beta2",
@@ -335,8 +351,8 @@ file_name2 <- paste0(file_name, 'run',
                                        full.names = FALSE)) + 1)
 
 write_rds(samples_jags,
-          #file = glue({file_name2},'.rds'),
-          file = glue("data/model_res/jags_res_{sps_loop}2dnoA1bo.rds")
+          file = glue({file_name2},'.rds'),
+          #file = glue("data/model_res/jags_res_{sps_loop}2dnoA1bo.rds")
           )
 
 system_time2 <- Sys.time()
@@ -362,7 +378,8 @@ paste('\n ************************************** \n \n \n ---------------- DONE 
       'Started running on =', system_time1, '\n',
       'Stopped running on =', system_time2, '\n',
       'Time it took =', time_it_took , unit_time,  '\n \n \n',
-      '**************************************') %>% cat
+      '**************************************  \n') %>% 
+      cat()
 
 
 
@@ -390,4 +407,5 @@ paste('\n ************************************** \n \n \n ---------------- DONE 
 # MCMCplot(samples_jags,
 #          #params = params[c(2,4,5,7)],
 #          ref_ovl = TRUE)
+
 
