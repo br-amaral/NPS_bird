@@ -58,7 +58,10 @@ parks <- parks %>%
   distinct() %>% 
   pull()
 
-parks <- parks[-1]
+parks_remove <- c("ACAD", "MIMA")
+
+parks <- parks[which(parks %!in% parks_remove)]
+
 # loop to load all park files
 park_folder <- list.files(path = "data/veg_maps/")
 folder_names <- substr(park_folder, 1, 4)
