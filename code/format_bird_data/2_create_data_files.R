@@ -74,9 +74,8 @@ yog <- y1
 # Import data -----------------------------------------
 ## file paths
 
-PATH_TREE_BA_SITE <- "data/NETN-forest/tree_ba_import.rds"
-PATH_TREE_DEN_SITE <- "data/NETN-forest/tree_den_import.rds"
-PATH_TREE_STR_SITE <- "data/NETN-forest/stand_import.rds"
+#  Point_Name siteBA site_n park 
+PATH_SITE_COVS <- "data/out/close_points_fcovs.rds"
 
 PATH_TREE_BA_PARK <- "data/NETN-forest/tree_ba_tab_park.rds"
 PATH_TREE_DEN_PARK <- "data/NETN-forest/tree_den_tab_park.rds"
@@ -479,12 +478,12 @@ nrow(spy_grid_yesdetec_cov3)/nrow(spy_grid_yesdetec_cov2) == 10
 y_dat3 <- y_dat3 %>% 
    mutate(Admin_Unit_Code = park) 
 
-colnmaes(spy_grid_yesdetec_cov3) %>% sort() == colnames(y_dat3) %>% sort()
+colnames(spy_grid_yesdetec_cov3) %>% sort() == colnames(y_dat3) %>% sort()
 
 spy_grid_yesdetec_cov4 <- spy_grid_yesdetec_cov3 %>% 
    relocate(colnames(y_dat3))
 
-colnmaes(spy_grid_yesdetec_cov4)  == colnames(y_dat3) 
+colnames(spy_grid_yesdetec_cov4)  == colnames(y_dat3) 
 
 y_dat4 <- rbind(y_dat3,
                 spy_grid_yesdetec_cov4)
@@ -521,41 +520,33 @@ site_key <- y_dat6 %>%
    distinct()
 
 ## site ------------
-## no data for all years, chosing 2018 for now
-tree_ba_tab_site <- read_rds(PATH_TREE_BA_SITE) %>% 
-  mutate(park = substr(Point_Name, 1, 4)) %>% 
-  select(Point_Name, park, site_n, Year, total_BA) 
+## no data for all years, using mean between years
+close_points_f2 <- read_rds(PATH_SITE_COVS)
 
-tree_ba_tab_site <- tree_ba_tab_site %>% 
-  na.omit() %>% 
-  group_by(Point_Name) %>% 
-  summarise(mean_tot_BA = mean(total_BA)) %>% 
-  left_join(., site_key, by = "Point_Name") %>% 
-  rename(siteBA = mean_tot_BA)
+tree_ba_tab_site <- close_points_f2 %>% 
+  mutate(Point_Name = bird_sit,
+         siteBA = BA_m2haM) %>% 
+  left_join(., site_key, by = c("Point_Name", "park")) %>%
+  select(Point_Name, park, site_n, siteBA) 
 
 X1 <- left_join(X, tree_ba_tab_site %>% select(-Point_Name), by = c("park", "site_n"))
 
-tree_den_tab_site <- read_rds(PATH_TREE_DEN_SITE) %>% 
-  mutate(park = substr(Point_Name, 1, 4)) %>% 
-  select(Point_Name, park, Year, total_den) %>% 
-  na.omit() %>% 
-  group_by(Point_Name) %>% 
-  summarise(mean_tot_den = mean(total_den)) %>% 
-  left_join(., site_key, by = "Point_Name") %>% 
-  rename(siteDEN = mean_tot_den)
+tree_den_tab_site <- close_points_f2 %>% 
+  mutate(Point_Name = bird_sit,
+         siteDEN = treeden_haM) %>% 
+  left_join(., site_key, by = c("Point_Name", "park")) %>% 
+  select(Point_Name, park, site_n, siteDEN) 
 
 X2 <- left_join(X1, tree_den_tab_site, by = c("park", "site_n", "Point_Name"))
 
-stand_struc_tab_site <- read_rds(PATH_TREE_STR_SITE) %>% 
-  mutate(park = substr(Point_Name, 1, 4)) %>% 
-  select(Point_Name, park, Year, 
-         Pct_Understory_Low, Pct_Understory_Mid, Pct_Understory_High) %>% 
-  na.omit() %>% 
-  group_by(Point_Name) %>% 
-  summarise(mean_low = mean(Pct_Understory_Low),
-            #mean_mid = mean(Pct_Understory_Mid),
-            mean_high = mean(Pct_Understory_High)) %>% 
-  left_join(., site_key, by = "Point_Name") 
+stand_struc_tab_site <- close_points_f2 %>% 
+  mutate(Point_Name = bird_sit) %>% 
+  select(Point_Name,
+         park,
+         pctBA_poleM,
+         pctBA_matureM,
+         pctBA_largeM) %>%
+  left_join(., site_key, by = c("Point_Name", "park")) 
 
 X3 <- left_join(X2, stand_struc_tab_site, by = c("park", "site_n", "Point_Name"))
 
@@ -606,7 +597,7 @@ park_size$park <- sort(unique(y_dat4$park))
   
 for(i in 1:length(pk)) {
   pb <- read_rds(file = glue("data/park_raster/{pk[i]}_pb.rds"))
-  park_size[i,2] <- raster::area(pb)   # suqre km
+  park_size[i,2] <- raster::area(pb)   # square km
 }
 
 if(length(park_size) > 1) {
