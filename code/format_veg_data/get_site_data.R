@@ -72,6 +72,7 @@ parks <- parks %>%
 
 parks <- sort(parks)
 
+
 for(ii in 1:length(bird_sit$points)){
   coord_loop <- 
     bird_sit$points[ii][[1]] %>% 
@@ -152,6 +153,7 @@ park_plot_nam <- bird_sit_coord %>%
               group_by(park) %>% 
               filter(row_number()==1) %>%
               ungroup()
+
 ggplot() +
   geom_point(aes(x = bird_sit_coord$lonutm, 
                  y = bird_sit_coord$latutm),
@@ -168,14 +170,16 @@ ggplot() +
 # great - it all alligns very well; now let's get the closest 3 sites
 
 #! Connect forest sites and bird sites --------------------
-# SAIR does not have forest plots, so it is gonna be reved for now 
-#bird_sit_coord2 <- bird_sit_coord %>% 
-#    as_tibble() %>% 
-#    mutate(park = substr(bird_sit, 1 , 4)) %>%
-#    filter(park != "SAIR")
+#TODO: attentionnnn
+# SAIR does not have forest plots, so it is gonna be removed for now 
+bird_sit_coord2 <- bird_sit_coord %>% 
+    as_tibble() %>% 
+    mutate(park = substr(bird_sit, 1 , 4)) %>%
+    filter(park != "SAIR") %>% 
+    select(-park)
 
 # link forest types with sites
-bird_sit_coord2 <- left_join(bird_sit_coord, 
+bird_sit_coord2 <- left_join(bird_sit_coord2, 
                              key_bsite %>% 
                                 rename(bird_sit = Point_Name,
                                        b_for = MapUnit_ID) %>% 
@@ -194,6 +198,29 @@ for_sit_coord2 <- left_join(for_sit_coord  %>%
                            by = "for_sit") %>% 
                    filter(!is.na(f_for))
 
+# make sure parks patch with forest sites only within the same park
+for_sit_coord_minusrova <- for_sit_coord2 %>% 
+  filter(park != "ROVA")
+
+for_sit_coord_rova <- for_sit_coord2 %>% 
+  filter(park == "ROVA") %>% 
+  select(-park)
+
+for_sit_coord_elro <- for_sit_coord_rova %>% 
+  mutate(park = "ELRO")
+for_sit_coord_vama <- for_sit_coord_rova %>% 
+  mutate(park = "VAMA")
+for_sit_coord_hofr <- for_sit_coord_rova %>% 
+  mutate(park = "HOFR")
+
+for_sit_coord3 <- rbind(for_sit_coord_minusrova, 
+                        for_sit_coord_elro, 
+                        for_sit_coord_vama, 
+                        for_sit_coord_hofr)
+
+#bird_sit_coord2 <- bird_sit_coord2[1:11,]
+
+# get neighbors
 for (ii in 1:nrow(bird_sit_coord2)) {
 
   band <- as.numeric(bird_sit_coord2$UTMZone[ii])
@@ -203,26 +230,37 @@ for (ii in 1:nrow(bird_sit_coord2)) {
                    coords=c("lonutm", "latutm"), 
                    crs = CRS(proj4string(y)))
 
-  for(jj in 1:nrow(for_sit_coord2)) {
-    
-    if((bird_sit_coord2$b_for[ii] == for_sit_coord2$f_for[jj]) == TRUE){
+  plop <- substr(bird_sit_coord2$bird_sit[ii], 1, 4)
 
-      band2 <- as.numeric(for_sit_coord2$UTMZone[jj])
+  for_sit_coord4 <- for_sit_coord3 %>% 
+                      filter(park == plop)
+  
+  print(bird_sit_coord2$bird_sit[ii])
+
+  for(jj in 1:nrow(for_sit_coord4)) {
+    
+    if((bird_sit_coord2$b_for[ii] == for_sit_coord4$f_for[jj]) == TRUE){
+    
+      print(for_sit_coord4$for_sit[jj])
+      print(jj)
+
+      band2 <- as.numeric(for_sit_coord4$UTMZone[jj])
       x <- spTransform(xy[ii,], CRS(glue("+proj=utm +zone={band2} +datum=WGS84 +units=m")))
 
-      fore <- st_as_sf(for_sit_coord2[,2:3], 
+      fore <- st_as_sf(for_sit_coord4[,2:3], 
                     coords=c("lonutm", "latutm"), 
                     crs = CRS(proj4string(x)))
 
       distances <- st_distance(bird, fore[jj,], by_element = TRUE)
   
-      distances2 <- cbind(as.numeric(distances), for_sit_coord2$for_sit[jj]) %>% 
+      distances2 <- cbind(as.numeric(distances), for_sit_coord4$for_sit[jj]) %>% 
           as_tibble() %>% 
           rename(dist = V1, 
                 for_sit = V2) %>% 
           mutate(dist = as.numeric(dist),
                 for_b = as.character(bird_sit_coord2$b_for[ii]),
-                for_f = as.character(for_sit_coord2$f_for[jj]))
+                for_f = as.character(for_sit_coord4$f_for[jj]),
+                bird_sit = bird_sit_coord2$bird_sit[ii])
     
       if("dist1" %!in% ls()) {
           dist1 <- distances2
@@ -231,14 +269,23 @@ for (ii in 1:nrow(bird_sit_coord2)) {
         } 
     } 
   }
+
   dist_small <- dist1 %>% 
                   arrange(dist) %>% 
-                  filter(dist <= 500) # diameter of the home range area of birds plus some slack if it is not circular 
+                  filter(dist <= 2000) %>% # diameter of the home range area of birds plus some slack if it is not circular 
+                  arrange(bird_sit, dist)
+  
+  table(dist_small$bird_sit)
 
 # ERROR: NOT REALLY AN ERROR, just choosing how many neighbours
-  close_points <- head(dist_small, 5) # TODO: 
-  close_points <- close_points %>% 
-                    mutate(bird_sit = bird_sit_coord2$bird_sit[ii])
+#!!ERROR: the problem is here! do it by site!!!!!!!!!!!
+  close_points <- dist_small %>%
+                    group_by(bird_sit) %>%
+                    slice(1:5) %>% # TODO: 
+                    ungroup()
+
+  table(close_points$bird_sit)
+
   if(ii == 1) {
     close_points_f <- close_points
     } else {
@@ -247,16 +294,57 @@ for (ii in 1:nrow(bird_sit_coord2)) {
   print(ii)
 }
 
-# write_rds(close_points_f, file = "data/out/close_points_f1.rds")
-close_points_f <- read_rds(file = "data/out/close_points_f1.rds")
+close_points_f <- close_points_f %>% 
+                    arrange(bird_sit, dist) %>% 
+                    distinct()
 
-close_points_f
+write_rds(close_points_f, file = "data/out/close_points_f1.rds")
+
+# plot close points by park
+## join coordinates
+close_points_f2 <- close_points_f %>% 
+  left_join(for_sit_coord2 %>% 
+              rename(latutmf = latutm, lonutmf = lonutm) %>%
+              select(for_sit, latutmf, lonutmf),
+            by = "for_sit") %>% 
+  left_join(bird_sit_coord2 %>% 
+              rename(latutmb = latutm, lonutmb = lonutm) %>%
+              select(bird_sit, latutmb, lonutmb),
+            by = "bird_sit") 
+
+for(ii in 1:lenght(parks)){
+  (plop <- parks[ii])
+  close_points_f3 <- close_points_f2 %>% 
+                      filter(substr(bird_sit, 1, 4) == plop)
+
+  p2 <- 
+  ggplot(close_points_f3) +
+    geom_segment(aes(x = lonutmb, y = latutmb, 
+                     xend = lonutmf, yend = latutmf, 
+                     colour = bird_sit)) +
+    geom_point(aes(x = lonutmb, 
+                   y = latutmb,
+                   colour = bird_sit),
+              size = 3) +
+    geom_point(aes(x = lonutmf, 
+                   y = latutmf),
+              size = 3,
+              color = "#186A3B",
+              shape = 15) +
+    #geom_text(aes(x= park_plot_nam$lonutm, y =park_plot_nam$latutm),
+    #          label = park_plot_nam$park, size = 3, vjust = -1.3) +
+    theme_bw()
+    #)
+  print(p2)
+  #library(plotly)
+  #ggplotly(p2)
+}
 
 table(close_points_f$bird_sit) %>% sort()
 
 table(for_sit$SampleYear) %>% max()
 
-#! Correlation plot ----------------------------------------------
+#! get means for all years ----------------------------------------------
 Modes <- function(x) {
   ux <- unique(x)
   tab <- tabulate(match(x, ux))
@@ -307,6 +395,7 @@ close_points_f2 <- left_join(close_points_f, for_sit2, by = "for_sit") %>%
          pctBA_matureM, pctBA_largeM, sap_den_m2M, shrub_covM) %>% 
   distinct()
 
+write_rds(for_sit2, file = "data/out/for_sit2.rds")
 write_rds(close_points_f2, file = "data/out/close_points_fcovs.rds")
 
 # creating correlation matrix
