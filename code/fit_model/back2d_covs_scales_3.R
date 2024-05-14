@@ -20,9 +20,9 @@
 
 script_name <- 'back2d_covs_scales_3.R'
 
-paste('\n ************************************** \n \n \n Running scrip', script_name, '\n \n \n',
+cat(paste('\n ************************************** \n \n \n Running scrip', script_name, '\n \n \n',
       '**************************************
-      ') %>% cat
+      '))
 
 system_time1 <- Sys.time()
 
@@ -39,7 +39,7 @@ conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::filter)
 # conflicts_prefer(scales::alpha)
 
-if("sps_loop" %in% ls() == FALSE){stop("No species selected #38")}
+#if("sps_loop" %in% ls() == FALSE){stop("No species selected #38")}
 
 # Make functions --------------------------------------
 colanmes <- colnames
@@ -52,6 +52,9 @@ YDAT_PATH <- "data/y_dat8.rds"
 XDAT_PATH <- "data/X10.rds"
 SITE_PK_PATH <- "data/out/nsite_pk.rds"
 PARK_PATH <- "data/src/key_park.rds"
+
+sps_list <- "RBWO"
+yearbo <- "yes"
 
 ## read files
 y_dat4 <- read_rds(file = YDAT_PATH)
@@ -97,8 +100,8 @@ X10 <- X10 %>%
    filter(unique_index %in% y_dat6$unique_index)
 
 nrow(X10) == nrow(y_dat6)
-
-spsglue <- paste("the species are ", paste(shQuote(sort(unique(y_dat6$sps_it))), collapse=", "), "and parks are")
+glu1 <- paste(shQuote(sort(unique(y_dat6$sps_it))), collapse=", ")
+spsglue <- glue("the species are {glu1}, and parks are")
 parkglue <- paste(shQuote(sort(unique(y_dat6$park))), collapse=", ")
 print(paste(spsglue,parkglue))
 
@@ -351,7 +354,7 @@ file_name2 <- paste0(file_name, 'run',
                                        full.names = FALSE)) + 1)
 
 write_rds(samples_jags,
-          file = glue({file_name2},'.rds'),
+          file = glue('data/model_res/{file_name2}.rds')
           #file = glue("data/model_res/jags_res_{sps_loop}2dnoA1bo.rds")
           )
 
@@ -394,18 +397,18 @@ paste('\n ************************************** \n \n \n ---------------- DONE 
 # # row 73 has the values in the loop
 
 #################################################################################
-# MCMCsummary(samples_jags,
-#             #params = params[c(2,4,5,7)],
-#             round = 2) 
+MCMCsummary(samples_jags,
+             #params = params[c(2,4,5,7)],
+             round = 2) 
 
-# MCMCtrace(samples_jags,
-#           #params = params[c(2,4,5,7)],
-#           ind = TRUE,
-#           pdf = FALSE)
+MCMCtrace(samples_jags,
+          params = params[c(10,8,2,4,5,7)],
+          ind = TRUE,
+          pdf = FALSE)
 
-# par(mfrow = c(1,1))
-# MCMCplot(samples_jags,
-#          #params = params[c(2,4,5,7)],
-#          ref_ovl = TRUE)
+par(mfrow = c(1,1))
+MCMCplot(samples_jags,
+         #params = params[c(2,4,5,7)],
+         ref_ovl = TRUE)
 
 
