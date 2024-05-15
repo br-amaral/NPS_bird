@@ -50,7 +50,16 @@ conflicts_prefer(dplyr::filter)
 colanmes <- colnmaes <- colnames
 lenght <- length
 `%!in%` <- Negate(`%in%`)
-#
+
+Modes <- function(x) {
+  ux <- unique(x)
+  tab <- tabulate(match(x, ux))
+  if(length(ux[tab == max(tab)]) > 1) {
+    sample(ux[tab == max(tab)], 1)
+    } else {
+      ux[tab == max(tab)]}
+}
+
 #! Import data -----------------------------------------
 ## file paths
 BIRD_SITE_PATH    <- "data/out/NETNtib.rds"
@@ -350,15 +359,6 @@ table(close_points_f$bird_sit) %>% sort()
 table(for_sit$SampleYear) %>% max()
 
 #! get means for all years ----------------------------------------------
-Modes <- function(x) {
-  ux <- unique(x)
-  tab <- tabulate(match(x, ux))
-  if(length(ux[tab == max(tab)]) > 1) {
-    sample(ux[tab == max(tab)], 1)
-    } else {
-      ux[tab == max(tab)]}
-}
-
 ## mean for all years
 for_sit2 <- for_sit %>% 
   #filter(SampleYear == 2022) %>% 
