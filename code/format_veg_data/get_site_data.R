@@ -9,11 +9,13 @@
 #           - :
 #
 #! Input ----------------------------------------------
-#           - data/veg_kateaaron/NETN_forest_data_2006-2023.rds : site forest covariates
-#           - data/veg_kateaaron/for_sites.rds : name of all the sites with they XY coordinates
-#           - data/veg_kateaaron/NETN_tree_dens_spp_2006-2023.rds : tree species abundance
-#           - data/veg_kateaaron/NETN_forest_metadata.csv : meta data with info of the columns of the forest variables
-#           -  : tibble with site names and coordinates
+#           - data/out/NETNtib.rds :
+#           - data/src/key_park.rds :
+#           - data/veg_kateaaron/NETN_forest_data_2006-2023.rds :
+#           - data/veg_kateaaron/NETN_tree_dens_spp_2006-2023.rds :
+#           - data/veg_kateaaron/for_sites.rds : 
+#           - data/out/key_bsite.rds : 
+#           - data/out/key_fsite.rds :
 #
 #! Output ----------------------------------------------
 #           - data/out/close_points_f.rds : tibble with combinations of forest and bird sites, and the distances between them
@@ -48,8 +50,6 @@ conflicts_prefer(dplyr::filter)
 colanmes <- colnmaes <- colnames
 lenght <- length
 `%!in%` <- Negate(`%in%`)
-#
-#! Source code -----------------------------------------
 #
 #! Import data -----------------------------------------
 ## file paths
