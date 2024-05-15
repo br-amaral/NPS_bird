@@ -1,5 +1,5 @@
 # *********************************************************************************
-# -------------------------------   Amazing Title   -------------------------------
+# -------------------------------   Plot model output   ---------------------------
 # *********************************************************************************
 # Code to ...
 #
@@ -36,16 +36,15 @@ colanmes <- colnames
 lenght <- length
 `%!in%` <- Negate(`%in%`)
 #
-#! Source code -----------------------------------------
-#
+
 #! Import data -----------------------------------------
 ## file paths and read files
 
-sps <- "BRCR"
+sps <- "RBWO"
 
-samples_jags <- read_rds(glue("data/model_res/jags_res_{sps}2d.rds"))
+# samples_jags <- read_rds(glue("data/model_res/jags_res_{sps}2d.rds"))
 
-samples_jags <- read_rds(file = glue("data/model_res/jags_res_WBNU2dnoA.rds"))
+samples_jags <- read_rds(file = glue("data/model_res/jags_res_RBWO_parks_run2.rds"))
 
 #! Summary --------------------------------------------
 MCMCsummary(samples_jags,
@@ -60,7 +59,7 @@ MCMCsummary(samples_jags,
 MCMCsummary(samples_jags,
             params = c("mu.beta0","beta",
                        "mu.alpha0","alpha",
-                      "scales_beta1","scales_beta2"),
+                       "scales_beta1","scales_beta2"),
                         round = 2)
 ##! traceplots ----------------------
 #MCMCtrace(samples_jags,
@@ -77,11 +76,11 @@ MCMCsummary(samples_jags,
 
 MCMCtrace(samples_jags,
           params = c("mu.beta0","beta",
-                   "mu.alpha0","alpha",
-                   "scales_beta1","scales_beta2"),
+                    "mu.alpha0","alpha",
+                    "scales_beta1","scales_beta2"),
           ind = TRUE,
-          pdf = TRUE,
-          filename = glue("data/model_res/{sps}_2b_trace_{nrow(samples_jags[[1]])}its"),
+          #pdf = FALSE,
+          filename = glue("data/model_res/plots/{sps}_run1_trace_{nrow(samples_jags[[1]])}its"),
           exact = TRUE,
           Rhat = TRUE,
           n.eff = TRUE)
@@ -93,6 +92,8 @@ MCMCplot(samples_jags,
               #          "mu.alpha0","alpha1","alpha2","alpha3",
                #         "scales_beta1","scales_beta2"),
           ref_ovl = TRUE)
+
+glue("{sps}_run1_pars_{nrow(samples_jags[[1]])}its")
 
 MCMCplot(samples_jags,
          params = c("mu.beta0","beta", 

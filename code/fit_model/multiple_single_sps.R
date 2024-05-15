@@ -48,7 +48,7 @@ sps_list <- "RBWO" # sps_list[-4]
 #              "BOBO", "YRWA", "PIWA", "CEDW", "CHSP", "NOFL", "HAWO", "BRCR", "RBGR", "DEJU", "AMCR", 
 #              "BAOR", "RBNU", "BHVI", "GCKI", "EATO", "FISP", "HETH", "VEER", "MODO", "BLBW")
 
-yearbo <- "no"
+yearbo <- "yes"
 
 # parks <- 
 
