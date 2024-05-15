@@ -1,5 +1,5 @@
 # *********************************************************************************
-# -------------------------------   Amazing Title   -------------------------------
+# ----------------------------  back2d_covs_scales_3  -----------------------------
 # *********************************************************************************
 # Code to run model to estimate the effect of different environmental
 #   covariates on bird occupancy in several national parks and on three
