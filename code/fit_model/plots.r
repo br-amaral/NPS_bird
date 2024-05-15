@@ -80,7 +80,7 @@ MCMCtrace(samples_jags,
                     "scales_beta1","scales_beta2"),
           ind = TRUE,
           #pdf = FALSE,
-          filename = glue("data/model_res/plots/{sps}_run1_trace_{nrow(samples_jags[[1]])}its"),
+          filename = glue("data/model_res/plots/{sps}_run1_trace_nei_{nrow(samples_jags[[1]])}its"),
           exact = TRUE,
           Rhat = TRUE,
           n.eff = TRUE)
