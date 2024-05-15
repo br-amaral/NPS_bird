@@ -17,7 +17,12 @@
 #
 #! Output ----------------------------------------------
 #           - data/out/close_points_f.rds : tibble with combinations of forest and bird sites, and the distances between them
-#           - :
+#           - data/out/park_site.rds :
+#           - data/out/for_sit_coord.rds :
+#           - data/out/bird_site_coords.rds :
+#           - data/out/close_points_f1.rds :
+#           - data/out/for_sit2.rds :
+#           - data/out/close_points_fcovs.rds :
 #
 # detach packages and clear workspace
 if(!require(freshr)){install.packages('freshr')}
