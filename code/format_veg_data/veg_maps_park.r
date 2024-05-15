@@ -58,9 +58,11 @@ parks <- parks %>%
   distinct() %>% 
   pull()
 
-parks_remove <- c("ACAD", "MIMA")
+parks_remove <- c("ACAD")
 
 parks <- parks[which(parks %!in% parks_remove)]
+
+xy_sf <- st_as_sf(xy)
 
 # loop to load all park files
 park_folder <- list.files(path = "data/veg_maps/")
@@ -76,6 +78,16 @@ for(ii in 1:lenght(parks)){
     (park_loop <- tolower(parks[ii]))
     if(park_loop %in% folder_names) {
 
+        if(park_loop == "mima"){ 
+
+        vegp_map <- read_sf(dsn = "data/veg_maps/mimageodata/MIMA_Veg_shp/MIMA_Veg.shp") 
+
+        assign(glue("{park_loop}_vegmap"), vegp_map)
+        
+        parks_ana <- c(parks_ana, park_loop)
+
+    } else { 
+
         PATH_PARK_LOOP <- glue("{PATH_PARK_GDB}{park_loop}geodata/{park_loop}geodata.gdb")
         
         # get layer names
@@ -87,6 +99,7 @@ for(ii in 1:lenght(parks)){
         assign(glue("{park_loop}_vegmap"), vegp_map)
         
         parks_ana <- c(parks_ana, park_loop)
+        }
     }
     
     if(park_loop %in% c("elro", "hofr", "vama")) {
@@ -101,7 +114,6 @@ for(ii in 1:lenght(parks)){
 
     }
 }
-
 
 #! get park X and Y coordinates ----------------------------------
 xy$park <- park_site$Admin_Unit_Code
@@ -118,7 +130,6 @@ parks_ana <- sort(parks_ana)
 for(ii in 1:lenght(parks_ana)){
     (park_loop <- tolower(parks_ana[ii]))
 
-    # Now you can apply the st_transform function
     xy_sf_loop <- xy_sf %>% filter(park == toupper(park_loop))
 
     get_parkloop_veg <- get(glue("{park_loop}_vegmap"))
@@ -142,16 +153,23 @@ for(ii in 1:lenght(parks_ana)){
     # bird_point_veg$MapUnit_Name %>% unique()
 
     assign(glue("{park_loop}_birdsite_vegmap"), bird_point_veg)
+
+    if(park_loop == "mima") {
+        bird_point_veg <- bird_point_veg  %>% 
+            mutate(MapUnit_ID = GROUP_CODE,
+                   MapUnit_Name = GROUP_NAME)
+    }
     
     key_bsite_l <- bird_point_veg %>% 
         select(park, Point_Name, UTM_ZONE, 
-               MapUnit_ID,  MapUnit_Name) %>% 
-               as_tibble()
+            MapUnit_ID,  MapUnit_Name) %>% 
+            as_tibble()
 
     if(ii == 1){key_bsite <- key_bsite_l
         } else {
             key_bsite <- rbind(key_bsite, key_bsite_l)
         }
+
     print(park_loop)
     print(nrow(key_bsite_l))
     rm(key_bsite_l)
@@ -220,6 +238,12 @@ for(ii in 1:lenght(parks_ana2)){
 
     assign(glue("{park_loop}_forsite_vegmap"), for_point_veg)
     
+  if(park_loop == "mima") {
+        for_point_veg <- for_point_veg %>% 
+            mutate(MapUnit_ID = GROUP_CODE,
+                   MapUnit_Name = GROUP_NAME)
+    }
+
     key_fsite_l <- for_point_veg %>% 
         select(park, ID, 
                X, Y, zone, 

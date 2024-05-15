@@ -15,8 +15,8 @@
 #           - data/model_res/jags_res_{sps}_{park}_run{run_number}.rds: file with result of jags model
 
 # detach packages and clear workspace
-# if(!require(freshr)){install.packages("freshr")}
-# freshr::freshr()
+if(!require(freshr)){install.packages("freshr")}
+freshr::freshr()
 
 script_name <- 'back2d_covs_scales_3.R'
 
@@ -53,7 +53,7 @@ XDAT_PATH <- "data/X10.rds"
 SITE_PK_PATH <- "data/out/nsite_pk.rds"
 PARK_PATH <- "data/src/key_park.rds"
 
-sps_list <- "RBWO"
+sps_list <- sps_loop <- "RBWO"
 yearbo <- "yes"
 
 ## read files
@@ -65,7 +65,11 @@ pk <- read_rds(PARK_PATH) %>%
   pull() %>%
   sort()
 
-# load("data/datJDnov2023.RData")
+pk <- pk[-1]
+pk <- pk[-7]
+
+nsite_pk <- nsite_pk[-1]
+nsite_pk <- nsite_pk[-7]
 
 # Filter for species and park ---------------------------------------
 ## 1 sps several parks
@@ -87,7 +91,7 @@ if(setequal(y_dat5$unique_index, X10$unique_index) != "TRUE")
 
 y_dat6 <- y_dat5 %>% 
    filter(sps_it == sps_loop,
-          park != "ACAD"
+          park %in% pk
    )
 
 if(length(sps_loop) == 1){
@@ -346,7 +350,7 @@ samples_jags <- coda.samples(
 
 cat("\n\n\n third done!!! \n\n\n\n")
 
-file_name <- glue("jags_res_{sps_name}_{park_name}_")
+file_name <- glue("jags_res_{sps_name}_{park_name}_nei_")
 
 file_name2 <- paste0(file_name, 'run',
                      length(list.files(path = file.path(getwd(),"data/model_res/"),
