@@ -399,6 +399,7 @@ for(ii in 1:nrow(y_dat3)){
       if(as.numeric(y_dat3$Interval_n[ii]) > y_dat3$interval_n[ii]) {y_dat3$bird_detec[ii] <- 0} else {print(round(ii/nrow(y_dat3),2))}}
 }
 
+
 ##### write file: data/out/y_dat3.rds ------
 write_rds(y_dat3, file = "data/out/y_dat3.rds")
 
@@ -507,10 +508,11 @@ site_key <- y_dat6 %>%
    select(Point_Name, site_n, park) %>% 
    distinct()
 
-## site ------------
+## site ----------------------------------------------------------------------------------------------
 ## no data for all years, using mean between years
 close_points_f2 <- read_rds(PATH_SITE_COVS)
 
+### Tree basal area
 tree_ba_tab_site <- close_points_f2 %>% 
   mutate(Point_Name = bird_sit,
          siteBA = BA_m2haM) %>% 
@@ -519,6 +521,7 @@ tree_ba_tab_site <- close_points_f2 %>%
 
 X1 <- left_join(X, tree_ba_tab_site %>% select(-Point_Name), by = c("park", "site_n"))
 
+### Tree density
 tree_den_tab_site <- close_points_f2 %>% 
   mutate(Point_Name = bird_sit,
          siteDEN = treeden_haM) %>% 
@@ -527,18 +530,69 @@ tree_den_tab_site <- close_points_f2 %>%
 
 X2 <- left_join(X1, tree_den_tab_site, by = c("park", "site_n", "Point_Name"))
 
+### Stand structure
 stand_struc_tab_site <- close_points_f2 %>% 
-  mutate(Point_Name = bird_sit) %>% 
+  mutate(Point_Name = bird_sit,
+         siteBA_pole = pctBA_poleM,
+         siteBA_mature = pctBA_matureM,
+         siteBA_large = pctBA_largeM) %>% 
   select(Point_Name,
          park,
-         pctBA_poleM,
-         pctBA_matureM,
-         pctBA_largeM) %>%
+         siteBA_pole,
+         siteBA_mature,
+         siteBA_large) %>%
   left_join(., site_key, by = c("Point_Name", "park")) 
 
 X3 <- left_join(X2, stand_struc_tab_site, by = c("park", "site_n", "Point_Name"))
 
+### Tree richness
+tree_rich_tab_site <- close_points_f2 %>% 
+  mutate(Point_Name = bird_sit,
+         siteRICHtree = tree_richM) %>% 
+  select(Point_Name,
+         park,
+         siteRICHtree) %>%
+  left_join(., site_key, by = c("Point_Name", "park"))
+ 
+X4 <- left_join(X3, tree_rich_tab_site, by = c("park", "site_n", "Point_Name"))
+
+### Stage of stand (mode)
+table(close_points_f2$StageM)
+
+sta_stan_tab_site <- close_points_f2 %>% 
+  mutate(Point_Name = bird_sit,
+         siteSTAstand = StageM) %>% 
+  select(Point_Name,
+         park,
+         siteSTAstand) %>%
+  left_join(., site_key, by = c("Point_Name", "park"))
+ 
+X5 <- left_join(X4, sta_stan_tab_site, by = c("park", "site_n", "Point_Name"))
+
+### Sapling density
+sap_den_tab_site <- close_points_f2 %>% 
+  mutate(Point_Name = bird_sit,
+         siteSAPden = sap_den_m2M) %>% 
+  select(Point_Name,
+         park,
+         siteSAPden) %>%
+  left_join(., site_key, by = c("Point_Name", "park"))
+
+X6 <- left_join(X5, sap_den_tab_site, by = c("park", "site_n", "Point_Name"))
+
+### Shrub cover
+shru_cov_tab_site <- close_points_f2 %>% 
+  mutate(Point_Name = bird_sit,
+         siteSHRUden = shrub_covM) %>% 
+  select(Point_Name,
+         park,
+         siteSHRUden) %>%
+  left_join(., site_key, by = c("Point_Name", "park"))
+
+X7 <- left_join(X6, shru_cov_tab_site, by = c("park", "site_n", "Point_Name"))
+
 ## park --------------------------------------------------------------------------------
+### Tree basal area
 tree_ba_tab_park <- read_rds(PATH_TREE_BA_PARK) %>% 
   na.omit() %>% 
   group_by(park) %>% 
@@ -550,6 +604,7 @@ tree_ba_tab_park <- read_rds(PATH_TREE_BA_PARK) %>%
 
 X4 <- left_join(X3, tree_ba_tab_park, by = c("park"))
 
+### Tree density
 tree_den_tab_park <- read_rds(PATH_TREE_DEN_PARK) %>% 
   na.omit() %>% 
   group_by(park) %>% 
@@ -561,22 +616,36 @@ tree_den_tab_park <- read_rds(PATH_TREE_DEN_PARK) %>%
 
 X5 <- left_join(X4, tree_den_tab_park, by = c("park"))
 
+### Stand structure
 stand_struc_tab_park <- read_rds(PATH_TREE_STR_PARK)
 
+### Tree richness
+### Stage of stand (mode)
+### Sapling density
+### Shrub cover
+
 ## county ---------------------------------------------------------------------------------
+### Tree basal area
 tree_ba_tab_coun <- read_rds(PATH_TREE_BA_COUN) %>% 
   select(-BAA_SE_mean) %>% 
   rename(counBA = BAA_mean)
 
 X6 <- left_join(X5, tree_ba_tab_coun, by = c("park"))
 
+### Tree density
 tree_den_tab_coun <- read_rds(PATH_TREE_DEN_COUN) %>% 
   select(-TPA_SE_mean) %>% 
   rename(counDEN = TPA_mean)
 
 X7 <- left_join(X6, tree_den_tab_coun, by = c("park"))
 
+### Stand structure
 stand_struc_tab_coun <- read_rds(PATH_TREE_STR_COUN)
+
+### Tree richness
+### Stage of stand (mode)
+### Sapling density
+### Shrub cover
 
 ## park area ------------------------------------------------------------------
 park_size <- as_tibble(matrix(NA, nrow = length(unique(y_dat4$park)), ncol = 2))
