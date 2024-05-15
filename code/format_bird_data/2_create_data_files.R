@@ -8,40 +8,28 @@
 #           - code/format_bird_data/2_format_data.R:
 #
 # Input ----------------------------------------------
-#           - y1: table of ones and zeros for sps detections
-#           - visits:
-
-#           - from code/2_format_data.R:
+#           from here: #!MISTERY WHERE THIS COMES FROM
+#           - data/out/close_points_fcovs.rds
+#           - data/NETN-forest/tree_ba_tab_park.rds
+#           - data/NETN-forest/tree_den_tab_park.rds
+#           - data/NETN-forest/stand_struc_tab_park.rds
+#           - data/FIA/out/bas_area_tot_import.rds
+#           - data/FIA/out/tree_acre_tot_import.rds
+#           - data/FIA/out/stand_struc_import.rds
+#           - data/park_raster/{pk[i]}_pb.rds : raster of each park to get park size 
+#
+#           from code/format_bird_data/format_data.R:
 #             -- y1: table of ones and zeros for sps detections
-#             -- nsite_pk: number of sites sampled in each park
-#             -- yrs_pk: number of years sampled in each park
-#             -- ninterval: number of intervals of removal sampling
-#             -- site_vec:  
-#             -- site_pk:
-#           - data/src/original/NETN_2020/BirdSpecies.csv: get species list
-#           - data/NETN-forest/tree_ba_import.rds
-#           - data/park_raster/{pk[i]}_pb.rds: raster of each park to get park size 
-#             -- data/NETN-forest/tree_ba_import.rds
-#             -- data/NETN-forest/tree_den_import.rds
-#             -- data/NETN-forest/stand_import.rds
-#             -- data/NETN-forest/tree_ba_tab_park.rds
-#             -- data/NETN-forest/tree_den_tab_park.rds
-#             -- data/NETN-forest/stand_struc_tab_park.rds
-#             -- data/FIA/out/bas_area_tot_import.rds
-#             -- data/FIA/out/tree_acre_tot_import.rds
-#             -- data/FIA/out/stand_struc_import.rds
+#             -- visits (data/out/visits.rds): data from the visit files
+#             -- yr_pk: number of years sampled in each park
 #
 # Output ---------------------------------------------
-#           - data/out/site_n_key.rds: park and site unique key
 #           - data/src/sites_park_tib.rds: tibble with park, number of sites and site numbers and codes
+#           - data/out/site_n_key.rds: park and site unique key
 #           - data/out/y_dat3.rds: first tibble with ALL occasions for sps, park, site, year and interval
-#           - data/y_dat6.rds: birds data for each occasion, with park, species and site indexes
+#           - data/y_dat8.rds: birds data for each occasion, with park, species and site indexes
 #           - data/X10.rds: environmental variables for all scales for each occasion, same dim() as y_dat6.rds
 #           - data/sps_pk_nth.rds: species code in each park
-
-#           - from code/2_format_data.R:
-#             -- data/out/visits.rds : data from the visit files
-
 
 ## detach packages and clear workspace
 if(!require(freshr)){install.packages("freshr")}
@@ -411,7 +399,7 @@ for(ii in 1:nrow(y_dat3)){
       if(as.numeric(y_dat3$Interval_n[ii]) > y_dat3$interval_n[ii]) {y_dat3$bird_detec[ii] <- 0} else {print(round(ii/nrow(y_dat3),2))}}
 }
 
- ##### write file: data/out/y_dat3.rds ------
+##### write file: data/out/y_dat3.rds ------
 write_rds(y_dat3, file = "data/out/y_dat3.rds")
 
 # This has all the zeros for all intervals, but I'm still missing an occasion for a species that was not detected in year X in site Y, but was detected ther on year X-1 or X+1
