@@ -53,7 +53,7 @@ SITE_PK_PATH <- "data/out/nsite_pk.rds"
 PARK_PATH <- "data/src/key_park.rds"
 
 sps_list <- sps_loop <- "RBWO"
-yearbo <- "yes"
+yearbo <- "no"
 
 ## read files
 y_dat4 <- read_rds(file = YDAT_PATH)
