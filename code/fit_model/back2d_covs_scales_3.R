@@ -40,6 +40,7 @@ conflicts_prefer(dplyr::filter)
 # conflicts_prefer(scales::alpha)
 
 #if("sps_loop" %in% ls() == FALSE){stop("No species selected #38")}
+# teste teste
 
 # Make functions --------------------------------------
 colanmes <- colnames
