@@ -9,12 +9,16 @@
 #           - :
 #
 # Input ----------------------------------------------
-#           - :
+#           - data/veg_maps/ :
+#           - data/src/key_park.rds :
+#           - data/out/park_site.rds :
+#           - data/out/bird_site_coords.rds :
+#           - data/out/for_sit_coord.rds :
 #           - :
 #
 # Output ----------------------------------------------
-#           - :
-#           - :
+#           - data/out/key_fsite.rds : 
+#           - data/out/key_bsite.rds :
 #
 # detach packages and clear workspace
 if(!require(freshr)){install.packages('freshr')}
