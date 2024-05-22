@@ -24,6 +24,8 @@ freshr::freshr()
 library(conflicted)
 library(tidyverse)
 library(glue)
+library(rFIA)
+library(tigris)
 #
 conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::filter)
@@ -47,14 +49,50 @@ Modes <- function(x) {
 #
 #! Import data -----------------------------------------
 ## file paths
-FORCOVS_COUNTY_PATH <- "data/"
-FORSPS_COUNTY_PATH  <- "data/"
+#FORCOVS_COUNTY_PATH <- "data/"
+#FORSPS_COUNTY_PATH  <- "data/"
+PARK_COUNTY_PATH <- "data/park_county.rds"
+PARKS_LIST_PATH <- "data/src/key_park.rds"
 
 ## read files
 for_cou       <- read_rds(file = FORCOVS_COUNTY_PATH)
 fordiv_cou    <- read_rds(file = FORSPS_COUNTY_PATH)
+park_county <- read_rds(file = PARK_COUNTY_PATH)
+parks <- readRDS(file = PARKS_LIST_PATH) %>% 
+  dplyr::select(parks) %>% 
+  distinct() %>% 
+  pull()
+
+### Get multiple states worth of data (not saved since 'dir' is not specified)
+### Load FIA Data from a local directory
+db <- readFIA('data/FIA/')
 
 #! calculate park means --------------------------------
+for(ii in 1:nrow(park_county)){
+  # get county shapefile
+  county_sp <- counties(park_county$state[ii], cb = TRUE)
+  
+  county_sp2 <- county_sp %>% filter(NAMELSAD == park_county$county[ii])
+  
+  # gg <- ggplot()
+  # gg <- gg + geom_sf(data = county_sp2, color="black",
+  #                    fill="white", linewidth=2) + 
+  #   theme_bw() + 
+  #   theme(panel.border = element_blank(), 
+  #         panel.grid.major = element_blank(),
+  #         panel.grid.minor = element_blank(), 
+  #         axis.line = element_blank()) 
+  # gg 
+  
+  # get the data for the county from FIA
+  dbclip2 <- clipFIA(db, mask = county_sp2, mostRecent = FALSE)
+  
+  name1 <- glue("fia_{park_county$park[ii]}")
+  
+  assign(name1, dbclip2)
+
+}
+
 ### Tree basal area
 ### Tree density
 for(ii in 1:nrow(park_county)){
@@ -109,26 +147,26 @@ for(ii in 1:nrow(park_county)){
 
 # SV%L1 - 4 or all together: [SV%Ar]]
 # 8.5 Vegetation Structure 8.5.12 - 15
- STND_COND_CD_PNWRS
- LAND_COVER_CLASS_CD
- GROWTH_HABIT_CD
+STND_COND_CD_PNWRS
+LAND_COVER_CLASS_CD
+GROWTH_HABIT_CD
 
-park_county <- c("CT", "MA", "ME", "NH", "NJ", "RI", "VT", "NY")
+park_county_l <- c("CT", "MA", "ME", "NH", "NJ", "RI", "VT", "NY")
 
 # shrub data
 ## LVSHRBCD: Live shrub code. A cover class code indicating the percent cover of the forested microplot area covered with live shrubs.
 ## LVSHRBHT: Live shrub height. Indicates the height of the tallest live shrub to the nearest 0.1 foot. Heights <6 feet are measured and heights 6 feet are estimated.
 
-for(ii in 1:length(park_county)){
+for(ii in 1:length(park_county_l)){
   
-  county_l <- park_county[ii]
+  county_l <- park_county_l[ii]
   
   county_shr <- read_csv(glue("data/FIA/{county_l}_DWM_MICROPLOT_FUEL.csv"),
                          col_types = cols(PLT_CN = col_character())) %>% 
     select(CN, PLT_CN, INVYR, STATECD, COUNTYCD, PLOT, SUBP, MEASYEAR,
            LVSHRBCD, LVSHRBHT) # , DSHRBCD, DSHRBHT) # the D's are dead shrubs
   
-  name1 <- glue("shr_{park_county[ii]}")
+  name1 <- glue("shr_{park_county_l[ii]}")
   
   assign(name1, county_shr)
 
