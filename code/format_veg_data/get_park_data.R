@@ -3,18 +3,14 @@
 #? *********************************************************************************
 # Code to get the environmental variables at the park level
 #
-#
 #! Source ---------------------------------------------
+#
+#! Input ----------------------------------------------
 #           - data/veg_kateaaron/NETN_forest_data_2006-2023.rds :
 #           - data/veg_kateaaron/NETN_tree_dens_spp_2006-2023.rds :
 #
-#! Input ----------------------------------------------
-#           - :
-#           - :
-#
 #! Output ----------------------------------------------
-#           - :
-#           - :
+#           - data/out/park_covs.rds : tibble with park level environmental variables
 #
 # detach packages and clear workspace
 if(!require(freshr)){install.packages('freshr')}
@@ -61,17 +57,20 @@ for_park2 <- for_park %>%
   mutate(parkDEN = mean(treeden_ha, na.rm = T),
          parkBA = mean(BA_m2ha, na.rm = T),
          parkRICH = mean(tree_rich, na.rm = T),
-         parkSTAstand = Modes(Stage),
+         parkSTA = Modes(Stage),
          parkBA_pole = mean(pctBA_pole, na.rm = T),
          parkBA_mature = mean(pctBA_mature, na.rm = T),
          parkBA_large = mean(pctBA_large, na.rm = T),
+         parkDIV = mean(tree_rich, na.rm = T),
          parkSAPden = mean(sap_den_m2, na.rm = T),
          parkSHRUden = mean(shrub_cov, na.rm = T))  %>% 
   ungroup() %>% 
   select(ParkUnit,
-         parkDEN, parkBA, parkRICH, parkSTAstand,
+         parkDEN, parkBA, parkRICH, parkSTA,
          parkBA_pole, parkBA_mature, parkBA_large,
-         parkSAPden, parkSHRUden) %>% 
+         parkSAPden, 
+         parkSHRUden) %>% 
   distinct()
 
-
+#! Output files ----------------------------------------------
+write_rds(for_park2, file = "data/out/park_covs.rds")
