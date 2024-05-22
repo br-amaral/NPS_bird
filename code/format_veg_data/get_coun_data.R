@@ -168,7 +168,7 @@ for(ii in 1:nrow(park_county)){
   county_shr <- read_csv(glue("data/FIA/{county_l}_DWM_MICROPLOT_FUEL.csv"),
                          col_types = cols(PLT_CN = col_character(), 
                                           CN = col_character())) %>% 
-    select(CN, PLT_CN, INVYR, STATECD, COUNTYCD, PLOT, SUBP, MEASYEAR,
+    select(INVYR, STATECD, COUNTYCD, PLOT, SUBP, MEASYEAR,
            LVSHRBCD, LVSHRBHT) %>%  # , DSHRBCD, DSHRBHT) # the D's are dead shrubs
            mutate(park = park_county$park[ii])  %>% 
            rename(shr_per = LVSHRBCD, 
@@ -183,8 +183,57 @@ for(ii in 1:nrow(park_county)){
 
 }
 
-#? Output files -----------------------------------------
-write_rds(tpa_tab, file = "data/FIA/county_tpa_tab.rds")
-write_rds(stastr_tab, file = "data/FIA/county_stastr_tab.rds")
-write_rds(div_tab, file = "data/FIA/county_div_tab.rds")
-write_rds(shr_tab, file = "data/FIA/county_shr_tab.rds")
+#? summarize the files by park and merge them -----------------------------------------
+tpa_tab2 <- tpa_tab %>% 
+  group_by(park) %>% 
+  summarise(tpa = mean(TPA, na.rm = T),
+            baa = mean(BAA, na.rm = T),
+            tree_total = mean(TREE_TOTAL, na.rm = T),
+            ba_total = mean(BA_TOTAL, na.rm = T),
+            tpa_se = mean(TPA_SE, na.rm = T),
+            baa_se = mean(BAA_SE, na.rm = T),
+            tree_total_se = mean(TREE_TOTAL_SE, na.rm = T)) %>% 
+  rename(ParkUnit = park,
+         counDEN = tpa, counBA = baa) %>% 
+  select(ParkUnit, counDEN, counBA)
+
+shr_tab2 <- shr_tab %>% 
+  group_by(park) %>% 
+  summarise(shr_per = mean(shr_per, na.rm = T),
+            shr_ht = mean(shr_ht, na.rm = T)) %>% 
+  rename(ParkUnit = park,
+         counSHRUden = shr_per) %>% 
+  select(ParkUnit, counSHRUden)
+
+stastr_tab2 <- stastr_tab %>%
+  select(-COVER_PCT_SE) %>%
+  pivot_wider(names_from = STAGE, values_from = COVER_PCT) %>% 
+  group_by(park) %>%
+  summarise(counPER_late = mean(LATE, na.rm = T),
+            counPER_matu = mean(MATURE, na.rm = T),
+            counPER_mosc = mean(MOSAIC, na.rm = T),
+            counPER_pole = mean(POLE, na.rm = T)) %>% 
+  rename(ParkUnit = park)
+
+div_tab2 <- div_tab %>%
+  select(-Eh_a_SE, -S_a_SE) %>%
+  group_by(park) %>%
+  summarise(counH_a = mean(H_a, na.rm = T),
+            counH_b = mean(H_b, na.rm = T),
+            counH_g = mean(H_g, na.rm = T),
+            counEh_a = mean(Eh_a, na.rm = T),
+            counEh_b = mean(Eh_b, na.rm = T),
+            counEh_g = mean(Eh_g, na.rm = T),
+            counS_a = mean(S_a, na.rm = T),
+            counS_b = mean(S_b, na.rm = T),
+            counS_g = mean(S_g, na.rm = T)) %>%
+  rename(ParkUnit = park)
+
+coun_covs <- left_join(tpa_tab2, stastr_tab2, by = "ParkUnit") %>% 
+  left_join(div_tab2, by = "ParkUnit") %>% 
+  left_join(shr_tab2, by = "ParkUnit")
+
+#! Output files -----------------------------------------
+write_rds(coun_covs, file = "data/out/coun_covs.rds")
+
+
