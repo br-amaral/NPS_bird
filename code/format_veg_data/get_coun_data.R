@@ -46,22 +46,48 @@ Modes <- function(x) {
 }
 
 #! Source code -----------------------------------------
-#
+## Download the state subset or Connecticut (requires an internet connection)
+## Save as an object to automatically load the data into your current R session!
+# vt <- getFIA(states = 'VT', dir = 'data/FIA', load = FALSE)
+# me <- getFIA(states = 'ME', dir = 'data/FIA', load = FALSE)
+# nh <- getFIA(states = 'NH', dir = 'data/FIA', load = FALSE)
+# ny <- getFIA(states = 'NY', dir = 'data/FIA', load = FALSE)
+# ct <- getFIA(states = 'CT', dir = 'data/FIA', load = FALSE)
+# ma <- getFIA(states = 'MA', dir = 'data/FIA', load = FALSE)
+# ri <- getFIA(states = 'RI', dir = 'data/FIA', load = FALSE)
+# nj <- getFIA(states = 'NJ', dir = 'data/FIA', load = FALSE)
+
 #! Import data -----------------------------------------
 ## file paths
-#FORCOVS_COUNTY_PATH <- "data/"
-#FORSPS_COUNTY_PATH  <- "data/"
 PARK_COUNTY_PATH <- "data/park_county.rds"
 PARKS_LIST_PATH <- "data/src/key_park.rds"
 
 ## read files
-for_cou       <- read_rds(file = FORCOVS_COUNTY_PATH)
-fordiv_cou    <- read_rds(file = FORSPS_COUNTY_PATH)
-park_county <- read_rds(file = PARK_COUNTY_PATH)
 parks <- readRDS(file = PARKS_LIST_PATH) %>% 
   dplyr::select(parks) %>% 
   distinct() %>% 
   pull()
+
+# master table with parks and counties
+# county location of each park
+park_county <- matrix(c(
+  'ACAD', 'Hancock County', 'Maine','ME',
+  'ELRO', 'Dutchess County', 'New York','NY',
+  'HOFR', 'Dutchess County', 'New York','NY',
+  'MABI', 'Windsor County', 'Vermont','VT',
+  'MIMA', 'Middlesex County', 'Massachusetts','MA',  
+  'MORR', 'Morris County', 'New Jersey','NJ',
+  'SAGA', 'Sullivan County', 'New Hampshire','NH',
+  'SAIR', 'Essex County', 'Massachusetts','MA',
+  'SARA', 'Saratoga County', 'New York','NY',
+  'VAMA', 'Dutchess County', 'New York','NY',
+  'WEFA', 'Western Connecticut Planning Region', 'Connecticut','CT'), # used to be 'Fairfield County'
+  ncol = 4, byrow = T) %>% 
+  as_tibble()
+colnames(park_county) <- c("park", "county", "state", "state_abbr")
+
+## write_rds(park_county, file = "data/park_county.rds") -----------------------------------------
+write_rds(park_county, file = "data/park_county.rds")
 
 ### Get multiple states worth of data (not saved since 'dir' is not specified)
 ### Load FIA Data from a local directory
@@ -93,8 +119,7 @@ for(ii in 1:nrow(park_county)){
 
 }
 
-### Tree basal area
-### Tree density
+###? Tree basal area and density -----------------------------------------
 for(ii in 1:nrow(park_county)){
   tpaRI <- tpa(get(glue("fia_{park_county$park[ii]}")), totals = TRUE) %>% 
     select(YEAR, TPA, BAA, TREE_TOTAL, BA_TOTAL, TPA_SE, BAA_SE, TREE_TOTAL_SE) %>% 
@@ -123,7 +148,7 @@ for(ii in 1:nrow(park_county)){
   }
 }
 
-### Tree richness
+###? Tree richness ----------------------------------------- 
 for(ii in 1:nrow(park_county)){
   div <- diversity(get(glue("fia_{park_county$park[ii]}"))) %>% 
     select(YEAR, H_a, Eh_a, S_a, H_b, Eh_b, S_b, H_g, Eh_g, S_g,
@@ -138,74 +163,30 @@ for(ii in 1:nrow(park_county)){
   }
 }
 
-### Stage of stand (mode)
-
-### Sapling density
-
-
-### Shrub cover ---------------------------------------------------------
-
-# SV%L1 - 4 or all together: [SV%Ar]]
-# 8.5 Vegetation Structure 8.5.12 - 15
-STND_COND_CD_PNWRS
-LAND_COVER_CLASS_CD
-GROWTH_HABIT_CD
-
-park_county_l <- c("CT", "MA", "ME", "NH", "NJ", "RI", "VT", "NY")
-
+###? Shrub cover ---------------------------------------------------------
 # shrub data
 ## LVSHRBCD: Live shrub code. A cover class code indicating the percent cover of the forested microplot area covered with live shrubs.
 ## LVSHRBHT: Live shrub height. Indicates the height of the tallest live shrub to the nearest 0.1 foot. Heights <6 feet are measured and heights 6 feet are estimated.
 
-for(ii in 1:length(park_county_l)){
+for(ii in 1:nrow(park_county)){
   
-  county_l <- park_county_l[ii]
+  county_l <- park_county$state_abbr[ii]
   
   county_shr <- read_csv(glue("data/FIA/{county_l}_DWM_MICROPLOT_FUEL.csv"),
-                         col_types = cols(PLT_CN = col_character())) %>% 
+                         col_types = cols(PLT_CN = col_character(), 
+                                          CN = col_character())) %>% 
     select(CN, PLT_CN, INVYR, STATECD, COUNTYCD, PLOT, SUBP, MEASYEAR,
-           LVSHRBCD, LVSHRBHT) # , DSHRBCD, DSHRBHT) # the D's are dead shrubs
+           LVSHRBCD, LVSHRBHT) %>%  # , DSHRBCD, DSHRBHT) # the D's are dead shrubs
+           mutate(park = park_county$park[ii])  %>% 
+           rename(shr_per = LVSHRBCD, 
+                  shr_ht = LVSHRBHT)
+  if(ii == 1){
+    shr_tab <- county_shr
+  }
   
-  name1 <- glue("shr_{park_county_l[ii]}")
-  
-  assign(name1, county_shr)
+  if(ii > 1){
+    shr_tab <- rbind(shr_tab, county_shr)
+  }
 
 }
-
-
-
-
-str(fia_MABI)
-summary(fia_MABI)
-length(fia_MABI)
-fia_colnam <- as_tibble(matrix(NA, nrow = length(colnames(fia_MABI[[1]])), ncol = 3))
-colnames(fia_colnam) <- c("colname", "tibble", "tib_num")
-fia_colnam <- fia_colnam %>%
-                mutate(colname = as.character(colnames(fia_MABI[[1]])),
-                       tibble = as.character(names(fia_MABI)[1]),
-                       tib_num = as.numeric(1))
-
-for(i in 2:(length(fia_MABI)-1)){
-  rbind(fia_colnam, 
-        as_tibble(cbind(colnames(fia_MABI[[i]]), 
-                        rep(names(fia_MABI)[i], length(colnames(fia_MABI[[i]]))), 
-                        rep(i, length(colnames(fia_MABI[[i]]))))) %>% 
-          rename(colname = V1, tibble = V2, tib_num = V3) %>% 
-          mutate(colname = as.character(colname),
-                 tibble = as.character(tibble),
-                 tib_num = as.numeric(tib_num)))
-}
-
-
-get("fia_{park_county$park[ii]}")
-
- db2_cond <- dbclip2$COND[c("CN", "PLT_CN", "INVYR", "UNITCD", "PLOT", "CONDID","COUNTYCD", "STATECD",
-                            "COND_STATUS_CD", "OWNCD", "OWNGRPCD", "FORTYPCD",
-                            "FLDTYPCD", "STDAGE", "STDSZCD", "SIBASE", "STDORGCD",
-                            "ALSTKCD", "DSTRBCD1", "DSTRBYR1", "DSTRBCD2", "TRTCD1",
-                            "PRESNFCD", "BALIVE", "FLDAGE", "ALSTK", "GSSTK", "FORTYPCDCALC",
-                            "HABTYPCD1", "CARBON_LITTER", "GRAZING_SRS", "HARVEST_TYPE1_SRS",
-                            "LIVE_CANOPY_CVR_PCT", "NBR_LIVE_STEMS", "DSTRBCD1_P2A", "TRTCD1_P2A",
-                            "LAND_COVER_CLASS_CD")]
-
 
