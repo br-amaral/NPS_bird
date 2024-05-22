@@ -10,12 +10,12 @@
 # Input ----------------------------------------------
 #           from here: #!MISTERY WHERE THIS COMES FROM
 #           - data/out/close_points_fcovs.rds
-#           - data/NETN-forest/tree_ba_tab_park.rds
-#           - data/NETN-forest/tree_den_tab_park.rds
-#           - data/NETN-forest/stand_struc_tab_park.rds
-#           - data/FIA/out/bas_area_tot_import.rds
-#           - data/FIA/out/tree_acre_tot_import.rds
-#           - data/FIA/out/stand_struc_import.rds
+#!           - data/NETN-forest/tree_ba_tab_park.rds
+#!           - data/NETN-forest/tree_den_tab_park.rds
+#!           - data/NETN-forest/stand_struc_tab_park.rds
+#!           - data/FIA/out/bas_area_tot_import.rds
+#!           - data/FIA/out/tree_acre_tot_import.rds
+#!           - data/FIA/out/stand_struc_import.rds
 #           - data/park_raster/{pk[i]}_pb.rds : raster of each park to get park size 
 #
 #           from code/format_bird_data/format_data.R:
