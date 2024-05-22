@@ -66,13 +66,9 @@ for_park2 <- for_park %>%
          parkBA_mature = mean(pctBA_mature, na.rm = T),
          parkBA_large = mean(pctBA_large, na.rm = T),
          parkSAPden = mean(sap_den_m2, na.rm = T),
-         parkSHRUden = mean(shrub_cov, na.rm = T),
-         X_for = X,      
-         Y_for = Y,
-         UTMZone_for = UTMZone,
-         for_sit = Plot_Name)  %>% 
+         parkSHRUden = mean(shrub_cov, na.rm = T))  %>% 
   ungroup() %>% 
-  select(for_sit, ParkUnit, X_for, Y_for, UTMZone_for,
+  select(ParkUnit,
          parkDEN, parkBA, parkRICH, parkSTAstand,
          parkBA_pole, parkBA_mature, parkBA_large,
          parkSAPden, parkSHRUden) %>% 
