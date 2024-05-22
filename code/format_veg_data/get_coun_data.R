@@ -3,18 +3,17 @@
 #? *********************************************************************************
 # Code to get the environmental variables at the county level
 #
-#
 #! Source ---------------------------------------------
-#           -  :
-#           -  :
+#           - getFIA function: from the rFIA package, get FIA data for states
 #
 #! Input ----------------------------------------------
-#           - :
-#           - :
+#
 #
 #! Output ----------------------------------------------
-#           - :
-#           - :
+#           - data/FIA/county_tpa_tab.rds : tree basal area and density
+#           - data/FIA/county_stastr_tab.rds : stand structure
+#           - data/FIA/county_div_tab.rds : tree richness
+#           - data/FIA/county_shr_tab.rds : shrub cover
 #
 # detach packages and clear workspace
 if(!require(freshr)){install.packages('freshr')}
@@ -58,15 +57,6 @@ Modes <- function(x) {
 # nj <- getFIA(states = 'NJ', dir = 'data/FIA', load = FALSE)
 
 #! Import data -----------------------------------------
-## file paths
-PARK_COUNTY_PATH <- "data/park_county.rds"
-PARKS_LIST_PATH <- "data/src/key_park.rds"
-
-## read files
-parks <- readRDS(file = PARKS_LIST_PATH) %>% 
-  dplyr::select(parks) %>% 
-  distinct() %>% 
-  pull()
 
 # master table with parks and counties
 # county location of each park
@@ -86,14 +76,15 @@ park_county <- matrix(c(
   as_tibble()
 colnames(park_county) <- c("park", "county", "state", "state_abbr")
 
-## write_rds(park_county, file = "data/park_county.rds") -----------------------------------------
-write_rds(park_county, file = "data/park_county.rds")
+parks <- park_county$park
 
 ### Get multiple states worth of data (not saved since 'dir' is not specified)
 ### Load FIA Data from a local directory
 db <- readFIA('data/FIA/')
 
-#! calculate park means --------------------------------
+#! Script! ---------------------------------------------
+
+#? calculate park means --------------------------------
 for(ii in 1:nrow(park_county)){
   # get county shapefile
   county_sp <- counties(park_county$state[ii], cb = TRUE)
@@ -165,8 +156,10 @@ for(ii in 1:nrow(park_county)){
 
 ###? Shrub cover ---------------------------------------------------------
 # shrub data
-## LVSHRBCD: Live shrub code. A cover class code indicating the percent cover of the forested microplot area covered with live shrubs.
-## LVSHRBHT: Live shrub height. Indicates the height of the tallest live shrub to the nearest 0.1 foot. Heights <6 feet are measured and heights 6 feet are estimated.
+# LVSHRBCD: Live shrub code. A cover class code indicating the percent cover of 
+#           the forested microplot area covered with live shrubs.
+# LVSHRBHT: Live shrub height. Indicates the height of the tallest live shrub to the
+#           nearest 0.1 foot. Heights <6 feet are measured and heights 6 feet are estimated.
 
 for(ii in 1:nrow(park_county)){
   
@@ -190,3 +183,8 @@ for(ii in 1:nrow(park_county)){
 
 }
 
+#? Output files -----------------------------------------
+write_rds(tpa_tab, file = "data/FIA/county_tpa_tab.rds")
+write_rds(stastr_tab, file = "data/FIA/county_stastr_tab.rds")
+write_rds(div_tab, file = "data/FIA/county_div_tab.rds")
+write_rds(shr_tab, file = "data/FIA/county_shr_tab.rds")
