@@ -1,5 +1,32 @@
 --------- my script log file ---------
 
+DOOOOO(ing):
+
+( ) avaliar o modelo com b0 que nao varia com ano
+( ) incorporate covariates
+... get covariates for the county level - check kate's scripts!
+
+
+
+--------------------------------------------------------------------------------------------------------------------------
+TO DO:
+- rodar modelo basico para mais sps
+- plotar vizinhos com o cover map
+
+
+
+--------------------------------------------------------------------------------------------------------------------------
+Assumptions/decisions:
+
+- add covariate value inputation - some site level have no forest covariates; right now im adding zero
+
+- parks: acadia is too big, sair is too different (open areas)
+
+- 500 m for the radius between the sites make sense for bird home range, but is that meaningful? now uning with 1000m
+
+- tree diversity is still missing from environmental covs
+
+-------------------------------------------------------------------------------------------------------------------------
 workflow:
 
 # veg_maps_park.R
@@ -29,6 +56,12 @@ workflow:
             out - data/out/for_sit2.rds
 ------------out - data/out/close_points_fcovs.rds
 
+# get_park_data.R
+
+# FIA_getdata.R
+
+# get_coun_data.R
+
 # 2_create_data_files.R
 ------------in  - data/out/close_points_fcovs.rds
             in  - data/NETN-forest/tree_ba_tab_park.rds
@@ -57,27 +90,3 @@ workflow:
 
             out - data/model_res/jags_res_{sps}_{park}_run{run_number}.rds
 --------------------------------------------------------------------------------------------------------------------------
-DOOOOO(ing):
-... checar se os vizinhos estao funcionando
-
-- rodar o modelo com b0 que nao varia com ano
-- incorporate covariates
-- descobrir de onde raios eu tirei os environmental .rds
-- rodar modelo basico para mais sps
-
-
-
---------------------------------------------------------------------------------------------------------------------------
-TO DO:
-
-
-
-
---------------------------------------------------------------------------------------------------------------------------
-Assumptions/decisions:
-
-- add covariate value inputation - some site level have no forest covariates; right now im adding zero
-
-- parks: acadia is too big, sair is too different (open areas)
-
-- 500 m for the radius between the sites make sense for bird home range, but is that meaningful? now uning with 1000m

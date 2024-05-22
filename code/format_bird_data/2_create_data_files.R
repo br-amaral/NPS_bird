@@ -548,10 +548,10 @@ X3 <- left_join(X2, stand_struc_tab_site, by = c("park", "site_n", "Point_Name")
 ### Tree richness
 tree_rich_tab_site <- close_points_f2 %>% 
   mutate(Point_Name = bird_sit,
-         siteRICHtree = tree_richM) %>% 
+         siteRICH = tree_richM) %>% 
   select(Point_Name,
          park,
-         siteRICHtree) %>%
+         siteRICH) %>%
   left_join(., site_key, by = c("Point_Name", "park"))
  
 X4 <- left_join(X3, tree_rich_tab_site, by = c("park", "site_n", "Point_Name"))
