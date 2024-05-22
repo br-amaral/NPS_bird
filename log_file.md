@@ -4,7 +4,7 @@ DOOOOO(ing):
 
 ( ) avaliar o modelo com b0 que nao varia com ano
 ( ) incorporate covariates
-... get covariates for the county level - check kate's scripts!
+
 
 
 
@@ -12,6 +12,8 @@ DOOOOO(ing):
 TO DO:
 - rodar modelo basico para mais sps
 - plotar vizinhos com o cover map
+- right now park diversity is using the mean of species for each site - it should be the value for all the park, not the mean for sites
+- tree diversity is still missing from environmental covs (county has indexes of diversity, park has number of species per site; park prob has species list to calculate indeces!)
 
 
 
@@ -20,11 +22,10 @@ Assumptions/decisions:
 
 - add covariate value inputation - some site level have no forest covariates; right now im adding zero
 
-- parks: acadia is too big, sair is too different (open areas)
+- parks removed: acadia is too big, sair is too different (open areas)
 
 - 500 m for the radius between the sites make sense for bird home range, but is that meaningful? now uning with 1000m
 
-- tree diversity is still missing from environmental covs
 
 -------------------------------------------------------------------------------------------------------------------------
 workflow:
