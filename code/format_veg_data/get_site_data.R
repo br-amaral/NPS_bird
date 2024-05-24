@@ -19,12 +19,12 @@
 #
 #! Output ----------------------------------------------
 #           - data/out/close_points_f.rds : tibble with combinations of forest and bird sites, and the distances between them
-#           - data/out/park_site.rds :
-#           - data/out/for_sit_coord.rds :
-#           - data/out/bird_site_coords.rds :
+#!          - data/out/park_site.rds :
+#!          - data/out/for_sit_coord.rds :
+#!          - data/out/bird_site_coords.rds :
 #           - data/out/site_covs.rds : output file with the covariate values
-#           - data/out/for_sit2.rds :
-#           - data/out/close_points_fcovs.rds :
+#!          - data/out/for_sit2.rds :
+#!          - data/out/close_points_fcovs.rds :
 #
 # detach packages and clear workspace
 if(!require(freshr)){install.packages('freshr')}
@@ -314,7 +314,7 @@ close_points_f <- close_points_f %>%
                     distinct()
 
 # write_rds data/out/close_points_f.rds
-write_rds(close_points_f, file = "data/out/close_points_f1.rds")
+write_rds(close_points_f, file = "data/out/close_points_f.rds")
 
 # plot close points by park
 ## join coordinates
@@ -419,177 +419,3 @@ write_rds(close_points_f2, file = "data/out/site_covs.rds")
 
 
 
-# creating correlation matrix
-corr_mat <- round(cor(close_points_f2[,c(3:5,7:11)], use="complete.obs"),2)
-
-# reduce the size of correlation matrix
-melted_corr_mat <- melt(corr_mat) %>% 
-    mutate(cov = substr(Var1,5,6))
-
-# plotting the correlation heatmap
-ggplot(data = melted_corr_mat, aes(x=Var1, y=Var2, 
-								fill=value)) + 
-geom_tile(color = "white")+
- scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
-   midpoint = 0, limit = c(-1,1), space = "Lab", 
-   name="Correlation \n") +
-   theme_minimal()+ 
- theme(axis.text.x = element_text(vjust = 1, angle = 90),
-       axis.title.x = element_blank(),       # Change x axis title only
-       axis.title.y = element_blank() )+
- geom_text(aes(Var1, Var2, label = value), 
-		color = "black", 
-        size = 4)  
-
-#! Variation plot for site ----------------------------------------------
-ggplot(close_points_f2, aes(x=park, y=BA_m2haM, fill=park)) +
-  geom_boxplot() +
-  geom_jitter(position=position_jitter(0.2), alpha = 0.5) +
-  coord_flip() +
-  theme_bw() +
-  theme(legend.position="none",
-        axis.title.y = element_blank(),
-        plot.title = element_text(hjust = 0.5)) +
-  labs(title = "Site Scale",
-       y =" \n  Basal area of live trees \n(>=10cm DBH in m2/ha)")
-
-
-#! park level covs ----------------------------------------------
-park_covs <- for_sit  %>% 
-              mutate(park = substr(Plot_Name, 1, 4))  %>% 
-              group_by(park) %>% 
-              mutate(treeden_haM = mean(treeden_ha, na.rm = T),
-                    BA_m2haM = mean(BA_m2ha, na.rm = T),
-                    tree_richM = mean(tree_rich, na.rm = T),
-                    StageM = Modes(Stage),
-                    pctBA_poleM = mean(pctBA_pole, na.rm = T),
-                    pctBA_matureM = mean(pctBA_mature, na.rm = T),
-                    pctBA_largeM = mean(pctBA_large, na.rm = T),
-                    sap_den_m2M = mean(sap_den_m2, na.rm = T),
-                    shrub_covM = mean(shrub_cov, na.rm = T))  %>% 
-              ungroup() %>% 
-              select(park,
-                    treeden_haM, BA_m2haM, tree_richM, StageM, pctBA_poleM, 
-                    pctBA_matureM, pctBA_largeM, sap_den_m2M, shrub_covM) %>% 
-              distinct()
-
-#! Variation plot for park ----------------------------------------------
-for_sit %>% 
-  mutate(park = substr(Plot_Name, 1, 4))  %>% 
-  #filter(park %!in% c("ELRO", "HOFR", "ROVA", "VAMA")) %>%  
-  ggplot(aes(x=park, y=BA_m2ha, fill=park))  +
-    geom_boxplot() +
-    geom_jitter(position=position_jitter(0.2), alpha = 0.3) +
-    coord_flip() +
-    theme_bw() +
-    theme(legend.position="none",
-          axis.title.y = element_blank(),
-          plot.title = element_text(hjust = 0.5)) +
-    labs(title = "Park Scale",
-        y =" \n  Basal area of live trees \n(>=10cm DBH in m2/ha)") +
-    scale_fill_manual(values = met.brewer("Morgenstern")) +
-    stat_summary(colour = "red", size = 0.75)
-
-#! Correlation plots --------------------------------------------------
-## basal area ---------------------------------------------------------
-county_covs <- read_rds(file = "data/FIA/out/tpa_fim.rds") %>% 
-  filter(park %!in% c("ELRO", "HOFR", "ROVA", "VAMA"))  %>% 
-  group_by(park) %>% 
-  mutate(BA_coun = mean(BAA, na.rm = T))  %>% 
-  ungroup() %>% 
-  select(park,
-         BA_coun) %>% 
-  distinct()
-
-park_covs
-
-all_scales_covs <- left_join(county_covs, 
-                             park_covs %>% rename(BA_park = BA_m2haM) %>% select(park, BA_park),
-                             by = "park")
-
-all_scales_covs <- left_join(close_points_f2 %>% 
-                                rename(BA_site = BA_m2haM) %>% 
-                                select(park, BA_site),
-                             all_scales_covs,
-                             by = "park") %>% 
-                             distinct()
-all_scales_covs <- all_scales_covs  %>% 
-                     relocate(park, BA_site, BA_park, BA_coun)
-
-# creating correlation matrix
-corr_mat <- round(cor(all_scales_covs[,2:4], use="complete.obs"),2)
-
-# reduce the size of correlation matrix
-melted_corr_mat <- melt(corr_mat) %>% 
-    mutate(cov = substr(Var1,5,6))
-
-# plotting the correlation heatmap
-ggplot(data = melted_corr_mat, aes(x=Var1, y=Var2, 
-								fill=value)) + 
-geom_tile(color = "white")+
- scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
-   midpoint = 0, limit = c(-1,1), space = "Lab", 
-   name="Correlation \n") +
-   theme_minimal()+ 
- theme(axis.text.x = element_text(vjust = 1, angle = 90),
-       axis.title.x = element_blank(),       # Change x axis title only
-       axis.title.y = element_blank() )+
- geom_text(aes(Var1, Var2, label = value), 
-		color = "black", 
-        size = 4)  
-
-library("PerformanceAnalytics")
-chart.Correlation(all_scales_covs[,2:4], histogram=TRUE, pch=19)
-
-## density ---------------------------------------------------------
-county_covs <- read_rds(file = "data/FIA/out/tpa_fim.rds") %>% 
-  filter(park %!in% c("ELRO", "HOFR", "ROVA", "VAMA"))  %>% 
-  group_by(park) %>% 
-  # change from per acre to hectare
-  mutate(TPH_coun = mean(TPA*2.471, na.rm = T))  %>% 
-  ungroup() %>% 
-  select(park,
-         TPH_coun) %>% 
-  distinct()
-
-park_covs
-
-all_scales_covs <- left_join(county_covs, 
-                             park_covs %>% 
-                                rename(TPH_park = treeden_haM) %>% 
-                                select(park, TPH_park),
-                             by = "park")
-
-all_scales_covs <- left_join(close_points_f2 %>% 
-                                rename(TPH_site = treeden_haM) %>% 
-                                select(park, TPH_site),
-                             all_scales_covs,
-                             by = "park") %>% 
-                             distinct()
-
-all_scales_covs <- all_scales_covs  %>% 
-                     relocate(park, TPH_site, TPH_park, TPH_coun)
-
-# creating correlation matrix
-corr_mat <- round(cor(all_scales_covs[,2:4], use="complete.obs"),2)
-
-# reduce the size of correlation matrix
-melted_corr_mat <- melt(corr_mat) %>% 
-    mutate(cov = substr(Var1,5,6))
-
-# plotting the correlation heatmap
-ggplot(data = melted_corr_mat, aes(x=Var1, y=Var2, 
-								fill=value)) + 
-geom_tile(color = "white")+
- scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
-   midpoint = 0, limit = c(-1,1), space = "Lab", 
-   name="Correlation \n") +
-   theme_minimal()+ 
- theme(axis.text.x = element_text(vjust = 1, angle = 90),
-       axis.title.x = element_blank(),       # Change x axis title only
-       axis.title.y = element_blank() )+
- geom_text(aes(Var1, Var2, label = value), 
-		color = "black", 
-        size = 4)  
-
-chart.Correlation(all_scales_covs[,2:4], histogram=TRUE, pch=19)
