@@ -10,10 +10,7 @@
 #
 #
 #! Output ----------------------------------------------
-#           - data/FIA/county_tpa_tab.rds : tree basal area and density
-#           - data/FIA/county_stastr_tab.rds : stand structure
-#           - data/FIA/county_div_tab.rds : tree richness
-#           - data/FIA/county_shr_tab.rds : shrub cover
+#           - data/out/coun_covs.rds - county covariate data for model
 #
 # detach packages and clear workspace
 if(!require(freshr)){install.packages('freshr')}
