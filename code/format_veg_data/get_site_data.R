@@ -22,7 +22,7 @@
 #           - data/out/park_site.rds :
 #           - data/out/for_sit_coord.rds :
 #           - data/out/bird_site_coords.rds :
-#           - data/out/site_covs.rds :
+#           - data/out/site_covs.rds : output file with the covariate values
 #           - data/out/for_sit2.rds :
 #           - data/out/close_points_fcovs.rds :
 #
@@ -413,6 +413,8 @@ close_points_f2 <- left_join(close_points_f, for_sit2, by = "for_sit") %>%
 #! Output files ----------------------------------------------
 write_rds(for_sit2, file = "data/out/for_sit2.rds")
 write_rds(close_points_f2, file = "data/out/site_covs.rds")
+
+
 
 
 
