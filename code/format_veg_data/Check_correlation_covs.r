@@ -91,28 +91,19 @@ melted_corr_mat %>%
 #! Correlation plot for county ----------------------------------------------
 corr_mat <- round(cor(X5[,c(24:39)], use="complete.obs"),2)
 
-# reduce the size of correlation matrix
-melted_corr_mat <- melt(corr_mat) %>% 
-    mutate(cov = substr(Var1,5,6))
+pairs.panels(X5[,c(24:29)],
+             smooth = TRUE,         # If TRUE, draws loess smooths
+             scale = TRUE,          # If TRUE, scales the correlation text font
+             density = TRUE,        # If TRUE, adds density plots and histograms
+             ellipses = FALSE,      # If TRUE, draws ellipses
+             method = "spearman",   # Correlation method ("spearman", "pearson" or "kendall")
+             lm = TRUE,             # If TRUE, plots linear fit rather than the LOESS (smoothed) fit
+             cor = TRUE,            # If TRUE, reports correlations
+             jiggle = FALSE,        # If TRUE, data points are jittered
+             hist.col = "magenta",  # Histograms color
+             stars = TRUE,          # If TRUE, adds significance level with stars
+             ci = TRUE)             # If TRUE, adds confidence intervals
 
-# plotting the correlation heatmap
-ggplot(data = melted_corr_mat, aes(x=Var1, y=Var2, 
-								fill=value)) + 
-geom_tile(color = "white")+
- scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
-   midpoint = 0, limit = c(-1,1), space = "Lab", 
-   name="Correlation \n") +
-   theme_minimal()+ 
- theme(axis.text.x = element_text(vjust = 1, angle = 90),
-       axis.title.x = element_blank(),       # Change x axis title only
-       axis.title.y = element_blank() )+
- geom_text(aes(Var1, Var2, label = value), 
-		color = "black", 
-        size = 4)  
-
-melted_corr_mat %>% 
-  filter(abs(value) < 0.5) %>% 
-  arrange(desc(value))
 
 # Same, but only for basal area, density and shrub ----------------
 
