@@ -1,21 +1,18 @@
-# *********************************************************************************
-# ----------------------------- 3_create_bird_data.R ------------------------------
-# *********************************************************************************
+#! *********************************************************************************
+#! ----------------------------- 3_create_bird_data.R ------------------------------
+#! *********************************************************************************
 # Code to create the y data file to run in the JAGS model 
 #   can be run for 1, all or groups f species, in one or all parks
 #
-# Source ---------------------------------------------
+#! Source ---------------------------------------------
 #           - code/format_bird_data/2_format_data.R:
 #
-# Input ----------------------------------------------
-#           from here: #!MISTERY WHERE THIS COMES FROM
+#! Input ----------------------------------------------
+#           from here: 
 #           - data/out/close_points_fcovs.rds
-#!           - data/NETN-forest/tree_ba_tab_park.rds
-#!           - data/NETN-forest/tree_den_tab_park.rds
-#!           - data/NETN-forest/stand_struc_tab_park.rds
-#!           - data/FIA/out/bas_area_tot_import.rds
-#!           - data/FIA/out/tree_acre_tot_import.rds
-#!           - data/FIA/out/stand_struc_import.rds
+#           - data/out/coun_covs.rds - covariate data from county level
+#           - data/out/park_covs.rds - covariate data from park level
+#           - data/out/site_covs.rds - covariate data from site level
 #           - data/park_raster/{pk[i]}_pb.rds : raster of each park to get park size 
 #
 #           from code/format_bird_data/format_data.R:
@@ -41,7 +38,7 @@ library(tidyverse)
 library(glue)
 library(hms)
 library(lubridate)
-# library(splitstackshape)
+library(splitstackshape)
 
 conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::filter)
@@ -56,22 +53,14 @@ lenght <- length
 ## Create empty matrix with all parks, species, years, sites and intervals --------------------------
 source("code/format_bird_data/format_data.R")
 
-#
-yog <- y1
+# yog <- y1 # reset safety ;)
 
 # Import data -----------------------------------------
 ## file paths
-
-#  Point_Name siteBA site_n park 
+PATH_COVS_COUN <- "data/out/coun_covs.rds"
+PATH_COVS_PARK <- "data/out/park_covs.rds"
+PATH_COVS_SITE <- "data/out/site_covs.rds"
 PATH_SITE_COVS <- "data/out/close_points_fcovs.rds"
-
-PATH_TREE_BA_PARK <- "data/NETN-forest/tree_ba_tab_park.rds"
-PATH_TREE_DEN_PARK <- "data/NETN-forest/tree_den_tab_park.rds"
-PATH_TREE_STR_PARK <- "data/NETN-forest/stand_struc_tab_park.rds"
-
-PATH_TREE_BA_COUN <- "data/FIA/out/bas_area_tot_import.rds"
-PATH_TREE_DEN_COUN <- "data/FIA/out/tree_acre_tot_import.rds"
-PATH_TREE_STR_COUN <- "data/FIA/out/stand_struc_import.rds"
 
 ## parks -------------------------------------------------------------------------------------------
 pk_list <- visits %>% 
@@ -437,6 +426,7 @@ spy_grid_yesdetec_cov <- spy_grid_zero %>%
                                -Bird_Count, -bird_detec, -AOU_Code, -spskey, -spskey_p) %>% 
                 distinct(),
              by = c("Point_Name", "Year", "park"))
+
 dim(spy_grid_yesdetec_cov) ; dim(spy_grid_zero)
 # add the missing columns and rename the y_dat3 column
 # bird_detec is the detection for that interval, while detec_occ is if it was detected that occasion (site-year)
