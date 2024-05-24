@@ -42,10 +42,13 @@ park_county <- matrix(c(
   'SAIR', 'Essex County', 'Massachusetts',
   'SARA', 'Saratoga County', 'New York',
   'VAMA', 'Dutchess County', 'New York',
-  'WEFA', 'Fairfield County', 'Connecticut'), 
+  'WEFA', 'Western Connecticut Planning Region', 'Connecticut'), # used to be 'Fairfield County'
   ncol = 3, byrow = T) %>% 
   as_tibble()
 colnames(park_county) <- c("park", "county", "state")
+
+## write_rds(park_county, file = "data/park_county.rds") -----------------------------------------
+write_rds(park_county, file = "data/park_county.rds")
 
 for(ii in 1:nrow(park_county)){
   

@@ -1,12 +1,12 @@
 # *********************************************************************************
-# -------------------------------   Amazing Title   -------------------------------
+# ----------------------------  back2d_covs_scales_3  -----------------------------
 # *********************************************************************************
 # Code to run model to estimate the effect of different environmental
 #   covariates on bird occupancy in several national parks and on three
 #   different spatial scales
 #
 # Input ----------------------------------------------
-#           - data/y_dat4.rds: tibble with bird data
+#           - data/y_dat8.rds: tibble with bird data
 #           - data/X10.rds: tibble with covariate data
 #           - data/out/nsite_pk.rds: vector with number of sites in each park
 #           - data/src/key_park.rds: vector of all parks being analyzed
@@ -40,7 +40,6 @@ conflicts_prefer(dplyr::filter)
 # conflicts_prefer(scales::alpha)
 
 #if("sps_loop" %in% ls() == FALSE){stop("No species selected #38")}
-# teste teste
 
 # Make functions --------------------------------------
 colanmes <- colnames
@@ -55,7 +54,7 @@ SITE_PK_PATH <- "data/out/nsite_pk.rds"
 PARK_PATH <- "data/src/key_park.rds"
 
 sps_list <- sps_loop <- "RBWO"
-yearbo <- "yes"
+yearbo <- "no"
 
 ## read files
 y_dat4 <- read_rds(file = YDAT_PATH)

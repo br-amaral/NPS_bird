@@ -1,47 +1,32 @@
-# *********************************************************************************
-# ----------------------------- 3_create_bird_data.R ------------------------------
-# *********************************************************************************
+#! *********************************************************************************
+#! ----------------------------- 3_create_bird_data.R ------------------------------
+#! *********************************************************************************
 # Code to create the y data file to run in the JAGS model 
 #   can be run for 1, all or groups f species, in one or all parks
 #
-# Source ---------------------------------------------
+#! Source ---------------------------------------------
 #           - code/format_bird_data/2_format_data.R:
 #
-# Input ----------------------------------------------
-#           - y1: table of ones and zeros for sps detections
-#           - visits:
-
-#           - from code/2_format_data.R:
+#! Input ----------------------------------------------
+#           from here: 
+#           - data/out/close_points_fcovs.rds
+#           - data/out/coun_covs.rds - covariate data from county level
+#           - data/out/park_covs.rds - covariate data from park level
+#           - data/out/site_covs.rds - covariate data from site level
+#           - data/park_raster/{pk[i]}_pb.rds : raster of each park to get park size 
+#
+#           from code/format_bird_data/format_data.R:
 #             -- y1: table of ones and zeros for sps detections
-#             -- nsite_pk: number of sites sampled in each park
-#             -- yrs_pk: number of years sampled in each park
-#             -- ninterval: number of intervals of removal sampling
-#             -- site_vec:  
-#             -- site_pk:
-#           - data/src/original/NETN_2020/BirdSpecies.csv: get species list
-#           - data/NETN-forest/tree_ba_import.rds
-#           - data/park_raster/{pk[i]}_pb.rds: raster of each park to get park size 
-#             -- data/NETN-forest/tree_ba_import.rds
-#             -- data/NETN-forest/tree_den_import.rds
-#             -- data/NETN-forest/stand_import.rds
-#             -- data/NETN-forest/tree_ba_tab_park.rds
-#             -- data/NETN-forest/tree_den_tab_park.rds
-#             -- data/NETN-forest/stand_struc_tab_park.rds
-#             -- data/FIA/out/bas_area_tot_import.rds
-#             -- data/FIA/out/tree_acre_tot_import.rds
-#             -- data/FIA/out/stand_struc_import.rds
+#             -- visits (data/out/visits.rds): data from the visit files
+#             -- yr_pk: number of years sampled in each park
 #
 # Output ---------------------------------------------
-#           - data/out/site_n_key.rds: park and site unique key
 #           - data/src/sites_park_tib.rds: tibble with park, number of sites and site numbers and codes
+#           - data/out/site_n_key.rds: park and site unique key
 #           - data/out/y_dat3.rds: first tibble with ALL occasions for sps, park, site, year and interval
-#           - data/y_dat6.rds: birds data for each occasion, with park, species and site indexes
+#           - data/y_dat8.rds: birds data for each occasion, with park, species and site indexes
 #           - data/X10.rds: environmental variables for all scales for each occasion, same dim() as y_dat6.rds
 #           - data/sps_pk_nth.rds: species code in each park
-
-#           - from code/2_format_data.R:
-#             -- data/out/visits.rds : data from the visit files
-
 
 ## detach packages and clear workspace
 if(!require(freshr)){install.packages("freshr")}
@@ -53,7 +38,7 @@ library(tidyverse)
 library(glue)
 library(hms)
 library(lubridate)
-# library(splitstackshape)
+library(splitstackshape)
 
 conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::filter)
@@ -68,22 +53,14 @@ lenght <- length
 ## Create empty matrix with all parks, species, years, sites and intervals --------------------------
 source("code/format_bird_data/format_data.R")
 
-#
-yog <- y1
+# yog <- y1 # reset safety ;)
 
 # Import data -----------------------------------------
 ## file paths
-
-#  Point_Name siteBA site_n park 
+PATH_COVS_COUN <- "data/out/coun_covs.rds"
+PATH_COVS_PARK <- "data/out/park_covs.rds"
+PATH_COVS_SITE <- "data/out/site_covs.rds"
 PATH_SITE_COVS <- "data/out/close_points_fcovs.rds"
-
-PATH_TREE_BA_PARK <- "data/NETN-forest/tree_ba_tab_park.rds"
-PATH_TREE_DEN_PARK <- "data/NETN-forest/tree_den_tab_park.rds"
-PATH_TREE_STR_PARK <- "data/NETN-forest/stand_struc_tab_park.rds"
-
-PATH_TREE_BA_COUN <- "data/FIA/out/bas_area_tot_import.rds"
-PATH_TREE_DEN_COUN <- "data/FIA/out/tree_acre_tot_import.rds"
-PATH_TREE_STR_COUN <- "data/FIA/out/stand_struc_import.rds"
 
 ## parks -------------------------------------------------------------------------------------------
 pk_list <- visits %>% 
@@ -411,7 +388,8 @@ for(ii in 1:nrow(y_dat3)){
       if(as.numeric(y_dat3$Interval_n[ii]) > y_dat3$interval_n[ii]) {y_dat3$bird_detec[ii] <- 0} else {print(round(ii/nrow(y_dat3),2))}}
 }
 
- ##### write file: data/out/y_dat3.rds ------
+
+##### write file: data/out/y_dat3.rds ------
 write_rds(y_dat3, file = "data/out/y_dat3.rds")
 
 # This has all the zeros for all intervals, but I'm still missing an occasion for a species that was not detected in year X in site Y, but was detected ther on year X-1 or X+1
@@ -448,6 +426,7 @@ spy_grid_yesdetec_cov <- spy_grid_zero %>%
                                -Bird_Count, -bird_detec, -AOU_Code, -spskey, -spskey_p) %>% 
                 distinct(),
              by = c("Point_Name", "Year", "park"))
+
 dim(spy_grid_yesdetec_cov) ; dim(spy_grid_zero)
 # add the missing columns and rename the y_dat3 column
 # bird_detec is the detection for that interval, while detec_occ is if it was detected that occasion (site-year)
@@ -519,10 +498,11 @@ site_key <- y_dat6 %>%
    select(Point_Name, site_n, park) %>% 
    distinct()
 
-## site ------------
+## site ----------------------------------------------------------------------------------------------
 ## no data for all years, using mean between years
 close_points_f2 <- read_rds(PATH_SITE_COVS)
 
+### Tree basal area
 tree_ba_tab_site <- close_points_f2 %>% 
   mutate(Point_Name = bird_sit,
          siteBA = BA_m2haM) %>% 
@@ -531,6 +511,7 @@ tree_ba_tab_site <- close_points_f2 %>%
 
 X1 <- left_join(X, tree_ba_tab_site %>% select(-Point_Name), by = c("park", "site_n"))
 
+### Tree density
 tree_den_tab_site <- close_points_f2 %>% 
   mutate(Point_Name = bird_sit,
          siteDEN = treeden_haM) %>% 
@@ -539,18 +520,69 @@ tree_den_tab_site <- close_points_f2 %>%
 
 X2 <- left_join(X1, tree_den_tab_site, by = c("park", "site_n", "Point_Name"))
 
+### Stand structure
 stand_struc_tab_site <- close_points_f2 %>% 
-  mutate(Point_Name = bird_sit) %>% 
+  mutate(Point_Name = bird_sit,
+         siteBA_pole = pctBA_poleM,
+         siteBA_mature = pctBA_matureM,
+         siteBA_large = pctBA_largeM) %>% 
   select(Point_Name,
          park,
-         pctBA_poleM,
-         pctBA_matureM,
-         pctBA_largeM) %>%
+         siteBA_pole,
+         siteBA_mature,
+         siteBA_large) %>%
   left_join(., site_key, by = c("Point_Name", "park")) 
 
 X3 <- left_join(X2, stand_struc_tab_site, by = c("park", "site_n", "Point_Name"))
 
+### Tree richness
+tree_rich_tab_site <- close_points_f2 %>% 
+  mutate(Point_Name = bird_sit,
+         siteRICH = tree_richM) %>% 
+  select(Point_Name,
+         park,
+         siteRICH) %>%
+  left_join(., site_key, by = c("Point_Name", "park"))
+ 
+X4 <- left_join(X3, tree_rich_tab_site, by = c("park", "site_n", "Point_Name"))
+
+### Stage of stand (mode)
+table(close_points_f2$StageM)
+
+sta_stan_tab_site <- close_points_f2 %>% 
+  mutate(Point_Name = bird_sit,
+         siteSTAstand = StageM) %>% 
+  select(Point_Name,
+         park,
+         siteSTAstand) %>%
+  left_join(., site_key, by = c("Point_Name", "park"))
+ 
+X5 <- left_join(X4, sta_stan_tab_site, by = c("park", "site_n", "Point_Name"))
+
+### Sapling density
+sap_den_tab_site <- close_points_f2 %>% 
+  mutate(Point_Name = bird_sit,
+         siteSAPden = sap_den_m2M) %>% 
+  select(Point_Name,
+         park,
+         siteSAPden) %>%
+  left_join(., site_key, by = c("Point_Name", "park"))
+
+X6 <- left_join(X5, sap_den_tab_site, by = c("park", "site_n", "Point_Name"))
+
+### Shrub cover
+shru_cov_tab_site <- close_points_f2 %>% 
+  mutate(Point_Name = bird_sit,
+         siteSHRUden = shrub_covM) %>% 
+  select(Point_Name,
+         park,
+         siteSHRUden) %>%
+  left_join(., site_key, by = c("Point_Name", "park"))
+
+X7 <- left_join(X6, shru_cov_tab_site, by = c("park", "site_n", "Point_Name"))
+
 ## park --------------------------------------------------------------------------------
+### Tree basal area
 tree_ba_tab_park <- read_rds(PATH_TREE_BA_PARK) %>% 
   na.omit() %>% 
   group_by(park) %>% 
@@ -562,6 +594,7 @@ tree_ba_tab_park <- read_rds(PATH_TREE_BA_PARK) %>%
 
 X4 <- left_join(X3, tree_ba_tab_park, by = c("park"))
 
+### Tree density
 tree_den_tab_park <- read_rds(PATH_TREE_DEN_PARK) %>% 
   na.omit() %>% 
   group_by(park) %>% 
@@ -573,22 +606,36 @@ tree_den_tab_park <- read_rds(PATH_TREE_DEN_PARK) %>%
 
 X5 <- left_join(X4, tree_den_tab_park, by = c("park"))
 
+### Stand structure
 stand_struc_tab_park <- read_rds(PATH_TREE_STR_PARK)
 
+### Tree richness
+### Stage of stand (mode)
+### Sapling density
+### Shrub cover
+
 ## county ---------------------------------------------------------------------------------
+### Tree basal area
 tree_ba_tab_coun <- read_rds(PATH_TREE_BA_COUN) %>% 
   select(-BAA_SE_mean) %>% 
   rename(counBA = BAA_mean)
 
 X6 <- left_join(X5, tree_ba_tab_coun, by = c("park"))
 
+### Tree density
 tree_den_tab_coun <- read_rds(PATH_TREE_DEN_COUN) %>% 
   select(-TPA_SE_mean) %>% 
   rename(counDEN = TPA_mean)
 
 X7 <- left_join(X6, tree_den_tab_coun, by = c("park"))
 
+### Stand structure
 stand_struc_tab_coun <- read_rds(PATH_TREE_STR_COUN)
+
+### Tree richness
+### Stage of stand (mode)
+### Sapling density
+### Shrub cover
 
 ## park area ------------------------------------------------------------------
 park_size <- as_tibble(matrix(NA, nrow = length(unique(y_dat4$park)), ncol = 2))

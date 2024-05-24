@@ -1,5 +1,5 @@
 #? *********************************************************************************
-#? -------------------------------   Amazing Title   -------------------------------
+#? ------------------------------   get_site_data.R   ------------------------------
 #? *********************************************************************************
 #! Code to ...
 #
@@ -9,15 +9,22 @@
 #           - :
 #
 #! Input ----------------------------------------------
-#           - data/veg_kateaaron/NETN_forest_data_2006-2023.rds : site forest covariates
-#           - data/veg_kateaaron/for_sites.rds : name of all the sites with they XY coordinates
-#           - data/veg_kateaaron/NETN_tree_dens_spp_2006-2023.rds : tree species abundance
-#           - data/veg_kateaaron/NETN_forest_metadata.csv : meta data with info of the columns of the forest variables
-#           -  : tibble with site names and coordinates
+#           - data/out/NETNtib.rds :
+#           - data/src/key_park.rds :
+#           - data/veg_kateaaron/NETN_forest_data_2006-2023.rds :
+#           - data/veg_kateaaron/NETN_tree_dens_spp_2006-2023.rds :
+#           - data/veg_kateaaron/for_sites.rds : 
+#           - data/out/key_bsite.rds : 
+#           - data/out/key_fsite.rds :
 #
 #! Output ----------------------------------------------
 #           - data/out/close_points_f.rds : tibble with combinations of forest and bird sites, and the distances between them
-#           - :
+#           - data/out/park_site.rds :
+#           - data/out/for_sit_coord.rds :
+#           - data/out/bird_site_coords.rds :
+#           - data/out/site_covs.rds : output file with the covariate values
+#           - data/out/for_sit2.rds :
+#           - data/out/close_points_fcovs.rds :
 #
 # detach packages and clear workspace
 if(!require(freshr)){install.packages('freshr')}
@@ -28,7 +35,7 @@ library(conflicted)
 library(tidyverse)
 library(glue)
 library(sp)
-library(rgdal)
+#library(rgdal)
 library(sf)
 library(reshape2)
 library(ggplot2)
@@ -43,9 +50,16 @@ conflicts_prefer(dplyr::filter)
 colanmes <- colnmaes <- colnames
 lenght <- length
 `%!in%` <- Negate(`%in%`)
-#
-#! Source code -----------------------------------------
-#
+
+Modes <- function(x) {
+  ux <- unique(x)
+  tab <- tabulate(match(x, ux))
+  if(length(ux[tab == max(tab)]) > 1) {
+    sample(ux[tab == max(tab)], 1)
+    } else {
+      ux[tab == max(tab)]}
+}
+
 #! Import data -----------------------------------------
 ## file paths
 BIRD_SITE_PATH    <- "data/out/NETNtib.rds"
@@ -91,6 +105,7 @@ for(ii in 1:length(bird_sit$points)){
 
 nrow(park_site)
 
+## write_rds "data/out/park_site.rds"
 write_rds(park_site, file = "data/out/park_site.rds")
 
 # get coordinates from bird plots
@@ -119,7 +134,7 @@ par(mfrow = c(1,2))
 plot(for_sit_coord$lonutm, for_sit_coord$latutm)
 plot(bird_sit_coord$lon, bird_sit_coord$lat)
 
-#! convert all bird coordinates to UTM to get distances in meters
+#? convert all bird coordinates to UTM to get distances in meters --------------------
 xy <- data.frame(ID = 1:nrow(bird_sit_coord), 
                  X = bird_sit_coord$lon, 
                  Y = bird_sit_coord$lat)
@@ -169,9 +184,8 @@ ggplot() +
 
 # great - it all alligns very well; now let's get the closest 3 sites
 
-#! Connect forest sites and bird sites --------------------
-#TODO: attentionnnn
-# SAIR does not have forest plots, so it is gonna be removed for now 
+#? Connect forest sites and bird sites -----------------------------------
+# there is no SAIR site level data
 bird_sit_coord2 <- bird_sit_coord %>% 
     as_tibble() %>% 
     mutate(park = substr(bird_sit, 1 , 4)) %>%
@@ -294,10 +308,12 @@ for (ii in 1:nrow(bird_sit_coord2)) {
   print(ii)
 }
 
+# connects forest and bird sites
 close_points_f <- close_points_f %>% 
                     arrange(bird_sit, dist) %>% 
                     distinct()
 
+# write_rds data/out/close_points_f.rds
 write_rds(close_points_f, file = "data/out/close_points_f1.rds")
 
 # plot close points by park
@@ -344,16 +360,7 @@ table(close_points_f$bird_sit) %>% sort()
 
 table(for_sit$SampleYear) %>% max()
 
-#! get means for all years ----------------------------------------------
-Modes <- function(x) {
-  ux <- unique(x)
-  tab <- tabulate(match(x, ux))
-  if(length(ux[tab == max(tab)]) > 1) {
-    sample(ux[tab == max(tab)], 1)
-    } else {
-      ux[tab == max(tab)]}
-}
-
+#? get means for all years ----------------------------------------------
 ## mean for all years
 for_sit2 <- for_sit %>% 
   #filter(SampleYear == 2022) %>% 
@@ -391,12 +398,26 @@ close_points_f2 <- left_join(close_points_f, for_sit2, by = "for_sit") %>%
   ungroup() %>% 
   mutate(park = substr(bird_sit, 1, 4)) %>%
   select(bird_sit, park,
-         treeden_haM, BA_m2haM, tree_richM, StageM, pctBA_poleM, 
-         pctBA_matureM, pctBA_largeM, sap_den_m2M, shrub_covM) %>% 
-  distinct()
+         treeden_haM, BA_m2haM, tree_richM, StageM, 
+         pctBA_poleM, pctBA_matureM, pctBA_largeM, 
+         sap_den_m2M, 
+         shrub_covM) %>% 
+  distinct() %>% 
+  rename(ParkUnit = park,
+         siteDEN = treeden_haM, siteBA = BA_m2haM, 
+         siteRICH = tree_richM, siteSTA = StageM,
+         siteBA_pole = pctBA_poleM, siteBA_mature = pctBA_matureM, siteBA_large = pctBA_largeM,
+         siteSAPden = sap_den_m2M, 
+         siteSHRUden = shrub_covM)
 
+#! Output files ----------------------------------------------
 write_rds(for_sit2, file = "data/out/for_sit2.rds")
-write_rds(close_points_f2, file = "data/out/close_points_fcovs.rds")
+write_rds(close_points_f2, file = "data/out/site_covs.rds")
+
+
+
+
+
 
 # creating correlation matrix
 corr_mat <- round(cor(close_points_f2[,c(3:5,7:11)], use="complete.obs"),2)
