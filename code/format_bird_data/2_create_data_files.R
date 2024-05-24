@@ -53,7 +53,7 @@ lenght <- length
 ## Create empty matrix with all parks, species, years, sites and intervals --------------------------
 source("code/format_bird_data/format_data.R")
 
-# yog <- y1 # reset safety ;)
+yog <- y1 # reset safety ;)
 
 # Import data -----------------------------------------
 ## file paths
@@ -387,7 +387,6 @@ for(ii in 1:nrow(y_dat3)){
    if(as.numeric(y_dat3$Interval_n[ii]) == y_dat3$interval_n[ii]) {y_dat3$bird_detec[ii] <- 1} else {
       if(as.numeric(y_dat3$Interval_n[ii]) > y_dat3$interval_n[ii]) {y_dat3$bird_detec[ii] <- 0} else {print(round(ii/nrow(y_dat3),2))}}
 }
-
 
 ##### write file: data/out/y_dat3.rds ------
 write_rds(y_dat3, file = "data/out/y_dat3.rds")
