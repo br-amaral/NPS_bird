@@ -3,9 +3,12 @@ library(conflicted)
 library(tidyverse)
 library(glue)
 library(psych)
+library(AHMbook)
+library(ggplot2)
 
 conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::filter)
+conflicts_prefer(AHMbook::standardize)
 
 X5 <- read_rds(file = "data/X5.rds")
 
@@ -61,6 +64,198 @@ geom_tile(color = "white")+
 melted_corr_mat %>% 
   filter(abs(value) < 0.5) %>% 
   arrange(desc(value))
+
+## group by year and site
+sit_yr <- X5[,c(3:4,6:8, 10:14)] %>% 
+  group_by(Year, Point_Name) %>% 
+  summarise_all(mean, na.rm = T) %>% 
+  ungroup() %>% 
+  filter(!is.na(siteDEN))
+
+corr_mat <- round(cor(sit_yr[,c(3:10)], use="complete.obs"),2)
+
+melted_corr_mat <- melt(corr_mat) %>% 
+    mutate(cov = substr(Var1,5,6))
+
+# plotting the correlation heatmap
+ggplot(data = melted_corr_mat, aes(x=Var1, y=Var2, 
+								fill=value)) + 
+geom_tile(color = "white")+
+ scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+   midpoint = 0, limit = c(-1,1), space = "Lab", 
+   name="Correlation \n") +
+   theme_minimal()+ 
+ theme(axis.text.x = element_text(vjust = 1, angle = 90),
+       axis.title.x = element_blank(),       # Change x axis title only
+       axis.title.y = element_blank() )+
+ geom_text(aes(Var1, Var2, label = value), 
+		color = "black", 
+        size = 4)  
+
+#! Variation plot for site ----------------------------------------------
+var_site <- X5[,c(3:4, 6:8, 10:14)] %>% 
+  distinct() %>% 
+  rowwise() %>%
+  mutate(rem = sum(siteDEN, siteBA, siteRICH, 
+                   siteBA_pole, siteBA_mature, siteBA_large,
+                   siteSAPden, siteSHRUden,
+                   na.rm = T)) %>%
+  filter(rem != 0) %>% 
+  select(-rem)
+
+var_site2 <- var_site 
+var_site2$siteDEN <- standardize(var_site2$siteDEN)
+var_site2$siteBA <- standardize(var_site2$siteBA)
+var_site2$siteRICH <- standardize(var_site2$siteRICH)
+var_site2$siteBA_pole <- standardize(var_site2$siteBA_pole)
+var_site2$siteBA_mature <- standardize(var_site2$siteBA_mature)
+var_site2$siteBA_large <- standardize(var_site2$siteBA_large)
+var_site2$siteSAPden <- standardize(var_site2$siteSAPden)
+var_site2$siteSHRUden <- standardize(var_site2$siteSHRUden)
+
+long_var_site <- pivot_longer(var_site2, 
+                                cols = c(3:10), 
+                                names_to = "Var", 
+                                values_to = "Value")
+long_var_site_mean <- long_var_site %>% 
+  group_by(Point_Name, Var) %>% 
+  summarise(Value = mean(Value, na.rm = T)) %>% 
+  ungroup() %>% 
+  #! TODO: attention 2021 is the mean 
+  mutate(Year = as.numeric(2021)) %>% 
+  relocate(Year)
+
+long_var_site2 <- rbind(long_var_site_mean, long_var_site)
+# plotting variation plot
+Vars <- c('siteDEN', 'siteBA', 'siteRICH', 
+          'siteBA_pole', 'siteBA_mature', 'siteBA_large',
+          'siteSAPden', 'siteSHRUden')
+hist(long_var_site2$Value)
+hist(long_var_site2$Year)
+
+for(i in 1:length(Vars)){
+  Year <- long_var_site2 %>% 
+            filter(Var == Vars[i]) %>% 
+            pull(Year)
+  values <- long_var_site2 %>% 
+            filter(Var == Vars[i]) %>% 
+            pull(Value)
+  park2 <- long_var_site2 %>% 
+            filter(Var == Vars[i]) %>% 
+            mutate(park = substr(Point_Name, 1, 4)) %>% 
+            select(park) 
+  park1 <- long_var_site2 %>% 
+            filter(Var == Vars[i]) %>% 
+            select(-Year) %>%
+            select(-Value) %>%
+            distinct() %>% 
+            mutate(park = substr(Point_Name, 1, 4)) %>% 
+            select(park) 
+  park3 <- long_var_site2 %>% 
+            filter(Var == Vars[i]) %>% 
+            select(-Year) %>%
+            select(-Value) %>%
+            distinct() %>%
+            mutate(park = substr(Point_Name, 1, 4)) %>% 
+            group_by(park) %>%
+            slice_head(n = 1) %>%
+            ungroup() %>% 
+            select(Point_Name, park)
+  park3 <- left_join(as_tibble(park1), park3, by = "park") %>% 
+            pull(Point_Name)
+  park3 <- cumsum(as.numeric(table(park3))) 
+
+  park2 <- park2 %>% pull(park)
+  
+  p <- ggplot(data = long_var_site2 %>% 
+                        filter(Var == Vars[i]) %>% 
+                        mutate(park = substr(Point_Name, 1, 4)),
+              aes(x=Year, y=Point_Name, 
+                            fill=Value)) + 
+              #facet_wrap(~park, scales = "free") +
+              geom_tile(
+                aes(color="black"#as.factor(park2)#, width=0.4, height=0.7
+                ), linewidth=0.1
+                ) +
+              scale_fill_gradientn(colours = c("red","orange", "pink", "blue", "black"), 
+                                  name="SD from mean \n",
+                                  limits=c(min(values),max(values))) +
+              theme_bw() + 
+              geom_hline(yintercept = c(as.numeric(park3) + 0.5, 0.5)) +
+              geom_vline(xintercept = 2020.5) +
+              geom_vline(xintercept = 2021.5) +
+              scale_x_continuous("Year", labels = as.character(Year), breaks = Year) +
+              theme(axis.text.x = element_text(vjust = 1, 
+                    angle = 90, size = 6),
+                    axis.text.y = element_text(size = 6),
+                    axis.title.x = element_blank(),       # Change x axis title only
+                    axis.title.y = element_blank()
+                    ) +
+              ggtitle(glue("Variation of {Vars[i]}")) 
+  print(p)
+}
+
+## loop 2 facet
+for(i in 1:length(Vars)){
+  Year <- long_var_site2 %>% 
+            filter(Var == Vars[i]) %>% 
+            pull(Year)
+  values <- long_var_site2 %>% 
+            filter(Var == Vars[i]) %>% 
+            pull(Value)
+  park2 <- long_var_site2 %>% 
+            filter(Var == Vars[i]) %>% 
+            mutate(park = substr(Point_Name, 1, 4)) %>% 
+            select(park) 
+  park1 <- long_var_site2 %>% 
+            filter(Var == Vars[i]) %>% 
+            select(-Year) %>%
+            select(-Value) %>%
+            distinct() %>% 
+            mutate(park = substr(Point_Name, 1, 4)) %>% 
+            select(park) 
+  park3 <- long_var_site2 %>% 
+            filter(Var == Vars[i]) %>% 
+            select(-Year) %>%
+            select(-Value) %>%
+            distinct() %>%
+            mutate(park = substr(Point_Name, 1, 4)) %>% 
+            group_by(park) %>%
+            slice_head(n = 1) %>%
+            ungroup() %>% 
+            select(Point_Name, park)
+  park3 <- left_join(as_tibble(park1), park3, by = "park") %>% 
+            pull(Point_Name)
+  park3 <- cumsum(as.numeric(table(park3))) 
+
+  park2 <- park2 %>% pull(park)
+  
+  p <- ggplot(data = long_var_site2 %>% 
+                        filter(Var == Vars[i]) %>% 
+                        mutate(park = substr(Point_Name, 1, 4)),
+              aes(x=Year, y=Point_Name, 
+                            fill=Value)) + 
+              facet_wrap(~park, scales = "free") +
+              geom_tile(
+                aes(color="black"#as.factor(park2)#, width=0.4, height=0.7
+                ), linewidth=0.1
+                ) +
+              scale_fill_gradientn(colours = c("red","orange", "pink", "blue", "black"), 
+                                  name="SD from mean \n",
+                                  #limits=c(min(values),max(values))
+                                  ) +
+              theme_bw() + 
+              geom_hline(yintercept = c(as.numeric(park3) + 0.5, 0.5)) +
+              scale_x_continuous("Year", labels = as.character(Year), breaks = Year) +
+              theme(axis.text.x = element_text(vjust = 1, 
+                    angle = 90, size = 6),
+                    axis.text.y = element_text(size = 6),
+                    axis.title.x = element_blank(),       # Change x axis title only
+                    axis.title.y = element_blank()
+                    ) +
+              ggtitle(glue("Variation of {Vars[i]}")) 
+  print(p)
+}
 
 #! Correlation plot for parks ----------------------------------------------
 corr_mat <- round(cor(X5[,c(15:17,19:23)], use="complete.obs"),2)
