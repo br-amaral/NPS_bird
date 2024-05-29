@@ -489,19 +489,23 @@ y_dat6 <- y_dat5 %>%
   left_join(., pk_key_sps, by = c("AOU_Code", "park", "parkey"))
 
 # get covariate data ----------------------------------------------------------------------------------
+# index to have the same dimentions as the bird data
 X <- y_dat6 %>% 
   select(park, site_n, Year, Point_Name, interval_n, Year)
 
-# no year so far in covariates
+# no year so far in covariates - key to get the combinations of covariates in each site
 site_key <- y_dat6 %>% 
    select(Point_Name, site_n, park) %>% 
    distinct()
 
 ## site ----------------------------------------------------------------------------------------------
+#! it is OK that ACAD and SAIR do not have covs now,
+#!   they are gonna be removed from the data in the next step (back2d_covs_scales_3)
 site_covs <- read_rds(PATH_COVS_SITE) %>% 
                rename(Point_Name = bird_sit,
                       park = ParkUnit) %>%
-               left_join(., site_key, by =  c("park", "Point_Name"))
+               left_join(., site_key, by =  c("park", "Point_Name")) %>% 
+               select(-c(siteSTA, siteSAPden))
 
 X1 <- left_join(X, site_covs, by = c("park", "site_n", "Point_Name"))
 
