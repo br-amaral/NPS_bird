@@ -196,6 +196,171 @@ for(i in 1:length(Vars)){
 }
 
 ## loop 2 facet
+# for(i in 1:length(Vars)){
+#   Year <- long_var_site2 %>% 
+#             filter(Var == Vars[i]) %>% 
+#             pull(Year)
+#   values <- long_var_site2 %>% 
+#             filter(Var == Vars[i]) %>% 
+#             pull(Value)
+#   park2 <- long_var_site2 %>% 
+#             filter(Var == Vars[i]) %>% 
+#             mutate(park = substr(Point_Name, 1, 4)) %>% 
+#             select(park) 
+#   park1 <- long_var_site2 %>% 
+#             filter(Var == Vars[i]) %>% 
+#             select(-Year) %>%
+#             select(-Value) %>%
+#             distinct() %>% 
+#             mutate(park = substr(Point_Name, 1, 4)) %>% 
+#             select(park) 
+#   park3 <- long_var_site2 %>% 
+#             filter(Var == Vars[i]) %>% 
+#             select(-Year) %>%
+#             select(-Value) %>%
+#             distinct() %>%
+#             mutate(park = substr(Point_Name, 1, 4)) %>% 
+#             group_by(park) %>%
+#             slice_head(n = 1) %>%
+#             ungroup() %>% 
+#             select(Point_Name, park)
+#   park3 <- left_join(as_tibble(park1), park3, by = "park") %>% 
+#             pull(Point_Name)
+#   park3 <- cumsum(as.numeric(table(park3))) 
+
+#   park2 <- park2 %>% pull(park)
+  
+#   p <- ggplot(data = long_var_site2 %>% 
+#                         filter(Var == Vars[i]) %>% 
+#                         mutate(park = substr(Point_Name, 1, 4)),
+#               aes(x=Year, y=Point_Name, 
+#                             fill=Value)) + 
+#               facet_wrap(~park, scales = "free") +
+#               geom_tile(
+#                 aes(color="black"#as.factor(park2)#, width=0.4, height=0.7
+#                 ), linewidth=0.1
+#                 ) +
+#               scale_fill_gradientn(colours = c("red","orange", "pink", "blue", "black"), 
+#                                   name="SD from mean \n",
+#                                   #limits=c(min(values),max(values))
+#                                   ) +
+#               theme_bw() + 
+#               geom_hline(yintercept = c(as.numeric(park3) + 0.5, 0.5)) +
+#               scale_x_continuous("Year", labels = as.character(Year), breaks = Year) +
+#               theme(axis.text.x = element_text(vjust = 1, 
+#                     angle = 90, size = 6),
+#                     axis.text.y = element_text(size = 6),
+#                     axis.title.x = element_blank(),       # Change x axis title only
+#                     axis.title.y = element_blank()
+#                     ) +
+#               ggtitle(glue("Variation of {Vars[i]}")) 
+#   print(p)
+# }
+
+# PCA for site level variables
+library("factoextra")
+site_pca <- prcomp(var_site[,3:10], scale = TRUE)
+summary(site_pca)
+site_pca$x
+head(site_pca$x)
+fviz_pca_biplot(site_pca, 
+  col.ind = as.factor(substr(var_site$Point_Name,1,4)),
+  palette = "jco", 
+  label = "var",
+  col.var = "black", repel = TRUE,
+  legend.title = "Parks") 
+
+# only percetage cover of different forest ages
+pca_age <- var_site[,c(2,6:8)] %>% distinct()
+site_pca2 <- prcomp(pca_age[,2:4], scale = TRUE)
+summary(site_pca2)
+head(site_pca2$x)
+pca_cols <- pca_age %>% select(Point_Name) %>% pull() %>% substr(.,1,4) %>% as.vector()
+fviz_pca_biplot(site_pca2, 
+  col.ind = pca_cols,
+  palette = "jco", 
+  #addEllipses = TRUE, 
+  label = "var",
+  col.var = "black", 
+  repel = TRUE,
+  legend.title = "Parks") 
+
+pairs(site_pca2$x)
+
+library(corrmorant)
+ggcorrm(data = site_pca2$x) +
+  lotri(geom_point(alpha = 0.5)) +
+  lotri(geom_smooth(method='lm')) +
+  utri_heatmap() +
+  utri_corrtext() +
+  dia_names(y_pos = 0.15, size = 3) +
+  dia_histogram(lower = 0.3, fill = "grey80", color = 1) +
+  scale_fill_corr() +
+  labs(title = "Correlation Plot")
+
+# get pca1 and 2 for line ar regression
+site_pca2$x %>% 
+  as_tibble() %>% 
+  mutate(Point_Name = var_site$Point_Name) %>% 
+  select(Point_Name, PC1 = PC1, PC2 = PC2)  %>% 
+  distinct()
+
+#! Correlation plot for parks ----------------------------------------------
+corr_mat <- round(cor(X5[,c(15:17,19:23)], use="complete.obs"),2)
+
+# reduce the size of correlation matrix
+melted_corr_mat <- melt(corr_mat) %>% 
+    mutate(cov = substr(Var1,5,6))
+
+# plotting the correlation heatmap
+ggplot(data = melted_corr_mat, aes(x=Var1, y=Var2, 
+								fill=value)) + 
+geom_tile(color = "white") +
+scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+  midpoint = 0, limit = c(-1,1), space = "Lab", 
+  name="Correlation \n") +
+theme_minimal() + 
+theme(axis.text.x = element_text(vjust = 1, angle = 90),
+      axis.title.x = element_blank(),       # Change x axis title only
+      axis.title.y = element_blank() )+
+geom_text(aes(Var1, Var2, label = value), 
+          color = "black", 
+          size = 4) +
+ggtitle("Correlation of park variables")
+
+melted_corr_mat %>% 
+  filter(abs(value) < 0.5) %>% 
+  arrange(desc(value))
+
+## variation ---------------------
+park_vars <- X5[,c(4,15:17,19:23)] %>% 
+  distinct() 
+
+park_vars$parkDEN <- standardize(park_vars$parkDEN)            
+park_vars$parkBA <- standardize(park_vars$parkBA)
+park_vars$parkRICH <- standardize(park_vars$parkRICH)
+park_vars$parkBA_pole <- standardize(park_vars$parkBA_pole)
+park_vars$parkBA_mature <- standardize(park_vars$parkBA_mature)
+park_vars$parkBA_large <- standardize(park_vars$parkBA_large)
+park_vars$parkSAPden <- standardize(park_vars$parkSAPden)
+park_vars$parkSHRUden <- standardize(park_vars$parkSHRUden)
+
+park_vars2 <- park_vars %>% 
+                pivot_longer(cols = c(3:10), 
+                              names_to = "Var", 
+                              values_to = "Value") %>% 
+                mutate(park = substr(Point_Name,1,4)) %>% 
+                group_by(park, Var) %>%
+                mutate(mean = mean(Value, na.rm = T))
+
+park_vars3 <- park_vars %>% 
+                pivot_longer(cols = c(3:10), 
+                              names_to = "Var", 
+                              values_to = "Value") %>% 
+                mutate(park = substr(Point_Name,1,4)) %>% 
+                group_by(park, Var, Year) %>%
+                summarise(mean = mean(Value, na.rm = T))
+
 for(i in 1:length(Vars)){
   Year <- long_var_site2 %>% 
             filter(Var == Vars[i]) %>% 
@@ -235,17 +400,18 @@ for(i in 1:length(Vars)){
                         mutate(park = substr(Point_Name, 1, 4)),
               aes(x=Year, y=Point_Name, 
                             fill=Value)) + 
-              facet_wrap(~park, scales = "free") +
+              #facet_wrap(~park, scales = "free") +
               geom_tile(
                 aes(color="black"#as.factor(park2)#, width=0.4, height=0.7
                 ), linewidth=0.1
                 ) +
               scale_fill_gradientn(colours = c("red","orange", "pink", "blue", "black"), 
                                   name="SD from mean \n",
-                                  #limits=c(min(values),max(values))
-                                  ) +
+                                  limits=c(min(values),max(values))) +
               theme_bw() + 
               geom_hline(yintercept = c(as.numeric(park3) + 0.5, 0.5)) +
+              geom_vline(xintercept = 2020.5) +
+              geom_vline(xintercept = 2021.5) +
               scale_x_continuous("Year", labels = as.character(Year), breaks = Year) +
               theme(axis.text.x = element_text(vjust = 1, 
                     angle = 90, size = 6),
@@ -256,33 +422,6 @@ for(i in 1:length(Vars)){
               ggtitle(glue("Variation of {Vars[i]}")) 
   print(p)
 }
-
-#! Correlation plot for parks ----------------------------------------------
-corr_mat <- round(cor(X5[,c(15:17,19:23)], use="complete.obs"),2)
-
-# reduce the size of correlation matrix
-melted_corr_mat <- melt(corr_mat) %>% 
-    mutate(cov = substr(Var1,5,6))
-
-# plotting the correlation heatmap
-ggplot(data = melted_corr_mat, aes(x=Var1, y=Var2, 
-								fill=value)) + 
-geom_tile(color = "white")+
- scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
-   midpoint = 0, limit = c(-1,1), space = "Lab", 
-   name="Correlation \n") +
-   theme_minimal()+ 
- theme(axis.text.x = element_text(vjust = 1, angle = 90),
-       axis.title.x = element_blank(),       # Change x axis title only
-       axis.title.y = element_blank() )+
- geom_text(aes(Var1, Var2, label = value), 
-		color = "black", 
-        size = 4)  
-
-melted_corr_mat %>% 
-  filter(abs(value) < 0.5) %>% 
-  arrange(desc(value))
-
 #! Correlation plot for county ----------------------------------------------
 corr_mat <- round(cor(X5[,c(24:39)], use="complete.obs"),2)
 
