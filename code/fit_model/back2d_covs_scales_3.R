@@ -49,12 +49,12 @@ lenght <- length
 # Import data -----------------------------------------
 ## file paths
 YDAT_PATH <- "data/y_dat8.rds"
-XDAT_PATH <- "data/X10.rds"
+XDAT_PATH <- "data/X5.rds"
 SITE_PK_PATH <- "data/out/nsite_pk.rds"
 PARK_PATH <- "data/src/key_park.rds"
 
 sps_list <- sps_loop <- "RBWO"
-yearbo <- "no"
+yearbo <- "yes"
 
 ## read files
 y_dat4 <- read_rds(file = YDAT_PATH)
@@ -133,18 +133,27 @@ y2 <- y %>%
   filter(interval_n == 1)
 
 X <- X10 %>% 
-  select(siteBA_s, siteDEN_s, 
-         parkBA_s, parkDEN_s, 
-         counBA_s, counDEN_s, 
-         area_s, 
-         date_jul,time_jul)
+  select(Point_Name,
+         siteDEN, siteBA, siteRICH,
+         siteBA_pole, siteBA_mature, siteBA_large,
+         siteSHRUden,
+         parkDEN, parkBA, parkRICH,
+         parkBA_pole, parkBA_mature, parkBA_large,   
+         parkSHRUden, 
+         counDEN, counBA, 
+         counPER_pole, counPER_matu, counPER_late,
+         counSHRUden,
+         area, EventDate2, StartTime2) %>% 
+  rename(area_s = area, 
+         date_jul = EventDate2,
+         time_jul = StartTime2)  
 
-table(is.na(X$siteBA_s))
-table(is.na(X$siteDEN_s))
-table(is.na(X$parkBA_s))
-table(is.na(X$parkDEN_s))
-table(is.na(X$counBA_s))
-table(is.na(X$counDEN_s))
+table(is.na(X$siteBA))
+table(is.na(X$siteDEN))
+table(is.na(X$parkBA))
+table(is.na(X$parkDEN))
+table(is.na(X$counBA))
+table(is.na(X$counDEN))
 table(is.na(X$date_jul))
 table(is.na(X$time_jul))
 
