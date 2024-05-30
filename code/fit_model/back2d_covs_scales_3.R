@@ -34,6 +34,7 @@ library(jagsUI)
 library(tidyverse)
 library(rjags)
 library(MCMCvis)
+library(AHMbook)
 
 conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::filter)
@@ -52,7 +53,7 @@ YDAT_PATH <- "data/y_dat8.rds"
 XDAT_PATH <- "data/X5.rds"
 SITE_PK_PATH <- "data/out/nsite_pk.rds"
 PARK_PATH <- "data/src/key_park.rds"
-
+PARK_SIZE_PATH <- "data/src/park_size.rds"
 sps_list <- sps_loop <- "RBWO"
 yearbo <- "yes"
 
@@ -70,6 +71,8 @@ pk <- pk[-7]
 
 nsite_pk <- nsite_pk[-1]
 nsite_pk <- nsite_pk[-7]
+
+park_size <- read_rds(PARK_SIZE_PATH)
 
 # Filter for species and park ---------------------------------------
 ## 1 sps several parks
@@ -140,24 +143,47 @@ X <- X10 %>%
          parkDEN, parkBA, parkRICH,
          parkBA_pole, parkBA_mature, parkBA_large,   
          parkSHRUden, 
-         counDEN, counBA, 
+         counDEN, counBA, counH_g, counEh_g, counS_g, ## https://rdrr.io/cran/rFIA/man/diversity.html
          counPER_pole, counPER_matu, counPER_late,
          counSHRUden,
-         area, EventDate2, StartTime2) %>% 
-  rename(area_s = area, 
-         date_jul = EventDate2,
-         time_jul = StartTime2)  
+         EventDate2, StartTime2) %>% 
+  rename(date_jul = EventDate2,
+         time_jul = StartTime2) %>% 
+  mutate(siteBA_s = standardize(siteBA),
+          siteDEN_s = standardize(siteDEN),
+          siteRICH_s = standardize(siteRICH),
+          siteBA_pole_s = standardize(siteBA_pole),
+          siteBA_mature_s = standardize(siteBA_mature),
+          siteBA_large_s = standardize(siteBA_large),
+          siteSHRUden_s = standardize(siteSHRUden),
+          parkDEN_s = standardize(parkDEN),
+          parkBA_s = standardize(parkBA),
+          parkRICH_s = standardize(parkRICH),
+          parkBA_pole_s = standardize(parkBA_pole),
+          parkBA_mature_s = standardize(parkBA_mature),
+          parkBA_large_s = standardize(parkBA_large),
+          parkSHRUden_s = standardize(parkSHRUden),
+          counDEN_s = standardize(counDEN),
+          counBA_s = standardize(counBA),
+          counPER_pole_s = standardize(counPER_pole),
+          counPER_matu_s = standardize(counPER_matu),
+          counPER_late_s = standardize(counPER_late),
+          counSHRUper_s = standardize(counSHRUden),
+          date_jul_s = standardize(date_jul),
+          time_jul_s = standardize(time_jul))
 
-table(is.na(X$siteBA))
-table(is.na(X$siteDEN))
-table(is.na(X$parkBA))
-table(is.na(X$parkDEN))
-table(is.na(X$counBA))
-table(is.na(X$counDEN))
-table(is.na(X$date_jul))
-table(is.na(X$time_jul))
+# add park size
+X <- X  %>% 
+      mutate(park = substr(Point_Name, 1, 4)) %>%
+      left_join(., park_size, by = "park") %>%
+      select(-park) %>% 
+      mutate(area_s = standardize(area))
 
-# occupancy variables
+
+#! TODO: for now, im putting zeros in the occasions that have no environmental data (mean)
+X[is.na(X)] <- 0
+
+# occupancy variables - separate them in covs in all scales per tibble
 ## tree basal area
 X1 <- X %>% 
   select(siteBA_s, parkBA_s, counBA_s)
@@ -165,6 +191,24 @@ X1 <- X %>%
 ## tree density
 X2 <- X %>% 
   select(siteDEN_s, parkDEN_s, counDEN_s)
+
+## Basal area large
+X3 <- X %>% 
+  select(siteBA_large_s, parkBA_large_s, counPER_late_s)
+
+## Shrub density and percentage
+X4 <- X %>% 
+  select(siteSHRUden_s, parkSHRUden_s, counSHRUper_s)
+
+## fores richness/diversity
+X5 <- X %>% 
+  select(siteRICH_s, parkRICH_s)
+
+## park size
+Xp <- X %>% 
+  select(area_s) %>% 
+  pull() %>% 
+  as.numeric()
 
 # detection variables
 Xa <- X %>% 
