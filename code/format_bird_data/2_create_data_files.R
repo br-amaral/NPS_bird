@@ -529,11 +529,13 @@ park_size$park <- sort(unique(y_dat4$park))
 for(i in 1:length(pk)) {
   pb <- read_rds(file = glue("data/park_raster/{pk[i]}_pb.rds"))
   park_size[i,2] <- raster::area(pb)   # square km
+  print(pk[i])
 }
 
 if(length(park_size) > 1) {
-  park_size$area <- park_size$area %>% scale() %>% as.numeric()
+  park_size$area <- park_size$area #%>% scale() %>% as.numeric()
 }
+write_rds(park_size, file = "data/park_size.rds")
 
 X4 <- left_join(X3, park_size, by = "park")
 
@@ -573,5 +575,5 @@ X5$EventDate2 <- y_dat8$EventDate2 ; X5$StartTime2 <- y_dat8$StartTime2
 
 ##### write files  ------
 write_rds(y_dat8, file = "data/y_dat8.rds")
-write_rds(X5, file = "data/X5.rds")
+#write_rds(X5, file = "data/X5.rds")
 write_rds(sps_pk_nth, file = "data/sps_pk_nth.rds")
