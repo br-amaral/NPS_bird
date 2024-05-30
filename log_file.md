@@ -2,10 +2,10 @@
 
 DOOOOO(ing):
 
-( ) avaliar o modelo com b0 que nao varia com ano
-( ) incorporate covariates
-
-
+( ) veg_maps_parks stopped working - get the output files on the office mac!
+( ) for now im ignoring that some sites at elro and other parks dont have either site or park covariates
+( ) rm std from area in previous script them back2d_covs_scales_3.R
+( ) ask Kate if genus is kept in the diversity calculations for the FIA data
 
 
 --------------------------------------------------------------------------------------------------------------------------
