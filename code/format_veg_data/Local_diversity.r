@@ -26,11 +26,13 @@ library(tidyverse)
 library(glue)
 library(vegan)
 library(plyr)
+library(forestNETN)
 #
 conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::filter)
 conflicts_prefer(dplyr::mutate)
 conflicts_prefer(dplyr::arrange)
+conflicts_prefer(dplyr::rename)
 # conflicts_prefer(scales::alpha)
 #
 # Make functions --------------------------------------
@@ -43,15 +45,18 @@ lenght <- length
 # Import data -----------------------------------------
 ## file paths
 FORSPS_SITE_PATH  <- "data/veg_kateaaron/NETN_tree_dens_spp_2006-2023.csv"
+path <- glue("{getwd()}/data/veg_kateaaron") #"C:/NETN/collaborators/Bruna/"
 
 ## read files
+importCSV(path, zip_name = "NETN_Forest_20231106.zip")
 site_div <- FORSPS_SITE_PATH %>% read_csv()
 
 tree_den_spp_a <- read_csv('data/veg_kateaaron/NETN_Forest_20231106/AdditionalSpecies_NETN.csv') %>% 
-     select(Plot_Name, SampleYear, ScientificName)
+    select(Plot_Name, SampleYear, ScientificName)
 
-tree_den_spp <- joinTreeData(status = "live") %>% filter(!ParkUnit %in% "ACAD") %>% 
-  select(Plot_Name, SampleYear, ScientificName)  
+tree_den_spp <- joinTreeData(status = "live") %>% 
+    filter(!ParkUnit %in% "ACAD") %>% 
+    select(Plot_Name, SampleYear, ScientificName)  
 
 tree_div <- rbind(tree_den_spp_a, tree_den_spp) %>% 
     mutate(park = substr(Plot_Name, 1, 4))  %>% 
@@ -124,5 +129,30 @@ for(i in 1:nrow(park_div)){
 
 }
 
-write_rds(site_div, "data/out/site_div.rds")
+# remove years
+site_div_m <- site_div  %>% 
+                group_by(Plot_Name) %>%
+                mutate(S_mean = mean(S, na.rm = TRUE),
+                       J_mean = mean(J, na.rm = TRUE)) %>% 
+                select(Plot_Name, S_mean, J_mean) %>%
+                distinct()
+
+park_div_m <- park_div %>% 
+                group_by(park) %>%
+                mutate(S_mean = mean(S, na.rm = TRUE),
+                       J_mean = mean(J, na.rm = TRUE)) %>% 
+                select(park, S_mean, J_mean) %>%
+                distinct()
+
+# join forest sites with bird sites
+close_points_f <- read_rds(file = "data/out/close_points_f.rds")  %>% 
+    select(for_sit, bird_sit) %>%
+    rename(Point_name = bird_sit,
+           Plot_Name = for_sit) %>% 
+    distinct()
+
+site_div2 <- left_join(close_points_f, site_div_m, by = "Plot_Name") %>% 
+                select(-Plot_Name)
+
+write_rds(site_div2, "data/out/site_div.rds")
 write_rds(park_div, "data/out/park_div.rds")
