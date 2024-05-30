@@ -106,7 +106,7 @@ for(ii in 1:length(bird_sit$points)){
 nrow(park_site)
 
 ## write_rds "data/out/park_site.rds"
-write_rds(park_site, file = "data/out/park_site.rds")
+# write_rds(park_site, file = "data/out/park_site.rds")
 
 # get coordinates from bird plots
 bird_sit_coord <- park_site %>% 
@@ -128,7 +128,7 @@ for_sit_coord <- for_sit_coord %>%
   mutate(UTMZone = substr(UTMZone, 1 , 2))
 
 colnmaes(for_sit_coord); colnmaes(bird_sit_coord)
-write_rds(for_sit_coord, file = "data/out/for_sit_coord.rds")
+# write_rds(for_sit_coord, file = "data/out/for_sit_coord.rds")
 
 par(mfrow = c(1,2))
 plot(for_sit_coord$lonutm, for_sit_coord$latutm)
@@ -141,7 +141,7 @@ xy <- data.frame(ID = 1:nrow(bird_sit_coord),
 coordinates(xy) <- c("X", "Y")
 proj4string(xy) <- CRS("+proj=longlat +datum=WGS84")
 
-write_rds(xy, file = "data/out/bird_site_coords.rds")
+# write_rds(xy, file = "data/out/bird_site_coords.rds")
 
 for(ii in 1:nrow(xy)){
   band <- as.numeric(bird_sit_coord$UTMZone[ii])
@@ -314,7 +314,7 @@ close_points_f <- close_points_f %>%
                     distinct()
 
 # write_rds data/out/close_points_f.rds
-write_rds(close_points_f, file = "data/out/close_points_f.rds")
+# write_rds(close_points_f, file = "data/out/close_points_f.rds")
 
 # plot close points by park
 ## join coordinates
@@ -411,8 +411,8 @@ close_points_f2 <- left_join(close_points_f, for_sit2, by = "for_sit") %>%
          siteSHRUden = shrub_covM)
 
 #! Output files ----------------------------------------------
-write_rds(for_sit2, file = "data/out/for_sit2.rds")
-write_rds(close_points_f2, file = "data/out/site_covs.rds")
+#write_rds(for_sit2, file = "data/out/for_sit2.rds")
+#write_rds(close_points_f2, file = "data/out/site_covs.rds")
 
 
 
