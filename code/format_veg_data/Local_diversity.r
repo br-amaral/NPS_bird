@@ -147,12 +147,15 @@ park_div_m <- park_div %>%
 # join forest sites with bird sites
 close_points_f <- read_rds(file = "data/out/close_points_f.rds")  %>% 
     select(for_sit, bird_sit) %>%
-    rename(Point_name = bird_sit,
+    rename(Point_Name = bird_sit,
            Plot_Name = for_sit) %>% 
     distinct()
 
 site_div2 <- left_join(close_points_f, site_div_m, by = "Plot_Name") %>% 
-                select(-Plot_Name)
+                select(-Plot_Name)  %>% 
+                group_by(Point_Name) %>%
+                dplyr::summarise(S_mean = mean(S_mean, na.rm = TRUE),
+                                 J_mean = mean(J_mean, na.rm = TRUE))
 
 write_rds(site_div2, "data/out/site_div.rds")
-write_rds(park_div, "data/out/park_div.rds")
+write_rds(park_div_m, "data/out/park_div.rds")

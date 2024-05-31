@@ -13,6 +13,7 @@
 #           - data/out/park_covs.rds - covariate data from park level
 #           - data/out/site_covs.rds - covariate data from site level
 #           - data/park_raster/{pk[i]}_pb.rds : raster of each park to get park size 
+#           - data/out/site_div.rds : diversity of forest for park and sites
 #
 #           from code/format_bird_data/format_data.R:
 #             -- y1: table of ones and zeros for sps detections
@@ -60,6 +61,8 @@ PATH_COVS_COUN <- "data/out/coun_covs.rds"
 PATH_COVS_PARK <- "data/out/park_covs.rds"
 PATH_COVS_SITE <- "data/out/site_covs.rds"
 PATH_SITE_COVS <- "data/out/close_points_fcovs.rds"
+PATH_DIV_SITE_COVS <- "data/out/site_div.rds"
+PATH_DIV_PARK_COVS <- "data/out/park_div.rds"
 
 ## parks -------------------------------------------------------------------------------------------
 pk_list <- visits %>% 
@@ -143,7 +146,7 @@ for(i in 1:npk){
 }
 
 ##### write file: data/src/sites_park_tib.rds ------
-write_rds(sites_park_tib, file = "data/src/sites_park_tib.rds")
+# write_rds(sites_park_tib, file = "data/src/sites_park_tib.rds")
 
 for(ii in 1:npk) {
   st_name <- sites_park_tib %>% 
@@ -159,7 +162,7 @@ for(ii in 1:npk) {
 }
 sit_mer2 <- as_tibble(sit_mer2)
 ##### write file: data/src/site_n_key.rds ------
-write_rds(sit_mer2, file = "data/out/site_n_key.rds")
+# write_rds(sit_mer2, file = "data/out/site_n_key.rds")
 
 visits2 <- left_join(visits, sit_mer2, by = "Point_Name")
 
@@ -388,7 +391,7 @@ for(ii in 1:nrow(y_dat3)){
 }
 
 ##### write file: data/out/y_dat3.rds ------
-write_rds(y_dat3, file = "data/out/y_dat3.rds")
+# write_rds(y_dat3, file = "data/out/y_dat3.rds")
 
 # This has all the zeros for all intervals, but I'm still missing an occasion for a species that was not detected in year X in site Y, but was detected ther on year X-1 or X+1
 # for each species, in a park, for the years the park was sampled
@@ -521,23 +524,33 @@ coun_covs <- read_rds(PATH_COVS_COUN) %>%
 
 X3 <- left_join(X2, coun_covs, by = "park")
 
+## diversity
+div_covs_site <- read_rds(PATH_DIV_SITE_COVS) %>% 
+                    rename(siteH_g = S_mean,
+                           siteEh_g = J_mean)
+
+X4 <- left_join(X3, div_covs_site, by = "Point_Name")
+
+div_covs_park <- read_rds(PATH_DIV_PARK_COVS) %>% 
+                    rename(parkH_g = S_mean,
+                           parkEh_g = J_mean)
+
+X5 <- left_join(X4, div_covs_park, by = "park")
+
 ## park area ------------------------------------------------------------------
 park_size <- as_tibble(matrix(NA, nrow = length(unique(y_dat4$park)), ncol = 2))
 colnames(park_size) <- c("park", "area")
 park_size$park <- sort(unique(y_dat4$park))
   
-for(i in 1:length(pk)) {
-  pb <- read_rds(file = glue("data/park_raster/{pk[i]}_pb.rds"))
+for(i in 1:nrow(park_size)) {
+  pb <- read_rds(file = glue("data/park_raster/{park_size[i,1]}_pb.rds"))
   park_size[i,2] <- raster::area(pb)   # square km
-  print(pk[i])
+  print(park_size[i,1])
 }
 
-if(length(park_size) > 1) {
-  park_size$area <- park_size$area #%>% scale() %>% as.numeric()
-}
-write_rds(park_size, file = "data/park_size.rds")
+# write_rds(park_size, file = "data/park_size.rds")
 
-X4 <- left_join(X3, park_size, by = "park")
+X6 <- left_join(X5, park_size, by = "park")
 
 # get detection covariates! 
 inte_key <- y1 %>% 
@@ -553,14 +566,14 @@ y_dat8 <- y_dat7 %>%
                               as.numeric(),
           EventDate2 = yday(EventDate)) 
 
-table(X4$park == y_dat8$park)
-table(X4$site_n == y_dat8$site_n)
-table(X4$Year == y_dat8$Year)
-table(X4$Point_Name == y_dat8$Point_Name) 
+table(X6$park == y_dat8$park)
+table(X6$site_n == y_dat8$site_n)
+table(X6$Year == y_dat8$Year)
+table(X6$Point_Name == y_dat8$Point_Name) 
 
-X5 <- X4
+X7 <- X6
 
-X5$EventDate2 <- y_dat8$EventDate2 ; X5$StartTime2 <- y_dat8$StartTime2
+X7$EventDate2 <- y_dat8$EventDate2 ; X7$StartTime2 <- y_dat8$StartTime2
 
 # X6 <- X5 %>% 
 #   mutate(date_jul = as.numeric(scale(EventDate2)),
@@ -574,6 +587,10 @@ X5$EventDate2 <- y_dat8$EventDate2 ; X5$StartTime2 <- y_dat8$StartTime2
 #          area_s = as.numeric(scale(area))) 
 
 ##### write files  ------
-write_rds(y_dat8, file = "data/y_dat8.rds")
-#write_rds(X5, file = "data/X5.rds")
-write_rds(sps_pk_nth, file = "data/sps_pk_nth.rds")
+# write_rds(y_dat8, file = "data/y_dat8.rds")
+# write_rds(X5, file = "data/X5.rds")
+# write_rds(sps_pk_nth, file = "data/sps_pk_nth.rds")
+
+X10 <- X7
+y_dat4 <- y_dat8
+
