@@ -50,12 +50,9 @@ lenght <- length
 # Import data -----------------------------------------
 ## file paths
 YDAT_PATH <- "data/y_dat8.rds"
-XDAT_PATH <- "data/X7.rds"
+XDAT_PATH <- "data/X.rds"
 SITE_PK_PATH <- "data/out/nsite_pk.rds"
 PARK_PATH <- "data/src/key_park.rds"
-PARK_SIZE_PATH <- "data/src/park_size.rds"
-sps_list <- sps_loop <- "RBWO"
-yearbo <- "yes"
 
 ## read files
 y_dat4 <- read_rds(file = YDAT_PATH)
@@ -79,7 +76,7 @@ y_dat5 <- y_dat4
 
 y_dat5 <- y_dat5 %>%
   mutate(parkey = as.numeric(parkey),
-         sps_it = AOU_Code)
+          sps_it = AOU_Code)
 
 nrow(X10) == nrow(y_dat5)
 
@@ -90,9 +87,9 @@ X10$unique_index <- seq(1,nrow(y_dat5),1)
 if(setequal(y_dat5$unique_index, X10$unique_index) != "TRUE") stop("ah wrong indexing!!!! #82")
 
 y_dat6 <- y_dat5 %>% 
-   filter(sps_it == sps_loop,
+  filter(sps_it == sps_loop,
           park %in% pk
-   )
+  )
 
 if(length(sps_loop) == 1){
   print(glue("analazing one species {sps_loop}"))
@@ -110,16 +107,15 @@ parkglue <- paste(shQuote(sort(unique(y_dat6$park))), collapse=", ")
 print(paste(spsglue,parkglue))
 
 ## add a step here to fix parkey
-
 parkey_right <- y_dat6 %>% 
-   select(Admin_Unit_Code, parkey) %>% 
-   arrange(parkey) %>% 
-   distinct() %>% 
-   mutate(parkey = seq(1, nrow(.)))
+  select(Admin_Unit_Code, parkey) %>% 
+  arrange(parkey) %>% 
+  distinct() %>% 
+  mutate(parkey = seq(1, nrow(.)))
 
 y_dat6 <- y_dat6 %>% 
-   select(-parkey) %>% 
-   left_join(., parkey_right, by = "Admin_Unit_Code")
+  select(-parkey) %>% 
+  left_join(., parkey_right, by = "Admin_Unit_Code")
 
 y <- y_dat6 %>% 
   select(bird_detec, parkey, site_n, year_n, interval_n, Year) %>% 
@@ -134,21 +130,22 @@ y2 <- y %>%
 
 X <- X10 %>% 
   select(Point_Name,
-         siteDEN, siteBA,
-         siteH_g, siteEh_g,
-         siteBA_pole, siteBA_mature, siteBA_large,
-         siteSHRUden,
-         parkDEN, parkBA, 
-         parkH_g, parkEh_g,
-         parkBA_pole, parkBA_mature, parkBA_large,   
-         parkSHRUden, 
-         counDEN, counBA, 
-         counH_g, counEh_g, ## https://rdrr.io/cran/rFIA/man/diversity.html
-         counPER_pole, counPER_matu, counPER_late,
-         counSHRUden,
-         EventDate2, StartTime2) %>% 
+          siteDEN, siteBA,
+          siteH_g, siteEh_g,
+          siteBA_pole, siteBA_mature, siteBA_large,
+          siteSHRUden,
+          parkDEN, parkBA, 
+          parkH_g, parkEh_g,
+          parkBA_pole, parkBA_mature, parkBA_large,   
+          parkSHRUden, 
+          counDEN, counBA, 
+          counH_g, counEh_g, ## https://rdrr.io/cran/rFIA/man/diversity.html
+          counPER_pole, counPER_matu, counPER_late,
+          counSHRUden,
+          area,
+          EventDate2, StartTime2) %>% 
   rename(date_jul = EventDate2,
-         time_jul = StartTime2) %>% 
+          time_jul = StartTime2) %>% 
   mutate( siteBA_s = standardize(siteBA),
           siteDEN_s = standardize(siteDEN),
           siteH_g = standardize(siteH_g),
@@ -173,6 +170,7 @@ X <- X10 %>%
           counPER_matu_s = standardize(counPER_matu),
           counPER_late_s = standardize(counPER_late),
           counSHRUper_s = standardize(counSHRUden),
+          area_s = standardize(area),
           date_jul_s = standardize(date_jul),
           time_jul_s = standardize(time_jul))
 
@@ -188,19 +186,35 @@ X1 <- X %>%
 X2 <- X %>% 
   select(siteDEN_s, parkDEN_s, counDEN_s)
 
-## Basal area large
+## Forets diversity
 X3 <- X %>% 
-  select(siteBA_large_s, parkBA_large_s, counPER_late_s)
+  select(siteH_g, siteEh_g,
+          parkH_g, parkEh_g,
+          counH_g, counEh_g)
 
 ## Shrub density and percentage
 X4 <- X %>% 
   select(siteSHRUden_s, parkSHRUden_s, counSHRUper_s)
 
-## fores diversity
-X5 <- X %>% 
-  select(siteH_g, siteEh_g,
-         parkH_g, parkEh_g,
-         counH_g, counEh_g)
+## Basal area large
+X5l <- X %>% 
+  select(siteBA_large_s, parkBA_large_s, counPER_late_s)
+
+## Basal area mature
+X5m <- X %>% 
+  select(siteBA_mature_s, parkBA_mature_s, counPER_matu_s)
+
+## Basal area pole
+X5p <- X %>% 
+  select(siteBA_pole_s, parkBA_pole_s, counPER_pole_s)
+
+if(for_stage == "late") {
+  X5 <- X5l
+  } else {
+    if(for_stage == "mature") {
+      X5 <- X5m
+      } else {
+        if(for_stage == "mature") { X5 <- X5p} else {stop("wrong stage row #220")}}}
 
 ## park size
 Xp <- X %>% 
@@ -210,7 +224,10 @@ Xp <- X %>%
 
 # detection variables
 Xa <- X %>% 
-  select(date_jul, time_jul)
+  select(time_jul)
+
+Xb <- X %>% 
+  select(date_jul)
 
 # initial values
 Zst <- y %>% 
@@ -221,9 +238,9 @@ Zst <- y %>%
   filter(interval_n == 1) 
 
 site_vec <- seq(1,max(nsite_pk),1)
-(npk <- length(unique(y_dat6$parkey)))
-(pk <- sort(unique(y_dat6$parkey)))
-years <- y_dat6 %>% 
+(npk <- length(unique(y$parkey)))
+(pk <- sort(unique(y$parkey)))
+years <- y %>% 
   select(Year) %>% 
   distinct() %>% 
   arrange() %>% 
@@ -253,7 +270,8 @@ for(a in 1:nrow(Zst)){
   
 }
 
-colnames(y) <- c("bird_detec", "parkey", "sitekey", "yearkey", "intervalkey","year_site","Year")
+colnames(y) <- c("bird_detec", "parkey", "sitekey", "yearkey", "intervalkey",#"year_site",
+"Year")
 
 y <- data.matrix(y)
 y2 <- data.matrix(y2)
@@ -262,62 +280,18 @@ nrow(y_dat6)
 nrow(y)
 nrow(y2)*ninterval
 nrow(X)
-
-# tree basal area - data frame with 3 columns for each of the three scales
-X1 <- X %>% 
-  select(siteBA_s, parkBA_s, counBA_s) %>% 
-  mutate(siteBA_s = as.numeric(siteBA_s), 
-         parkBA_s = as.numeric(parkBA_s), 
-         counBA_s = as.numeric(counBA_s))
-
-# tree density - data frame with 3 columns for each of the three scales
-X2 <- X %>% 
-  select(siteDEN_s, parkDEN_s, counDEN_s) %>% 
-  mutate(siteDEN_s = as.numeric(siteDEN_s), 
-         parkDEN_s = as.numeric(parkDEN_s), 
-         counDEN_s = as.numeric(counDEN_s))
-
-# park size - vector
-X3 <- X %>% 
-  select(area_s) %>% 
-  pull() %>% 
-  as.numeric()
-
-Xa <- X %>% 
-  select(date_jul) %>% 
-  pull() %>% 
-  as.numeric()
-
-Xb <- X %>% 
-  select(time_jul) %>% 
-  pull() %>% 
-  as.numeric()
-
-nrow(X)
 dim(X1)
 dim(X2)
-length(X3)
+dim(X3)
+dim(X4)
+dim(X5)
+length(Xp)
+dim(Xa)
+dim(Xb)
 
 # number of alphas and betas
-n_bs <- 3
+n_bs <- 6
 n_as <- 3
-
-#! TODO: for now, im putting zeros in the occasions that have no environmental data
- for(i in 1:nrow(X1)) {
-    for(j in 1:3) {
-      if(is.na(X1[i,j])) {
-        X1[i,j] <- 0
-
-      if(is.na(X2[i,j])) {
-        X2[i,j] <- 0
-      }
-    }
-       
-    if(is.na(X3[i])) {
-      X3[i] <- 0
-    }
-  }
- }
 
 # model
 str(jags.data <- list(y = y,
@@ -329,39 +303,42 @@ str(jags.data <- list(y = y,
                       X1 = X1,
                       X2 = X2,
                       X3 = X3,
+                      X4 = X4,
+                      X5 = X5,
+                      Xp = Xp,
                       Xa = Xa,
                       Xb = Xb,
                       n_yrM = length((unique(y[,4]))),
                       n_pkM = length((unique(y[,2])))
                       #y_ind = y_ind
 ))
-
 inits <- function()list(Z = Zst2
 #, beta0 = rnorm(10,0.6), beta1 = rnorm(10,0.6)
 )
 
-niterations <- 20000
+niterations <- 30000
 burnin <- 10000
-nchains <- 5
+nchains <- 8
 
 if(length(sps_loop) > 1) { sps_name <- "commu"} else {sps_name <- sps_loop}
 if(length((unique(y[,2]))) == 1) { park_name <- unique(y[,2])} else {park_name <- "parks"}
 
 paste('\n ************************************* \n \n \n Running JAGS for:', '\n',
-      'Parks =', park_name, '\n',
-      'Species =', sps_name, '\n',
-      'Iterations =', niterations, '\n',
-      'Data size =', nrow(y), '\n',
-      'Started running on =', Sys.time(),  '\n \n \n',
+      '  Parks =', park_name, '\n',
+      '  Species =', sps_name, '\n',
+      '  Iterations =', niterations, '\n',
+      '  Data size =', nrow(y), '\n',
+      '  Started running on =', Sys.time(),  '\n \n \n',
       '**************************************
       ') %>% cat()
 
 cat("\n\n\n running first jags \n\n\n\n")
-params <- c("beta0","beta", "alpha0", "alpha", "scales_beta1", "scales_beta2",
+params <- c("beta0","beta", "alpha0", "alpha", 
+            "scales_beta1", "scales_beta2", "scales_beta3", "scales_beta4", "scales_beta5",
             "mu.beta0", "tau.beta0", "mu.alpha0", "tau.alpha0") # Z, psi
 
-if(yearbo == "yes") { model_file <- "models/mod_1_vector1spsparks_simple_covs_scales.txt"}
-if(yearbo == "no") { model_file <- "models/mod_1_vector1spsparks_simple_covs_scalesnoyear.txt"}
+if(yearbo == "yes") { model_file <- "models/mod_1_vector1spsparks_simple_MOREcovs_scales.txt"}
+if(yearbo == "no") { model_file <- "models/mod_1_vector1spsparks_simple_MOREcovs_scalesnoyear.txt"}
 
 ## initialize JAGS
 jags_model <- rjags::jags.model(
