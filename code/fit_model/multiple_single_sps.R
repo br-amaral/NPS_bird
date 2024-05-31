@@ -50,6 +50,7 @@ sps_list <- "RBWO" # sps_list[-4]
 
 yearbo <- "yes"
 
+for_stage <- "late" # late, mature, pole
 # parks <- 
 
 for (i in 1:length(sps_list)){
