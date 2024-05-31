@@ -316,9 +316,9 @@ inits <- function()list(Z = Zst2
 #, beta0 = rnorm(10,0.6), beta1 = rnorm(10,0.6)
 )
 
-niterations <- 30000
-burnin <- 10000
-nchains <- 10
+niterations <- 3
+burnin <- 1
+nchains <- 1
 
 if(length(sps_loop) > 1) { sps_name <- "commu"} else {sps_name <- sps_loop}
 if(length((unique(y[,2]))) == 1) { park_name <- unique(y[,2])} else {park_name <- "parks"}
@@ -377,13 +377,16 @@ samples_jags <- coda.samples(
 )
 
 cat("\n\n\n third done!!! \n\n\n\n")
+fil_nam <- master_tab  %>% 
+  filter(sps_list == sps_loop) %>% 
+  pull(res_name)  
 
-file_name <- glue("jags_res_{sps_name}_{park_name}_nei_")
+file_name <- glue("jags_res_{fil_nam}_{park_name}_")
 
 file_name2 <- paste0(file_name, 'run',
-                     length(list.files(path = file.path(getwd(),"data/model_res/"),
-                                       pattern = file_name,
-                                       full.names = FALSE)) + 1)
+                      length(list.files(path = file.path(getwd(),"data/model_res/"),
+                                        pattern = file_name,
+                                        full.names = FALSE)) + 1)
 
 write_rds(samples_jags,
           file = glue('data/model_res/{file_name2}.rds')

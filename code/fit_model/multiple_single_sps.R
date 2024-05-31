@@ -41,21 +41,23 @@ lenght <- length
 #                pull()
 
 #sps_list <- sps_list[-1]
-sps_list <- "RBWO" # sps_list[-4]
+sps_list1 <- c("GCFL", "AMGO", "DOWO", "NOCA", "SCTA", "SOSP", "GRCA", "RBWO", "COYE", "WOTH", "RWBL",
+                "WBNU", "BTNW", "EAWP", "BCCH", "BLJA", "TUTI", "AMRO", "REVI", "OVEN", "BTBW", "YBSA", 
+                "BOBO", "YRWA", "PIWA", "CEDW", "CHSP", "NOFL", "HAWO", "BRCR", "RBGR", "DEJU", "AMCR", 
+                "BAOR", "RBNU", "BHVI", "GCKI", "EATO", "FISP", "HETH", "VEER", "MODO", "BLBW")
 
-#c("GCFL", "AMGO", "DOWO", "NOCA", "SCTA", "SOSP", "GRCA", "RBWO", "COYE", "WOTH", "RWBL",
-#              "WBNU", "BTNW", "EAWP", "BCCH", "BLJA", "TUTI", "AMRO", "REVI", "OVEN", "BTBW", "YBSA", 
-#              "BOBO", "YRWA", "PIWA", "CEDW", "CHSP", "NOFL", "HAWO", "BRCR", "RBGR", "DEJU", "AMCR", 
-#              "BAOR", "RBNU", "BHVI", "GCKI", "EATO", "FISP", "HETH", "VEER", "MODO", "BLBW")
+yearbo1 <- c('yes', 'no')
 
-yearbo <- "yes"
+for_stage1 <- c('late', 'mature', 'pole')
 
-for_stage <- "late" # late, mature, pole
-# parks <- 
+master_tab <- expand_grid(sps_list1, yearbo1, for_stage1) %>% 
+                mutate(res_name = glue("{sps_list1}_b0{yearbo1}_{for_stage1}"))
 
-for (i in 1:length(sps_list)){
-    sps_loop <- sps_list[i]
-    print(i)
+for (i in 1:nrow(master_tab)){
+    sps_loop <- master_tab[i,1] %>% pull()
+    yearbo <- master_tab[i,2] %>% pull()
+    for_stage <- master_tab[i,3] %>% pull()
+    print(master_tab[i,4] %>% pull())
     source("code/fit_model/back2d_covs_scales_3.R")
 }
 
