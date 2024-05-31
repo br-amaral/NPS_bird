@@ -431,19 +431,19 @@ paste('\n ************************************** \n \n \n ---------------- DONE 
 # Zst2[r,j,t]
 # # row 73 has the values in the loop
 
-#################################################################################
-MCMCsummary(samples_jags,
-             #params = params[c(2,4,5,7)],
-             round = 2) 
+# #################################################################################
+# MCMCsummary(samples_jags,
+#              #params = params[c(2,4,5,7)],
+#              round = 2) 
 
-MCMCtrace(samples_jags,
-          params = params[c(10,8,2,4,5,7)],
-          ind = TRUE,
-          pdf = FALSE)
+# MCMCtrace(samples_jags,
+#           params = params[c(10,8,2,4,5,7)],
+#           ind = TRUE,
+#           pdf = FALSE)
 
-par(mfrow = c(1,1))
-MCMCplot(samples_jags,
-         #params = params[c(2,4,5,7)],
-         ref_ovl = TRUE)
+# par(mfrow = c(1,1))
+# MCMCplot(samples_jags,
+#          #params = params[c(2,4,5,7)],
+#          ref_ovl = TRUE)
 
 
