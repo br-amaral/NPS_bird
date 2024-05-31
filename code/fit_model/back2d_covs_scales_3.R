@@ -316,9 +316,9 @@ inits <- function()list(Z = Zst2
 #, beta0 = rnorm(10,0.6), beta1 = rnorm(10,0.6)
 )
 
-niterations <- 3
-burnin <- 1
-nchains <- 1
+niterations <- 20000
+burnin <- 5000
+nchains <- 8
 
 if(length(sps_loop) > 1) { sps_name <- "commu"} else {sps_name <- sps_loop}
 if(length((unique(y[,2]))) == 1) { park_name <- unique(y[,2])} else {park_name <- "parks"}
@@ -381,7 +381,7 @@ fil_nam <- master_tab  %>%
   filter(sps_list == sps_loop) %>% 
   pull(res_name)  
 
-file_name <- glue("jags_res_{fil_nam}_{park_name}_")
+file_name <- glue("jags_res_{fil_nam}_{park_name}_{niterations}its")
 
 file_name2 <- paste0(file_name, 'run',
                       length(list.files(path = file.path(getwd(),"data/model_res/"),
@@ -390,7 +390,6 @@ file_name2 <- paste0(file_name, 'run',
 
 write_rds(samples_jags,
           file = glue('data/model_res/{file_name2}.rds')
-          #file = glue("data/model_res/jags_res_{sps_loop}2dnoA1bo.rds")
           )
 
 system_time2 <- Sys.time()
