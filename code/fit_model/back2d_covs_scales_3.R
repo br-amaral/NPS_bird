@@ -316,9 +316,9 @@ inits <- function()list(Z = Zst2
 #, beta0 = rnorm(10,0.6), beta1 = rnorm(10,0.6)
 )
 
-niterations <- 3
-burnin <- 1
-nchains <- 1
+niterations <- 30000
+burnin <- 10000
+nchains <- 10
 
 if(length(sps_loop) > 1) { sps_name <- "commu"} else {sps_name <- sps_loop}
 if(length((unique(y[,2]))) == 1) { park_name <- unique(y[,2])} else {park_name <- "parks"}
