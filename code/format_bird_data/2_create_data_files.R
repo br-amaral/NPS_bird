@@ -511,18 +511,20 @@ site_covs <- read_rds(PATH_COVS_SITE) %>%
                select(-c(siteSTA, siteSAPden))
 
 X1 <- left_join(X, site_covs, by = c("park", "site_n", "Point_Name"))
-
+dim(X1)
 ## park --------------------------------------------------------------------------------
 park_covs <- read_rds(PATH_COVS_PARK) %>% 
                rename(park = ParkUnit) 
 
 X2 <- left_join(X1, park_covs, by = c("park"))
+dim(X2)
 
 ## county ---------------------------------------------------------------------------------
 coun_covs <- read_rds(PATH_COVS_COUN) %>% 
                rename(park = ParkUnit)
 
 X3 <- left_join(X2, coun_covs, by = "park")
+dim(X3)
 
 ## diversity
 div_covs_site <- read_rds(PATH_DIV_SITE_COVS) %>% 
@@ -530,12 +532,14 @@ div_covs_site <- read_rds(PATH_DIV_SITE_COVS) %>%
                            siteEh_g = J_mean)
 
 X4 <- left_join(X3, div_covs_site, by = "Point_Name")
+dim(X4)
 
 div_covs_park <- read_rds(PATH_DIV_PARK_COVS) %>% 
                     rename(parkH_g = S_mean,
                            parkEh_g = J_mean)
 
 X5 <- left_join(X4, div_covs_park, by = "park")
+dim(X5)
 
 ## park area ------------------------------------------------------------------
 park_size <- as_tibble(matrix(NA, nrow = length(unique(y_dat4$park)), ncol = 2))
@@ -551,6 +555,7 @@ for(i in 1:nrow(park_size)) {
 # write_rds(park_size, file = "data/park_size.rds")
 
 X6 <- left_join(X5, park_size, by = "park")
+dim(X6)
 
 # get detection covariates! 
 inte_key <- y1 %>% 
