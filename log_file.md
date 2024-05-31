@@ -2,19 +2,17 @@
 
 DOOOOO(ing):
 
-( ) veg_maps_parks stopped working - get the output files on the office mac!
-( ) for now im ignoring that some sites at elro and other parks dont have either site or park covariates
-(x) rm std from area in previous script them back2d_covs_scales_3.R
-( ) ask Kate if genus is kept in the diversity calculations for the FIA data
+- rodar modelo basico para mais sps - HPCC!!!!
 
 
 --------------------------------------------------------------------------------------------------------------------------
 TO DO:
-- rodar modelo basico para mais sps
-- plotar vizinhos com o cover map
-- right now park diversity is using the mean of species for each site - it should be the value for all the park, not the mean for sites
-- tree diversity is still missing from environmental covs (county has indexes of diversity, park has number of species per site; park prob has species list to calculate indeces!)
+- which sps with which stage
 
+- plotar vizinhos com o cover map
+
+( ) Kate: if genus is kept in the diversity calculations for the FIA data
+( ) Kate: are these the same? siteBA_large_s, parkBA_large_s, counPER_late_s
 
 
 --------------------------------------------------------------------------------------------------------------------------
@@ -26,6 +24,7 @@ Assumptions/decisions:
 
 - 500 m for the radius between the sites make sense for bird home range, but is that meaningful? now uning with 1000m
 
+- for now im ignoring that some sites at elro and other parks dont have either site or park covariates due to lack of proper neighbours
 
 -------------------------------------------------------------------------------------------------------------------------
 workflow:
