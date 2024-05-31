@@ -554,15 +554,15 @@ X6 <- left_join(X5, park_size, by = "park")
 
 # get detection covariates! 
 inte_key <- y1 %>% 
-   select(Interval_Length, Interval_n) %>% 
-   rename(interval_n = Interval_n) %>% 
-   mutate(interval_n = as.numeric(interval_n)) %>% 
-   distinct()
+  select(Interval_Length, Interval_n) %>% 
+  rename(interval_n = Interval_n) %>% 
+  mutate(interval_n = as.numeric(interval_n)) %>% 
+  distinct()
 y_dat7 <- left_join(y_dat6, inte_key, by = "interval_n")
 y_dat8 <- y_dat7 %>% 
-   mutate(StartTime2 = as.period(seconds(StartTime) + minutes(substr(Interval_Length,1,1) %>%
-                                                                       as.numeric() %>% 
-                                                                       as_hms()), unit = "hours") %>% 
+  mutate(StartTime2 = as.period(seconds(StartTime) + minutes(substr(Interval_Length,1,1) %>%
+                                                                      as.numeric() %>% 
+                                                                      as_hms()), unit = "hours") %>% 
                               as.numeric(),
           EventDate2 = yday(EventDate)) 
 
@@ -587,10 +587,8 @@ X7$EventDate2 <- y_dat8$EventDate2 ; X7$StartTime2 <- y_dat8$StartTime2
 #          area_s = as.numeric(scale(area))) 
 
 ##### write files  ------
-# write_rds(y_dat8, file = "data/y_dat8.rds")
-# write_rds(X5, file = "data/X5.rds")
+write_rds(y_dat8, file = "data/y_dat8.rds")
+write_rds(X7, file = "data/X.rds")
 # write_rds(sps_pk_nth, file = "data/sps_pk_nth.rds")
 
-X10 <- X7
-y_dat4 <- y_dat8
 
