@@ -1,39 +1,59 @@
-# *********************************************************************************
-# -------------------------------   Amazing Title   -------------------------------
-# *********************************************************************************
-# Code to ...
+#? *********************************************************************************
+#? -------------------------------   Amazing Title   -------------------------------
+#? *********************************************************************************
 #
-# Source ---------------------------------------------
-#           - :
-#           - :
+#! Code to ...
 #
-# Input ----------------------------------------------
+#! Source ---------------------------------------------
 #           - :
 #           - :
 #
-# Output ----------------------------------------------
+#! Input ----------------------------------------------
 #           - :
 #           - :
 #
+#! Output ----------------------------------------------
+#           - :
+#           - :
+
+# Print script file name
+context <- rstudioapi::getSourceEditorContext()
+cat("\n", "\n", "\n", 'Current script: ', basename(context[[2]]), "\n", "\n", "\n", "\n")
+
+#! Package library and versions -------------------------
+#  Created a library repo?
+#  (  )yes  (  )no
+#  renv::init()
+
+# Load an existing library?
+#  renv::restore()
+
+# Installed new packages?
+#  renv::snapshot()
+
 # detach packages and clear workspace
 if(!require(freshr)){install.packages('freshr')}
 freshr::freshr()
-#
-# Load packages ---------------------------------------
+
+#! Load packages ---------------------------------------
 library(conflicted)
 library(tidyverse)
 library(glue)
-#
+
 conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::filter)
 # conflicts_prefer(scales::alpha)
-#
-# Make functions --------------------------------------
+
+#! Make functions --------------------------------------
 colanmes <- colnames
 lenght <- length
 `%!in%` <- Negate(`%in%`)
-#
-# Source code -----------------------------------------
+
+
+#! Source code and Import data -----------------------------------------
+## file paths
+
+## read files
 #sps_list <- read_rds("data/src/guilds.rds")  %>% 
 #                filter(Response_Guild == "InteriorForestObligate") %>% 
 #                select(AOU_Code) %>% 
@@ -60,4 +80,3 @@ for (i in 1:nrow(master_tab)){
     print(master_tab[i,4] %>% pull())
     source("code/fit_model/back2d_covs_scales_3.R")
 }
-
