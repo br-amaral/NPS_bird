@@ -377,9 +377,7 @@ samples_jags <- coda.samples(
 )
 
 cat("\n\n\n third done!!! \n\n\n\n")
-fil_nam <- master_tab  %>% 
-  filter(sps_list == sps_loop) %>% 
-  pull(res_name)  
+fil_nam <- sps_loop2
 
 file_name <- glue("jags_res_{fil_nam}_{park_name}_{niterations}its")
 
