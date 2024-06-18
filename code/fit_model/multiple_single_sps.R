@@ -26,6 +26,7 @@ cat("\n", "\n", "\n", 'Current script: ', basename(context[[2]]), "\n", "\n", "\
 #  renv::init()
 
 # Load an existing library?
+#  renv::status()
 #  renv::restore()
 
 # Installed new packages?
