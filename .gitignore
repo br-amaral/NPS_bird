@@ -56,5 +56,8 @@ ehthumbs.db
 
 # Icon?
 Thumbs.db.DS_Store
+
+# Random repo-specific files
+core.7433
 ./Rplots.pdf
 Rplots.pdf
