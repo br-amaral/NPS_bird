@@ -7,7 +7,7 @@
 #
 # Input ----------------------------------------------
 #           - data/y_dat8.rds: tibble with bird data
-#           - data/X10.rds: tibble with covariate data
+#           - data/X.rds: tibble with covariate data
 #           - data/out/nsite_pk.rds: vector with number of sites in each park
 #           - data/src/key_park.rds: vector of all parks being analyzed
 #

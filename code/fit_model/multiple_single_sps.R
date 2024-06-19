@@ -5,8 +5,14 @@
 #! Code to ...
 #
 #! Source ---------------------------------------------
-#           - :
-#           - :
+#           - code/fit_model/back2d_covs_scales_3.R:
+#!              - Input:
+#                   - data/y_dat8.rds: tibble with bird data
+#                   - data/X.rds: tibble with covariate data
+#                   - data/out/nsite_pk.rds: vector with number of sites in each park
+#                   - data/src/key_park.rds: vector of all parks being analyzed:
+#!              - Output: 
+#                   - data/model_res/jags_res_{sps}_{park}_run{run_number}.rds: file with result of jags model
 #
 #! Input ----------------------------------------------
 #           - :
