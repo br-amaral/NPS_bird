@@ -1,0 +1,37 @@
+#!/bin/bash --login
+
+# how long? (168 hours is the maximum)
+#SBATCH --time=168:00:00 
+
+# how much memory?
+#SBATCH --mem=20G
+
+# specify nodes needed. 
+#SBATCH --ntasks=1
+
+# specify CPUs (or cores per task) needed.
+#SBATCH --cpus-per-task=4
+
+# specify which development nodes you want the job run on (here, limiting to intel16 or intel18)
+#SBATCH --constraint="[intel16|intel18]"
+
+# email me (might want to remove BEGIN, END, or remove this altogether)
+#SBATCH --mail-type=FAIL,BEGIN,END
+#SBATCH --mail-user=username@msu.edu
+
+# change to current directory
+cd $SLURM_SUBMIT_DIR
+
+# add necessary modules (programs that I'm using') to run R
+module purge
+
+module load JAGS/4.3.2-foss-2023a
+
+module load R-bundle-CRAN/2023.12-foss-2023a
+
+R --no-environ
+
+# run R script
+Rscript code/fit_model/multiple_single_sps.R --vanilla
+
+scontrol show job $SLURM_JOB_ID
