@@ -24,7 +24,9 @@
 
 # Print script file name
 context <- "multiple_single_sps.R" #rstudioapi::getSourceEditorContext()
-cat("\n", "\n", "\n", 'Current script: ', basename(context[[2]]), "\n", "\n", "\n", "\n")
+cat("\n", "\n", "\n", 
+    'Current script:', context, #basename(context[[2]]), 
+    "\n", "\n", "\n", "\n")
 
 #! Package library and versions -------------------------
 #  Created a library repo?
@@ -55,7 +57,6 @@ conflicts_prefer(dplyr::filter)
 colanmes <- colnames
 lenght <- length
 `%!in%` <- Negate(`%in%`)
-
 
 #! Source code and Import data -----------------------------------------
 ## file paths
