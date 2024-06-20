@@ -27,8 +27,9 @@ module purge
 module load GCC/12.3.0
 module load OpenMPI/4.1.5-GCC-12.3.0
 module load GDAL/3.7.1-foss-2023a
+module load NLopt/2.7.1-GCCcore-12.3.0
+module load UDUNITS/2.2.28-GCCcore-12.3.0
 module load JAGS/4.3.2-foss-2023a
-module load R/4.3.2-gfbf-2023a
 
 R --no-environ
 
