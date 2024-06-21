@@ -32,7 +32,7 @@ library(tidyverse)
 library(glue)
 library(jagsUI)
 library(rjags)
-library(MCMCvis)
+#library(MCMCvis)
 library(AHMbook)
 
 conflicts_prefer(dplyr::select)
