@@ -46,6 +46,11 @@ colanmes <- colnames
 lenght <- length
 `%!in%` <- Negate(`%in%`)
 
+# MCMC settings ---------------------------------------
+niterations <- 20
+burnin <- 50
+nchains <- 3
+
 # Import data -----------------------------------------
 ## file paths
 YDAT_PATH <- "data/y_dat8.rds"
@@ -314,10 +319,6 @@ str(jags.data <- list(y = y,
 inits <- function()list(Z = Zst2
 #, beta0 = rnorm(10,0.6), beta1 = rnorm(10,0.6)
 )
-
-niterations <- 20000
-burnin <- 5000
-nchains <- 8
 
 if(length(sps_loop) > 1) { sps_name <- "commu"} else {sps_name <- sps_loop}
 if(length((unique(y[,2]))) == 1) { park_name <- unique(y[,2])} else {park_name <- "parks"}
