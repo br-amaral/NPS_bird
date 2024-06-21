@@ -58,7 +58,7 @@ y_dat4 <- read_rds(file = YDAT_PATH)
 X10 <- read_rds(file = XDAT_PATH)
 nsite_pk <- read_rds(SITE_PK_PATH)
 pk <- read_rds(PARK_PATH) %>%
-  select(parks) %>%
+  dplyr::select(parks) %>%
   pull() %>%
   sort()
 
@@ -97,7 +97,7 @@ if(length(sps_loop) == 1){
 }
 
 X10 <- X10 %>% 
-   dplyr::(unique_index %in% y_dat6$unique_index)
+   dplyr::filter(unique_index %in% y_dat6$unique_index)
 
 nrow(X10) == nrow(y_dat6)
 glu1 <- paste(shQuote(sort(unique(y_dat6$sps_it))), collapse=", ")
@@ -107,17 +107,17 @@ print(paste(spsglue,parkglue))
 
 ## add a step here to fix parkey
 parkey_right <- y_dat6 %>% 
-  select(Admin_Unit_Code, parkey) %>% 
+  dplyr::select(Admin_Unit_Code, parkey) %>% 
   arrange(parkey) %>% 
   distinct() %>% 
   mutate(parkey = seq(1, nrow(.)))
 
 y_dat6 <- y_dat6 %>% 
-  select(-parkey) %>% 
+  dplyr::select(-parkey) %>% 
   left_join(., parkey_right, by = "Admin_Unit_Code")
 
 y <- y_dat6 %>% 
-  select(bird_detec, parkey, site_n, year_n, interval_n, Year) %>% 
+  dplyr::select(bird_detec, parkey, site_n, year_n, interval_n, Year) %>% 
   arrange(parkey, site_n, year_n, interval_n)
 
 ##
@@ -128,7 +128,7 @@ y2 <- y %>%
   dplyr::filter(interval_n == 1)
 
 X <- X10 %>% 
-  select(Point_Name,
+  dplyr::select(Point_Name,
           siteDEN, siteBA,
           siteH_g, siteEh_g,
           siteBA_pole, siteBA_mature, siteBA_large,
@@ -179,33 +179,33 @@ X[is.na(X)] <- 0
 # occupancy variables - separate them in covs in all scales per tibble
 ## tree basal area
 X1 <- X %>% 
-  select(siteBA_s, parkBA_s, counBA_s)
+  dplyr::select(siteBA_s, parkBA_s, counBA_s)
 
 ## tree density
 X2 <- X %>% 
-  select(siteDEN_s, parkDEN_s, counDEN_s)
+  dplyr::select(siteDEN_s, parkDEN_s, counDEN_s)
 
 ## Forets diversity
 X3 <- X %>% 
-  select(siteH_g, siteEh_g,
+  dplyr::select(siteH_g, siteEh_g,
           parkH_g, parkEh_g,
           counH_g, counEh_g)
 
 ## Shrub density and percentage
 X4 <- X %>% 
-  select(siteSHRUden_s, parkSHRUden_s, counSHRUper_s)
+  dplyr::select(siteSHRUden_s, parkSHRUden_s, counSHRUper_s)
 
 ## Basal area large
 X5l <- X %>% 
-  select(siteBA_large_s, parkBA_large_s, counPER_late_s)
+  dplyr::select(siteBA_large_s, parkBA_large_s, counPER_late_s)
 
 ## Basal area mature
 X5m <- X %>% 
-  select(siteBA_mature_s, parkBA_mature_s, counPER_matu_s)
+  dplyr::select(siteBA_mature_s, parkBA_mature_s, counPER_matu_s)
 
 ## Basal area pole
 X5p <- X %>% 
-  select(siteBA_pole_s, parkBA_pole_s, counPER_pole_s)
+  dplyr::select(siteBA_pole_s, parkBA_pole_s, counPER_pole_s)
 
 if(for_stage == "late") {
   X5 <- X5l
@@ -217,20 +217,20 @@ if(for_stage == "late") {
 
 ## park size
 Xp <- X %>% 
-  select(area_s) %>% 
+  dplyr::select(area_s) %>% 
   pull() %>% 
   as.numeric()
 
 # detection variables
 Xa <- X %>% 
-  select(time_jul)
+  dplyr::select(time_jul)
 
 Xb <- X %>% 
-  select(date_jul)
+  dplyr::select(date_jul)
 
 # initial values
 Zst <- y %>% 
-  select(bird_detec, parkey, site_n, year_n, interval_n) %>% 
+  dplyr::select(bird_detec, parkey, site_n, year_n, interval_n) %>% 
   group_by(parkey, site_n, year_n) %>% 
   mutate(z = ifelse(sum(bird_detec, na.rm = T) == 0, 0, 1)) %>% 
   ungroup() %>% 
@@ -240,7 +240,7 @@ site_vec <- seq(1,max(nsite_pk),1)
 (npk <- length(unique(y$parkey)))
 (pk <- sort(unique(y$parkey)))
 years <- y %>% 
-  select(Year) %>% 
+  dplyr::select(Year) %>% 
   distinct() %>% 
   arrange() %>% 
   pull()
