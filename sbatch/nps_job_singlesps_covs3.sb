@@ -35,6 +35,6 @@ module load R-bundle-CRAN/2023.12-foss-2023a
 R --no-environ
 
 # run R script
-Rscript code/fit_model/multiple_single_sps.R --vanilla
 
-scontrol show job $SLURM_JOB_ID
+# run R commandline with the Rscript command
+Rscript --vanilla  code/fit_model/multiple_single_sps.R 
