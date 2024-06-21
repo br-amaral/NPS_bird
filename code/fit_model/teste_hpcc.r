@@ -23,7 +23,7 @@
 #           - :
 
 # Print script file name
-context <- "multiple_single_sps.R" #rstudioapi::getSourceEditorContext()
+context <- "teste_hpcc.R" #rstudioapi::getSourceEditorContext()
 cat("\n", "\n", "\n", 
     'Current script:', context, #basename(context[[2]]), 
     "\n", "\n", "\n", "\n")
@@ -33,7 +33,62 @@ cat("\n", "\n", "\n",
 #  (  )yes  (  )no
 #  renv::init()
 
-print("RUNING")
+system_time1 <- Sys.time()
+
+# Load packages --------------------------------------
+library(conflicted)
+library(tidyverse)
+library(glue)
+library(jagsUI)
+library(rjags)
+#library(MCMCvis)
+library(AHMbook)
+
+conflicts_prefer(dplyr::select)
+conflicts_prefer(dplyr::filter)
+# conflicts_prefer(scales::alpha)
+
+#if("sps_loop" %in% ls() == FALSE){stop("No species selected #38")}
+
+# Make functions --------------------------------------
+colanmes <- colnames
+lenght <- length
+`%!in%` <- Negate(`%in%`)
+
+# MCMC settings ---------------------------------------
+niterations <- 20
+burnin <- 50
+nchains <- 3
+
+# Import data -----------------------------------------
+## file paths
+YDAT_PATH <- "data/y_dat8.rds"
+XDAT_PATH <- "data/X.rds"
+SITE_PK_PATH <- "data/out/nsite_pk.rds"
+PARK_PATH <- "data/src/key_park.rds"
+
+## read files
+y_dat4 <- read_rds(file = YDAT_PATH)
+X10 <- read_rds(file = XDAT_PATH)
+nsite_pk <- read_rds(SITE_PK_PATH)
+pk <- read_rds(PARK_PATH) %>%
+  dplyr::select(parks) %>%
+  pull() %>%
+  sort()
+
+pk <- pk[-1]
+pk <- pk[-7]
+
+nsite_pk <- nsite_pk[-1]
+nsite_pk <- nsite_pk[-7]
+
+## row 74
+
+
+
+
+
+print("SUCCESS")
 
 
 
