@@ -386,6 +386,12 @@ file_name2 <- paste0(file_name, 'run',
                                         pattern = file_name,
                                         full.names = FALSE)) + 1)
 
+folder_path <- "data/model_res"
+
+if (!file.exists(folder_path)) {
+  dir.create(folder_path, recursive = TRUE)
+}
+
 write_rds(samples_jags,
           file = glue('data/model_res/{file_name2}.rds')
           )
