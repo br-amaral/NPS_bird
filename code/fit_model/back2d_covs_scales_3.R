@@ -74,7 +74,7 @@ y_dat5 <- y_dat4
 # _n means that the 1 is the first occasion for that sps, year, loc, etc, not the first calendar one
 
 y_dat5 <- y_dat5 %>%
-  mutate(parkey = as.numeric(parkey),
+  mutate( parkey = as.numeric(parkey),
           sps_it = AOU_Code)
 
 nrow(X10) == nrow(y_dat5)
@@ -86,8 +86,8 @@ X10$unique_index <- seq(1,nrow(y_dat5),1)
 if(setequal(y_dat5$unique_index, X10$unique_index) != "TRUE") stop("ah wrong indexing!!!! #82")
 
 y_dat6 <- y_dat5 %>% 
-  filter(sps_it == sps_loop,
-          park %in% pk
+  dplyr::filter(sps_it == sps_loop,
+                park %in% pk
   )
 
 if(length(sps_loop) == 1){
@@ -97,7 +97,7 @@ if(length(sps_loop) == 1){
 }
 
 X10 <- X10 %>% 
-   filter(unique_index %in% y_dat6$unique_index)
+   dplyr::(unique_index %in% y_dat6$unique_index)
 
 nrow(X10) == nrow(y_dat6)
 glu1 <- paste(shQuote(sort(unique(y_dat6$sps_it))), collapse=", ")
@@ -125,7 +125,7 @@ y <- y_dat6 %>%
 
 ## trick for coding = only interval one
 y2 <- y %>% 
-  filter(interval_n == 1)
+  dplyr::filter(interval_n == 1)
 
 X <- X10 %>% 
   select(Point_Name,
@@ -234,7 +234,7 @@ Zst <- y %>%
   group_by(parkey, site_n, year_n) %>% 
   mutate(z = ifelse(sum(bird_detec, na.rm = T) == 0, 0, 1)) %>% 
   ungroup() %>% 
-  filter(interval_n == 1) 
+  dplyr::filter(interval_n == 1) 
 
 site_vec <- seq(1,max(nsite_pk),1)
 (npk <- length(unique(y$parkey)))
