@@ -39,6 +39,7 @@ cat("\n", "\n", "\n",
 
 # Installed new packages?
 #  renv::snapshot()
+options(repos = c(CRAN = "https://cloud.r-project.org/"))
 update.packages()
 # detach packages and clear workspace
 if(!require(freshr)){install.packages('freshr')}
