@@ -27,7 +27,7 @@ cat(paste('\n ************************************** \n \n \n Running scrip', sc
 system_time1 <- Sys.time()
 
 # Load packages --------------------------------------
-library(conflicted)
+#library(conflicted)
 library(tidyverse)
 library(glue)
 library(jagsUI)
@@ -35,8 +35,8 @@ library(rjags)
 #library(MCMCvis)
 library(AHMbook)
 
-conflicts_prefer(dplyr::select)
-conflicts_prefer(dplyr::filter)
+#conflicts_prefer(dplyr::select)
+#conflicts_prefer(dplyr::filter)
 # conflicts_prefer(scales::alpha)
 
 #if("sps_loop" %in% ls() == FALSE){stop("No species selected #38")}

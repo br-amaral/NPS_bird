@@ -45,12 +45,12 @@ if(!require(freshr)){install.packages('freshr')}
 freshr::freshr()
 
 #! Load packages ---------------------------------------
-library(conflicted)
+#library(conflicted)
 library(tidyverse)
 library(glue)
 
-conflicts_prefer(dplyr::select)
-conflicts_prefer(dplyr::filter)
+#conflicts_prefer(dplyr::select)
+#conflicts_prefer(dplyr::filter)
 # conflicts_prefer(scales::alpha)
 
 #! Make functions --------------------------------------
