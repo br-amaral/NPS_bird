@@ -47,9 +47,9 @@ lenght <- length
 `%!in%` <- Negate(`%in%`)
 
 # MCMC settings ---------------------------------------
-niterations <- 20
-burnin <- 50
-nchains <- 3
+niterations <- 10000
+burnin <- 5000
+nchains <- 5
 
 # Import data -----------------------------------------
 ## file paths
@@ -218,7 +218,7 @@ if(for_stage == "late") {
     if(for_stage == "mature") {
       X5 <- X5m
       } else {
-        if(for_stage == "mature") { X5 <- X5p} else {stop("wrong stage row #220")}}}
+        if(for_stage == "pole") { X5 <- X5p} else {stop("wrong stage row #220")}}}
 
 ## park size
 Xp <- X %>% 
@@ -327,6 +327,7 @@ paste('\n ************************************* \n \n \n Running JAGS for:', '\n
       '  Parks =', park_name, '\n',
       '  Species =', sps_name, '\n',
       '  Iterations =', niterations, '\n',
+      '  Burn-in =', burnin, '\n',
       '  Data size =', nrow(y), '\n',
       '  Started running on =', Sys.time(),  '\n \n \n',
       '**************************************
