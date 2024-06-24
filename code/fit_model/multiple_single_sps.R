@@ -39,7 +39,7 @@ cat("\n", "\n", "\n",
 
 # Installed new packages?
 #  renv::snapshot()
-
+update.packages()
 # detach packages and clear workspace
 if(!require(freshr)){install.packages('freshr')}
 freshr::freshr()
