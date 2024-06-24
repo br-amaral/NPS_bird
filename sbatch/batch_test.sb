@@ -34,5 +34,5 @@ module load JAGS/4.3.2-foss-2023a
 # run R commandline with the Rscript command
 export R_DISABLE_BYTECODE=1
 
-Rscript --vanilla  code/fit_model/teste_hpcc.r 
+Rscript code/fit_model/teste_hpcc.r 
 
