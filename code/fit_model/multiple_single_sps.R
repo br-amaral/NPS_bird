@@ -39,11 +39,11 @@ cat("\n", "\n", "\n",
 
 # Installed new packages?
 #  renv::snapshot()
-options(repos = c(CRAN = "https://cloud.r-project.org/"))
-update.packages("freshr")
+#options(repos = c(CRAN = "https://cloud.r-project.org/"))
+#update.packages("freshr")
 # detach packages and clear workspace
-if(!require(freshr)){install.packages('freshr')}
-freshr::freshr()
+#if(!require(freshr)){install.packages('freshr')}
+#freshr::freshr()
 
 #! Load packages ---------------------------------------
 #library(conflicted)
