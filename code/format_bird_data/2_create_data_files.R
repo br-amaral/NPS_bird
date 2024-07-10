@@ -9,11 +9,11 @@
 #
 #! Input ----------------------------------------------
 #           from here: 
-#           - data/out/close_points_fcovs.rds
 #           - data/out/coun_covs.rds - covariate data from county level
 #           - data/out/park_covs.rds - covariate data from park level
 #           - data/out/site_covs.rds - covariate data from site level
 #           - data/park_raster/{pk[i]}_pb.rds : raster of each park to get park size 
+#           - data/out/site_div.rds : diversity of forest for park and sites
 #
 #           from code/format_bird_data/format_data.R:
 #             -- y1: table of ones and zeros for sps detections
@@ -61,6 +61,8 @@ PATH_COVS_COUN <- "data/out/coun_covs.rds"
 PATH_COVS_PARK <- "data/out/park_covs.rds"
 PATH_COVS_SITE <- "data/out/site_covs.rds"
 PATH_SITE_COVS <- "data/out/close_points_fcovs.rds"
+PATH_DIV_SITE_COVS <- "data/out/site_div.rds"
+PATH_DIV_PARK_COVS <- "data/out/park_div.rds"
 
 ## parks -------------------------------------------------------------------------------------------
 pk_list <- visits %>% 
@@ -144,7 +146,7 @@ for(i in 1:npk){
 }
 
 ##### write file: data/src/sites_park_tib.rds ------
-write_rds(sites_park_tib, file = "data/src/sites_park_tib.rds")
+# write_rds(sites_park_tib, file = "data/src/sites_park_tib.rds")
 
 for(ii in 1:npk) {
   st_name <- sites_park_tib %>% 
@@ -160,7 +162,7 @@ for(ii in 1:npk) {
 }
 sit_mer2 <- as_tibble(sit_mer2)
 ##### write file: data/src/site_n_key.rds ------
-write_rds(sit_mer2, file = "data/out/site_n_key.rds")
+# write_rds(sit_mer2, file = "data/out/site_n_key.rds")
 
 visits2 <- left_join(visits, sit_mer2, by = "Point_Name")
 
@@ -389,7 +391,7 @@ for(ii in 1:nrow(y_dat3)){
 }
 
 ##### write file: data/out/y_dat3.rds ------
-write_rds(y_dat3, file = "data/out/y_dat3.rds")
+# write_rds(y_dat3, file = "data/out/y_dat3.rds")
 
 # This has all the zeros for all intervals, but I'm still missing an occasion for a species that was not detected in year X in site Y, but was detected ther on year X-1 or X+1
 # for each species, in a park, for the years the park was sampled
@@ -412,6 +414,7 @@ for(ii in 1:length(pk)) {
 }
 spy_grid <- spy_grid %>% 
    rename(AOU_Code = sps_pk_loop)
+
 # check which ones already exist (1 at the occasion, and add only the zeros)
 spy_grid_yesdetec <- y_dat3 %>% 
    select(Point_Name, Year, park, AOU_Code) %>% 
@@ -489,204 +492,108 @@ y_dat6 <- y_dat5 %>%
   left_join(., pk_key_sps, by = c("AOU_Code", "park", "parkey"))
 
 # get covariate data ----------------------------------------------------------------------------------
+# index to have the same dimentions as the bird data
 X <- y_dat6 %>% 
   select(park, site_n, Year, Point_Name, interval_n, Year)
 
-# no year so far in covariates
+# no year so far in covariates - key to get the combinations of covariates in each site
 site_key <- y_dat6 %>% 
    select(Point_Name, site_n, park) %>% 
    distinct()
 
 ## site ----------------------------------------------------------------------------------------------
-## no data for all years, using mean between years
-close_points_f2 <- read_rds(PATH_SITE_COVS)
+#! it is OK that ACAD and SAIR do not have covs now,
+#!   they are gonna be removed from the data in the next step (back2d_covs_scales_3)
+site_covs <- read_rds(PATH_COVS_SITE) %>% 
+               rename(Point_Name = bird_sit,
+                      park = ParkUnit) %>%
+               left_join(., site_key, by =  c("park", "Point_Name")) %>% 
+               select(-c(siteSTA, siteSAPden))
 
-### Tree basal area
-tree_ba_tab_site <- close_points_f2 %>% 
-  mutate(Point_Name = bird_sit,
-         siteBA = BA_m2haM) %>% 
-  left_join(., site_key, by = c("Point_Name", "park")) %>%
-  select(Point_Name, park, site_n, siteBA) 
-
-X1 <- left_join(X, tree_ba_tab_site %>% select(-Point_Name), by = c("park", "site_n"))
-
-### Tree density
-tree_den_tab_site <- close_points_f2 %>% 
-  mutate(Point_Name = bird_sit,
-         siteDEN = treeden_haM) %>% 
-  left_join(., site_key, by = c("Point_Name", "park")) %>% 
-  select(Point_Name, park, site_n, siteDEN) 
-
-X2 <- left_join(X1, tree_den_tab_site, by = c("park", "site_n", "Point_Name"))
-
-### Stand structure
-stand_struc_tab_site <- close_points_f2 %>% 
-  mutate(Point_Name = bird_sit,
-         siteBA_pole = pctBA_poleM,
-         siteBA_mature = pctBA_matureM,
-         siteBA_large = pctBA_largeM) %>% 
-  select(Point_Name,
-         park,
-         siteBA_pole,
-         siteBA_mature,
-         siteBA_large) %>%
-  left_join(., site_key, by = c("Point_Name", "park")) 
-
-X3 <- left_join(X2, stand_struc_tab_site, by = c("park", "site_n", "Point_Name"))
-
-### Tree richness
-tree_rich_tab_site <- close_points_f2 %>% 
-  mutate(Point_Name = bird_sit,
-         siteRICH = tree_richM) %>% 
-  select(Point_Name,
-         park,
-         siteRICH) %>%
-  left_join(., site_key, by = c("Point_Name", "park"))
- 
-X4 <- left_join(X3, tree_rich_tab_site, by = c("park", "site_n", "Point_Name"))
-
-### Stage of stand (mode)
-table(close_points_f2$StageM)
-
-sta_stan_tab_site <- close_points_f2 %>% 
-  mutate(Point_Name = bird_sit,
-         siteSTAstand = StageM) %>% 
-  select(Point_Name,
-         park,
-         siteSTAstand) %>%
-  left_join(., site_key, by = c("Point_Name", "park"))
- 
-X5 <- left_join(X4, sta_stan_tab_site, by = c("park", "site_n", "Point_Name"))
-
-### Sapling density
-sap_den_tab_site <- close_points_f2 %>% 
-  mutate(Point_Name = bird_sit,
-         siteSAPden = sap_den_m2M) %>% 
-  select(Point_Name,
-         park,
-         siteSAPden) %>%
-  left_join(., site_key, by = c("Point_Name", "park"))
-
-X6 <- left_join(X5, sap_den_tab_site, by = c("park", "site_n", "Point_Name"))
-
-### Shrub cover
-shru_cov_tab_site <- close_points_f2 %>% 
-  mutate(Point_Name = bird_sit,
-         siteSHRUden = shrub_covM) %>% 
-  select(Point_Name,
-         park,
-         siteSHRUden) %>%
-  left_join(., site_key, by = c("Point_Name", "park"))
-
-X7 <- left_join(X6, shru_cov_tab_site, by = c("park", "site_n", "Point_Name"))
-
+X1 <- left_join(X, site_covs, by = c("park", "site_n", "Point_Name"))
+dim(X1)
 ## park --------------------------------------------------------------------------------
-### Tree basal area
-tree_ba_tab_park <- read_rds(PATH_TREE_BA_PARK) %>% 
-  na.omit() %>% 
-  group_by(park) %>% 
-  mutate(mean_total_BA = mean(mean_total_BA)) %>% 
-  ungroup() %>% 
-  select(-c(Year, mean_total_BA_SE)) %>% 
-  distinct() %>% 
-  rename(parkBA = mean_total_BA)
+park_covs <- read_rds(PATH_COVS_PARK) %>% 
+               rename(park = ParkUnit) 
 
-X4 <- left_join(X3, tree_ba_tab_park, by = c("park"))
-
-### Tree density
-tree_den_tab_park <- read_rds(PATH_TREE_DEN_PARK) %>% 
-  na.omit() %>% 
-  group_by(park) %>% 
-  mutate(mean_total_den = mean(mean_total_den)) %>% 
-  ungroup() %>% 
-  select(-c(Year)) %>% 
-  distinct() %>% 
-  rename(parkDEN = mean_total_den)
-
-X5 <- left_join(X4, tree_den_tab_park, by = c("park"))
-
-### Stand structure
-stand_struc_tab_park <- read_rds(PATH_TREE_STR_PARK)
-
-### Tree richness
-### Stage of stand (mode)
-### Sapling density
-### Shrub cover
+X2 <- left_join(X1, park_covs, by = c("park"))
+dim(X2)
 
 ## county ---------------------------------------------------------------------------------
-### Tree basal area
-tree_ba_tab_coun <- read_rds(PATH_TREE_BA_COUN) %>% 
-  select(-BAA_SE_mean) %>% 
-  rename(counBA = BAA_mean)
+coun_covs <- read_rds(PATH_COVS_COUN) %>% 
+               rename(park = ParkUnit)
 
-X6 <- left_join(X5, tree_ba_tab_coun, by = c("park"))
+X3 <- left_join(X2, coun_covs, by = "park")
+dim(X3)
 
-### Tree density
-tree_den_tab_coun <- read_rds(PATH_TREE_DEN_COUN) %>% 
-  select(-TPA_SE_mean) %>% 
-  rename(counDEN = TPA_mean)
+## diversity
+div_covs_site <- read_rds(PATH_DIV_SITE_COVS) %>% 
+                    rename(siteH_g = S_mean,
+                           siteEh_g = J_mean)
 
-X7 <- left_join(X6, tree_den_tab_coun, by = c("park"))
+X4 <- left_join(X3, div_covs_site, by = "Point_Name")
+dim(X4)
 
-### Stand structure
-stand_struc_tab_coun <- read_rds(PATH_TREE_STR_COUN)
+div_covs_park <- read_rds(PATH_DIV_PARK_COVS) %>% 
+                    rename(parkH_g = S_mean,
+                           parkEh_g = J_mean)
 
-### Tree richness
-### Stage of stand (mode)
-### Sapling density
-### Shrub cover
+X5 <- left_join(X4, div_covs_park, by = "park")
+dim(X5)
 
 ## park area ------------------------------------------------------------------
 park_size <- as_tibble(matrix(NA, nrow = length(unique(y_dat4$park)), ncol = 2))
 colnames(park_size) <- c("park", "area")
 park_size$park <- sort(unique(y_dat4$park))
   
-for(i in 1:length(pk)) {
-  pb <- read_rds(file = glue("data/park_raster/{pk[i]}_pb.rds"))
+for(i in 1:nrow(park_size)) {
+  pb <- read_rds(file = glue("data/park_raster/{park_size[i,1]}_pb.rds"))
   park_size[i,2] <- raster::area(pb)   # square km
+  print(park_size[i,1])
 }
 
-if(length(park_size) > 1) {
-  park_size$area <- park_size$area %>% scale() %>% as.numeric()
-}
+# write_rds(park_size, file = "data/park_size.rds")
 
-X8 <- left_join(X7, park_size, by = "park")
+X6 <- left_join(X5, park_size, by = "park")
+dim(X6)
 
 # get detection covariates! 
 inte_key <- y1 %>% 
-   select(Interval_Length, Interval_n) %>% 
-   rename(interval_n = Interval_n) %>% 
-   mutate(interval_n = as.numeric(interval_n)) %>% 
-   distinct()
+  select(Interval_Length, Interval_n) %>% 
+  rename(interval_n = Interval_n) %>% 
+  mutate(interval_n = as.numeric(interval_n)) %>% 
+  distinct()
 y_dat7 <- left_join(y_dat6, inte_key, by = "interval_n")
 y_dat8 <- y_dat7 %>% 
-   mutate(StartTime2 = as.period(seconds(StartTime) + minutes(substr(Interval_Length,1,1) %>%
-                                                                       as.numeric() %>% 
-                                                                       as_hms()), unit = "hours") %>% 
+  mutate(StartTime2 = as.period(seconds(StartTime) + minutes(substr(Interval_Length,1,1) %>%
+                                                                      as.numeric() %>% 
+                                                                      as_hms()), unit = "hours") %>% 
                               as.numeric(),
           EventDate2 = yday(EventDate)) 
 
-table(X8$park == y_dat8$park)
-table(X8$site_n == y_dat8$site_n)
-table(X8$Year == y_dat8$Year)
-table(X8$Point_Name == y_dat8$Point_Name) 
+table(X6$park == y_dat8$park)
+table(X6$site_n == y_dat8$site_n)
+table(X6$Year == y_dat8$Year)
+table(X6$Point_Name == y_dat8$Point_Name) 
 
-X9 <- X8
+X7 <- X6
 
-X9$EventDate2 <- y_dat8$EventDate2 ; X9$StartTime2 <- y_dat8$StartTime2
+X7$EventDate2 <- y_dat8$EventDate2 ; X7$StartTime2 <- y_dat8$StartTime2
 
-X10 <- X9 %>% 
-  mutate(date_jul = as.numeric(scale(EventDate2)),
-         time_jul = as.numeric(scale(StartTime2)),
-         siteBA_s = as.numeric(scale(siteBA)),
-         siteDEN_s = as.numeric(scale(siteDEN)),
-         parkBA_s = as.numeric(scale(parkBA)),
-         parkDEN_s = as.numeric(scale(parkDEN)),
-         counBA_s = as.numeric(scale(counBA)),
-         counDEN_s = as.numeric(scale(counDEN)),
-         area_s = as.numeric(scale(area))) 
+# X6 <- X5 %>% 
+#   mutate(date_jul = as.numeric(scale(EventDate2)),
+#          time_jul = as.numeric(scale(StartTime2)),
+#          siteBA_s = as.numeric(scale(siteBA)),
+#          siteDEN_s = as.numeric(scale(siteDEN)),
+#          parkBA_s = as.numeric(scale(parkBA)),
+#          parkDEN_s = as.numeric(scale(parkDEN)),
+#          counBA_s = as.numeric(scale(counBA)),
+#          counDEN_s = as.numeric(scale(counDEN)),
+#          area_s = as.numeric(scale(area))) 
 
 ##### write files  ------
 write_rds(y_dat8, file = "data/y_dat8.rds")
-write_rds(X10, file = "data/X10.rds")
-write_rds(sps_pk_nth, file = "data/sps_pk_nth.rds")
+write_rds(X7, file = "data/X.rds")
+# write_rds(sps_pk_nth, file = "data/sps_pk_nth.rds")
+
+

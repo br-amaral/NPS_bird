@@ -22,14 +22,18 @@
 # change to current directory
 cd $SLURM_SUBMIT_DIR
 
-# add necessary modules (programs that I'm using')
+# add necessary modules (programs that I'm using') to run R
 module purge
-module load GCC/8.3.0 OpenMPI/3.1.4 
-module load R/4.0.2
-module load JAGS/4.3.0
+module load GCC/12.3.0
+module load OpenMPI/4.1.5-GCC-12.3.0
+module load GDAL/3.7.1-foss-2023a
+module load NLopt/2.7.1-GCCcore-12.3.0
+module load UDUNITS/2.2.28-GCCcore-12.3.0
+module load JAGS/4.3.2-foss-2023a
+
 R --no-environ
 
 # run R script
-Rscript code/M3_occupancy_BLISS_multisps_multicovs.R --vanilla
+Rscript code/fit_model/multiple_single_sps.R --vanilla
 
 scontrol show job $SLURM_JOB_ID
