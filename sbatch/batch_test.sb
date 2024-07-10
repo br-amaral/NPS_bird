@@ -30,9 +30,7 @@ module purge
 module load R-bundle-CRAN/2023.12-foss-2023a
 module load JAGS/4.3.2-foss-2023a
 
-
-# run R commandline with the Rscript command
 export R_DISABLE_BYTECODE=1
-
-Rscript code/fit_model/teste_hpcc.r 
+# run R commandline with the Rscript command
+Rscript --vanilla  code/fit_model/teste_hpcc.r 
 
