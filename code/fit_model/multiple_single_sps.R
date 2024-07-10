@@ -83,8 +83,8 @@ master_tab <- expand_grid(sps_list1, yearbo1, for_stage1) %>%
                 mutate(res_name = glue("{sps_list1}_b0{yearbo1}_{for_stage1}"))
 
 colnames(master_tab) <- c("sps_list", "yearbo", "for_stage", "res_name")
-
-for (i in 1:nrow(master_tab)){
+## BTNW not working
+for (i in 145:nrow(master_tab)){
     sps_loop <- master_tab[i,1] %>% pull()
     yearbo <- master_tab[i,2] %>% pull()
     for_stage <- master_tab[i,3] %>% pull()
