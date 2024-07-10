@@ -190,8 +190,8 @@ xy3 <- data.frame(ID = xy2$for_sit,
                   X =  xy2$lonutm, 
                   Y =  xy2$latutm,
                   zone = as.numeric(xy2$UTMZone))
-library(bcmaps)
-xy4 <- utm_convert(xy3, easting = "X", northing = "Y",
+
+xy4 <- bcmaps::utm_convert(xy3, easting = "X", northing = "Y",
                    zone = "zone", crs = "WGS84")
 
 projcrs <- "+proj=utm +datum=WGS84 +units=m"
@@ -267,7 +267,7 @@ for(ii in 1:lenght(parks_ana2)){
 
 key_fsite %>% tail()
 
-write_rds(key_fsite, file = "data/out/key_fsite.rds")
-write_rds(key_bsite, file = "data/out/key_bsite.rds")
+# write_rds(key_fsite, file = "data/out/key_fsite.rds")
+# write_rds(key_bsite, file = "data/out/key_bsite.rds")
 
 
