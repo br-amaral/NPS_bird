@@ -47,7 +47,7 @@ lenght <- length
 `%!in%` <- Negate(`%in%`)
 
 # MCMC settings ---------------------------------------
-niterations <- 10000
+niterations <- 20000
 burnin <- 5000
 nchains <- 5
 
@@ -294,7 +294,7 @@ dim(Xa)
 dim(Xb)
 
 # number of alphas and betas
-n_bs <- 3
+n_bs <- 4
 n_as <- 3
 
 # model
@@ -307,7 +307,7 @@ str(jags.data <- list(y = y,
                       X1 = X1,
                       X2 = X2,
                       #X3 = X3,
-                      #X4 = X4,
+                      X4 = X4,
                       #X5 = X5,
                       Xp = Xp,
                       Xa = Xa,
@@ -338,7 +338,7 @@ params <- c("beta0","beta", "alpha0", "alpha",
             "scales_beta1", "scales_beta2", #"scales_beta3", "scales_beta4", "scales_beta5",
             "mu.beta0", "tau.beta0", "mu.alpha0", "tau.alpha0") # Z, psi
 
-if(yearbo == "yes") { model_file <- "models/mod_1_vector1spsparks_simple_LESScovs_scales.txt"}
+if(yearbo == "yes") { model_file <- "models/mod_1_vector1spsparks_simple_LESSHRcovs_scales.txt"}
 if(yearbo == "no") { model_file <- "models/mod_1_vector1spsparks_simple_MOREcovs_scalesnoyear.txt"}
 
 ## initialize JAGS
@@ -380,7 +380,7 @@ samples_jags <- coda.samples(
 cat("\n\n\n third done!!! \n\n\n\n")
 fil_nam <- sps_loop2
 
-file_name <- glue("jags_res_{fil_nam}_{park_name}_{niterations}its_LESS")
+file_name <- glue("jags_res_{fil_nam}_{park_name}_{niterations}its_LESSHR")
 
 file_name2 <- paste0(file_name, 'run',
                       length(list.files(path = file.path(getwd(),"data/model_res/"),
