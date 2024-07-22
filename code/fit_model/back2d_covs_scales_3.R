@@ -15,8 +15,8 @@
 #           - data/model_res/jags_res_{sps}_{park}_run{run_number}.rds: file with result of jags model
 
 # detach packages and clear workspace
-if(!require(freshr)){install.packages("freshr")}
-freshr::freshr()
+#if(!require(freshr)){install.packages("freshr")}
+#freshr::freshr()
 
 script_name <- 'back2d_covs_scales_3.R'
 
