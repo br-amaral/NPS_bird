@@ -3,11 +3,8 @@
 #? *********************************************************************************
 # Code to get the environmental variables at the park level
 #
-#! Source ---------------------------------------------
-#
 #! Input ----------------------------------------------
-#           - data/veg_kateaaron/NETN_forest_data_2006-2023.rds :
-#           - data/veg_kateaaron/NETN_tree_dens_spp_2006-2023.rds :
+#           - data/out/site_covs.rds :
 #
 #! Output ----------------------------------------------
 #           - data/out/park_covs.rds : tibble with park level environmental variables
@@ -43,27 +40,25 @@ Modes <- function(x) {
 #
 #! Import data -----------------------------------------
 ## file paths
-FORCOVS_PATH <- "data/veg_kateaaron/NETN_forest_data_2006-2023.rds"
-FORSPS_PATH  <- "data/veg_kateaaron/NETN_tree_dens_spp_2006-2023.rds"
+FORCOVS_PATH <- "data/out/site_covs.rds"
 
 ## read files
-for_park       <- read_rds(file = FORCOVS_PATH)
-fordiv_park    <- read_rds(file = FORSPS_PATH)
+for_park <- read_rds(file = FORCOVS_PATH)
 
 #! calculate park means --------------------------------
 for_park2 <- for_park %>% 
   #filter(SampleYear == 2022) %>% 
   group_by(ParkUnit) %>% 
-  mutate(parkDEN = mean(treeden_ha, na.rm = T),
-         parkBA = mean(BA_m2ha, na.rm = T),
-         parkRICH = mean(tree_rich, na.rm = T),
-         parkSTA = Modes(Stage),
-         parkBA_pole = mean(pctBA_pole, na.rm = T),
-         parkBA_mature = mean(pctBA_mature, na.rm = T),
-         parkBA_large = mean(pctBA_large, na.rm = T),
-         parkDIV = mean(tree_rich, na.rm = T),
-         parkSAPden = mean(sap_den_m2, na.rm = T),
-         parkSHRUden = mean(shrub_cov, na.rm = T))  %>% 
+  mutate(parkDEN = mean(siteDEN, na.rm = T),
+          parkBA = mean(siteBA, na.rm = T),
+          parkRICH = mean(siteRICH, na.rm = T),
+          parkSTA = Modes(siteSTA),
+          parkBA_pole = mean(siteBA_pole, na.rm = T),
+          parkBA_mature = mean(siteBA_mature, na.rm = T),
+          parkBA_large = mean(siteBA_large, na.rm = T),
+          #parkDIV = mean(, na.rm = T),
+          parkSAPden = mean(siteSAPden, na.rm = T),
+          parkSHRUden = mean(siteSHRUden, na.rm = T))  %>% 
   ungroup() %>% 
   select(ParkUnit,
          parkDEN, parkBA, parkRICH, parkSTA,
