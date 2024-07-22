@@ -54,7 +54,6 @@ Modes <- function(x) {
 # nj <- getFIA(states = 'NJ', dir = 'data/FIA', load = FALSE)
 
 #! Import data -----------------------------------------
-
 # master table with parks and counties
 # county location of each park
 park_county <- matrix(c(
