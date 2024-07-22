@@ -14,7 +14,8 @@
 #SBATCH --cpus-per-task=1
 
 # specify which development nodes you want the job run on. Doesn't seem to work?
-#SBATCH --constraint="[intel16|intel18]"
+#  SBATCH --constraint="[intel16|intel18]"
+#SBATCH --constraint="[amd20|amd22]"
 
 # email me
 # SBATCH --mail-type=FAIL,END
@@ -23,14 +24,15 @@
 # change to current directory
 cd $SLURM_SUBMIT_DIR
 
-# export R_LIBS_USER=/mnt/home/bamaral/R
+export R_LIBS_USER=/mnt/home/bamaral/R
 
 # add necessary modules
 module purge
 module load R-bundle-CRAN/2023.12-foss-2023a
 module load JAGS/4.3.2-foss-2023a
 
-export R_DISABLE_BYTECODE=1
 # run R commandline with the Rscript command
-Rscript --vanilla  code/fit_model/teste_hpcc.r 
+# export R_DISABLE_BYTECODE=1
+
+Rscript code/fit_model/teste_hpcc.r 
 
