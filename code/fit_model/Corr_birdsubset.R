@@ -1,3 +1,8 @@
+library(reshape2)
+
+XDAT_PATH <- "data/X.rds"
+X10 <- read_rds(file = XDAT_PATH)
+
 X_corr <- X10 %>% 
             filter(interval_n == 1) %>% 
             dplyr::select(Point_Name,
@@ -17,31 +22,127 @@ X_corr <- X10 %>%
                 EventDate2, StartTime2) %>% 
             rename(date_jul = EventDate2,
                 time_jul = StartTime2) %>% 
-            mutate(siteBA_s = standardize(siteBA),
-                siteDEN_s = standardize(siteDEN),
-                siteH_g = standardize(siteH_g),
-                siteEh_g = standardize(siteEh_g),
-                siteBA_pole_s = standardize(siteBA_pole),
-                siteBA_mature_s = standardize(siteBA_mature),
-                siteBA_large_s = standardize(siteBA_large),
-                siteSHRUden_s = standardize(siteSHRUden),
-                parkDEN_s = standardize(parkDEN),
-                parkBA_s = standardize(parkBA),
-                parkH_g = standardize(parkH_g), 
-                parkEh_g = standardize(parkEh_g),
-                parkBA_pole_s = standardize(parkBA_pole),
-                parkBA_mature_s = standardize(parkBA_mature),
-                parkBA_large_s = standardize(parkBA_large),
-                parkSHRUden_s = standardize(parkSHRUden),
-                counDEN_s = standardize(counDEN),
-                counBA_s = standardize(counBA),
-                counH_g = standardize(counH_g),
-                counEh_g = standardize(counEh_g),
-                counPER_pole_s = standardize(counPER_pole),
-                counPER_matu_s = standardize(counPER_matu),
-                counPER_late_s = standardize(counPER_late),
-                counSHRUper_s = standardize(counSHRUden),
-                area_s = standardize(area),
-                date_jul_s = standardize(date_jul),
-                time_jul_s = standardize(time_jul))
+            mutate(#AOU_code = sps_loop2,
+                   park = substr(Point_Name,1,4))
+
+cbind(colnames(X_corr), seq(1,ncol(X_corr),1))
+
+# creating correlation matrices
+
+#? first, check the correlation of the mature, pole, and late forest types 
+#?  within the same scale, and between the forest types
+(corr_mat_pole <- round(cor(X_corr[,c(6,7,8)], use="complete.obs"),2))
+(corr_mat_matu <- round(cor(X_corr[,c(14,15,16)], use="complete.obs"),2))
+(corr_mat_late <- round(cor(X_corr[,c(22,23,24)], use="complete.obs"),2))
+
+#! ALL: definetely cannot be added together. 
+#! GCFL_b0yes_late: definetely cannot be added together. 
+# Note that large is strongly negatively correlated with pole and mature
+# mature and pole are not bad except for park level
+
+#? check between each variables, the correlation between the SCALES: 0.75 thres
+(corr_mat_DEN <- round(cor(X_corr[,c(2,10,18)], use="complete.obs"),2))
+
+(corr_mat_BA <- round(cor(X_corr[,c(3,11,19)], use="complete.obs"),2))
+
+(corr_mat_H_g <- round(cor(X_corr[,c(4,12,20)], use="complete.obs"),2))
+
+(corr_mat_Eh_g <- round(cor(X_corr[,c(5,13,21)], use="complete.obs"),2))
+
+(corr_mat_BApole <- round(cor(X_corr[,c(6,14,22)], use="complete.obs"),2))
+
+(corr_mat_BAmatu <- round(cor(X_corr[,c(7,15,23)], use="complete.obs"),2))
+
+(corr_mat_BAlate <- round(cor(X_corr[,c(8,16,24)], use="complete.obs"),2))
+
+(corr_mat_SHRU <- round(cor(X_corr[,c(9,17,25)], use="complete.obs"),2))
+
+#? plot different ones here if needed
+#? reduce the size of correlation matrix and plot
+melted_corr_mat <- melt(corr_mat_SHRU) %>% 
+    mutate(cov = substr(Var1,5,6))
+
+# plotting the correlation heatmap
+ggplot(data = melted_corr_mat, aes(x=Var1, y=Var2, 
+								fill=value)) + 
+geom_tile(color = "white")+
+ scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+   midpoint = 0, limit = c(-1,1), space = "Lab", 
+   name="Correlation \n") +
+   theme_minimal()+ 
+ theme(axis.text.x = element_text(vjust = 1, angle = 90),
+       axis.title.x = element_blank(),       # Change x axis title only
+       axis.title.y = element_blank() )+
+ geom_text(aes(Var1, Var2, label = value), 
+		color = "black", 
+        size = 4)  
+
+melted_corr_mat %>% 
+  filter(abs(value) < 0.75) %>% 
+  arrange(desc(value))
+
+#! all good for GCFL with 0.75
+
+#! GCFL_b0yes_late: definetely cannot be added together. 
+# Note that large is strongly negatively correlated with pole and mature
+# mature and pole are not bad except for park level
+
+#? check between each variables, the correlation between the VARIABLES at same scale: 0.5 thres
+(corr_mat_SITE <- round(cor(X_corr[,c(2:9)], use="complete.obs"),2))
+
+(corr_mat_PARK <- round(cor(X_corr[,c(10:17)], use="complete.obs"),2))
+
+(corr_mat_COUN <- round(cor(X_corr[,c(18:25)], use="complete.obs"),2))
+
+#? reduce the size of correlation matrix and plot
+melted_corr_mat <- melt(corr_mat_PARK) %>% 
+    mutate(cov = substr(Var1,5,6))
+
+# plotting the correlation heatmap
+ggplot(data = melted_corr_mat, aes(x=Var1, y=Var2, 
+								fill=value)) + 
+geom_tile(color = "white")+
+ scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+   midpoint = 0, limit = c(-1,1), space = "Lab", 
+   name="Correlation \n") +
+   theme_minimal()+ 
+ theme(axis.text.x = element_text(vjust = 1, angle = 90),
+       axis.title.x = element_blank(),       # Change x axis title only
+       axis.title.y = element_blank() )+
+ geom_text(aes(Var1, Var2, label = value), 
+		color = "black", 
+        size = 4)  
+
+melted_corr_mat %>% 
+  filter(abs(value) < 0.5) %>% 
+  arrange(desc(value))
+
+#! ALL county rm EH_g, forest age BA, TRY H_g
+
+#! GCFL site good with 0.5! on the forest age BA are cor
+#! GCFL park has shrub, BApole, BA, DEN
+(corr_mat_PARK <- round(cor(X_corr[,c(10:11,14,17)], use="complete.obs"),2))
+#! GCFL county has shrub(0.72 with DEN), Eh_g, BA, DEN
+(corr_mat_COUN <- round(cor(X_corr[,c(18:19,21,25)], use="complete.obs"),2))
+
+cbind(colnames(X_corr), seq(1,ncol(X_corr),1))
+
+# variation
+var_site <- X_corr[,c(#1,29,
+                    2,3,4,9)] 
+
+  table(is.na(var_site))
+
+var_site2 <- X_corr[,c(1,29,
+                    2,3,4,9)]  %>% 
+    pivot_longer(cols = c("siteDEN", "siteBA", "siteH_g", "siteSHRUden"),
+                names_to = "site",
+                values_to = "value",
+                values_drop_na = TRUE)
+
+ggplot(var_site2) +
+  geom_boxplot(aes(x = site, y = value)) +
+  theme_bw() +
+  facet_wrap(~park, scales = "free_y", ncol = 2) +
+  coord_flip()
 
