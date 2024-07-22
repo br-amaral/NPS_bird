@@ -55,13 +55,16 @@ tree_den_spp_a <- read_csv('data/veg_kateaaron/NETN_Forest_20231106/AdditionalSp
     select(Plot_Name, SampleYear, ScientificName)
 
 tree_den_spp <- joinTreeData(status = "live") %>% 
-    filter(!ParkUnit %in% "ACAD") %>% 
+    filter(ParkUnit != "ACAD") %>% 
+    filter(ParkUnit != "SAIR") %>% 
+    filter(ParkUnit != "ELRO") %>% 
     select(Plot_Name, SampleYear, ScientificName)  
 
 tree_div <- rbind(tree_den_spp_a, tree_den_spp) %>% 
     mutate(park = substr(Plot_Name, 1, 4))  %>% 
     filter(park != "ACAD") %>%
     filter(park != "SAIR") %>% 
+    filter(park != "ELRO") %>% 
     arrange(park)
 
 year3 <- tree_div$SampleYear %>% unique() %>% sort()
@@ -159,3 +162,5 @@ site_div2 <- left_join(close_points_f, site_div_m, by = "Plot_Name") %>%
 
 write_rds(site_div2, "data/out/site_div.rds")
 write_rds(park_div_m, "data/out/park_div.rds")
+
+print("Done")
