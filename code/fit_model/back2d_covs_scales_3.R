@@ -1,22 +1,22 @@
-# *********************************************************************************
-# ----------------------------  back2d_covs_scales_3  -----------------------------
-# *********************************************************************************
+#? *********************************************************************************
+#? ----------------------------  back2d_covs_scales_3  -----------------------------
+#? *********************************************************************************
 # Code to run model to estimate the effect of different environmental
 #   covariates on bird occupancy in several national parks and on three
 #   different spatial scales
 #
-# Input ----------------------------------------------
-#           - data/y_dat8.rds: tibble with bird data
-#           - data/X.rds: tibble with covariate data
+#! Input ----------------------------------------------
+#           - data/y_dat8.rds: tibble with bird data (2_create_data_files.R)
+#           - data/X.rds: tibble with covariate data (2_create_data_files.R)
 #           - data/out/nsite_pk.rds: vector with number of sites in each park
 #           - data/src/key_park.rds: vector of all parks being analyzed
 #
-# Output ---------------------------------------------
+#! Output ---------------------------------------------
 #           - data/model_res/jags_res_{sps}_{park}_run{run_number}.rds: file with result of jags model
 
 # detach packages and clear workspace
-# if(!require(freshr)){install.packages("freshr")}
-# freshr::freshr()
+if(!require(freshr)){install.packages("freshr")}
+freshr::freshr()
 
 script_name <- 'back2d_covs_scales_3.R'
 
@@ -47,9 +47,9 @@ lenght <- length
 `%!in%` <- Negate(`%in%`)
 
 # MCMC settings ---------------------------------------
-niterations <- 20000
-burnin <- 5000
-nchains <- 5
+niterations <- 20
+burnin <- 5
+nchains <- 1
 
 # Import data -----------------------------------------
 ## file paths
@@ -61,17 +61,18 @@ PARK_PATH <- "data/src/key_park.rds"
 ## read files
 y_dat4 <- read_rds(file = YDAT_PATH)
 X10 <- read_rds(file = XDAT_PATH)
+
 nsite_pk <- read_rds(SITE_PK_PATH)
 pk <- read_rds(PARK_PATH) %>%
   dplyr::select(parks) %>%
   pull() %>%
   sort()
 
-pk <- pk[-1]
-pk <- pk[-7]
+rem_pks <- as_tibble(cbind(nsite_pk,pk)) %>% 
+              filter(pk %!in% c("ACAD","ELRO","SAIR"))
 
-nsite_pk <- nsite_pk[-1]
-nsite_pk <- nsite_pk[-7]
+nsite_pk <- as.numeric(rem_pks$nsite_pk)
+pk <- as.vector(rem_pks$pk)
 
 # Filter for species and park ---------------------------------------
 ## 1 sps several parks
@@ -102,7 +103,7 @@ if(length(sps_loop) == 1){
 }
 
 X10 <- X10 %>% 
-   dplyr::filter(unique_index %in% y_dat6$unique_index)
+    dplyr::filter(unique_index %in% y_dat6$unique_index)
 
 nrow(X10) == nrow(y_dat6)
 glu1 <- paste(shQuote(sort(unique(y_dat6$sps_it))), collapse=", ")
@@ -179,6 +180,7 @@ X <- X10 %>%
           time_jul_s = standardize(time_jul))
 
 #! TODO: for now, im putting zeros in the occasions that have no environmental data (mean)
+table(is.na(X))
 X[is.na(X)] <- 0
 
 # occupancy variables - separate them in covs in all scales per tibble
@@ -274,8 +276,8 @@ for(a in 1:nrow(Zst)){
   
 }
 
-colnames(y) <- c("bird_detec", "parkey", "sitekey", "yearkey", "intervalkey",#"year_site",
-"Year")
+colnames(y) <- c("bird_detec", "parkey", "sitekey", "yearkey", "intervalkey",# "year_site",
+                  "Year")
 
 y <- data.matrix(y)
 y2 <- data.matrix(y2)
@@ -333,7 +335,6 @@ paste('\n ************************************* \n \n \n Running JAGS for:', '\n
       '**************************************
       ') %>% cat()
 
-cat("\n\n\n running first jags \n\n\n\n")
 params <- c("beta0","beta", "alpha0", "alpha", 
             "scales_beta1", "scales_beta2", #"scales_beta3", "scales_beta4", "scales_beta5",
             "mu.beta0", "tau.beta0", "mu.alpha0", "tau.alpha0") # Z, psi
@@ -342,6 +343,8 @@ if(yearbo == "yes") { model_file <- "models/mod_1_vector1spsparks_simple_LESSHRc
 if(yearbo == "no") { model_file <- "models/mod_1_vector1spsparks_simple_MOREcovs_scalesnoyear.txt"}
 
 ## initialize JAGS
+cat("\n\n\n running first jags \n\n\n\n")
+
 jags_model <- rjags::jags.model(
   file = model_file,
   data = jags.data,
