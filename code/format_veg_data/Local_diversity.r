@@ -19,6 +19,21 @@
 # detach packages and clear workspace
 if(!require(freshr)){install.packages('freshr')}
 freshr::freshr()
+
+# Code to ...
+#
+#
+# Source ---------------------------------------------
+#           - :
+#           - :
+#
+# Input ----------------------------------------------
+#           - :
+#           - :
+#
+# Output ----------------------------------------------
+#           - :
+#           - :
 #
 # Load packages ---------------------------------------
 library(conflicted)
