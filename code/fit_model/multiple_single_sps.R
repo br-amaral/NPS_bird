@@ -90,3 +90,7 @@ for (i in 1:nrow(master_tab)){
     print(sps_loop2)
     source("code/fit_model/back2d_covs_scales_3.R")
 }
+
+cat(paste('\n ************************************** \n \n \n 
+        ---------------- all DONE Lol ----------------', 
+        '\n\n \n ************************************** \n'))
