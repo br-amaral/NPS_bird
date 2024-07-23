@@ -27,10 +27,13 @@ cd $SLURM_SUBMIT_DIR
 
 # add necessary modules
 module purge
-module load R-bundle-CRAN/2023.12-foss-2023a
 module load JAGS/4.3.2-foss-2023a
+# module load R/4.3.2-gfbf-2023a
+module load R-bundle-CRAN/2023.12-foss-2023a
 
-export R_DISABLE_BYTECODE=1
 # run R commandline with the Rscript command
-Rscript --vanilla  code/fit_model/teste_hpcc.r 
+export R_DISABLE_BYTECODE=1
+
+# Rscript code/fit_model/teste_hpcc.r 
+Rscript code/fit_model/multiple_single_sps.R
 
