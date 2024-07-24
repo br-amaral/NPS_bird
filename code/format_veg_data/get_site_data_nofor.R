@@ -39,6 +39,9 @@ conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::filter)
 # conflicts_prefer(scales::alpha)
 #
+#! Define settings -------------------------------------
+radi_dist <- 1000
+
 #! Make functions --------------------------------------
 colanmes <- colnmaes <- colnames
 lenght <- length
@@ -161,12 +164,12 @@ park_plot_nam <- bird_sit_coord %>%
 
 ggplot() +
   geom_point(aes(x = bird_sit_coord$lonutm, 
-                 y = bird_sit_coord$latutm),
-             size = 2,
-             color = "red") +
+                  y = bird_sit_coord$latutm),
+              size = 2,
+              color = "red") +
   geom_point(aes(x = for_sit_coord$lonutm, 
-                 y = for_sit_coord$latutm), 
-             color = "darkgreen") +
+                  y = for_sit_coord$latutm), 
+              color = "darkgreen") +
   #geom_text(aes(x= park_plot_nam$lonutm, y =park_plot_nam$latutm),
   #          label = park_plot_nam$park, size = 3, vjust = -1.3) +
   theme_bw() +
@@ -268,7 +271,7 @@ for (ii in 1:nrow(bird_sit_coord2)) {
 
     dist_small <- dist1 %>% 
                     arrange(dist) %>% 
-                    filter(dist <= 500) %>% # diameter of the home range area of birds plus some slack if it is not circular 
+                    filter(dist <= radi_dist) %>% # diameter of the home range area of birds plus some slack if it is not circular 
                     arrange(bird_sit, dist)
 
     table(dist_small$bird_sit)
@@ -397,9 +400,10 @@ close_points_f2 <- left_join(close_points_f, for_sit2, by = "for_sit") %>%
         siteSHRUden = shrub_covM)
 
 #! Output files ----------------------------------------------
-write_rds(for_sit2, file = "data/out/for_sit2.rds")
-write_rds(close_points_f2, file = "data/out/site_covs.rds")
+write_rds(for_sit2, file = glue("data/out/for_sit2_{radi_dist}m.rds"))
+write_rds(close_points_f2, file = glue("data/out/site_covs_{radi_dist}m.rds"))
 
+cat(paste("\n\n Done \n\n\n"))
 
 
 
