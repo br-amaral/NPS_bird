@@ -230,4 +230,5 @@ coun_covs <- left_join(tpa_tab2, stastr_tab2, by = "ParkUnit") %>%
 #! Output files -----------------------------------------
 write_rds(coun_covs, file = "data/out/coun_covs.rds")
 
+cat(paste("\n\n Done \n\n\n"))
 
