@@ -36,36 +36,37 @@ Modes <- function(x) {
       ux[tab == max(tab)]}
 }
 
-#! Source code -----------------------------------------
-#
 #! Import data -----------------------------------------
 ## file paths
-FORCOVS_PATH <- "data/out/site_covs.rds"
+
+FORCOVS_PARK_PATH <- "data/veg_kateaaron/NETN_forest_data_2006-2023.rds"
 
 ## read files
-for_park <- read_rds(file = FORCOVS_PATH)
+for_park <- read_rds(file = FORCOVS_PARK_PATH)
 
 #! calculate park means --------------------------------
 for_park2 <- for_park %>% 
-  #filter(SampleYear == 2022) %>% 
+  filter(SampleYear == 2022) %>% 
   group_by(ParkUnit) %>% 
-  mutate(parkDEN = mean(siteDEN, na.rm = T),
-          parkBA = mean(siteBA, na.rm = T),
-          parkRICH = mean(siteRICH, na.rm = T),
-          parkSTA = Modes(siteSTA),
-          parkBA_pole = mean(siteBA_pole, na.rm = T),
-          parkBA_mature = mean(siteBA_mature, na.rm = T),
-          parkBA_large = mean(siteBA_large, na.rm = T),
+  mutate(parkDEN = mean(treeden_ha, na.rm = T),
+          parkBA = mean(BA_m2ha, na.rm = T),
+          parkRICH = mean(tree_rich, na.rm = T),
+          parkSTA = Modes(Stage),
+          parkBA_pole = mean(pctBA_pole, na.rm = T),
+          parkBA_mature = mean(pctBA_mature, na.rm = T),
+          parkBA_large = mean(pctBA_large, na.rm = T),
           #parkDIV = mean(, na.rm = T),
-          parkSAPden = mean(siteSAPden, na.rm = T),
-          parkSHRUden = mean(siteSHRUden, na.rm = T))  %>% 
+          parkSAPden = mean(sap_den_m2, na.rm = T),
+          parkSHRUden = mean(shrub_cov, na.rm = T))  %>% 
   ungroup() %>% 
   select(ParkUnit,
-         parkDEN, parkBA, parkRICH, parkSTA,
-         parkBA_pole, parkBA_mature, parkBA_large,
-         parkSAPden, 
-         parkSHRUden) %>% 
+          parkDEN, parkBA, parkRICH, parkSTA,
+          parkBA_pole, parkBA_mature, parkBA_large,
+          parkSAPden, 
+          parkSHRUden) %>% 
   distinct()
 
 #! Output files ----------------------------------------------
 write_rds(for_park2, file = "data/out/park_covs.rds")
+
+cat(paste("\n\n Done \n\n\n"))
