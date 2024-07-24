@@ -20,7 +20,7 @@
 #             -- visits (data/out/visits.rds): data from the visit files
 #             -- yr_pk: number of years sampled in each park
 #
-# Output ---------------------------------------------
+#! Output ---------------------------------------------
 #           - data/src/sites_park_tib.rds: tibble with park, number of sites and site numbers and codes
 #           - data/out/site_n_key.rds: park and site unique key
 #           - data/out/y_dat3.rds: first tibble with ALL occasions for sps, park, site, year and interval
@@ -32,7 +32,7 @@
 if(!require(freshr)){install.packages("freshr")}
 freshr::freshr()
 
-# Load packages --------------------------------------
+#! Load packages --------------------------------------
 library(conflicted)
 library(tidyverse)
 library(glue)
@@ -44,22 +44,24 @@ conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::filter)
 # conflicts_prefer(scales::alpha)
 
-# Make functions --------------------------------------
+#! Make functions --------------------------------------
 colanmes <- colnames
 lenght <- length
 `%!in%` <- Negate(`%in%`)
 
-# Source code -----------------------------------------
+#! Source code -----------------------------------------
 ## Create empty matrix with all parks, species, years, sites and intervals --------------------------
 source("code/format_bird_data/format_data.R")
 
 yog <- y1 # reset safety ;)
+#! Define settings -------------------------------------
+radi_dist <- 500
 
-# Import data -----------------------------------------
+#! Import data -----------------------------------------
 ## file paths
 PATH_COVS_COUN <- "data/out/coun_covs.rds"
 PATH_COVS_PARK <- "data/out/park_covs.rds"
-PATH_COVS_SITE <- "data/out/site_covs.rds"
+PATH_COVS_SITE <- glue("data/out/site_covs_{radi_dist}m.rds")
 PATH_DIV_SITE_COVS <- "data/out/site_div.rds"
 PATH_DIV_PARK_COVS <- "data/out/park_div.rds"
 
@@ -632,4 +634,4 @@ write_rds(y_dat8, file = "data/y_dat8.rds")
 write_rds(X7, file = "data/X.rds")
 # write_rds(sps_pk_nth, file = "data/sps_pk_nth.rds")
 
-print("Done")
+cat(paste("\n\n Done \n\n\n"))
