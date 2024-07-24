@@ -78,8 +78,6 @@ parks <- park_county$park
 ### Load FIA Data from a local directory
 db <- readFIA('data/FIA/')
 
-#! Script! ---------------------------------------------
-
 #? calculate park means --------------------------------
 for(ii in 1:nrow(park_county)){
   # get county shapefile
