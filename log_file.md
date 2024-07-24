@@ -23,7 +23,9 @@ Assumptions/decisions:
 - parks removed: acadia is too big, sair is too different (open areas)
 elro only has one forest plot
 
-- 500 m for the radius between the sites make sense for bird home range, but is that meaningful? now uning with 1000m
+- 500 m for the radius between the sites make sense for bird home range, but is that meaningful? now using with 1000m
+
+- year of environmental covariates: 2022
 
 # --------------------------------------------------------------------
 Workflow:
@@ -36,14 +38,14 @@ Workflow:
             in  - data/veg_kateaaron/for_sites.rds
 
             out - data/out/for_sit2.rds
-            out - data/out/site_covs.rds
+            out - data/out/site_covs_[xx]m.rds
             out - data/out/park_site.rds
             out - data/out/for_sit_coord.rds
             out - data/out/bird_site_coords.rds
             out - data/out/close_points_f.rds
 
 # format_veg_data/get_park_data.R
-            in  - data/out/site_covs.rds
+            in  - data/veg_kateaaron/NETN_forest_data_2006-2023.rds
 
             out - data/out/park_covs.rds
 
