@@ -59,7 +59,8 @@ Modes <- function(x) {
     } else {
       ux[tab == max(tab)]}
 }
-
+#! Define settings -------------------------------------
+radi_dist <- 1000
 #! Import data -----------------------------------------
 ## file paths
 BIRD_SITE_PATH    <- "data/out/NETNtib.rds"
@@ -111,19 +112,19 @@ nrow(park_site)
 # get coordinates from bird plots
 bird_sit_coord <- park_site %>% 
   select(Point_Name,
-         Latitude,
-         Longitude, 
-         UTM_ZONE) %>% 
+          Latitude,
+          Longitude, 
+          UTM_ZONE) %>% 
   rename(bird_sit = Point_Name,
-         lat = Latitude,
-         lon = Longitude,
-         UTMZone = UTM_ZONE) 
+          lat = Latitude,
+          lon = Longitude,
+          UTMZone = UTM_ZONE) 
 
 #! get coordinates from the forest plots ------------------------------
 for_sit_coord <- for_sit_coord %>% 
   rename(for_sit = Plot_Name,
-         latutm = Y,
-         lonutm = X) %>% 
+          latutm = Y,
+          lonutm = X) %>% 
   relocate(for_sit, latutm, lonutm, UTMZone) %>% 
   mutate(UTMZone = substr(UTMZone, 1 , 2))
 
@@ -136,8 +137,8 @@ plot(bird_sit_coord$lon, bird_sit_coord$lat)
 
 #? convert all bird coordinates to UTM to get distances in meters --------------------
 xy <- data.frame(ID = 1:nrow(bird_sit_coord), 
-                 X = bird_sit_coord$lon, 
-                 Y = bird_sit_coord$lat)
+                  X = bird_sit_coord$lon, 
+                  Y = bird_sit_coord$lat)
 coordinates(xy) <- c("X", "Y")
 proj4string(xy) <- CRS("+proj=longlat +datum=WGS84")
 
@@ -171,12 +172,12 @@ park_plot_nam <- bird_sit_coord %>%
 
 ggplot() +
   geom_point(aes(x = bird_sit_coord$lonutm, 
-                 y = bird_sit_coord$latutm),
-             size = 2,
-             color = "red") +
+                  y = bird_sit_coord$latutm),
+              size = 2,
+              color = "red") +
   geom_point(aes(x = for_sit_coord$lonutm, 
-                 y = for_sit_coord$latutm), 
-             color = "darkgreen") +
+                  y = for_sit_coord$latutm), 
+              color = "darkgreen") +
   #geom_text(aes(x= park_plot_nam$lonutm, y =park_plot_nam$latutm),
   #          label = park_plot_nam$park, size = 3, vjust = -1.3) +
   theme_bw() +
@@ -194,23 +195,23 @@ bird_sit_coord2 <- bird_sit_coord %>%
 
 # link forest types with sites
 bird_sit_coord2 <- left_join(bird_sit_coord2, 
-                             key_bsite %>% 
+                              key_bsite %>% 
                                 rename(bird_sit = Point_Name,
-                                       b_for = MapUnit_ID) %>% 
+                                        b_for = MapUnit_ID) %>% 
                                 select(bird_sit, b_for),
-                             by = "bird_sit") %>% 
-                   filter(!is.na(b_for))
+                              by = "bird_sit") %>% 
+                    filter(!is.na(b_for))
 
 for_sit_coord2 <- left_join(for_sit_coord  %>% 
                               mutate(park = substr(for_sit, 1, 4)), #%>% 
                               #filter(park != "ACAD") %>% 
                               #filter(park != "SAIR"), 
-                           key_fsite %>% 
+                            key_fsite %>% 
                               rename(for_sit = ID,
-                                     f_for = MapUnit_ID) %>% 
+                                      f_for = MapUnit_ID) %>% 
                               select(for_sit, f_for, geometry),
-                           by = "for_sit") %>% 
-                   filter(!is.na(f_for))
+                            by = "for_sit") %>% 
+                    filter(!is.na(f_for))
 
 # make sure parks patch with forest sites only within the same park
 for_sit_coord_minusrova <- for_sit_coord2 %>% 
@@ -241,8 +242,8 @@ for (ii in 1:nrow(bird_sit_coord2)) {
   y <- spTransform(xy[ii,], CRS(glue("+proj=utm +zone={band} +datum=WGS84 +units=m")))
 
   bird <- st_as_sf(bird_sit_coord2[ii,5:6], 
-                   coords=c("lonutm", "latutm"), 
-                   crs = CRS(proj4string(y)))
+                    coords=c("lonutm", "latutm"), 
+                    crs = CRS(proj4string(y)))
 
   plop <- substr(bird_sit_coord2$bird_sit[ii], 1, 4)
 
@@ -336,14 +337,14 @@ for(ii in 1:lenght(parks)){
   p2 <- 
   ggplot(close_points_f3) +
     geom_segment(aes(x = lonutmb, y = latutmb, 
-                     xend = lonutmf, yend = latutmf, 
-                     colour = bird_sit)) +
+                      xend = lonutmf, yend = latutmf, 
+                      colour = bird_sit)) +
     geom_point(aes(x = lonutmb, 
-                   y = latutmb,
-                   colour = bird_sit),
+                    y = latutmb,
+                    colour = bird_sit),
               size = 3) +
     geom_point(aes(x = lonutmf, 
-                   y = latutmf),
+                    y = latutmf),
               size = 3,
               color = "#186A3B",
               shape = 15) +
@@ -366,53 +367,55 @@ for_sit2 <- for_sit %>%
   #filter(SampleYear == 2022) %>% 
   group_by(Plot_Name) %>% 
   mutate(treeden_haM = mean(treeden_ha, na.rm = T),
-         BA_m2haM = mean(BA_m2ha, na.rm = T),
-         tree_richM = mean(tree_rich, na.rm = T),
-         StageM = Modes(Stage),
-         pctBA_poleM = mean(pctBA_pole, na.rm = T),
-         pctBA_matureM = mean(pctBA_mature, na.rm = T),
-         pctBA_largeM = mean(pctBA_large, na.rm = T),
-         sap_den_m2M = mean(sap_den_m2, na.rm = T),
-         shrub_covM = mean(shrub_cov, na.rm = T),
-         X_for = X,      
-         Y_for = Y,
-         UTMZone_for = UTMZone,
-         for_sit = Plot_Name)  %>% 
+          BA_m2haM = mean(BA_m2ha, na.rm = T),
+          tree_richM = mean(tree_rich, na.rm = T),
+          StageM = Modes(Stage),
+          pctBA_poleM = mean(pctBA_pole, na.rm = T),
+          pctBA_matureM = mean(pctBA_mature, na.rm = T),
+          pctBA_largeM = mean(pctBA_large, na.rm = T),
+          sap_den_m2M = mean(sap_den_m2, na.rm = T),
+          shrub_covM = mean(shrub_cov, na.rm = T),
+          X_for = X,      
+          Y_for = Y,
+          UTMZone_for = UTMZone,
+          for_sit = Plot_Name)  %>% 
   ungroup() %>% 
   select(for_sit, ParkUnit, X_for, Y_for, UTMZone_for,
-         treeden_haM, BA_m2haM, tree_richM, StageM, pctBA_poleM, 
-         pctBA_matureM, pctBA_largeM, sap_den_m2M, shrub_covM) %>% 
+          treeden_haM, BA_m2haM, tree_richM, StageM, pctBA_poleM, 
+          pctBA_matureM, pctBA_largeM, sap_den_m2M, shrub_covM) %>% 
   distinct()
   
 close_points_f2 <- left_join(close_points_f, for_sit2, by = "for_sit") %>% 
     group_by(bird_sit) %>%
   mutate(treeden_haM = mean(treeden_haM, na.rm = T),
-         BA_m2haM = mean(BA_m2haM, na.rm = T),
-         tree_richM = mean(tree_richM, na.rm = T),
-         StageM = Modes(StageM),
-         pctBA_poleM = mean(pctBA_poleM, na.rm = T),
-         pctBA_matureM = mean(pctBA_matureM, na.rm = T),
-         pctBA_largeM = mean(pctBA_largeM, na.rm = T),
-         sap_den_m2M = mean(sap_den_m2M, na.rm = T),
-         shrub_covM = mean(shrub_covM, na.rm = T))  %>% 
+          BA_m2haM = mean(BA_m2haM, na.rm = T),
+          tree_richM = mean(tree_richM, na.rm = T),
+          StageM = Modes(StageM),
+          pctBA_poleM = mean(pctBA_poleM, na.rm = T),
+          pctBA_matureM = mean(pctBA_matureM, na.rm = T),
+          pctBA_largeM = mean(pctBA_largeM, na.rm = T),
+          sap_den_m2M = mean(sap_den_m2M, na.rm = T),
+          shrub_covM = mean(shrub_covM, na.rm = T))  %>% 
   ungroup() %>% 
   mutate(park = substr(bird_sit, 1, 4)) %>%
   select(bird_sit, park,
-         treeden_haM, BA_m2haM, tree_richM, StageM, 
-         pctBA_poleM, pctBA_matureM, pctBA_largeM, 
-         sap_den_m2M, 
-         shrub_covM) %>% 
+          treeden_haM, BA_m2haM, tree_richM, StageM, 
+          pctBA_poleM, pctBA_matureM, pctBA_largeM, 
+          sap_den_m2M, 
+          shrub_covM) %>% 
   distinct() %>% 
   rename(ParkUnit = park,
-         siteDEN = treeden_haM, siteBA = BA_m2haM, 
-         siteRICH = tree_richM, siteSTA = StageM,
-         siteBA_pole = pctBA_poleM, siteBA_mature = pctBA_matureM, siteBA_large = pctBA_largeM,
-         siteSAPden = sap_den_m2M, 
-         siteSHRUden = shrub_covM)
+          siteDEN = treeden_haM, siteBA = BA_m2haM, 
+          siteRICH = tree_richM, siteSTA = StageM,
+          siteBA_pole = pctBA_poleM, siteBA_mature = pctBA_matureM, siteBA_large = pctBA_largeM,
+          siteSAPden = sap_den_m2M, 
+          siteSHRUden = shrub_covM)
 
 #! Output files ----------------------------------------------
-#write_rds(for_sit2, file = "data/out/for_sit2.rds")
-#write_rds(close_points_f2, file = "data/out/site_covs.rds")
+write_rds(for_sit2, file = glue("data/out/for_sit2_nei_{radi_dist}m.rds"))
+write_rds(close_points_f2, file = glue("data/out/site_covs_nei_{radi_dist}m.rds"))
+
+cat(paste("\n\n Done \n\n\n"))
 
 
 
