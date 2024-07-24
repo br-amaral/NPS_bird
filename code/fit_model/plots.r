@@ -53,7 +53,7 @@ lenght <- length
 # mod_loop <- 10
 # samples_jags <- read_rds(file = glue("data/model_res/jags_res_{master_tab[mod_loop,4]}_parks_10000itsrun1.rds"))
 
-samples_jags <- read_rds(glue("data/model_res/jags_res_GCFL_b0yes_parks_20000its_LESSHRrun1.rds"))
+samples_jags <- read_rds(glue("data/model_res/jags_res_AMGO_b0yes_parks_30000its_LESSHRrun1.rds"))
 
 #! Summary --------------------------------------------
 MCMCsummary(samples_jags,
@@ -66,35 +66,35 @@ MCMCsummary(samples_jags,
                         "scales_beta1","scales_beta2"),
                         round = 2)
 ##! traceplots ----------------------
-print(glue("jags_res_{master_tab[mod_loop,4]}_parks_10000itsrun1"))
+#print(glue("jags_res_{master_tab[mod_loop,4]}_parks_10000itsrun1"))
 
 MCMCtrace(samples_jags,
-          params = c("mu.alpha0", "mu.beta0",
-                     "beta","alpha",
+            params = c("mu.alpha0", "mu.beta0",
+                        "beta","alpha",
                      "scales_beta1","scales_beta2"),
-          ind = TRUE,
-          #pdf = FALSE,
-          filename = glue("figures/preliminary/jags_res_GCFL_b0yes_parks_20000its_LESSHRrun1"),
-          exact = TRUE,
-          Rhat = TRUE,
-          n.eff = TRUE)
+            ind = TRUE,
+            pdf = FALSE,
+            #filename = glue("figures/preliminary/jags_res_GCFL_b0yes_parks_20000its_LESSHRrun1"),
+            exact = TRUE,
+            Rhat = TRUE,
+            n.eff = TRUE) 
 
 MCMCtrace(samples_jags,
-          params = c("alpha0", "beta0"),
-          ind = TRUE,
-          #pdf = FALSE,
-          filename = glue("figures/preliminary/trace2_jags_res_COYE_b0yes_parks_10000its_LESSrun1"),
-          exact = TRUE,
-          Rhat = TRUE,
-          n.eff = TRUE)
+            params = c("alpha0", "beta0"),
+            ind = TRUE,
+            pdf = FALSE,
+            #filename = glue("figures/preliminary/trace2_jags_res_COYE_b0yes_parks_10000its_LESSrun1"),
+            exact = TRUE,
+            Rhat = TRUE,
+            n.eff = TRUE)
 
 # par estimates ----------------------------------
 par(mfrow = c(1,1))
 
 MCMCplot(samples_jags,
          params = c("mu.beta0","beta", 
-                    "mu.alpha0","alpha",
-                    "scales_beta1","scales_beta2"),
+                     "mu.alpha0","alpha",
+                     "scales_beta1","scales_beta2"),
          ref_ovl = TRUE)
 print(glue("pars1_jags_res_{master_tab[mod_loop,4]}_parks_10000itsrun1"))
 
