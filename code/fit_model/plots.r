@@ -1,21 +1,9 @@
 # *********************************************************************************
 # -------------------------------   Plot model output   ---------------------------
 # *********************************************************************************
-# Code to ...
+# Code to make plots
 #
-#
-# Source ---------------------------------------------
-#           - :
-#           - :
-#
-# Input ----------------------------------------------
-#           - :
-#           - :
-#
-# Output ----------------------------------------------
-#           - :
-#           - :
-#
+hg <- httpgd::hgd()
 # detach packages and clear workspace
 if(!require(freshr)){install.packages('freshr')}
 freshr::freshr()
@@ -36,7 +24,6 @@ colanmes <- colnames
 lenght <- length
 `%!in%` <- Negate(`%in%`)
 
-
 #! Import data -----------------------------------------
 ## file paths and read files
 
@@ -53,12 +40,11 @@ lenght <- length
 # mod_loop <- 10
 # samples_jags <- read_rds(file = glue("data/model_res/jags_res_{master_tab[mod_loop,4]}_parks_10000itsrun1.rds"))
 
-samples_jags <- read_rds(glue("data/model_res/jags_res_AMGO_b0yes_parks_30000its_LESSHRrun1.rds"))
+samples_jags <- read_rds(glue("data/model_res/jags_res_AMGO_b0yes_parks_30000its_LESSHRrun3.rds"))
 
 #! Summary --------------------------------------------
 MCMCsummary(samples_jags,
             round = 2)
-
 
 MCMCsummary(samples_jags,
             params = c("mu.beta0","beta",
