@@ -61,7 +61,7 @@ radi_dist <- 500
 ## file paths
 PATH_COVS_COUN <- "data/out/coun_covs.rds"
 PATH_COVS_PARK <- "data/out/park_covs.rds"
-PATH_COVS_SITE <- glue("data/out/site_covs_{radi_dist}m.rds")
+PATH_COVS_SITE <- glue("data/out/site_covs_nei_1000m.rds")# glue("data/out/site_covs_{radi_dist}m.rds")
 PATH_DIV_SITE_COVS <- "data/out/site_div.rds"
 PATH_DIV_PARK_COVS <- "data/out/park_div.rds"
 
@@ -289,7 +289,7 @@ for(i in 1:lenght(nsps_pk)) {
 }
 
 sps_pk2 <- sps_pk_nth %>% 
-   nest(sps = AOU_Code,
+    nest(sps = AOU_Code,
         spskey = spskey,
         spskey_p = spskey_p) 
 sps_pk2$nsps <- nsps_pk
