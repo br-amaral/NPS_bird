@@ -1,6 +1,6 @@
 library(reshape2)
 
-XDAT_PATH <- "data/X.rds"
+XDAT_PATH <- "data/X_1000.rds"
 X10 <- read_rds(file = XDAT_PATH)
 
 X_corr <- X10 %>% 
@@ -143,6 +143,6 @@ var_site2 <- X_corr[,c(1,29,
 ggplot(var_site2) +
   geom_boxplot(aes(x = site, y = value)) +
   theme_bw() +
-  facet_wrap(~park, scales = "free_y", ncol = 2) +
+  facet_wrap(~park, scales = "free_y", ncol = 1) +
   coord_flip()
 
