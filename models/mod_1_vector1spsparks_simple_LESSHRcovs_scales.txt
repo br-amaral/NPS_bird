@@ -1,6 +1,6 @@
 # three part model - occupancy at the three different levels - site, park, county
 # mod_1_vector1spsparks_simple_covs_scales
-
+# this one has shrub
 model {	
   # Priors
   ## Sampling process
@@ -51,7 +51,7 @@ model {
       # site level, park level and county level DEN (tree density)
       beta[2] * X2[b,scales_beta2] + 
       # SHRUB!
-      beta[3] * X4[b,scales_beta2] + 
+      beta[3] * X4[b,scales_beta3] + 
       # park size
       beta[4] * Xp[b]                   
   }
