@@ -146,3 +146,29 @@ ggplot(var_site2) +
   facet_wrap(~park, scales = "free_y", ncol = 1) +
   coord_flip()
 
+## compare scales ------------------------------------------------------
+X1000 <- read_rds(file = "data/X_1000.rds")
+X500 <- read_rds(file = "data/X_500.rds")
+X1000for <- read_rds(file = "data/X_1000nei.rds")
+
+X_corr <- X10 %>% 
+            filter(interval_n == 1) %>% 
+            dplyr::select(Point_Name,
+                siteDEN, siteBA,
+                siteH_g, siteEh_g,
+                siteBA_pole, siteBA_mature, siteBA_large,
+                siteSHRUden,
+                parkDEN, parkBA, 
+                parkH_g, parkEh_g,
+                parkBA_pole, parkBA_mature, parkBA_large,   
+                parkSHRUden, 
+                counDEN, counBA, 
+                counH_g, counEh_g, ## https://rdrr.io/cran/rFIA/man/diversity.html
+                counPER_pole, counPER_matu, counPER_late,
+                counSHRUden,
+                area,
+                EventDate2, StartTime2) %>% 
+            rename(date_jul = EventDate2,
+                time_jul = StartTime2) %>% 
+            mutate(#AOU_code = sps_loop2,
+                    park = substr(Point_Name,1,4))
