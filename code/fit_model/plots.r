@@ -82,12 +82,10 @@ MCMCplot(samples_jags,
                      "mu.alpha0","alpha",
                      "scales_beta1","scales_beta2"),
          ref_ovl = TRUE)
-print(glue("pars1_jags_res_{master_tab[mod_loop,4]}_parks_10000itsrun1"))
 
 MCMCplot(samples_jags,
          params = c("alpha0","beta0"),
          ref_ovl = TRUE)
-print(glue("pars2_jags_res_{master_tab[mod_loop,4]}_parks_10000itsrun1"))
 
 MCMCplot(samples_jags,
          params = c("mu.beta0","beta",
