@@ -40,7 +40,7 @@ lenght <- length
 # mod_loop <- 10
 # samples_jags <- read_rds(file = glue("data/model_res/jags_res_{master_tab[mod_loop,4]}_parks_10000itsrun1.rds"))
 
-samples_jags <- read_rds(glue("data/model_res/jags_res_AMGO_b0yes_parks_30000its_LESSHRrun3.rds"))
+samples_jags <- read_rds(glue("data/model_res/jags_res_AMGO_b0yes_parks_50000its_a0srun1.rds"))
 
 #! Summary --------------------------------------------
 MCMCsummary(samples_jags,
@@ -49,7 +49,7 @@ MCMCsummary(samples_jags,
 MCMCsummary(samples_jags,
             params = c("mu.beta0","beta",
                         "mu.alpha0","alpha",
-                        "scales_beta1","scales_beta2"),
+                        "scales_beta1","scales_beta2", "scales_beta3"),
                         round = 2)
 ##! traceplots ----------------------
 #print(glue("jags_res_{master_tab[mod_loop,4]}_parks_10000itsrun1"))
@@ -57,7 +57,7 @@ MCMCsummary(samples_jags,
 MCMCtrace(samples_jags,
             params = c("mu.alpha0", "mu.beta0",
                         "beta","alpha",
-                     "scales_beta1","scales_beta2"),
+                        "scales_beta1","scales_beta2", "scales_beta3"),
             ind = TRUE,
             pdf = FALSE,
             #filename = glue("figures/preliminary/jags_res_GCFL_b0yes_parks_20000its_LESSHRrun1"),
@@ -80,7 +80,7 @@ par(mfrow = c(1,1))
 MCMCplot(samples_jags,
          params = c("mu.beta0","beta", 
                      "mu.alpha0","alpha",
-                     "scales_beta1","scales_beta2"),
+                     "scales_beta1","scales_beta2", "scales_beta3"),
          ref_ovl = TRUE)
 
 MCMCplot(samples_jags,
