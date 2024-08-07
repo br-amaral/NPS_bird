@@ -1,11 +1,11 @@
 #? *********************************************************************************
-#? -------------------------------   Amazing Title   -------------------------------
+#? ---------------------------   multiple_single_sps.R   ---------------------------
 #? *********************************************************************************
 #
 #! Code to ...
 #
 #! Source ---------------------------------------------
-#           - code/fit_model/back2d_covs_scales_3.R:
+#           - code/fit_model/back2d_covs_scales_2min.R:
 #!              - Input:
 #                   - data/y_dat8.rds: tibble with bird data
 #                   - data/X.rds: tibble with covariate data
@@ -42,8 +42,8 @@ cat("\n", "\n", "\n",
 #options(repos = c(CRAN = "https://cloud.r-project.org/"))
 #update.packages("freshr")
 # detach packages and clear workspace
-#if(!require(freshr)){install.packages('freshr')}
-#freshr::freshr()
+if(!require(freshr)){install.packages('freshr')}
+freshr::freshr()
 
 #! Load packages ---------------------------------------
 #library(conflicted)
@@ -59,6 +59,12 @@ colanmes <- colnames
 lenght <- length
 `%!in%` <- Negate(`%in%`)
 
+#! MCMC settings ---------------------------------------
+niterations <- 50000
+burnin <- 10000
+nchains <- 4
+n_thin <- 10
+
 #! Source code and Import data -----------------------------------------
 ## file paths
 
@@ -71,7 +77,12 @@ lenght <- length
 
 # removing forest stage, species, 
 #sps_list <- sps_list[-1]
-sps_list1 <- c("GCFL", "AMGO", "DOWO", "RBWO", "COYE")
+sps_list1 <- c("GCFL", 
+               "AMGO", 
+               "DOWO", 
+               "RBWO", 
+               "COYE"
+               )
 
 yearbo1 <- c('yes')
 
@@ -88,7 +99,8 @@ for (i in 1:nrow(master_tab)){
     # for_stage <- master_tab[i,3] %>% pull()
     sps_loop2 <- master_tab[i,3] %>% pull()
     print(sps_loop2)
-    source("code/fit_model/back2d_covs_scales_3.R")
+    #source("code/fit_model/back2d_covs_scales_3.R")
+    source("code/fit_model/back2d_covs_scales_2min.R")
 }
 
 cat(paste('\n ************************************** \n \n \n 
