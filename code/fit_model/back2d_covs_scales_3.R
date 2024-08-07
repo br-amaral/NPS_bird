@@ -46,11 +46,6 @@ colanmes <- colnames
 lenght <- length
 `%!in%` <- Negate(`%in%`)
 
-# MCMC settings ---------------------------------------
-niterations <- 50000
-burnin <- 10000
-nchains <- 10
-
 # Import data -----------------------------------------
 ## file paths
 YDAT_PATH <- "data/y_dat8.rds"
@@ -60,6 +55,7 @@ PARK_PATH <- "data/src/key_park.rds"
 
 ## read files
 y_dat4 <- read_rds(file = YDAT_PATH)
+
 X10 <- read_rds(file = XDAT_PATH)
 
 nsite_pk <- read_rds(SITE_PK_PATH)
@@ -123,16 +119,9 @@ y_dat6 <- y_dat6 %>%
   left_join(., parkey_right, by = "Admin_Unit_Code")
 
 y <- y_dat6 %>% 
-  dplyr::select(bird_detec, parkey, site_n, year_n, interval_n, Year) %>% 
-  arrange(parkey, site_n, year_n, interval_n)
+  dplyr::select(bird_detec, parkey, site_n, year_n, interval_n, Year) 
 
-##
-# colnames(y)
-
-## trick for coding = only interval one
-y2 <- y %>% 
-  dplyr::filter(interval_n == 1)
-
+# get covariates
 X <- X10 %>% 
   dplyr::select(Point_Name,
           siteDEN, siteBA,
@@ -192,15 +181,16 @@ X1 <- X %>%
 X2 <- X %>% 
   dplyr::select(siteDEN_s, parkDEN_s, counDEN_s)
 
-## Forets diversity
+
+## Shrub density and percentage
 X3 <- X %>% 
+  dplyr::select(siteSHRUden_s, parkSHRUden_s, counSHRUper_s)
+  
+## Forets diversity
+X4 <- X %>% 
   dplyr::select(siteH_g, siteEh_g,
           parkH_g, parkEh_g,
           counH_g, counEh_g)
-
-## Shrub density and percentage
-X4 <- X %>% 
-  dplyr::select(siteSHRUden_s, parkSHRUden_s, counSHRUper_s)
 
 ## Basal area large
 X5l <- X %>% 
@@ -230,10 +220,35 @@ Xp <- X %>%
 
 # detection variables
 Xa <- X %>% 
-  dplyr::select(time_jul)
+  dplyr::select(time_jul_s)
 
 Xb <- X %>% 
-  dplyr::select(date_jul)
+  dplyr::select(date_jul_s)
+
+# put everything together, arrange, and split!
+
+y_all <- cbind(y, X1, X2, X3, X4, Xa, Xb, Xp) %>% 
+  as_tibble() %>% 
+  arrange(parkey, site_n, year_n, interval_n)
+
+rm(list = c("y", "X1", "X2", "X3", "X4", "Xa", "Xb", "Xp"))
+
+X1 <- y_all %>% select(siteBA_s, parkBA_s, counBA_s)
+X2 <- y_all %>% select(siteDEN_s, parkDEN_s, counDEN_s)
+X3 <- y_all %>% select(siteSHRUden_s, parkSHRUden_s, counSHRUper_s)
+
+Xa <- y_all %>% select(time_jul_s)
+Xb <- y_all %>% select(date_jul_s)
+Xp <- y_all %>% select(Xp) %>% rename(area_s = Xp) %>% pull() %>% as.numeric()
+
+y <- y_all %>% select(bird_detec, parkey, site_n, year_n, interval_n, Year)
+
+## trick for coding = only interval one
+y2 <- y %>% 
+  dplyr::filter(interval_n == 1)
+
+#colnames(y) <- c("bird_detec", "parkey", "sitekey", "yearkey", "intervalkey",# "year_site",
+#                  "Year")
 
 # initial values
 Zst <- y %>% 
@@ -276,9 +291,6 @@ for(a in 1:nrow(Zst)){
   
 }
 
-colnames(y) <- c("bird_detec", "parkey", "sitekey", "yearkey", "intervalkey",# "year_site",
-                  "Year")
-
 y <- data.matrix(y)
 y2 <- data.matrix(y2)
 y_ind <- sort(rep(seq(1, nrow(y2),1),10))
@@ -289,7 +301,7 @@ nrow(X)
 dim(X1)
 dim(X2)
 dim(X3)
-dim(X4)
+#dim(X4)
 #dim(X5)
 length(Xp)
 dim(Xa)
@@ -298,6 +310,9 @@ dim(Xb)
 # number of alphas and betas
 n_bs <- 4
 n_as <- 3
+
+if(length(sps_loop) > 1) { sps_name <- "commu"} else {sps_name <- sps_loop}
+if(length((unique(y[,2]))) == 1) { park_name <- unique(y[,2])} else {park_name <- "parks"}
 
 # model
 str(jags.data <- list(y = y,
@@ -308,8 +323,8 @@ str(jags.data <- list(y = y,
                       nrowy2 = nrow(y2),
                       X1 = X1,
                       X2 = X2,
-                      #X3 = X3,
-                      X4 = X4,
+                      X3 = X3,
+                      #X4 = X4,
                       #X5 = X5,
                       Xp = Xp,
                       Xa = Xa,
@@ -318,12 +333,34 @@ str(jags.data <- list(y = y,
                       n_pkM = length((unique(y[,2])))
                       #y_ind = y_ind
 ))
-inits <- function()list(Z = Zst2
-#, beta0 = rnorm(10,0.6), beta1 = rnorm(10,0.6)
-)
+#! jags.data structure:
+# y: detection matrix
+# y2: first detection matrix
+# n_bs: number of betas
+# n_as: number of alphas
+# nrowy: number of total rows (all detections)
+# nrowy2: number of rows of first detections 
+# X1: tree basal area
+# X2: tree density
+# X3: shrub density
+# Xp: park size
+# Xa: detection time
+# Xb: detection day of the year
+# n_yrM: number of years 
+# n_pkM: number of parks 
+write_rds(jags.data, file = glue("data/ana_file/data_{sps_name}_{park_name}.rds"))
 
-if(length(sps_loop) > 1) { sps_name <- "commu"} else {sps_name <- sps_loop}
-if(length((unique(y[,2]))) == 1) { park_name <- unique(y[,2])} else {park_name <- "parks"}
+# source("code/check_data.R") 
+
+inits <- function() {
+    list(
+        Z = Zst2,
+        mu_beta0 = rnorm(1, 0.5),
+        beta = c(rnorm(1, 0.5), rnorm(1, 0.5), rnorm(1, 0.5), rnorm(1, 0.5)),
+        mu.alpha0 = rnorm(1, 0.5),
+        alpha = c(rnorm(1, 0.5), rnorm(1, 0.6), rnorm(1, 0.6))
+    )
+}
 
 paste('\n ************************************* \n \n \n Running JAGS for:', '\n',
       '  Parks =', park_name, '\n',
@@ -362,7 +399,7 @@ if (burnin > 0) {
     jags_model,
     variable.names = params,
     n.iter = niterations,
-    thin = 5
+    thin = n_thin
   )
 }
 
@@ -376,7 +413,7 @@ samples_jags <- coda.samples(
   jags_model,
   variable.names = params,
   n.iter = niterations,
-  thin = 5
+  thin = n_thin
 )
 
 cat("\n\n\n third done!!! \n\n\n\n")
