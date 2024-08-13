@@ -61,9 +61,9 @@ lenght <- length
 
 #! MCMC settings ---------------------------------------
 niterations <- 50000
-burnin <- 10000
+nburnin <- 10000
 nchains <- 4
-n_thin <- 10
+nthin <- 10
 
 #! Source code and Import data -----------------------------------------
 ## file paths
