@@ -18,7 +18,7 @@
 #if(!require(freshr)){install.packages("freshr")}
 #freshr::freshr()
 
-script_name <- 'back2d_covs_scales_3.R'
+script_name <- 'back2d_covs_scales_2min.R'
 
 cat(paste('\n ************************************** \n \n \n Running scrip', script_name, '\n \n \n',
       '**************************************
@@ -448,7 +448,7 @@ paste('\n ************************************* \n \n \n Running JAGS for:', '\n
       '  Parks =', park_name, '\n',
       '  Species =', sps_name, '\n',
       '  Iterations =', niterations, '\n',
-      '  Burn-in =', burnin, '\n',
+      '  Burn-in =', nburnin, '\n',
       '  Data size =', nrow(y), '\n',
       '  Started running on =', Sys.time(),  '\n \n \n',
       '**************************************
@@ -458,7 +458,19 @@ params <- c("beta0","beta", "alpha0", "alpha",
             "scales_beta1", "scales_beta2", "scales_beta3", #"scales_beta4", "scales_beta5",
             "mu.beta0", "tau.beta0", "mu.alpha0", "tau.alpha0") # Z, psi
 
+
+# Define the model file and the output file name
 model_file <- "models/mod_1_vector1spsparks_simple_3covs_a0s_scales.txt"
+mod_name <- glue("data/ana_file/{date_out}_mod_{sps_name}_{park_name}.txt") %>% as.character()
+
+# Read the content of the model file
+mod_content <- readLines(model_file)
+
+# Combine the content into a single string
+mod_string <- paste(mod_content, collapse = "\n")
+
+# Write the content to the output file
+writeLines(mod_string, mod_name)
 
 ## initialize JAGS
 cat("\n\n\n running first jags \n\n\n\n")
@@ -475,13 +487,13 @@ jags_model <- rjags::jags.model(
 cat("\n\n\n first done, running second \n\n\n\n") 
 
 # burn-in
-if (burnin > 0) {
-  message(paste("burn-in:", burnin, "iterations"))
+if (nburnin > 0) {
+  message(paste("burn-in:", nburnin, "iterations"))
   rjags::jags.samples(
     jags_model,
     variable.names = params,
     n.iter = niterations,
-    thin = n_thin
+    thin = nthin
   )
 }
 
@@ -495,7 +507,7 @@ samples_jags <- coda.samples(
   jags_model,
   variable.names = params,
   n.iter = niterations,
-  thin = n_thin
+  thin = nthin
 )
 
 cat("\n\n\n third done!!! \n\n\n\n")
@@ -545,6 +557,27 @@ paste('\n ************************************** \n \n \n ---------------- DONE 
       cat()
 
 
+meta_name <- file(glue("data/ana_file/{date_out}_metadata_{sps_name}_{park_name}.txt"))
+writeLines(paste(
+
+                ' Results File Name = ', glue('{file_name2}.rds'), '\n', 
+                'Data File Name = ', glue("data/ana_file/{date_out}_data_{sps_name}_{park_name}.rds"), '\n', 
+                'Script = ', script_name, '\n',
+                'Model file =', glue("{mod_name}"), '\n',
+                'Species =', sps_name, '\n',
+                'Parks =', park_name, '\n',
+                'Iterations =', niterations, '\n',
+                'Chains =', nchains, '\n',
+                'Burn-in =', nburnin, '\n',
+                'Thinning =', nthin, '\n',
+                'Run number =', str_split(file_name2, 'run', simplify = TRUE)[2], '\n',
+                'Started running on =', system_time1, '\n',
+                'Stopped running on =', system_time2, '\n',
+                'Time it took =', time_it_took , unit_time), 
+
+          meta_name)
+
+close(meta_name)
 
 
 # code to check the data and initial values
