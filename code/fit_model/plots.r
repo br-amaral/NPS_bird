@@ -40,7 +40,8 @@ lenght <- length
 # mod_loop <- 10
 # samples_jags <- read_rds(file = glue("data/model_res/jags_res_{master_tab[mod_loop,4]}_parks_10000itsrun1.rds"))
 
-samples_jags <- read_rds(glue("data/model_res/jags_res_AMGO_b0yes_parks_50000its_a0srun1.rds"))
+samples_jags <- read_rds("data/model_res/2024_08_08_DOWO_b0yes_parks_50000its_run1.rds")
+# when loading the model results, get the most updated file?
 
 #! Summary --------------------------------------------
 MCMCsummary(samples_jags,
@@ -80,7 +81,7 @@ par(mfrow = c(1,1))
 MCMCplot(samples_jags,
          params = c("mu.beta0","beta", 
                      "mu.alpha0","alpha",
-                     "scales_beta1","scales_beta2", "scales_beta3"),
+                     "scales_beta1","scales_beta2","scales_beta3"),
          ref_ovl = TRUE)
 
 MCMCplot(samples_jags,
