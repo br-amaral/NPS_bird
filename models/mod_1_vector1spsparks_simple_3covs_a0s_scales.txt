@@ -1,6 +1,5 @@
 # three part model - occupancy at the three different levels - site, park, county
-# mod_1_vector1spsparks_simple_covs_scales
-# this one has shrub
+
 model {	
   # Priors
   ## Sampling process
