@@ -18,11 +18,11 @@
 #if(!require(freshr)){install.packages("freshr")}
 #freshr::freshr()
 
-script_name <- 'back2d_covs_scales_2min.R'
+script_name <- rstudioapi::getSourceEditorContext()
 
-cat(paste('\n ************************************** \n \n \n Running scrip', script_name, '\n \n \n',
-      '**************************************
-      '))
+cat("\n", "\n", "\n", 
+    'Current script:', basename(script_name[[2]]), 
+    "\n", "\n", "\n", "\n")
 
 system_time1 <- Sys.time()
 date_out <- glue("{substr(system_time1, 1,4)}_{substr(system_time1, 6,7)}_{substr(system_time1, 9,10)}")
