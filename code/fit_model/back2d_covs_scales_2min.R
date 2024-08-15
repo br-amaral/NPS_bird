@@ -18,33 +18,63 @@
 #if(!require(freshr)){install.packages("freshr")}
 #freshr::freshr()
 
-script_name <- 'back2d_covs_scales_3.R'
-
-cat(paste('\n ************************************** \n \n \n Running scrip', script_name, '\n \n \n',
-      '**************************************
-      '))
-
-system_time1 <- Sys.time()
-
 # Load packages --------------------------------------
-#library(conflicted)
+library(conflicted)
 library(tidyverse)
 library(glue)
 library(jagsUI)
 library(rjags)
 #library(MCMCvis)
 library(AHMbook)
+library(fs)
+library(here)
 
-#conflicts_prefer(dplyr::select)
-#conflicts_prefer(dplyr::filter)
-# conflicts_prefer(scales::alpha)
-
+conflicts_prefer(dplyr::select)
+conflicts_prefer(dplyr::filter)
+conflicts_prefer(scales::alpha)
+ 
 #if("sps_loop" %in% ls() == FALSE){stop("No species selected #38")}
 
 # Make functions --------------------------------------
 colanmes <- colnames
 lenght <- length
 `%!in%` <- Negate(`%in%`)
+sum_na <- function(df){ # sum fuction to ignore NAs, but keep NA if all entries are NA
+  if (all(is.na(df))){
+    suma <- NA
+  }  
+  else {    
+    suma <- sum(df, na.rm = T)
+  }
+  return(suma)
+}
+# Function to get the script name
+get_script_name <- function() {
+  # Get the command line arguments
+  args <- commandArgs(trailingOnly = FALSE)
+  
+  # Look for the --file argument
+  script_path <- sub("--file=", "", args[grep("--file=", args)])
+  
+  # If running interactively, script_path will be character(0)
+  if (length(script_path) == 0) {
+    # Manually set the script name if running interactively
+    script_path <- here::here("back2d_covs_scales_2min.R")
+  } else {
+    script_path <- path_abs(script_path)
+  }
+  
+  return(script_path)
+}
+
+# Get the script name and time that it started running --
+script_name <- get_script_name()
+
+cat("\n", "\n", "\n", 
+    'Current script:', script_name, 
+    "\n", "\n", "\n", "\n")
+system_time1 <- Sys.time()
+(date_out <- glue("{substr(system_time1, 1,4)}_{substr(system_time1, 6,7)}_{substr(system_time1, 9,10)}"))
 
 # Import data -----------------------------------------
 ## file paths
@@ -181,7 +211,6 @@ X1 <- X %>%
 X2 <- X %>% 
   dplyr::select(siteDEN_s, parkDEN_s, counDEN_s)
 
-
 ## Shrub density and percentage
 X3 <- X %>% 
   dplyr::select(siteSHRUden_s, parkSHRUden_s, counSHRUper_s)
@@ -229,19 +258,92 @@ Xb <- X %>%
 
 y_all <- cbind(y, X1, X2, X3, X4, Xa, Xb, Xp) %>% 
   as_tibble() %>% 
-  arrange(parkey, site_n, year_n, interval_n)
+  arrange(parkey, site_n, year_n, interval_n)  %>% 
+  mutate(interval_2 = ifelse(interval_n %in% c(1,2), 1, 
+                                ifelse(interval_n %in% c(3,4), 2, 
+                                    ifelse(interval_n %in% c(5,6), 3, 
+                                        ifelse(interval_n %in% c(7,8), 4, 
+                                            5)))))
+
+y_all2 <- y_all  %>% 
+        group_by(parkey, site_n, year_n, interval_2) %>%
+        mutate(bird_detec2 = ifelse(sum_na(bird_detec) > 0, 1, 0), 
+               Year2 = mean(Year), 
+               siteBA_s2 = mean(siteBA_s), 
+               parkBA_s2 = mean(parkBA_s), 
+               counBA_s2 = mean(counBA_s), 
+               siteDEN_s2 = mean(siteDEN_s), 
+               parkDEN_s2 = mean(parkDEN_s), 
+               counDEN_s2 = mean(counDEN_s),  
+               siteSHRUden_s2 = mean(siteSHRUden_s), 
+               parkSHRUden_s2 = mean(parkSHRUden_s), 
+               counSHRUper_s2 = mean(counSHRUper_s),
+               time_jul_s2 = mean(time_jul_s),
+               date_jul_s2 = mean(date_jul_s),
+               area_s2 = mean(Xp)) %>% 
+        ungroup()
+
+table(y_all2$Year == y_all2$Year2)
+table(y_all2$siteBA_s == y_all2$siteBA_s2)
+table(y_all2$parkBA_s == y_all2$parkBA_s2)
+table(y_all2$counBA_s == y_all2$counBA_s2)
+table(y_all2$siteDEN_s == y_all2$siteDEN_s2)
+table(y_all2$parkDEN_s == y_all2$parkDEN_s2)
+table(y_all2$counDEN_s == y_all2$counDEN_s2)
+table(y_all2$siteSHRUden_s == y_all2$siteSHRUden_s2)
+table(y_all2$parkSHRUden_s == y_all2$parkSHRUden_s2)
+table(y_all2$counSHRUper_s == y_all2$counSHRUper_s2)
+table(y_all2$date_jul_s2 == y_all2$date_jul_s)
+table(y_all2$area_s2 == y_all2$Xp)
+
+# FALSES
+table(y_all2$time_jul_s2 == y_all2$time_jul_s)
+table(y_all2$bird_detec2 == y_all2$bird_detec)
+
+y_all3 <- y_all2 %>% 
+                select(bird_detec2, parkey, site_n, year_n, Year2,
+                       interval_2,
+                       siteBA_s2, parkBA_s2, counBA_s2,     
+                       siteDEN_s2, parkDEN_s2, counDEN_s2,
+                       siteSHRUden_s2, parkSHRUden_s2, counSHRUper_s2,
+                       time_jul_s2, date_jul_s2, area_s2) 
+dim(y_all3)
+dim(y_all2)
 
 rm(list = c("y", "X1", "X2", "X3", "X4", "Xa", "Xb", "Xp"))
 
-X1 <- y_all %>% select(siteBA_s, parkBA_s, counBA_s)
-X2 <- y_all %>% select(siteDEN_s, parkDEN_s, counDEN_s)
-X3 <- y_all %>% select(siteSHRUden_s, parkSHRUden_s, counSHRUper_s)
+y_all4 <- y_all3 %>% 
+                rename(bird_detec = bird_detec2, 
+                       Year = Year2,
+                       interval_n = interval_2,
+                       siteBA_s = siteBA_s2, 
+                       parkBA_s = parkBA_s2, 
+                       counBA_s = counBA_s2,     
+                       siteDEN_s = siteDEN_s2, 
+                       parkDEN_s = parkDEN_s2, 
+                       counDEN_s = counDEN_s2,
+                       siteSHRUden_s = siteSHRUden_s2, 
+                       parkSHRUden_s = parkSHRUden_s2, 
+                       counSHRUper_s = counSHRUper_s2,
+                       time_jul_s = time_jul_s2, 
+                       date_jul_s = date_jul_s2, 
+                       area_s = area_s2) %>% 
+                distinct()
 
-Xa <- y_all %>% select(time_jul_s)
-Xb <- y_all %>% select(date_jul_s)
-Xp <- y_all %>% select(Xp) %>% rename(area_s = Xp) %>% pull() %>% as.numeric()
+dim(y_all4)
 
-y <- y_all %>% select(bird_detec, parkey, site_n, year_n, interval_n, Year)
+nrow(y_all4) == 1/2*(nrow(y_all3))
+
+X1 <- y_all4 %>% select(siteBA_s, parkBA_s, counBA_s)
+X2 <- y_all4 %>% select(siteDEN_s, parkDEN_s, counDEN_s)
+X3 <- y_all4 %>% select(siteSHRUden_s, parkSHRUden_s, counSHRUper_s)
+
+Xa <- y_all4 %>% select(time_jul_s)
+Xb <- y_all4 %>% select(date_jul_s)
+Xp <- y_all4 %>% select(area_s) %>% pull()
+
+y <- y_all4 %>% select(bird_detec, parkey, site_n, year_n, 
+                         interval_n, Year) # interval_n is now interval2
 
 ## trick for coding = only interval one
 y2 <- y %>% 
@@ -266,7 +368,7 @@ years <- y %>%
   distinct() %>% 
   arrange() %>% 
   pull()
-ninterval <- 10
+ninterval <- 5
 
 Zst2 <- 
   array(NA, 
@@ -293,14 +395,13 @@ for(a in 1:nrow(Zst)){
 
 y <- data.matrix(y)
 y2 <- data.matrix(y2)
-y_ind <- sort(rep(seq(1, nrow(y2),1),10))
-nrow(y_dat6)
+y_ind <- sort(rep(seq(1, nrow(y2),1),ninterval))
 nrow(y)
 nrow(y2)*ninterval
-nrow(X)
 dim(X1)
 dim(X2)
 dim(X3)
+nrow(y_all3)/2
 #dim(X4)
 #dim(X5)
 length(Xp)
@@ -348,17 +449,17 @@ str(jags.data <- list(y = y,
 # Xb: detection day of the year
 # n_yrM: number of years 
 # n_pkM: number of parks 
-write_rds(jags.data, file = glue("data/ana_file/data_{sps_name}_{park_name}.rds"))
+write_rds(jags.data, file = glue("data/ana_file/{date_out}_data_{sps_name}_{park_name}.rds"))
 
 # source("code/check_data.R") 
 
 inits <- function() {
     list(
         Z = Zst2,
-        mu_beta0 = rnorm(1, 0.5),
-        beta = c(rnorm(1, 0.5), rnorm(1, 0.5), rnorm(1, 0.5), rnorm(1, 0.5)),
+        # mu_beta0 = rnorm(1, 0.5),
+        beta = rnorm(n_bs, 0.5),
         mu.alpha0 = rnorm(1, 0.5),
-        alpha = c(rnorm(1, 0.5), rnorm(1, 0.6), rnorm(1, 0.6))
+        alpha = rnorm(n_as, 0.5)
     )
 }
 
@@ -366,7 +467,7 @@ paste('\n ************************************* \n \n \n Running JAGS for:', '\n
       '  Parks =', park_name, '\n',
       '  Species =', sps_name, '\n',
       '  Iterations =', niterations, '\n',
-      '  Burn-in =', burnin, '\n',
+      '  Burn-in =', nburnin, '\n',
       '  Data size =', nrow(y), '\n',
       '  Started running on =', Sys.time(),  '\n \n \n',
       '**************************************
@@ -376,7 +477,19 @@ params <- c("beta0","beta", "alpha0", "alpha",
             "scales_beta1", "scales_beta2", "scales_beta3", #"scales_beta4", "scales_beta5",
             "mu.beta0", "tau.beta0", "mu.alpha0", "tau.alpha0") # Z, psi
 
+
+# Define the model file and the output file name
 model_file <- "models/mod_1_vector1spsparks_simple_3covs_a0s_scales.txt"
+mod_name <- glue("data/ana_file/{date_out}_mod_{sps_name}_{park_name}.txt") %>% as.character()
+
+# Read the content of the model file
+mod_content <- readLines(model_file)
+
+# Combine the content into a single string
+mod_string <- paste(mod_content, collapse = "\n")
+
+# Write the content to the output file
+writeLines(mod_string, mod_name)
 
 ## initialize JAGS
 cat("\n\n\n running first jags \n\n\n\n")
@@ -393,13 +506,13 @@ jags_model <- rjags::jags.model(
 cat("\n\n\n first done, running second \n\n\n\n") 
 
 # burn-in
-if (burnin > 0) {
-  message(paste("burn-in:", burnin, "iterations"))
+if (nburnin > 0) {
+  message(paste("burn-in:", nburnin, "iterations"))
   rjags::jags.samples(
     jags_model,
     variable.names = params,
     n.iter = niterations,
-    thin = n_thin
+    thin = nthin
   )
 }
 
@@ -413,13 +526,13 @@ samples_jags <- coda.samples(
   jags_model,
   variable.names = params,
   n.iter = niterations,
-  thin = n_thin
+  thin = nthin
 )
 
 cat("\n\n\n third done!!! \n\n\n\n")
 fil_nam <- sps_loop2
 
-file_name <- glue("jags_res_{fil_nam}_{park_name}_{niterations}its_a0s")
+file_name <- glue("{date_out}_{fil_nam}_{park_name}_{niterations}its_")
 
 file_name2 <- paste0(file_name, 'run',
                       length(list.files(path = file.path(getwd(),"data/model_res/"),
@@ -463,6 +576,27 @@ paste('\n ************************************** \n \n \n ---------------- DONE 
       cat()
 
 
+meta_name <- file(glue("data/ana_file/{date_out}_metadata_{sps_name}_{park_name}.txt"))
+writeLines(paste(
+
+                ' Results File Name = ', glue('{file_name2}.rds'), '\n', 
+                'Data File Name = ', glue("data/ana_file/{date_out}_data_{sps_name}_{park_name}.rds"), '\n', 
+                'Script = ', script_name, '\n',
+                'Model file =', glue("{mod_name}"), '\n',
+                'Species =', sps_name, '\n',
+                'Parks =', park_name, '\n',
+                'Iterations =', niterations, '\n',
+                'Chains =', nchains, '\n',
+                'Burn-in =', nburnin, '\n',
+                'Thinning =', nthin, '\n',
+                'Run number =', str_split(file_name2, 'run', simplify = TRUE)[2], '\n',
+                'Started running on =', system_time1, '\n',
+                'Stopped running on =', system_time2, '\n',
+                'Time it took =', time_it_took , unit_time), 
+
+          meta_name)
+
+close(meta_name)
 
 
 # code to check the data and initial values
@@ -489,4 +623,35 @@ paste('\n ************************************** \n \n \n ---------------- DONE 
 #          #params = params[c(2,4,5,7)],
 #          ref_ovl = TRUE)
 
+# Function to get the script name
+get_script_name <- function() {
+  # Get the command line arguments
+  args <- commandArgs(trailingOnly = FALSE)
+  
+  # Look for the --file argument
+  script_path <- sub("--file=", "", args[grep("--file=", args)])
+  
+  # If running interactively, script_path will be character(0)
+  if (length(script_path) == 0) {
+    # Check if the script is being sourced
+    if (!is.null(sys.frames()[[1]]$ofile)) {
+      script_path <- sys.frames()[[1]]$ofile
+    } else {
+      script_path <- "Script is being run interactively"
+    }
+  }
+  
+  # Extract just the script name
+  script_name <- basename(script_path)
+  
+  return(script_name)
+}
 
+# Get the script name
+script_name <- get_script_name()
+
+cat("\n", "\n", "\n", 
+    'Current script:', script_name, 
+    "\n", "\n", "\n", "\n")
+
+system_time1 <- Sys.time()

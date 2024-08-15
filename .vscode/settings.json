@@ -37,17 +37,17 @@
     "key": "cmd+shift+n",
     "command": "type",
     // "when": "editorLangId == r && editorTextFocus || editorLangId == rmd && editorTextFocus || terminalFocus",
-    "args": {"text": " %>% "}
+    "args": {"text": "%>% "}
 }
 {
     "key": "cmd+shift+n",
     "command": "type",
     "when": "editorLangId == r && editorTextFocus || editorLangId == rmd && editorTextFocus || terminalFocus",
-    "args": {"text": " %>% "}
+    "args": {"text": "%>% "}
 }
 {
     "key": "cmd+shift+n",
     "command": "type",
      "when": "editorLangId == r && terminalFocus",
-    "args": {"text": " %>% "}
+    "args": {"text": "%>% "}
 }

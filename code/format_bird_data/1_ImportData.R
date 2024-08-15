@@ -96,8 +96,8 @@ for(i in 1:nrow(key_tib)){
 ## Check tibble and export as an RDS file-------------------------------------------------
 NETNtib
 
-saveRDS(NETNtib, file = "data/NETNtib.rds")
-saveRDS(key_tib, file = "data/key_park.rds")
+write_rds(NETNtib, file = "data/out/NETNtib.rds")
+write_rds(key_tib, file = "data/key_park.rds")
 
 
 

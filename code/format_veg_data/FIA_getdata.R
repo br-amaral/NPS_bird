@@ -12,14 +12,14 @@ library(corrplot)
 
 ## Download the state subset or Connecticut (requires an internet connection)
 ## Save as an object to automatically load the data into your current R session!
-        # vt <- getFIA(states = 'VT', dir = 'data/FIA')
-        # me <- getFIA(states = 'ME', dir = 'data/FIA', load = FALSE)
-        # nh <- getFIA(states = 'NH', dir = 'data/FIA')
-        # ny <- getFIA(states = 'NY', dir = 'data/FIA', load = FALSE)
-        # ct <- getFIA(states = 'CT', dir = 'data/FIA')
-        # ma <- getFIA(states = 'MA', dir = 'data/FIA')
-        # ri <- getFIA(states = 'RI', dir = 'data/FIA')
-        # nj <- getFIA(states = 'NJ', dir = 'data/FIA')
+      # vt <- getFIA(states = 'VT', dir = 'data/FIA', load = FALSE)
+      # me <- getFIA(states = 'ME', dir = 'data/FIA', load = FALSE)
+      # nh <- getFIA(states = 'NH', dir = 'data/FIA', load = FALSE)
+      # ny <- getFIA(states = 'NY', dir = 'data/FIA', load = FALSE)
+      # ct <- getFIA(states = 'CT', dir = 'data/FIA', load = FALSE)
+      # ma <- getFIA(states = 'MA', dir = 'data/FIA', load = FALSE)
+      # ri <- getFIA(states = 'RI', dir = 'data/FIA', load = FALSE)
+      # nj <- getFIA(states = 'NJ', dir = 'data/FIA', load = FALSE)
 
 ## Get multiple states worth of data (not saved since 'dir' is not specified)
 ## Load FIA Data from a local directory
@@ -33,19 +33,22 @@ parks <- readRDS(file = "data/src/key_park.rds") %>%
 # county location of each park
 park_county <- matrix(c(
   'ACAD', 'Hancock County', 'Maine',
-  #'ELRO', 'Dutchess County', 'New York',
-  #'HOFR', 'Dutchess County', 'New York',
+  'ELRO', 'Dutchess County', 'New York',
+  'HOFR', 'Dutchess County', 'New York',
   'MABI', 'Windsor County', 'Vermont',
   'MIMA', 'Middlesex County', 'Massachusetts',
   'MORR', 'Morris County', 'New Jersey',
   'SAGA', 'Sullivan County', 'New Hampshire',
-  #'SAIR', 'Essex County', 'Massachusetts',
-  #'SARA', 'Saratoga County', 'New York',
-  #'VAMA', 'Dutchess County', 'New York',
-  'WEFA', 'Fairfield County', 'Connecticut'), 
+  'SAIR', 'Essex County', 'Massachusetts',
+  'SARA', 'Saratoga County', 'New York',
+  'VAMA', 'Dutchess County', 'New York',
+  'WEFA', 'Western Connecticut Planning Region', 'Connecticut'), # used to be 'Fairfield County'
   ncol = 3, byrow = T) %>% 
   as_tibble()
 colnames(park_county) <- c("park", "county", "state")
+
+## write_rds(park_county, file = "data/park_county.rds") -----------------------------------------
+write_rds(park_county, file = "data/park_county.rds")
 
 for(ii in 1:nrow(park_county)){
   
@@ -148,7 +151,7 @@ for(ii in 1:nrow(park_county)){
 # Estimate trees per acre and basal area per acre from FIADB
 
 for(ii in 1:nrow(park_county)){
-  
+  # tree per acre - density
   tpaRI <- tpa(get(glue("fia_{park_county$park[ii]}")), totals = TRUE) %>% 
     select(YEAR, TPA, BAA, TREE_TOTAL, BA_TOTAL, TPA_SE, BAA_SE, TREE_TOTAL_SE) %>% 
     mutate(park = park_county$park[ii])
@@ -586,6 +589,22 @@ tpa_fim %>%
   theme(axis.text.x = element_text(angle = 90), 
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank()) 
+
+tpa_fim %>% 
+  filter(park %!in% c("ELRO", "HOFR", "ROVA", "VAMA")) %>% 
+  ggplot(aes(x = park, y = BAA, fill = park,)) +
+    geom_boxplot() +
+    geom_jitter(position=position_jitter(0.2), alpha = 0.5) +
+    coord_flip() +
+    theme_bw() +
+    theme(legend.position="none",
+          axis.title.y = element_blank(),
+          plot.title = element_text(hjust = 0.5)) +
+    labs(title = "County Scale",
+        y =" \n  Basal area of live trees \n(>=10cm DBH in m2/ha)") +
+    scale_fill_manual(values = met.brewer("Morgenstern")) +
+    stat_summary(colour = "red", size = 0.75)
+
 
 write_rds(tpa_fim, file = "data/FIA/out/tpa_fim.rds")
 ##

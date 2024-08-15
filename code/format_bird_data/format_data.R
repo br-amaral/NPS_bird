@@ -1,14 +1,16 @@
 
-# input:    - data/src/NETNtib.rds
-#           - 
-# output:   - data/src/sites_park_tib.rds:
-#           - y1
-#           - yr_pk
-#           - 
-#           - 
-#           - 
-#           - 
-#           - 
+# input:    - data/src/original/NETN_2020/NETNtib.rds
+#           - data/src/guilds.rds
+
+# output:   - visits (data/out/visits.rds): 
+##          - y1: table of ones and zeros for sps detections
+#           - nsite_pk: number of sites sampled in each park
+#           - yr_pk: number of years sampled in each park
+#           - ninterval: number of intervals of removal sampling
+#           - site_vec:  
+#           - site_pk:
+#           - data/nsite_pk.csv
+#          
 
 # Load libraries -------------------------------------------------------------------------------------
 library("stringr")
@@ -20,7 +22,7 @@ library(glue)
 # setwd("~/Documents/GitHub/NPS_birds/")
 # Data paths -------------------------------------------------------------------------------------
 NPS_DATA_PATH <- file.path("data/src/original/NETN_2020/NETNtib.rds")
-
+GUILD_DATA_PATH <- file.path("data/src/guilds.rds")
 # Load data -------------------------------------------------------------------------------------
 dat <- read_rds(file = NPS_DATA_PATH)
 
@@ -74,7 +76,7 @@ field_dat1 <- field_dat0.75 %>%
                 !is.na(Admin_Unit_Code)) 
 
 ## filter forest interior birds
-spslist_g <- read_rds("data/src/guilds.rds") %>% 
+spslist_g <- read_rds(GUILD_DATA_PATH) %>% 
   as_tibble()
 
 spslist2 <- spslist_g %>% 
