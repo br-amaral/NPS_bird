@@ -623,4 +623,35 @@ close(meta_name)
 #          #params = params[c(2,4,5,7)],
 #          ref_ovl = TRUE)
 
+# Function to get the script name
+get_script_name <- function() {
+  # Get the command line arguments
+  args <- commandArgs(trailingOnly = FALSE)
+  
+  # Look for the --file argument
+  script_path <- sub("--file=", "", args[grep("--file=", args)])
+  
+  # If running interactively, script_path will be character(0)
+  if (length(script_path) == 0) {
+    # Check if the script is being sourced
+    if (!is.null(sys.frames()[[1]]$ofile)) {
+      script_path <- sys.frames()[[1]]$ofile
+    } else {
+      script_path <- "Script is being run interactively"
+    }
+  }
+  
+  # Extract just the script name
+  script_name <- basename(script_path)
+  
+  return(script_name)
+}
 
+# Get the script name
+script_name <- get_script_name()
+
+cat("\n", "\n", "\n", 
+    'Current script:', script_name, 
+    "\n", "\n", "\n", "\n")
+
+system_time1 <- Sys.time()
