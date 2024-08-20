@@ -317,8 +317,8 @@ params <- c("beta0","beta", "alpha0", "alpha",
             "scales_beta1", "scales_beta2", "scales_beta3", "scales_beta4", "scales_beta5",
             "mu.beta0", "tau.beta0", "mu.alpha0", "tau.alpha0") # Z, psi
 
-if(yearbo == "yes") { model_file <- "models/mod_1_vector1spsparks_simple_MOREcovs_scales.txt"}
-if(yearbo == "no") { model_file <- "models/mod_1_vector1spsparks_simple_MOREcovs_scalesnoyear.txt"}
+if(yearbo == "yes") { model_file <- "models/mod_1_vector1spsparks_simple_LESScovs_scales.txt"} #"models/mod_1_vector1spsparks_simple_MOREcovs_scales.txt"}
+if(yearbo == "no") { model_file <- "models/mod_1_vector1spsparks_simple_LESScovs_scales.txt"} # "models/mod_1_vector1spsparks_simple_MOREcovs_scalesnoyear.txt"}
 
 ## initialize JAGS
 jags_model <- rjags::jags.model(
