@@ -68,10 +68,10 @@ get_script_name <- function() {
 }
 
 # Get the script name and time that it started running --
-script_name <- get_script_name()
+#script_name <- get_script_name()
 
 cat("\n", "\n", "\n", 
-    'Current script:', script_name, 
+#    'Current script:', script_name, 
     "\n", "\n", "\n", "\n")
 system_time1 <- Sys.time()
 (date_out <- glue("{substr(system_time1, 1,4)}_{substr(system_time1, 6,7)}_{substr(system_time1, 9,10)}"))
@@ -123,7 +123,7 @@ y_dat6 <- y_dat5 %>%
   )
 
 if(length(sps_loop) == 1){
-  print(glue("analazing one species {sps_loop}"))
+  print(glue("analazing one species: {sps_loop}"))
   } else {
   print('analazing a community: {sps_loop}')
 }
@@ -151,7 +151,35 @@ y_dat6 <- y_dat6 %>%
 y <- y_dat6 %>% 
   dplyr::select(bird_detec, parkey, site_n, year_n, interval_n, Year) 
 
-# get covariates
+# check detections that I have for each occasion (5 intervals)
+y_test <- y %>% 
+            mutate(unique_occ = glue("{parkey}_{site_n}_{year_n}")) %>%
+            select(unique_occ, bird_detec) %>%
+            mutate(bird_detec_na = ifelse(is.na(bird_detec), 2, bird_detec)) %>% 
+            select(unique_occ, bird_detec_na) %>%
+            table() 
+
+rowSums(y_test) %>% unique()
+colSums(y_test)
+sum(y_test) == nrow(y)
+sum(y_test[,2]) == sum(y$bird_detec, na.rm = T)
+sum(y_dat6$bird_detec, na.rm = T) == sum(y_test[,2])
+
+# check by park
+
+# park and site
+
+# park and year
+
+# park and site and year
+
+# site, park, county and covs values
+
+# site, interval, year and detec covs
+
+
+
+#? get covariates ----------------------------------------------------------------
 X <- X10 %>% 
   dplyr::select(Point_Name,
           siteDEN, siteBA,
@@ -532,7 +560,7 @@ samples_jags <- coda.samples(
 cat("\n\n\n third done!!! \n\n\n\n")
 fil_nam <- sps_loop2
 
-file_name <- glue("{date_out}_{fil_nam}_{park_name}_{niterations}its_")
+file_name <- glue("{date_out}_{fil_nam}_{park_name}_{niterations}its_2min_")
 
 file_name2 <- paste0(file_name, 'run',
                       length(list.files(path = file.path(getwd(),"data/model_res/"),
