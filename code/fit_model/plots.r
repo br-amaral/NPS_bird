@@ -40,7 +40,7 @@ lenght <- length
 # mod_loop <- 10
 # samples_jags <- read_rds(file = glue("data/model_res/jags_res_{master_tab[mod_loop,4]}_parks_10000itsrun1.rds"))
 
-samples_jags <- read_rds("data/model_res/2024_08_08_DOWO_b0yes_parks_50000its_run1.rds")
+samples_jags <- read_rds("data/model_res/OLD_2024_08_20_GCFL_b0yes_late_parks_10000its_run1.rds")
 # when loading the model results, get the most updated file?
 
 #! Summary --------------------------------------------
