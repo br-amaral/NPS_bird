@@ -437,7 +437,7 @@ dim(Xa)
 dim(Xb)
 
 # number of alphas and betas
-n_bs <- 3
+n_bs <- 2
 n_as <- 3
 
 if(length(sps_loop) > 1) { sps_name <- "commu"} else {sps_name <- sps_loop}
@@ -451,7 +451,7 @@ str(jags.data <- list(y = y,
                       nrowy = nrow(y),
                       nrowy2 = nrow(y2),
                       X1 = X1,
-                      X2 = X2,
+                      #X2 = X2,
                       #X3 = X3,
                       #X4 = X4,
                       #X5 = X5,
@@ -502,13 +502,13 @@ paste('\n ************************************* \n \n \n Running JAGS for:', '\n
       ') %>% cat()
 
 params <- c("beta0","beta", "alpha0", "alpha", 
-            "scales_beta1", "scales_beta2", #"scales_beta3", #"scales_beta4", "scales_beta5",
+            "scales_beta1",# "scales_beta2", #"scales_beta3", #"scales_beta4", "scales_beta5",
             "mu.beta0", "tau.beta0", "mu.alpha0", "tau.alpha0") # Z, psi
 
 
 # Define the model file and the output file name
-model_file <- "models/mod_1_vector1spsparks_simple_3covs_a0s_scales_noshrub.txt"
-mod_name <- glue("data/ana_file/{date_out}_mod_{sps_name}_{park_name}_noshrub.txt") %>% as.character()
+model_file <- "models/mod_1_vector1spsparks_simple_3covs_a0s_scales_BA.txt"
+mod_name <- glue("data/ana_file/{date_out}_mod_{sps_name}_{park_name}_BA.txt") %>% as.character()
 
 # Read the content of the model file
 mod_content <- readLines(model_file)
