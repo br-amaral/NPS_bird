@@ -540,7 +540,8 @@ if (nburnin > 0) {
     jags_model,
     variable.names = params,
     n.iter = niterations,
-    thin = nthin
+    thin = nthin,
+    quiet = FALSE
   )
 }
 
@@ -554,7 +555,8 @@ samples_jags <- coda.samples(
   jags_model,
   variable.names = params,
   n.iter = niterations,
-  thin = nthin
+  thin = nthin,
+  quiet = FALSE
 )
 
 cat("\n\n\n third done!!! \n\n\n\n")
