@@ -151,6 +151,7 @@ y_dat6 <- y_dat6 %>%
 y <- y_dat6 %>% 
   dplyr::select(bird_detec, parkey, site_n, year_n, interval_n, Year) 
 
+#! STOP AND CHECK ---------------------------------------------------------
 # check detections that I have for each occasion (5 intervals)
 y_test <- y %>% 
             mutate(unique_occ = glue("{parkey}_{site_n}_{year_n}")) %>%
@@ -165,19 +166,28 @@ sum(y_test) == nrow(y)
 sum(y_test[,2]) == sum(y$bird_detec, na.rm = T)
 sum(y_dat6$bird_detec, na.rm = T) == sum(y_test[,2])
 
-# check by park
+# check detections by:
+## park
+table(y_dat6 %>% select(park, bird_detec))
+table(y %>% select(parkey, bird_detec))
+setequal(table(y_dat6 %>% select(park, bird_detec)),
+         table(y %>% select(parkey, bird_detec)))
 
-# park and site
+## park and site and year 
+table(y_dat6 %>% select(parkey, site_n, year_n, bird_detec) %>% 
+                 mutate(uni_comb = glue("{parkey}_{site_n}_{year_n}")) %>% 
+                              select(uni_comb, bird_detec))
 
-# park and year
+table(y %>% select(parkey, site_n, year_n, bird_detec) %>% 
+            mutate(uni_comb = glue("{parkey}_{site_n}_{year_n}")) %>% 
+            select(uni_comb, bird_detec))
 
-# park and site and year
-
-# site, park, county and covs values
-
-# site, interval, year and detec covs
-
-
+setequal(y_dat6 %>% select(parkey, site_n, year_n, bird_detec) %>% 
+                    mutate(uni_comb = glue("{parkey}_{site_n}_{year_n}")) %>% 
+                    select(uni_comb, bird_detec),
+         y %>% select(parkey, site_n, year_n, bird_detec) %>% 
+               mutate(uni_comb = glue("{parkey}_{site_n}_{year_n}")) %>% 
+               select(uni_comb, bird_detec))
 
 #? get covariates ----------------------------------------------------------------
 X <- X10 %>% 
@@ -282,19 +292,26 @@ Xa <- X %>%
 Xb <- X %>% 
   dplyr::select(date_jul_s)
 
+#! STOP AND CHECK ---------------------------------------------------------
+## site, park, county and covs values
+
+## site, interval, year and detec covs
+
 # put everything together, arrange, and split!
 
 y_all <- cbind(y, X1, X2, X3, X4, Xa, Xb, Xp) %>% 
   as_tibble() %>% 
   arrange(parkey, site_n, year_n, interval_n)  %>% 
+# and GROUPING THE INTERVALS IN FIVES  
   mutate(interval_2 = ifelse(interval_n %in% c(1,2), 1, 
                                 ifelse(interval_n %in% c(3,4), 2, 
                                     ifelse(interval_n %in% c(5,6), 3, 
                                         ifelse(interval_n %in% c(7,8), 4, 
                                             5)))))
-
+# group the 10 intervals on fives
 y_all2 <- y_all  %>% 
-        group_by(parkey, site_n, year_n, interval_2) %>%
+        group_by(parkey, site_n, year_n, interval_2
+                 ) %>%
         mutate(bird_detec2 = ifelse(sum_na(bird_detec) > 0, 1, 0), 
                Year2 = mean(Year), 
                siteBA_s2 = mean(siteBA_s), 
@@ -327,6 +344,9 @@ table(y_all2$area_s2 == y_all2$Xp)
 # FALSES
 table(y_all2$time_jul_s2 == y_all2$time_jul_s)
 table(y_all2$bird_detec2 == y_all2$bird_detec)
+sum(y$bird_detec, na.rm = T)
+sum(y_all$bird_detec, na.rm = T)
+sum(y_all2$bird_detec, na.rm = T)
 
 y_all3 <- y_all2 %>% 
                 select(bird_detec2, parkey, site_n, year_n, Year2,
@@ -373,7 +393,7 @@ Xp <- y_all4 %>% select(area_s) %>% pull()
 y <- y_all4 %>% select(bird_detec, parkey, site_n, year_n, 
                          interval_n, Year) # interval_n is now interval2
 
-## trick for coding = only interval one
+## trick for coding = only interval one for starting values
 y2 <- y %>% 
   dplyr::filter(interval_n == 1)
 
@@ -395,7 +415,9 @@ years <- y %>%
   dplyr::select(Year) %>% 
   distinct() %>% 
   arrange() %>% 
-  pull()
+  pull() %>% 
+  sort()
+years
 ninterval <- 5
 
 Zst2 <- 
@@ -678,7 +700,7 @@ get_script_name <- function() {
 }
 
 # Get the script name
-script_name <- get_script_name()
+script_name <- 'back2d_covs_scales_2min.R'#get_script_name()
 
 cat("\n", "\n", "\n", 
     'Current script:', script_name, 
