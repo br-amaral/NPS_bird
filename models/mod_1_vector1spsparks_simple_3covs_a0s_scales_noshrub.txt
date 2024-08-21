@@ -51,7 +51,7 @@ model {
       # SHRUB!
       #beta[3] * X3[b,scales_beta3] + 
       # park size
-      beta[4] * Xp[b]                   
+      beta[3] * Xp[b]                   
   }
   
   # longer interval loop, all intervals of the removal sampling (not the first)
