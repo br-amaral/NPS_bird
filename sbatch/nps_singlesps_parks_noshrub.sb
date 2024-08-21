@@ -1,0 +1,39 @@
+#!/bin/bash --login
+
+# how long?
+#SBATCH --time=168:00:00
+
+# how much memory?
+#SBATCH --mem=15G
+
+# specify nodes needed.
+#SBATCH --ntasks=1
+#SBATCH --nodes=1
+
+# specify CPUs (or cores per task)
+#SBATCH --cpus-per-task=1
+
+# specify which development nodes you want the job run on. Doesn't seem to work?
+#SBATCH --constraint="[intel16|intel18]"
+
+# email me
+# SBATCH --mail-type=FAIL,END
+# SBATCH --mail-user=bamaral@msu.edu
+
+# change to current directory
+cd $SLURM_SUBMIT_DIR
+
+# export R_LIBS_USER=/mnt/home/bamaral/R
+
+# add necessary modules
+module purge
+module load JAGS/4.3.2-foss-2023a
+# module load R/4.3.2-gfbf-2023a
+module load R-bundle-CRAN/2023.12-foss-2023a
+
+# run R commandline with the Rscript command
+export R_DISABLE_BYTECODE=1
+
+# Rscript code/fit_model/teste_hpcc.r 
+Rscript code/fit_model/multiple_single_sps_noshrub.R
+
