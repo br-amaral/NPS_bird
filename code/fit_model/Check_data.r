@@ -15,10 +15,7 @@
 #! Output ----------------------------------------------
 #           - :
 #           - :
-
-# Print script file name
-context <- rstudioapi::getSourceEditorContext()
-cat("\n", "\n", "\n", 'Current script: ', basename(context[[2]]), "\n", "\n", "\n", "\n")
+hg <- httpgd::hgd()
 
 #! Package library and versions -------------------------
 #  Created a library repo?
@@ -50,14 +47,15 @@ lenght <- length
 `%!in%` <- Negate(`%in%`)
 
 #! Settings --------------------------------------------
-sps_name <- "RBWO"
+sps_name <- "GCFL"
 park_name <- "parks"
 
 #! Source code -----------------------------------------
 
 #! Import data -----------------------------------------
 ## file paths
-SPS_ANA_DATA <- glue("data/ana_file/data_{sps_name}_{park_name}.rds")
+file_name <- "2024_08_21_data_GCFL_parks"
+SPS_ANA_DATA <- glue("data/ana_file/{file_name}.rds")
 
 ## read files
 dat <- read_rds(SPS_ANA_DATA)
@@ -92,6 +90,10 @@ dat2xb %>%
        facet_wrap(~ year, ncol = 4) +
        theme_bw()
 #TODO: maybe park 7 has an outlier - 2010 to 2012
+dat2xb %>% 
+       filter(park == 7,
+       year == 2010)
+-3.235437752 # 138
 
 dat2xb %>% 
     ggplot() + 
@@ -122,7 +124,9 @@ ggplot(dat2xa) +
                strip.text = element_blank()
                ) +
                facet_wrap(~ park, ncol = 4, scales = "free_x")
-#TODO: park 3 has outliers on time in 2012 or 2011!!! 
+#TODO: park 3 has outliers on time in 2012!!! 
+#TODO: park 6 has outliers on time in 2010!!! 
+
 dat2xa %>% 
     ggplot() + 
        geom_histogram(aes(x = time_jul_s, fill = park)) +
@@ -147,17 +151,23 @@ dat2x1 <- dat$X1 %>%
                      sitekey = as.factor(dat$y[,3])) %>% 
                      filter(intervalkey == 1) 
 
-ggplot(dat2x1) + 
-       geom_point(aes(x = sitekey, 
-                      y = siteBA_s,
-                      col = year),
-                  #alpha = 0.5,
-                  size = 0.4) +
-               theme_bw() +
-               theme(legend.position = "none",
-               strip.text = element_blank()
-               ) +
-               facet_wrap(~ park, ncol = 4, scales = "free_x")
+dat2x1 %>% mutate(year = as.character(year)) %>% 
+           filter(year %in% c('2006','2007','2008','2009','2010',
+                              '2011','2012','2013','2014','2015',
+                              '2016','2017','2018','2019','2020')) %>% 
+       ggplot() + 
+              geom_point(aes(#x = jitter(as.numeric(sitekey),1.2), 
+                            x = as.numeric(sitekey),
+                            y = siteBA_s,
+                            col = year),
+                     #alpha = 0.5,
+                     size = 0.4) +
+                     theme_bw() +
+                     theme(#legend.position = "none",
+                     strip.text = element_blank()
+                     ) +
+                     facet_wrap(~ park, ncol = 1, scales = "free_x")
+
 # TODO: park 6 has different years
 ggplot(dat2x1) + 
        geom_point(aes(x = park, 
@@ -180,10 +190,6 @@ ggplot(dat2x1) +
                theme(legend.position = "none",
                strip.text = element_blank()
                ) 
-
-
-
-
                
 #TODO: 
 dat2xa %>% 
@@ -201,3 +207,7 @@ dat2xa %>%
     ggplot() + 
        geom_histogram(aes(x = time_jul_s, fill = year)) +
        theme_bw()
+
+## check for correlation between vars
+## check covariate values - proper place?
+## go back in time MORE.
