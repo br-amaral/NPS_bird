@@ -34,7 +34,7 @@ data/model_res/
 data/NETN-forest/
 data/out
 data/park_raster/
-figures/
+# figures/
 paper_scripts/
 papers/
 PaperScripts/
