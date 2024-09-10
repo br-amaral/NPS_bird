@@ -55,13 +55,13 @@ source("code/format_bird_data/format_data.R")
 
 yog <- y1 # reset safety ;)
 #! Define settings -------------------------------------
-radi_dist <- 1000
+radi_dist <- 500
 
 #! Import data -----------------------------------------
 ## file paths
 PATH_COVS_COUN <- "data/out/coun_covs.rds"
 PATH_COVS_PARK <- "data/out/park_covs.rds"
-PATH_COVS_SITE <- glue("data/out/site_covs_nei_1000m.rds")# glue("data/out/site_covs_{radi_dist}m.rds")
+PATH_COVS_SITE <- glue("data/out/site_covs_nei_grp_{radi_dist}m.rds")
 PATH_DIV_SITE_COVS <- "data/out/site_div.rds"
 PATH_DIV_PARK_COVS <- "data/out/park_div.rds"
 
@@ -541,7 +541,7 @@ site_covs <- read_rds(PATH_COVS_SITE) %>%
                 left_join(., site_key, by =  c("park", "Point_Name")) %>% 
                 select(-c(siteSTA, siteSAPden, park))
 
-X1 <- left_join(X, site_covs, by = c("Point_Name"))
+X1 <- left_join(X, site_covs, by = c("Point_Name","site_n"))
 dim(X1)
 X1 %>% select(Point_Name,siteDEN) %>% distinct() %>% arrange(siteDEN) %>% view()
 
