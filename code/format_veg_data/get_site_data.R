@@ -70,6 +70,8 @@ FORSPS_SITE_PATH  <- "data/veg_kateaaron/NETN_tree_dens_spp_2006-2023.rds"
 FOR_SITE_PATH     <- "data/veg_kateaaron/for_sites.rds"
 BIRD_FOR_PATH     <- "data/out/key_bsite.rds"
 FOR_FOR_PATH      <- "data/out/key_fsite.rds"
+VEG_TYP_PATH      <- "data/veg_parks.csv"
+
 ## read files
 bird_sit      <- read_rds(file = BIRD_SITE_PATH)
 parks         <- read_rds(file = PARK_SITE_PATH) 
@@ -78,6 +80,7 @@ fordiv_sit    <- read_rds(file = FORSPS_SITE_PATH)
 for_sit_coord <- read_rds(file = FOR_SITE_PATH)
 key_bsite     <- read_rds(file = BIRD_FOR_PATH)
 key_fsite     <- read_rds(file = FOR_FOR_PATH)
+veg_type      <- read_csv(file = VEG_TYP_PATH)
 
 #! get coordinates from the bird plots ------------------------------
 parks <- parks %>% 
@@ -234,6 +237,26 @@ for_sit_coord3 <- rbind(for_sit_coord_minusrova,
                         for_sit_coord_hofr)
 
 #bird_sit_coord2 <- bird_sit_coord2[1:11,]
+
+# get a table with all the forest types to compare to the key, 
+#    and possible combine them into smaller groups
+veg_type_indata <- c(unique(for_sit_coord3$f_for),
+                      unique(bird_sit_coord2$b_for)) %>% 
+                      unique() %>% 
+                      sort() %>% 
+                      as_tibble() %>% 
+                      rename(MapUnit_ID = value) %>% 
+                      left_join(veg_type, by = "MapUnit_ID")
+dim(veg_type_indata)
+length(unique(veg_type_indata$MapUnit_ID))
+table(for_sit_coord3 %>% select(park, f_for)) %>% t()
+tab_veg <- table(for_sit_coord3 %>% select(park, f_for)) %>% t() 
+tab_veg2 <- ifelse(tab_veg > 0,1,0) 
+tab_veg2 %>% colSums()
+tab_veg3 <- as_tibble(tab_veg2) %>% 
+              mutate(MapUnit_ID = rownames(tab_veg2)) %>% 
+              left_join(veg_type, by = "MapUnit_ID")
+writexl::write_xlsx(tab_veg3, path = "data/out/tab_veg3.xlsx")
 
 # get neighbors
 for (ii in 1:nrow(bird_sit_coord2)) {
