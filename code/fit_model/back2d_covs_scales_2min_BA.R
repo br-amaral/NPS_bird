@@ -48,12 +48,30 @@ sum_na <- function(df){ # sum fuction to ignore NAs, but keep NA if all entries 
   }
   return(suma)
 }
+# Function to get the script name
+get_script_name <- function() {
+  # Get the command line arguments
+  args <- commandArgs(trailingOnly = FALSE)
+  
+  # Look for the --file argument
+  script_path <- sub("--file=", "", args[grep("--file=", args)])
+  
+  # If running interactively, script_path will be character(0)
+  if (length(script_path) == 0) {
+    # Manually set the script name if running interactively
+    script_path <- here::here("back2d_covs_scales_2min.R")
+  } else {
+    script_path <- path_abs(script_path)
+  }
+  
+  return(script_path)
+}
 
 # Get the script name and time that it started running --
-script_name <- "back2d_covs_scales_2min_BA.R"
+#script_name <- get_script_name()
 
 cat("\n", "\n", "\n", 
-    'Current script:', script_name, 
+#    'Current script:', script_name, 
     "\n", "\n", "\n", "\n")
 system_time1 <- Sys.time()
 (date_out <- glue("{substr(system_time1, 1,4)}_{substr(system_time1, 6,7)}_{substr(system_time1, 9,10)}"))
@@ -80,7 +98,7 @@ rem_pks <- as_tibble(cbind(nsite_pk,pk)) %>%
               filter(pk %!in% c("ACAD","ELRO","SAIR"))
 
 nsite_pk <- as.numeric(rem_pks$nsite_pk)
-pk <- as.vector(rem_pks$pk)
+(pk <- as.vector(rem_pks$pk))
 
 # Filter for species and park ---------------------------------------
 ## 1 sps several parks
