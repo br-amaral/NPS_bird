@@ -26,21 +26,9 @@ lenght <- length
 
 #! Import data -----------------------------------------
 ## file paths and read files
+file_name <- "2024_08_21_GCFL_b0yes_parks_50000its_2min_noshrub_run1"
 
-#sps <- "AMGO"
-# sps_list1 <- c("GCFL", "AMGO", "DOWO", "NOCA", "SCTA", "SOSP", "GRCA", "RBWO", "COYE", "WOTH", "RWBL",
-#                 "WBNU", "BTNW", "EAWP", "BCCH", "BLJA", "TUTI", "AMRO", "REVI", "OVEN", "BTBW", "YBSA", 
-#                 "BOBO", "YRWA", "PIWA", "CEDW", "CHSP", "NOFL", "HAWO", "BRCR", "RBGR", "DEJU", "AMCR", 
-#                 "BAOR", "RBNU", "BHVI", "GCKI", "EATO", "FISP", "HETH", "VEER", "MODO", "BLBW")
-# yearbo1 <- c('yes', 'no')
-# for_stage1 <- c('late', 'mature', 'pole')
-# master_tab <- expand_grid(sps_list1, yearbo1, for_stage1) %>% 
-#                 mutate(res_name = glue("{sps_list1}_b0{yearbo1}_{for_stage1}"))
-# colnames(master_tab) <- c("sps_list", "yearbo", "for_stage", "res_name")
-# mod_loop <- 10
-# samples_jags <- read_rds(file = glue("data/model_res/jags_res_{master_tab[mod_loop,4]}_parks_10000itsrun1.rds"))
-
-samples_jags <- read_rds("data/model_res/OLD_2024_08_20_GCFL_b0yes_late_parks_10000its_run1.rds")
+samples_jags <- read_rds(glue("data/model_res/{file_name}.rds"))
 # when loading the model results, get the most updated file?
 
 #! Summary --------------------------------------------
