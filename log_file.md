@@ -20,10 +20,11 @@ Assumptions/decisions:
 
 - add covariate value inputation - some site level have no forest covariates; right now im adding zero
 
-- parks removed: acadia is too big, sair is too different (open areas)
-elro only has one forest plot
+- parks removed: acadia is too big
+                 sair is too different (open areas)
+                 elro only has one forest plot
 
-- 500 m for the radius between the sites make sense for bird home range, but is that meaningful? now using with 1000m
+- 500 m for the radius between the sites make sense for bird home range, but is that meaningful? now using with 1000m, ctually back to 500m
 
 - year of environmental covariates: 2022
 
