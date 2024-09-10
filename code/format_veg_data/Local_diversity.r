@@ -1,8 +1,8 @@
 # *********************************************************************************
 # -------------------------------   Amazing Title   -------------------------------
 # *********************************************************************************
-# Code to ...
-#
+#! Code to ...
+#!
 #
 # Source ---------------------------------------------
 #           - :
@@ -20,22 +20,22 @@
 if(!require(freshr)){install.packages('freshr')}
 freshr::freshr()
 
-# Code to ...
+#! Code to ...
 #
 #
-# Source ---------------------------------------------
-#           - :
-#           - :
-#
-# Input ----------------------------------------------
+#! Source ---------------------------------------------
 #           - :
 #           - :
 #
-# Output ----------------------------------------------
+#! Input ----------------------------------------------
 #           - :
 #           - :
 #
-# Load packages ---------------------------------------
+#! Output ----------------------------------------------
+#           - :
+#           - :
+#
+#! Load packages ---------------------------------------
 library(conflicted)
 library(tidyverse)
 library(glue)
@@ -50,17 +50,21 @@ conflicts_prefer(dplyr::arrange)
 conflicts_prefer(dplyr::rename)
 # conflicts_prefer(scales::alpha)
 #
-# Make functions --------------------------------------
+#! Make functions --------------------------------------
 colanmes <- colnames
 lenght <- length
 `%!in%` <- Negate(`%in%`)
 #
-# Source code -----------------------------------------
+#! Source code -----------------------------------------
 #
-# Import data -----------------------------------------
+#! Import data -----------------------------------------
+#! Settings --------------------------------------------
+radi_dist <- 500
+
 ## file paths
 FORSPS_SITE_PATH  <- "data/veg_kateaaron/NETN_tree_dens_spp_2006-2023.csv"
 path <- glue("{getwd()}/data/veg_kateaaron") #"C:/NETN/collaborators/Bruna/"
+PATH_NEI_BEF <- glue("data/out/neighbor_grp_{radi_dist}m.rds")
 
 ## read files
 importCSV(path, zip_name = "NETN_Forest_20231106.zip")
@@ -163,11 +167,12 @@ park_div_m <- park_div %>%
                 distinct()
 
 # join forest sites with bird sites
-close_points_f <- read_rds(file = "data/out/close_points_f.rds")  %>% 
+close_points_f <- read_rds(file = PATH_NEI_BEF) %>% 
     select(for_sit, bird_sit) %>%
     rename(Point_Name = bird_sit,
            Plot_Name = for_sit) %>% 
     distinct()
+close_points_f
 
 site_div2 <- left_join(close_points_f, site_div_m, by = "Plot_Name") %>% 
                 select(-Plot_Name)  %>% 
