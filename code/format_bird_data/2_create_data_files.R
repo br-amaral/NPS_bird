@@ -55,7 +55,7 @@ source("code/format_bird_data/format_data.R")
 
 yog <- y1 # reset safety ;)
 #! Define settings -------------------------------------
-radi_dist <- 500
+radi_dist <- 1000
 
 #! Import data -----------------------------------------
 ## file paths
@@ -525,7 +525,7 @@ y_dat6 <- y_dat5 %>%
 # get covariate data ----------------------------------------------------------------------------------
 # index to have the same dimentions as the bird data
 X <- y_dat6 %>% 
-  select(park, site_n, Year, Point_Name, interval_n, Year)
+  select(park, site_n, Year, Point_Name, interval_n)
 
 # no year so far in covariates - key to get the combinations of covariates in each site
 site_key <- y_dat6 %>% 
@@ -539,10 +539,12 @@ site_covs <- read_rds(PATH_COVS_SITE) %>%
                 rename(Point_Name = bird_sit,
                         park = ParkUnit) %>%
                 left_join(., site_key, by =  c("park", "Point_Name")) %>% 
-                select(-c(siteSTA, siteSAPden))
+                select(-c(siteSTA, siteSAPden, park))
 
-X1 <- left_join(X, site_covs, by = c("park", "site_n", "Point_Name"))
+X1 <- left_join(X, site_covs, by = c("Point_Name"))
 dim(X1)
+X1 %>% select(Point_Name,siteDEN) %>% distinct() %>% arrange(siteDEN) %>% view()
+
 ## park --------------------------------------------------------------------------------
 park_covs <- read_rds(PATH_COVS_PARK) %>% 
                 rename(park = ParkUnit) 
