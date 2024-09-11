@@ -201,32 +201,6 @@ X2 <- X %>%
 X3 <- X %>% 
   dplyr::select(siteSHRUden_s)
   
-## Forets diversity
-X4 <- X %>% 
-  dplyr::select(siteH_g, siteEh_g,
-          parkH_g, parkEh_g,
-          counH_g, counEh_g)
-
-## Basal area large
-X5l <- X %>% 
-  dplyr::select(siteBA_large_s)
-
-## Basal area mature
-X5m <- X %>% 
-  dplyr::select(siteBA_mature_s)
-
-## Basal area pole
-X5p <- X %>% 
-  dplyr::select(siteBA_pole_s)
-
-# if(for_stage == "late") {
-#   X5 <- X5l
-#   } else {
-#     if(for_stage == "mature") {
-#       X5 <- X5m
-#       } else {
-#         if(for_stage == "pole") { X5 <- X5p} else {stop("wrong stage row 220")}}}
-
 ## park size
 Xp <- X %>% 
   dplyr::select(area_s) %>% 
@@ -242,7 +216,7 @@ Xb <- X %>%
 
 # put everything together, arrange, and split!
 
-y_all <- cbind(y, X1, X2, X3, X4, Xa, Xb, Xp) %>% 
+y_all <- cbind(y, X1, X2, X3, Xa, Xb, Xp) %>% 
   as_tibble() %>% 
   arrange(parkey, site_n, year_n, interval_n)  %>% 
   mutate(interval_2 = ifelse(interval_n %in% c(1,2), 1, 
