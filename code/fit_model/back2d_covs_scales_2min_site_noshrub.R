@@ -199,7 +199,7 @@ X2 <- X %>%
 
 ## Shrub density and percentage
 X3 <- X %>% 
-  dplyr::select(siteSHRUden_s, parkSHRUden_s, counSHRUper_s)
+  dplyr::select(siteSHRUden_s)
   
 ## Forets diversity
 X4 <- X %>% 
