@@ -47,14 +47,14 @@ lenght <- length
 `%!in%` <- Negate(`%in%`)
 
 #! Settings --------------------------------------------
-sps_name <- "GCFL"
+sps_name <- "COYE"
 park_name <- "parks"
 
 #! Source code -----------------------------------------
 
 #! Import data -----------------------------------------
 ## file paths
-file_name <- "2024_08_21_data_GCFL_parks"
+file_name <- "2024_09_11_data_COYE_parks"
 SPS_ANA_DATA <- glue("data/ana_file/{file_name}.rds")
 
 ## read files

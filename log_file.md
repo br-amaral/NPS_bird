@@ -50,7 +50,7 @@ Workflow:
 
             out - data/out/park_covs.rds
 
-# format_veg_data/local_diversity
+# format_veg_data/local_diversity.R
 
 # format_veg_data/FIA_getdata.R
 
