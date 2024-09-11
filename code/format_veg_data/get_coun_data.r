@@ -54,7 +54,6 @@ Modes <- function(x) {
 # nj <- getFIA(states = 'NJ', dir = 'data/FIA', load = FALSE)
 
 #! Import data -----------------------------------------
-
 # master table with parks and counties
 # county location of each park
 park_county <- matrix(c(
@@ -78,8 +77,6 @@ parks <- park_county$park
 ### Get multiple states worth of data (not saved since 'dir' is not specified)
 ### Load FIA Data from a local directory
 db <- readFIA('data/FIA/')
-
-#! Script! ---------------------------------------------
 
 #? calculate park means --------------------------------
 for(ii in 1:nrow(park_county)){
@@ -233,4 +230,5 @@ coun_covs <- left_join(tpa_tab2, stastr_tab2, by = "ParkUnit") %>%
 #! Output files -----------------------------------------
 write_rds(coun_covs, file = "data/out/coun_covs.rds")
 
+cat(paste("\n\n Done \n\n\n"))
 

@@ -1,22 +1,22 @@
-# *********************************************************************************
-# ----------------------------  back2d_covs_scales_3  -----------------------------
-# *********************************************************************************
+#? *********************************************************************************
+#? ----------------------------  back2d_covs_scales_3  -----------------------------
+#? *********************************************************************************
 # Code to run model to estimate the effect of different environmental
 #   covariates on bird occupancy in several national parks and on three
 #   different spatial scales
 #
-# Input ----------------------------------------------
-#           - data/y_dat8.rds: tibble with bird data
-#           - data/X.rds: tibble with covariate data
+#! Input ----------------------------------------------
+#           - data/y_dat8.rds: tibble with bird data (2_create_data_files.R)
+#           - data/X.rds: tibble with covariate data (2_create_data_files.R)
 #           - data/out/nsite_pk.rds: vector with number of sites in each park
 #           - data/src/key_park.rds: vector of all parks being analyzed
 #
-# Output ---------------------------------------------
+#! Output ---------------------------------------------
 #           - data/model_res/jags_res_{sps}_{park}_run{run_number}.rds: file with result of jags model
 
 # detach packages and clear workspace
-# if(!require(freshr)){install.packages("freshr")}
-# freshr::freshr()
+#if(!require(freshr)){install.packages("freshr")}
+#freshr::freshr()
 
 script_name <- 'back2d_covs_scales_3.R'
 
@@ -46,32 +46,29 @@ colanmes <- colnames
 lenght <- length
 `%!in%` <- Negate(`%in%`)
 
-# MCMC settings ---------------------------------------
-niterations <- 10000
-burnin <- 5000
-nchains <- 5
-
 # Import data -----------------------------------------
 ## file paths
 YDAT_PATH <- "data/y_dat8.rds"
-XDAT_PATH <- "data/X.rds"
+XDAT_PATH <- "data/X_1000.rds"
 SITE_PK_PATH <- "data/out/nsite_pk.rds"
 PARK_PATH <- "data/src/key_park.rds"
 
 ## read files
 y_dat4 <- read_rds(file = YDAT_PATH)
+
 X10 <- read_rds(file = XDAT_PATH)
+
 nsite_pk <- read_rds(SITE_PK_PATH)
 pk <- read_rds(PARK_PATH) %>%
   dplyr::select(parks) %>%
   pull() %>%
   sort()
 
-pk <- pk[-1]
-pk <- pk[-7]
+rem_pks <- as_tibble(cbind(nsite_pk,pk)) %>% 
+              filter(pk %!in% c("ACAD","ELRO","SAIR"))
 
-nsite_pk <- nsite_pk[-1]
-nsite_pk <- nsite_pk[-7]
+nsite_pk <- as.numeric(rem_pks$nsite_pk)
+pk <- as.vector(rem_pks$pk)
 
 # Filter for species and park ---------------------------------------
 ## 1 sps several parks
@@ -102,7 +99,7 @@ if(length(sps_loop) == 1){
 }
 
 X10 <- X10 %>% 
-   dplyr::filter(unique_index %in% y_dat6$unique_index)
+    dplyr::filter(unique_index %in% y_dat6$unique_index)
 
 nrow(X10) == nrow(y_dat6)
 glu1 <- paste(shQuote(sort(unique(y_dat6$sps_it))), collapse=", ")
@@ -122,16 +119,9 @@ y_dat6 <- y_dat6 %>%
   left_join(., parkey_right, by = "Admin_Unit_Code")
 
 y <- y_dat6 %>% 
-  dplyr::select(bird_detec, parkey, site_n, year_n, interval_n, Year) %>% 
-  arrange(parkey, site_n, year_n, interval_n)
+  dplyr::select(bird_detec, parkey, site_n, year_n, interval_n, Year) 
 
-##
-# colnames(y)
-
-## trick for coding = only interval one
-y2 <- y %>% 
-  dplyr::filter(interval_n == 1)
-
+# get covariates
 X <- X10 %>% 
   dplyr::select(Point_Name,
           siteDEN, siteBA,
@@ -179,6 +169,7 @@ X <- X10 %>%
           time_jul_s = standardize(time_jul))
 
 #! TODO: for now, im putting zeros in the occasions that have no environmental data (mean)
+table(is.na(X))
 X[is.na(X)] <- 0
 
 # occupancy variables - separate them in covs in all scales per tibble
@@ -190,15 +181,16 @@ X1 <- X %>%
 X2 <- X %>% 
   dplyr::select(siteDEN_s, parkDEN_s, counDEN_s)
 
-## Forets diversity
+
+## Shrub density and percentage
 X3 <- X %>% 
+  dplyr::select(siteSHRUden_s, parkSHRUden_s, counSHRUper_s)
+  
+## Forets diversity
+X4 <- X %>% 
   dplyr::select(siteH_g, siteEh_g,
           parkH_g, parkEh_g,
           counH_g, counEh_g)
-
-## Shrub density and percentage
-X4 <- X %>% 
-  dplyr::select(siteSHRUden_s, parkSHRUden_s, counSHRUper_s)
 
 ## Basal area large
 X5l <- X %>% 
@@ -212,13 +204,13 @@ X5m <- X %>%
 X5p <- X %>% 
   dplyr::select(siteBA_pole_s, parkBA_pole_s, counPER_pole_s)
 
-if(for_stage == "late") {
-  X5 <- X5l
-  } else {
-    if(for_stage == "mature") {
-      X5 <- X5m
-      } else {
-        if(for_stage == "pole") { X5 <- X5p} else {stop("wrong stage row #220")}}}
+# if(for_stage == "late") {
+#   X5 <- X5l
+#   } else {
+#     if(for_stage == "mature") {
+#       X5 <- X5m
+#       } else {
+#         if(for_stage == "pole") { X5 <- X5p} else {stop("wrong stage row 220")}}}
 
 ## park size
 Xp <- X %>% 
@@ -228,10 +220,35 @@ Xp <- X %>%
 
 # detection variables
 Xa <- X %>% 
-  dplyr::select(time_jul)
+  dplyr::select(time_jul_s)
 
 Xb <- X %>% 
-  dplyr::select(date_jul)
+  dplyr::select(date_jul_s)
+
+# put everything together, arrange, and split!
+
+y_all <- cbind(y, X1, X2, X3, X4, Xa, Xb, Xp) %>% 
+  as_tibble() %>% 
+  arrange(parkey, site_n, year_n, interval_n)
+
+rm(list = c("y", "X1", "X2", "X3", "X4", "Xa", "Xb", "Xp"))
+
+X1 <- y_all %>% select(siteBA_s, parkBA_s, counBA_s)
+X2 <- y_all %>% select(siteDEN_s, parkDEN_s, counDEN_s)
+X3 <- y_all %>% select(siteSHRUden_s, parkSHRUden_s, counSHRUper_s)
+
+Xa <- y_all %>% select(time_jul_s)
+Xb <- y_all %>% select(date_jul_s)
+Xp <- y_all %>% select(Xp) %>% rename(area_s = Xp) %>% pull() %>% as.numeric()
+
+y <- y_all %>% select(bird_detec, parkey, site_n, year_n, interval_n, Year)
+
+## trick for coding = only interval one
+y2 <- y %>% 
+  dplyr::filter(interval_n == 1)
+
+#colnames(y) <- c("bird_detec", "parkey", "sitekey", "yearkey", "intervalkey",# "year_site",
+#                  "Year")
 
 # initial values
 Zst <- y %>% 
@@ -274,9 +291,6 @@ for(a in 1:nrow(Zst)){
   
 }
 
-colnames(y) <- c("bird_detec", "parkey", "sitekey", "yearkey", "intervalkey",#"year_site",
-"Year")
-
 y <- data.matrix(y)
 y2 <- data.matrix(y2)
 y_ind <- sort(rep(seq(1, nrow(y2),1),10))
@@ -287,15 +301,18 @@ nrow(X)
 dim(X1)
 dim(X2)
 dim(X3)
-dim(X4)
-dim(X5)
+#dim(X4)
+#dim(X5)
 length(Xp)
 dim(Xa)
 dim(Xb)
 
 # number of alphas and betas
-n_bs <- 6
+n_bs <- 4
 n_as <- 3
+
+if(length(sps_loop) > 1) { sps_name <- "commu"} else {sps_name <- sps_loop}
+if(length((unique(y[,2]))) == 1) { park_name <- unique(y[,2])} else {park_name <- "parks"}
 
 # model
 str(jags.data <- list(y = y,
@@ -307,8 +324,8 @@ str(jags.data <- list(y = y,
                       X1 = X1,
                       X2 = X2,
                       X3 = X3,
-                      X4 = X4,
-                      X5 = X5,
+                      #X4 = X4,
+                      #X5 = X5,
                       Xp = Xp,
                       Xa = Xa,
                       Xb = Xb,
@@ -316,12 +333,34 @@ str(jags.data <- list(y = y,
                       n_pkM = length((unique(y[,2])))
                       #y_ind = y_ind
 ))
-inits <- function()list(Z = Zst2
-#, beta0 = rnorm(10,0.6), beta1 = rnorm(10,0.6)
-)
+#! jags.data structure:
+# y: detection matrix
+# y2: first detection matrix
+# n_bs: number of betas
+# n_as: number of alphas
+# nrowy: number of total rows (all detections)
+# nrowy2: number of rows of first detections 
+# X1: tree basal area
+# X2: tree density
+# X3: shrub density
+# Xp: park size
+# Xa: detection time
+# Xb: detection day of the year
+# n_yrM: number of years 
+# n_pkM: number of parks 
+write_rds(jags.data, file = glue("data/ana_file/data_{sps_name}_{park_name}.rds"))
 
-if(length(sps_loop) > 1) { sps_name <- "commu"} else {sps_name <- sps_loop}
-if(length((unique(y[,2]))) == 1) { park_name <- unique(y[,2])} else {park_name <- "parks"}
+# source("code/check_data.R") 
+
+inits <- function() {
+    list(
+        Z = Zst2,
+        mu_beta0 = rnorm(1, 0.5),
+        beta = c(rnorm(1, 0.5), rnorm(1, 0.5), rnorm(1, 0.5), rnorm(1, 0.5)),
+        mu.alpha0 = rnorm(1, 0.5),
+        alpha = c(rnorm(1, 0.5), rnorm(1, 0.6), rnorm(1, 0.6))
+    )
+}
 
 paste('\n ************************************* \n \n \n Running JAGS for:', '\n',
       '  Parks =', park_name, '\n',
@@ -333,15 +372,15 @@ paste('\n ************************************* \n \n \n Running JAGS for:', '\n
       '**************************************
       ') %>% cat()
 
-cat("\n\n\n running first jags \n\n\n\n")
 params <- c("beta0","beta", "alpha0", "alpha", 
-            "scales_beta1", "scales_beta2", "scales_beta3", "scales_beta4", "scales_beta5",
+            "scales_beta1", "scales_beta2", "scales_beta3", #"scales_beta4", "scales_beta5",
             "mu.beta0", "tau.beta0", "mu.alpha0", "tau.alpha0") # Z, psi
 
-if(yearbo == "yes") { model_file <- "models/mod_1_vector1spsparks_simple_MOREcovs_scales.txt"}
-if(yearbo == "no") { model_file <- "models/mod_1_vector1spsparks_simple_MOREcovs_scalesnoyear.txt"}
+model_file <- "models/mod_1_vector1spsparks_simple_3covs_a0s_scales.txt"
 
 ## initialize JAGS
+cat("\n\n\n running first jags \n\n\n\n")
+
 jags_model <- rjags::jags.model(
   file = model_file,
   data = jags.data,
@@ -360,7 +399,7 @@ if (burnin > 0) {
     jags_model,
     variable.names = params,
     n.iter = niterations,
-    thin = 5
+    thin = n_thin
   )
 }
 
@@ -374,13 +413,13 @@ samples_jags <- coda.samples(
   jags_model,
   variable.names = params,
   n.iter = niterations,
-  thin = 5
+  thin = n_thin
 )
 
 cat("\n\n\n third done!!! \n\n\n\n")
 fil_nam <- sps_loop2
 
-file_name <- glue("jags_res_{fil_nam}_{park_name}_{niterations}its")
+file_name <- glue("jags_res_{fil_nam}_{park_name}_{niterations}its_a0s")
 
 file_name2 <- paste0(file_name, 'run',
                       length(list.files(path = file.path(getwd(),"data/model_res/"),

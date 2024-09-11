@@ -1,11 +1,11 @@
 #? *********************************************************************************
-#? -------------------------------   Amazing Title   -------------------------------
+#? ---------------------------   multiple_single_sps.R   ---------------------------
 #? *********************************************************************************
 #
 #! Code to ...
 #
 #! Source ---------------------------------------------
-#           - code/fit_model/back2d_covs_scales_3.R:
+#           - code/fit_model/back2d_covs_scales_2min.R:
 #!              - Input:
 #                   - data/y_dat8.rds: tibble with bird data
 #                   - data/X.rds: tibble with covariate data
@@ -42,8 +42,8 @@ cat("\n", "\n", "\n",
 #options(repos = c(CRAN = "https://cloud.r-project.org/"))
 #update.packages("freshr")
 # detach packages and clear workspace
-#if(!require(freshr)){install.packages('freshr')}
-#freshr::freshr()
+if(!require(freshr)){install.packages('freshr')}
+freshr::freshr()
 
 #! Load packages ---------------------------------------
 #library(conflicted)
@@ -59,6 +59,12 @@ colanmes <- colnames
 lenght <- length
 `%!in%` <- Negate(`%in%`)
 
+#! MCMC settings ---------------------------------------
+niterations <- 10000
+nburnin <- 5000
+nchains <- 5
+nthin <- 10
+
 #! Source code and Import data -----------------------------------------
 ## file paths
 
@@ -69,26 +75,34 @@ lenght <- length
 #                distinct() %>% 
 #                pull()
 
+# removing forest stage, species, 
 #sps_list <- sps_list[-1]
-sps_list1 <- c("GCFL", "AMGO", "DOWO", "NOCA", "SCTA", "SOSP", "GRCA", "RBWO", "COYE", "WOTH", "RWBL",
-                "WBNU", "BTNW", "EAWP", "BCCH", "BLJA", "TUTI", "AMRO", "REVI", "OVEN", "BTBW", "YBSA", 
-                "BOBO", "YRWA", "PIWA", "CEDW", "CHSP", "NOFL", "HAWO", "BRCR", "RBGR", "DEJU", "AMCR", 
-                "BAOR", "RBNU", "BHVI", "GCKI", "EATO", "FISP", "HETH", "VEER", "MODO", "BLBW")
+sps_list1 <- c("GCFL", 
+               "AMGO", 
+               "DOWO", 
+               "RBWO", 
+               "COYE"
+               )
 
-yearbo1 <- c('yes', 'no')
+yearbo1 <- c('yes')
 
-for_stage1 <- c('late', 'mature', 'pole')
+#for_stage1 <- c('late', 'mature', 'pole')
 
-master_tab <- expand_grid(sps_list1, yearbo1, for_stage1) %>% 
-                mutate(res_name = glue("{sps_list1}_b0{yearbo1}_{for_stage1}"))
+master_tab <- expand_grid(sps_list1, yearbo1) %>% 
+                mutate(res_name = glue("{sps_list1}_b0{yearbo1}"))
 
-colnames(master_tab) <- c("sps_list", "yearbo", "for_stage", "res_name")
+colnames(master_tab) <- c("sps_list", "yearbo", "res_name")
 ## BTNW not working
-for (i in 151:nrow(master_tab)){
+for (i in 1:nrow(master_tab)){
     sps_loop <- master_tab[i,1] %>% pull()
     yearbo <- master_tab[i,2] %>% pull()
-    for_stage <- master_tab[i,3] %>% pull()
-    sps_loop2 <- master_tab[i,4] %>% pull()
+    # for_stage <- master_tab[i,3] %>% pull()
+    sps_loop2 <- master_tab[i,3] %>% pull()
     print(sps_loop2)
-    source("code/fit_model/back2d_covs_scales_3.R")
+    #source("code/fit_model/back2d_covs_scales_3.R")
+    source("code/fit_model/back2d_covs_scales_2min.R")
 }
+
+cat(paste('\n ************************************** \n \n \n 
+        ---------------- all DONE Lol ----------------', 
+        '\n\n \n ************************************** \n'))

@@ -37,17 +37,38 @@
                     "cd ..",
                     "cd ..",
                     "cd ..",
+                    "cd ..",
+                    "cd ..",
+                    "cd ..",
                     "cd Volumes/bamaral",
                     "echo Find your repo now!"
                 ]
             },
             {
-                "name": "R",
+                "name": "R local",
                 "autoExecuteCommands": false,
                 "icon": "run",
                 "color": "terminal.ansiBrightCyan",
                 "commands": [
                     "R"
+                ]
+            },
+            {
+                "name": "R mapped",
+                "autoExecuteCommands": false,
+                "icon": "run",
+                "color": "terminal.ansiBrightCyan",
+                "commands": [
+                    "cd ..",
+                    "cd ..",
+                    "cd ..",
+                    "cd ..",
+                    "cd ..",
+                    "cd ..",
+                    "cd ..",
+                    "cd ..",
+                    "cd Volumes/bamaral",
+                    "echo Find your repo now!"
                 ]
             }
         ]
