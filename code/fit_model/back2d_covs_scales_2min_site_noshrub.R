@@ -196,10 +196,6 @@ X1 <- X %>%
 ## tree density
 X2 <- X %>% 
   dplyr::select(siteDEN_s)
-
-## Shrub density and percentage
-X3 <- X %>% 
-  dplyr::select(siteSHRUden_s)
   
 ## park size
 Xp <- X %>% 
@@ -216,7 +212,7 @@ Xb <- X %>%
 
 # put everything together, arrange, and split!
 
-y_all <- cbind(y, X1, X2, X3, Xa, Xb, Xp) %>% 
+y_all <- cbind(y, X1, X2, Xa, Xb, Xp) %>% 
   as_tibble() %>% 
   arrange(parkey, site_n, year_n, interval_n)  %>% 
   mutate(interval_2 = ifelse(interval_n %in% c(1,2), 1, 
@@ -337,7 +333,6 @@ nrow(y)
 nrow(y2)*ninterval
 dim(X1)
 dim(X2)
-dim(X3)
 nrow(y_all3)/2
 length(Xp)
 dim(Xa)
