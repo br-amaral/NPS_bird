@@ -26,7 +26,7 @@ lenght <- length
 
 #! Import data -----------------------------------------
 ## file paths and read files
-file_name <- "2024_09_11_COYE_b0yes_parks_5000its_2min_noshrub_run1"
+file_name <- "2024_09_10_AMGO_b0yes_parks_10000its_2min_run1"
 
 samples_jags <- read_rds(glue("data/model_res/{file_name}.rds"))
 # when loading the model results, get the most updated file?
@@ -35,14 +35,7 @@ samples_jags <- read_rds(glue("data/model_res/{file_name}.rds"))
 MCMCsummary(samples_jags,
             round = 2)
 
-MCMCsummary(samples_jags,
-            params = c("mu.beta0","beta",
-                        "mu.alpha0","alpha",
-                        "scales_beta1","scales_beta2", "scales_beta3"),
-                        round = 2)
 ##! traceplots ----------------------
-#print(glue("jags_res_{master_tab[mod_loop,4]}_parks_10000itsrun1"))
-
 MCMCtrace(samples_jags,
             params = c("mu.alpha0", "mu.beta0",
                         "beta","alpha",
@@ -54,6 +47,24 @@ MCMCtrace(samples_jags,
             Rhat = TRUE,
             n.eff = TRUE) 
 
+# par estimates ----------------------------------
+par(mfrow = c(1,1))
+MCMCplot(samples_jags,
+         params = c("mu.beta0","beta", 
+                     "mu.alpha0","alpha",
+                     "scales_beta1","scales_beta2","scales_beta3"),
+         ref_ovl = TRUE)
+         
+#TODO:
+summary(samples_jags)
+
+#NOTE:
+MCMCsummary(samples_jags,
+            params = c("mu.beta0","beta",
+                        "mu.alpha0","alpha",
+                        "scales_beta1","scales_beta2", "scales_beta3"),
+                        round = 2)
+
 MCMCtrace(samples_jags,
             params = c("alpha0", "beta0"),
             ind = TRUE,
@@ -63,15 +74,6 @@ MCMCtrace(samples_jags,
             Rhat = TRUE,
             n.eff = TRUE)
 
-# par estimates ----------------------------------
-par(mfrow = c(1,1))
-
-MCMCplot(samples_jags,
-         params = c("mu.beta0","beta", 
-                     "mu.alpha0","alpha",
-                     "scales_beta1","scales_beta2","scales_beta3"),
-         ref_ovl = TRUE)
-
 MCMCplot(samples_jags,
          params = c("alpha0","beta0"),
          ref_ovl = TRUE)
@@ -80,13 +82,3 @@ MCMCplot(samples_jags,
          params = c("mu.beta0","beta",
                     "mu.alpha0","alpha"),
          ref_ovl = TRUE)
-#MCMCplot(samples_jags,
-#         params = c("mu.beta0","beta1", "beta2","beta3",
-#                    "mu.alpha0","alpha1","alpha2","alpha3",
-#                    "scales_beta1","scales_beta2"),
-#         ref_ovl = TRUE)
-         
-#TODO:
-summary(samples_jags)
-
-#NOTE:
