@@ -399,7 +399,6 @@ paste('\n ************************************* \n \n \n Running JAGS for:', '\n
       ') %>% cat()
 
 params <- c("beta0","beta", "alpha0", "alpha", 
-            "scales_beta1",# "scales_beta2", #"scales_beta3", #"scales_beta4", "scales_beta5",
             "mu.beta0", "tau.beta0", "mu.alpha0", "tau.alpha0") # Z, psi
 
 
