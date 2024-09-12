@@ -592,7 +592,7 @@ paste('\n ************************************** \n \n \n ---------------- DONE 
 meta_name <- file(glue("data/ana_file/{date_out}_metadata_{sps_name}_{park_name}.txt"))
 writeLines(paste(
 
-                ' Results File Name = ', glue('{file_name2}.rds'), '\n', 
+                'Results File Name = ', glue('{file_name2}.rds'), '\n', 
                 'Data File Name = ', glue("data/ana_file/{date_out}_data_{sps_name}_{park_name}.rds"), '\n', 
                 'Script = ', script_name, '\n',
                 'Model file =', glue("{mod_name}"), '\n',
