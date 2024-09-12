@@ -48,12 +48,29 @@ sum_na <- function(df){ # sum fuction to ignore NAs, but keep NA if all entries 
   }
   return(suma)
 }
+# Function to get the script name
+get_script_name <- function() {
+  # Get the command line arguments
+  args <- commandArgs(trailingOnly = FALSE)
+  
+  # Look for the --file argument
+  script_path <- sub("--file=", "", args[grep("--file=", args)])
+  
+  # If running interactively, script_path will be character(0)
+  if (length(script_path) == 0) {
+    # Manually set the script name if running interactively
+    script_path <- here::here("back2d_covs_site_2min_BA.R")
+  } else {
+    script_path <- path_abs(script_path)
+  }
+  
+  return(script_path)
+}
 
 # Get the script name and time that it started running --
-script_name <- "back2d_covs_scales_2min_site.R"
-
+script_name <- 'back2d_covs_site_2min_BA.R'
 cat("\n", "\n", "\n", 
-    'Current script:', script_name, 
+#    'Current script:', script_name, 
     "\n", "\n", "\n", "\n")
 system_time1 <- Sys.time()
 (date_out <- glue("{substr(system_time1, 1,4)}_{substr(system_time1, 6,7)}_{substr(system_time1, 9,10)}"))
@@ -80,7 +97,7 @@ rem_pks <- as_tibble(cbind(nsite_pk,pk)) %>%
               filter(pk %!in% c("ACAD","ELRO","SAIR"))
 
 nsite_pk <- as.numeric(rem_pks$nsite_pk)
-pk <- as.vector(rem_pks$pk)
+(pk <- as.vector(rem_pks$pk))
 
 # Filter for species and park ---------------------------------------
 ## 1 sps several parks
@@ -133,7 +150,6 @@ y_dat6 <- y_dat6 %>%
 y <- y_dat6 %>% 
   dplyr::select(bird_detec, parkey, site_n, year_n, interval_n, Year) 
 
-#! STOP AND CHECK ---------------------------------------------------------
 # check detections that I have for each occasion (5 intervals)
 y_test <- y %>% 
             mutate(unique_occ = glue("{parkey}_{site_n}_{year_n}")) %>%
@@ -148,72 +164,29 @@ sum(y_test) == nrow(y)
 sum(y_test[,2]) == sum(y$bird_detec, na.rm = T)
 sum(y_dat6$bird_detec, na.rm = T) == sum(y_test[,2])
 
-# check detections by:
-## park
-table(y_dat6 %>% select(park, bird_detec))
-table(y %>% select(parkey, bird_detec))
-setequal(table(y_dat6 %>% select(park, bird_detec)),
-         table(y %>% select(parkey, bird_detec)))
+# check by park
 
-## park and site and year 
-table(y_dat6 %>% select(parkey, site_n, year_n, bird_detec) %>% 
-                 mutate(uni_comb = glue("{parkey}_{site_n}_{year_n}")) %>% 
-                              select(uni_comb, bird_detec))
+# park and site
 
-table(y %>% select(parkey, site_n, year_n, bird_detec) %>% 
-            mutate(uni_comb = glue("{parkey}_{site_n}_{year_n}")) %>% 
-            select(uni_comb, bird_detec))
+# park and year
 
-setequal(y_dat6 %>% select(parkey, site_n, year_n, bird_detec) %>% 
-                    mutate(uni_comb = glue("{parkey}_{site_n}_{year_n}")) %>% 
-                    select(uni_comb, bird_detec),
-         y %>% select(parkey, site_n, year_n, bird_detec) %>% 
-               mutate(uni_comb = glue("{parkey}_{site_n}_{year_n}")) %>% 
-               select(uni_comb, bird_detec))
+# park and site and year
+
+# site, park, county and covs values
+
+# site, interval, year and detec covs
+
+
 
 #? get covariates ----------------------------------------------------------------
 X <- X10 %>% 
   dplyr::select(Point_Name,
-          siteDEN, siteBA,
-          siteH_g, siteEh_g,
-          siteBA_pole, siteBA_mature, siteBA_large,
-          siteSHRUden,
-          parkDEN, parkBA, 
-          parkH_g, parkEh_g,
-          parkBA_pole, parkBA_mature, parkBA_large,   
-          parkSHRUden, 
-          counDEN, counBA, 
-          counH_g, counEh_g, ## https://rdrr.io/cran/rFIA/man/diversity.html
-          counPER_pole, counPER_matu, counPER_late,
-          counSHRUden,
+          siteBA,
           area,
           EventDate2, StartTime2) %>% 
-  rename(date_jul = EventDate2,
+  rename( date_jul = EventDate2,
           time_jul = StartTime2) %>% 
   mutate( siteBA_s = standardize(siteBA),
-          siteDEN_s = standardize(siteDEN),
-          siteH_g = standardize(siteH_g),
-          siteEh_g = standardize(siteEh_g),
-          siteBA_pole_s = standardize(siteBA_pole),
-          siteBA_mature_s = standardize(siteBA_mature),
-          siteBA_large_s = standardize(siteBA_large),
-          siteSHRUden_s = standardize(siteSHRUden),
-          parkDEN_s = standardize(parkDEN),
-          parkBA_s = standardize(parkBA),
-          parkH_g = standardize(parkH_g), 
-          parkEh_g = standardize(parkEh_g),
-          parkBA_pole_s = standardize(parkBA_pole),
-          parkBA_mature_s = standardize(parkBA_mature),
-          parkBA_large_s = standardize(parkBA_large),
-          parkSHRUden_s = standardize(parkSHRUden),
-          counDEN_s = standardize(counDEN),
-          counBA_s = standardize(counBA),
-          counH_g = standardize(counH_g),
-          counEh_g = standardize(counEh_g),
-          counPER_pole_s = standardize(counPER_pole),
-          counPER_matu_s = standardize(counPER_matu),
-          counPER_late_s = standardize(counPER_late),
-          counSHRUper_s = standardize(counSHRUden),
           area_s = standardize(area),
           date_jul_s = standardize(date_jul),
           time_jul_s = standardize(time_jul))
@@ -226,38 +199,6 @@ X[is.na(X)] <- 0
 ## tree basal area
 X1 <- X %>% 
   dplyr::select(siteBA_s)
-
-## tree density
-X2 <- X %>% 
-  dplyr::select(siteDEN_s)
-
-## Shrub density and percentage
-X3 <- X %>% 
-  dplyr::select(siteSHRUden_s)
-  
-## Forets diversity
-X4 <- X %>% 
-  dplyr::select(siteH_g, siteEh_g)
-
-## Basal area large
-X5l <- X %>% 
-  dplyr::select(siteBA_large_s)
-
-## Basal area mature
-X5m <- X %>% 
-  dplyr::select(siteBA_mature_s)
-
-## Basal area pole
-X5p <- X %>% 
-  dplyr::select(siteBA_pole_s)
-
-# if(for_stage == "late") {
-#   X5 <- X5l
-#   } else {
-#     if(for_stage == "mature") {
-#       X5 <- X5m
-#       } else {
-#         if(for_stage == "pole") { X5 <- X5p} else {stop("wrong stage row 220")}}}
 
 ## park size
 Xp <- X %>% 
@@ -272,31 +213,22 @@ Xa <- X %>%
 Xb <- X %>% 
   dplyr::select(date_jul_s)
 
-#! STOP AND CHECK ---------------------------------------------------------
-## site, park, county and covs values
-
-## site, interval, year and detec covs
-
 # put everything together, arrange, and split!
 
-y_all <- cbind(y, X1, X2, X3, X4, Xa, Xb, Xp) %>% 
+y_all <- cbind(y, X1, Xa, Xb, Xp) %>% 
   as_tibble() %>% 
   arrange(parkey, site_n, year_n, interval_n)  %>% 
-# and GROUPING THE INTERVALS IN FIVES  
   mutate(interval_2 = ifelse(interval_n %in% c(1,2), 1, 
                                 ifelse(interval_n %in% c(3,4), 2, 
                                     ifelse(interval_n %in% c(5,6), 3, 
                                         ifelse(interval_n %in% c(7,8), 4, 
                                             5)))))
-# group the 10 intervals on fives
+
 y_all2 <- y_all  %>% 
-        group_by(parkey, site_n, year_n, interval_2
-                 ) %>%
+        group_by(parkey, site_n, year_n, interval_2) %>%
         mutate(bird_detec2 = ifelse(sum_na(bird_detec) > 0, 1, 0), 
                Year2 = mean(Year), 
                siteBA_s2 = mean(siteBA_s), 
-               siteDEN_s2 = mean(siteDEN_s), 
-               siteSHRUden_s2 = mean(siteSHRUden_s), 
                time_jul_s2 = mean(time_jul_s),
                date_jul_s2 = mean(date_jul_s),
                area_s2 = mean(Xp)) %>% 
@@ -304,37 +236,28 @@ y_all2 <- y_all  %>%
 
 table(y_all2$Year == y_all2$Year2)
 table(y_all2$siteBA_s == y_all2$siteBA_s2)
-table(y_all2$siteDEN_s == y_all2$siteDEN_s2)
-table(y_all2$siteSHRUden_s == y_all2$siteSHRUden_s2)
 table(y_all2$date_jul_s2 == y_all2$date_jul_s)
 table(y_all2$area_s2 == y_all2$Xp)
 
 # FALSES
 table(y_all2$time_jul_s2 == y_all2$time_jul_s)
 table(y_all2$bird_detec2 == y_all2$bird_detec)
-sum(y$bird_detec, na.rm = T)
-sum(y_all$bird_detec, na.rm = T)
-sum(y_all2$bird_detec, na.rm = T)
 
 y_all3 <- y_all2 %>% 
                 select(bird_detec2, parkey, site_n, year_n, Year2,
                        interval_2,
-                       siteBA_s2,    
-                       siteDEN_s2,
-                       siteSHRUden_s2,
+                       siteBA_s2,
                        time_jul_s2, date_jul_s2, area_s2) 
 dim(y_all3)
 dim(y_all2)
 
-rm(list = c("y", "X1", "X2", "X3", "X4", "Xa", "Xb", "Xp"))
+rm(list = c("y", "X1", "Xa", "Xb", "Xp"))
 
 y_all4 <- y_all3 %>% 
                 rename(bird_detec = bird_detec2, 
                        Year = Year2,
                        interval_n = interval_2,
                        siteBA_s = siteBA_s2, 
-                       siteDEN_s = siteDEN_s2, 
-                       siteSHRUden_s = siteSHRUden_s2, 
                        time_jul_s = time_jul_s2, 
                        date_jul_s = date_jul_s2, 
                        area_s = area_s2) %>% 
@@ -345,8 +268,6 @@ dim(y_all4)
 nrow(y_all4) == 1/2*(nrow(y_all3))
 
 X1 <- y_all4 %>% select(siteBA_s)
-X2 <- y_all4 %>% select(siteDEN_s)
-X3 <- y_all4 %>% select(siteSHRUden_s)
 
 Xa <- y_all4 %>% select(time_jul_s)
 Xb <- y_all4 %>% select(date_jul_s)
@@ -355,7 +276,7 @@ Xp <- y_all4 %>% select(area_s) %>% pull()
 y <- y_all4 %>% select(bird_detec, parkey, site_n, year_n, 
                          interval_n, Year) # interval_n is now interval2
 
-## trick for coding = only interval one for starting values
+## trick for coding = only interval one
 y2 <- y %>% 
   dplyr::filter(interval_n == 1)
 
@@ -377,9 +298,7 @@ years <- y %>%
   dplyr::select(Year) %>% 
   distinct() %>% 
   arrange() %>% 
-  pull() %>% 
-  sort()
-years
+  pull()
 ninterval <- 5
 
 Zst2 <- 
@@ -411,8 +330,6 @@ y_ind <- sort(rep(seq(1, nrow(y2),1),ninterval))
 nrow(y)
 nrow(y2)*ninterval
 dim(X1)
-dim(X2)
-dim(X3)
 nrow(y_all3)/2
 #dim(X4)
 #dim(X5)
@@ -421,7 +338,7 @@ dim(Xa)
 dim(Xb)
 
 # number of alphas and betas
-n_bs <- 4
+n_bs <- 2
 n_as <- 3
 
 if(length(sps_loop) > 1) { sps_name <- "commu"} else {sps_name <- sps_loop}
@@ -435,10 +352,6 @@ str(jags.data <- list(y = y,
                       nrowy = nrow(y),
                       nrowy2 = nrow(y2),
                       X1 = X1,
-                      X2 = X2,
-                      X3 = X3,
-                      #X4 = X4,
-                      #X5 = X5,
                       Xp = Xp,
                       Xa = Xa,
                       Xb = Xb,
@@ -461,14 +374,14 @@ str(jags.data <- list(y = y,
 # Xb: detection day of the year
 # n_yrM: number of years 
 # n_pkM: number of parks 
-write_rds(jags.data, file = glue("data/ana_file/{date_out}_data_{sps_name}_{park_name}_site.rds"))
+write_rds(jags.data, file = glue("data/ana_file/{date_out}_data_{sps_name}_{park_name}_site_BA.rds"))
 
 # source("code/check_data.R") 
 
 inits <- function() {
     list(
         Z = Zst2,
-        # mu_beta0 = rnorm(1, 0.5), # check this!!!!!
+        # mu_beta0 = rnorm(1, 0.5),
         beta = rnorm(n_bs, 0.5),
         mu.alpha0 = rnorm(1, 0.5),
         alpha = rnorm(n_as, 0.5)
@@ -486,12 +399,13 @@ paste('\n ************************************* \n \n \n Running JAGS for:', '\n
       ') %>% cat()
 
 params <- c("beta0","beta", "alpha0", "alpha", 
+            "scales_beta1",# "scales_beta2", #"scales_beta3", #"scales_beta4", "scales_beta5",
             "mu.beta0", "tau.beta0", "mu.alpha0", "tau.alpha0") # Z, psi
 
 
 # Define the model file and the output file name
-model_file <- "models/mod_1_vector1spsparks_simple_3covs_a0s_site.txt"
-mod_name <- glue("data/ana_file/{date_out}_mod_{sps_name}_{park_name}.txt") %>% as.character()
+model_file <- "models/mod_1_vector1spsparks_simple_3covs_a0s_site_BA.txt"
+mod_name <- glue("data/ana_file/{date_out}_mod_{sps_name}_{park_name}_site_BA.txt") %>% as.character()
 
 # Read the content of the model file
 mod_content <- readLines(model_file)
@@ -545,7 +459,7 @@ samples_jags <- coda.samples(
 cat("\n\n\n third done!!! \n\n\n\n")
 fil_nam <- sps_loop2
 
-file_name <- glue("{date_out}_{fil_nam}_{park_name}_{niterations}its_2min_site")
+file_name <- glue("{date_out}_{fil_nam}_{park_name}_{niterations}its_2min_site_BA")
 
 file_name2 <- paste0(file_name, 'run',
                       length(list.files(path = file.path(getwd(),"data/model_res/"),

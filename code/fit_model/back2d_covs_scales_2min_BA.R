@@ -68,7 +68,7 @@ get_script_name <- function() {
 }
 
 # Get the script name and time that it started running --
-#script_name <- get_script_name()
+script_name <- "back2d_covs_scales_2min_BA.R"
 
 cat("\n", "\n", "\n", 
 #    'Current script:', script_name, 

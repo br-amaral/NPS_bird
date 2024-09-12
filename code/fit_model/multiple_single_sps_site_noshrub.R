@@ -99,7 +99,7 @@ for (i in 1:nrow(master_tab)){
     # for_stage <- master_tab[i,3] %>% pull()
     sps_loop2 <- master_tab[i,3] %>% pull()
     print(sps_loop2)
-    source("code/fit_model/back2d_covs_scales_2min_site_noshrub.R")
+    source("code/fit_model/back2d_covs_site_2min_noshrub.R")
 }
 
 cat(paste('\n ************************************** \n \n \n 
