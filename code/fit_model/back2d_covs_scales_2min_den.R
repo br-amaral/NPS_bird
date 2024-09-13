@@ -198,30 +198,13 @@ X <- X10 %>%
           EventDate2, StartTime2) %>% 
   rename(date_jul = EventDate2,
           time_jul = StartTime2) %>% 
-  mutate( siteBA_s = standardize(siteBA),
+  mutate(
           siteDEN_s = standardize(siteDEN),
-          siteH_g = standardize(siteH_g),
-          siteEh_g = standardize(siteEh_g),
-          siteBA_pole_s = standardize(siteBA_pole),
-          siteBA_mature_s = standardize(siteBA_mature),
-          siteBA_large_s = standardize(siteBA_large),
-          siteSHRUden_s = standardize(siteSHRUden),
+          
           parkDEN_s = standardize(parkDEN),
-          parkBA_s = standardize(parkBA),
-          parkH_g = standardize(parkH_g), 
-          parkEh_g = standardize(parkEh_g),
-          parkBA_pole_s = standardize(parkBA_pole),
-          parkBA_mature_s = standardize(parkBA_mature),
-          parkBA_large_s = standardize(parkBA_large),
-          parkSHRUden_s = standardize(parkSHRUden),
+          
           counDEN_s = standardize(counDEN),
-          counBA_s = standardize(counBA),
-          counH_g = standardize(counH_g),
-          counEh_g = standardize(counEh_g),
-          counPER_pole_s = standardize(counPER_pole),
-          counPER_matu_s = standardize(counPER_matu),
-          counPER_late_s = standardize(counPER_late),
-          counSHRUper_s = standardize(counSHRUden),
+          
           area_s = standardize(area),
           date_jul_s = standardize(date_jul),
           time_jul_s = standardize(time_jul))
