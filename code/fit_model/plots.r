@@ -26,7 +26,7 @@ lenght <- length
 
 #! Import data -----------------------------------------
 ## file paths and read files
-file_name <- "2024_09_10_AMGO_b0yes_parks_10000its_2min_run1"
+file_name <- "2024_09_13_AMGO_b0yes_parks_50000its_2min_BA_run1"
 
 samples_jags <- read_rds(glue("data/model_res/{file_name}.rds"))
 # when loading the model results, get the most updated file?
@@ -35,7 +35,7 @@ samples_jags <- read_rds(glue("data/model_res/{file_name}.rds"))
 MCMCsummary(samples_jags,
             round = 2)
 
-##! traceplots ----------------------
+#! traceplots ----------------------
 MCMCtrace(samples_jags,
             params = c("mu.alpha0", "mu.beta0",
                         "beta","alpha",
@@ -47,7 +47,7 @@ MCMCtrace(samples_jags,
             Rhat = TRUE,
             n.eff = TRUE) 
 
-# par estimates ----------------------------------
+#! par estimates ----------------------------------
 par(mfrow = c(1,1))
 MCMCplot(samples_jags,
          params = c("mu.beta0","beta", 
