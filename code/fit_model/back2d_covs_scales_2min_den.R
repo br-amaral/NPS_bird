@@ -182,29 +182,16 @@ sum(y_dat6$bird_detec, na.rm = T) == sum(y_test[,2])
 #? get covariates ----------------------------------------------------------------
 X <- X10 %>% 
   dplyr::select(Point_Name,
-          siteDEN, siteBA,
-          siteH_g, siteEh_g,
-          siteBA_pole, siteBA_mature, siteBA_large,
-          siteSHRUden,
-          parkDEN, parkBA, 
-          parkH_g, parkEh_g,
-          parkBA_pole, parkBA_mature, parkBA_large,   
-          parkSHRUden, 
-          counDEN, counBA, 
-          counH_g, counEh_g, ## https://rdrr.io/cran/rFIA/man/diversity.html
-          counPER_pole, counPER_matu, counPER_late,
-          counSHRUden,
+          siteDEN, 
+          parkDEN, 
+          counDEN,
           area,
           EventDate2, StartTime2) %>% 
   rename(date_jul = EventDate2,
           time_jul = StartTime2) %>% 
-  mutate(
-          siteDEN_s = standardize(siteDEN),
-          
+  mutate( siteDEN_s = standardize(siteDEN),
           parkDEN_s = standardize(parkDEN),
-          
           counDEN_s = standardize(counDEN),
-          
           area_s = standardize(area),
           date_jul_s = standardize(date_jul),
           time_jul_s = standardize(time_jul))
@@ -219,15 +206,6 @@ X[is.na(X)] <- 0
 ## tree density
 X2 <- X %>% 
   dplyr::select(siteDEN_s, parkDEN_s, counDEN_s)
-
-
-# if(for_stage == "late") {
-#   X5 <- X5l
-#   } else {
-#     if(for_stage == "mature") {
-#       X5 <- X5m
-#       } else {
-#         if(for_stage == "pole") { X5 <- X5p} else {stop("wrong stage row 220")}}}
 
 ## park size
 Xp <- X %>% 
@@ -257,30 +235,18 @@ y_all2 <- y_all  %>%
         group_by(parkey, site_n, year_n, interval_2) %>%
         mutate(bird_detec2 = ifelse(sum_na(bird_detec) > 0, 1, 0), 
                Year2 = mean(Year), 
-               siteBA_s2 = mean(siteBA_s), 
-               parkBA_s2 = mean(parkBA_s), 
-               counBA_s2 = mean(counBA_s), 
                siteDEN_s2 = mean(siteDEN_s), 
                parkDEN_s2 = mean(parkDEN_s), 
                counDEN_s2 = mean(counDEN_s),  
-               siteSHRUden_s2 = mean(siteSHRUden_s), 
-               parkSHRUden_s2 = mean(parkSHRUden_s), 
-               counSHRUper_s2 = mean(counSHRUper_s),
                time_jul_s2 = mean(time_jul_s),
                date_jul_s2 = mean(date_jul_s),
                area_s2 = mean(Xp)) %>% 
         ungroup()
 
 table(y_all2$Year == y_all2$Year2)
-table(y_all2$siteBA_s == y_all2$siteBA_s2)
-table(y_all2$parkBA_s == y_all2$parkBA_s2)
-table(y_all2$counBA_s == y_all2$counBA_s2)
 table(y_all2$siteDEN_s == y_all2$siteDEN_s2)
 table(y_all2$parkDEN_s == y_all2$parkDEN_s2)
 table(y_all2$counDEN_s == y_all2$counDEN_s2)
-table(y_all2$siteSHRUden_s == y_all2$siteSHRUden_s2)
-table(y_all2$parkSHRUden_s == y_all2$parkSHRUden_s2)
-table(y_all2$counSHRUper_s == y_all2$counSHRUper_s2)
 table(y_all2$date_jul_s2 == y_all2$date_jul_s)
 table(y_all2$area_s2 == y_all2$Xp)
 
@@ -291,9 +257,7 @@ table(y_all2$bird_detec2 == y_all2$bird_detec)
 y_all3 <- y_all2 %>% 
                 select(bird_detec2, parkey, site_n, year_n, Year2,
                        interval_2,
-                       siteBA_s2, parkBA_s2, counBA_s2,     
                        siteDEN_s2, parkDEN_s2, counDEN_s2,
-                       siteSHRUden_s2, parkSHRUden_s2, counSHRUper_s2,
                        time_jul_s2, date_jul_s2, area_s2) 
 dim(y_all3)
 dim(y_all2)

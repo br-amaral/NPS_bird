@@ -181,7 +181,7 @@ sum(y_dat6$bird_detec, na.rm = T) == sum(y_test[,2])
 #? get covariates ----------------------------------------------------------------
 X <- X10 %>% 
   dplyr::select(Point_Name,
-          siteBA,
+          siteDEN,
           area,
           EventDate2, StartTime2) %>% 
   rename( date_jul = EventDate2,
@@ -228,14 +228,14 @@ y_all2 <- y_all  %>%
         group_by(parkey, site_n, year_n, interval_2) %>%
         mutate(bird_detec2 = ifelse(sum_na(bird_detec) > 0, 1, 0), 
                Year2 = mean(Year), 
-               siteBA_s2 = mean(siteBA_s), 
+               siteDEN_s2 = mean(siteDEN_s), 
                time_jul_s2 = mean(time_jul_s),
                date_jul_s2 = mean(date_jul_s),
                area_s2 = mean(Xp)) %>% 
         ungroup()
 
 table(y_all2$Year == y_all2$Year2)
-table(y_all2$siteBA_s == y_all2$siteBA_s2)
+table(y_all2$siteDEN_s == y_all2$siteDEN_s2)
 table(y_all2$date_jul_s2 == y_all2$date_jul_s)
 table(y_all2$area_s2 == y_all2$Xp)
 
@@ -246,7 +246,7 @@ table(y_all2$bird_detec2 == y_all2$bird_detec)
 y_all3 <- y_all2 %>% 
                 select(bird_detec2, parkey, site_n, year_n, Year2,
                        interval_2,
-                       siteBA_s2,
+                       siteDEN_s2,
                        time_jul_s2, date_jul_s2, area_s2) 
 dim(y_all3)
 dim(y_all2)
@@ -257,7 +257,7 @@ y_all4 <- y_all3 %>%
                 rename(bird_detec = bird_detec2, 
                        Year = Year2,
                        interval_n = interval_2,
-                       siteBA_s = siteBA_s2, 
+                       siteDEN_s = siteDEN_s2, 
                        time_jul_s = time_jul_s2, 
                        date_jul_s = date_jul_s2, 
                        area_s = area_s2) %>% 
