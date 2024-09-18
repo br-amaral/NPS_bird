@@ -23,6 +23,8 @@ library(glue)
 # Data paths -------------------------------------------------------------------------------------
 NPS_DATA_PATH <- file.path("data/src/original/NETN_2020/NETNtib.rds")
 GUILD_DATA_PATH <- file.path("data/src/guilds.rds")
+FIBIRD_DATA_PATH <- file.path("data/for_int_list.csv")
+
 # Load data -------------------------------------------------------------------------------------
 dat <- read_rds(file = NPS_DATA_PATH)
 
@@ -76,11 +78,13 @@ field_dat1 <- field_dat0.75 %>%
                 !is.na(Admin_Unit_Code)) 
 
 ## filter forest interior birds
-spslist_g <- read_rds(GUILD_DATA_PATH) %>% 
-  as_tibble()
+#spslist_g <- read_rds(GUILD_DATA_PATH) %>% 
+#  as_tibble()
+#spslist2 <- spslist_g %>% 
+#  filter(Response_Guild == "InteriorForestObligate")     ### remove this from the rest of the analysis!!!!!
 
-spslist2 <- spslist_g %>% 
-  filter(Response_Guild == "InteriorForestObligate")     ### remove this from the rest of the analysis!!!!!
+spslist2 <- read_csv(FIBIRD_DATA_PATH) %>% 
+  as_tibble()
 
 ## parks --------------------------------------------------------------------------------------
 (npk <- field_dat1$Admin_Unit_Code %>% unique() %>% length())
