@@ -100,7 +100,7 @@ X10$unique_index <- seq(1,nrow(y_dat5),1)
 if(setequal(y_dat5$unique_index, X10$unique_index) != "TRUE") stop("ah wrong indexing!!!! #82")
 
 y_dat6 <- y_dat5 %>% 
-  dplyr::filter(sps_it == sps_loop,
+  dplyr::filter(sps_it %in% sps_loop,
                 park %in% pk
   )
 
