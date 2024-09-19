@@ -107,7 +107,7 @@ y_dat6 <- y_dat5 %>%
 if(length(sps_loop) == 1){
   print(glue("analazing one species: {sps_loop}"))
   } else {
-  print('analazing a community: {sps_loop}')
+  print(glue('analazing the community: {sps_loop}'))
 }
 
 X10 <- X10 %>% 
@@ -118,6 +118,11 @@ glu1 <- paste(shQuote(sort(unique(y_dat6$sps_it))), collapse=", ")
 spsglue <- glue("the species are {glu1}, and parks are")
 parkglue <- paste(shQuote(sort(unique(y_dat6$park))), collapse=", ")
 print(paste(spsglue,parkglue))
+
+## check the number of detections for the species
+y_dat6 %>% 
+    filter(detec_occ == 1) %>% 
+    select(AOU_Code, park) %>% table()
 
 ## add a step here to fix parkey
 parkey_right <- y_dat6 %>% 

@@ -69,20 +69,20 @@ nthin <- 10
 ## file paths
 
 ## read files
-#sps_list <- read_rds("data/src/guilds.rds")  %>% 
-#                filter(Response_Guild == "InteriorForestObligate") %>% 
-#                select(AOU_Code) %>% 
-#                distinct() %>% 
-#                pull()
+sps_list <- read_csv("data/for_int_list.csv")  %>% 
+                #filter(Response_Guild == "InteriorForestObligate") %>% 
+                select(AOU_Code) %>% 
+                distinct() %>% 
+                pull()
 
 # removing forest stage, species, 
 #sps_list <- sps_list[-1]
-sps_list1 <- c("GCFL", 
-               "AMGO", 
-               "DOWO", 
-               "RBWO", 
-               "COYE"
-               )
+#sps_list1 <- c("GCFL", 
+#               "AMGO", 
+#               "DOWO", 
+#               "RBWO", 
+#               "COYE"
+#               )
 
 yearbo1 <- c('yes')
 
