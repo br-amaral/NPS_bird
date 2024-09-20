@@ -42,8 +42,8 @@ cat("\n", "\n", "\n",
 #options(repos = c(CRAN = "https://cloud.r-project.org/"))
 #update.packages("freshr")
 # detach packages and clear workspace
-if(!require(freshr)){install.packages('freshr')}
-freshr::freshr()
+#if(!require(freshr)){install.packages('freshr')}
+#freshr::freshr()
 
 #! Load packages ---------------------------------------
 #library(conflicted)
@@ -60,8 +60,8 @@ lenght <- length
 `%!in%` <- Negate(`%in%`)
 
 #! MCMC settings ---------------------------------------
-niterations <- 10000
-nburnin <- 5000
+niterations <- 50000
+nburnin <- 20000
 nchains <- 5
 nthin <- 10
 
