@@ -26,7 +26,7 @@ lenght <- length
 
 #! Import data -----------------------------------------
 ## file paths and read files
-file_name <- "2024_09_14_COYE_b0yes_parks_50000its_2min_site_noshrub_run1"
+file_name <- "2024_09_19_BRCR_parks_10000its_2min_spscov_run1"
 
 samples_jags <- read_rds(glue("data/model_res/{file_name}.rds"))
 # when loading the model results, get the most updated file?
@@ -82,3 +82,42 @@ MCMCplot(samples_jags,
          params = c("mu.beta0","beta",
                     "mu.alpha0","alpha"),
          ref_ovl = TRUE)
+
+# scale selection plots and objects:
+
+sca_beta1 <- MCMCchains(samples_jags, params = 'scales_beta3')
+selected_scales = rep(NA, 1)
+#for (i in 1:3) {
+  tb_mcmc_scales_i = table(sca_beta1)
+  
+  selected_scales = as.integer(names(which.max(tb_mcmc_scales_i)))
+#}
+
+sca_beta1
+selected_scales
+
+sca_beta1p <- as_tibble(sca_beta1) %>%  
+  mutate(new = 1)
+sca_beta1p <- pivot_longer(sca_beta1p, -new, names_to = "site", values_to = "selected_scale") %>% 
+  select(site, selected_scale) %>% 
+  arrange(site)
+
+ggplot(aes(x = selected_scale, 
+           y = (..count..)/sum(..count..), 
+           fill = (..count..)/sum(..count..)), 
+           data = sca_beta1p) + 
+  geom_histogram(position = "stack", binwidth = 0.5) + 
+  theme_bw() +
+  ylab("Frequency") + 
+  xlab("Selected scale") +
+  scale_y_continuous(limits = c(0, 1)) +
+  scale_fill_gradient(
+    name = "Frequency",
+    low = "#ecffdd", high = "#0a2701",  # Customize gradient colors
+    limits = c(0, 1),  # Explicitly set the limits for the fill scale
+    guide = guide_colorbar(ticks = FALSE))+  # Remove ticks from legend bar+
+  theme(
+    legend.title = element_text(size = 14),  # Increase legend title size
+    legend.text = element_text(size = 12),   # Increase legend text size
+    legend.key.size = unit(3, "cm")        # Increase legend key size
+  )
