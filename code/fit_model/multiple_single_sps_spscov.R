@@ -71,6 +71,7 @@ nthin <- 10
 ## read files
 master_tab <- read_rds("data/out/sps_covs.rds")
 master_tab[6,3] <- 1 # HETH DEN
+master_tab[5,2:3] <- 1 # HAWO BA and DEN
 
 ## BTNW not working
 for (i in 1:nrow(master_tab)){
@@ -85,14 +86,15 @@ for (i in 1:nrow(master_tab)){
     
     cov_key <- master_tab[i,2:8]
     print(sps_loop)
+    print(cov_key)
     # Print object name if the value is greater than zero
-    if (BA > 0) print("BA")
-    if (DEN > 0) print("DEN")
-    if (SHR > 0) print("SHR")
-    if (DIV > 0) print("DIV")
-    if (EAR > 0) print("EAR")
-    if (MID > 0) print("MID")
-    if (LAT > 0) print("LAT")
+    if (BA == 1) print("BA")
+    if (DEN == 1) print("DEN")
+    if (SHR == 1) print("SHR")
+    if (DIV == 1) print("DIV")
+    if (EAR == 1) print("EAR")
+    if (MID == 1) print("MID")
+    if (LAT == 1) print("LAT")
     source("code/fit_model/back2d_covs_scales_2min_spscov.R")
 }
 
