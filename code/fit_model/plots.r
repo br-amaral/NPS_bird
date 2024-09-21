@@ -26,7 +26,7 @@ lenght <- length
 
 #! Import data -----------------------------------------
 ## file paths and read files
-file_name <- "2024_09_19_BRCR_parks_10000its_2min_spscov_run1"
+file_name <- "2024_09_20_DOWO_parks_10000its_2min_spscov_run1"
 
 samples_jags <- read_rds(glue("data/model_res/{file_name}.rds"))
 # when loading the model results, get the most updated file?
@@ -121,3 +121,5 @@ ggplot(aes(x = selected_scale,
     legend.text = element_text(size = 12),   # Increase legend text size
     legend.key.size = unit(3, "cm")        # Increase legend key size
   )
+
+
