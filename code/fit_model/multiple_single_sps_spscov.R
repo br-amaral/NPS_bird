@@ -73,8 +73,7 @@ master_tab <- read_rds("data/out/sps_covs.rds")
 master_tab[6,3] <- 1 # HETH DEN
 master_tab[5,2:3] <- 1 # HAWO BA and DEN
 
-## BTNW not working
-for (i in 1:nrow(master_tab)){
+for (i in 5:nrow(master_tab)){
     (sps_loop <- master_tab$AOU_Code[i])
     BA  <- master_tab$BA[i]
     DEN <- master_tab$DEN[i]   
