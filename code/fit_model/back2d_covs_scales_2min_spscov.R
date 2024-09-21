@@ -224,33 +224,57 @@ X[is.na(X)] <- 0
 # occupancy variables - separate them in covs in all scales per tibble
 ## tree basal area
 X1 <- X %>% 
-  dplyr::select(siteBA_s, parkBA_s, counBA_s)
+  dplyr::select(siteBA_s, parkBA_s, counBA_s) %>% 
+  mutate(siteBA_s = ifelse(is.na(siteBA_s) == TRUE, 0, siteBA_s),
+         parkBA_s = ifelse(is.na(parkBA_s) == TRUE, 0, parkBA_s),
+         counBA_s = ifelse(is.na(counBA_s) == TRUE, 0, counBA_s))
 
 ## tree density
 X2 <- X %>% 
-  dplyr::select(siteDEN_s, parkDEN_s, counDEN_s)
+  dplyr::select(siteDEN_s, parkDEN_s, counDEN_s)%>% 
+  mutate(siteDEN_s = ifelse(is.na(siteDEN_s) == TRUE, 0, siteDEN_s),
+         parkDEN_s = ifelse(is.na(parkDEN_s) == TRUE, 0, parkDEN_s),
+         counDEN_s = ifelse(is.na(counDEN_s) == TRUE, 0, counDEN_s))
 
 ## Shrub density and percentage
 X3 <- X %>% 
-  dplyr::select(siteSHRUden_s, parkSHRUden_s, counSHRUper_s)
+  dplyr::select(siteSHRUden_s, parkSHRUden_s, counSHRUper_s)%>% 
+  mutate(siteSHRUden_s = ifelse(is.na(siteSHRUden_s) == TRUE, 0, siteSHRUden_s),
+         parkSHRUden_s = ifelse(is.na(parkSHRUden_s) == TRUE, 0, parkSHRUden_s),
+         counSHRUper_s = ifelse(is.na(counSHRUper_s) == TRUE, 0, counSHRUper_s))
   
 ## Forets diversity
 X4 <- X %>% 
   dplyr::select(siteH_g, siteEh_g,
-          parkH_g, parkEh_g,
-          counH_g, counEh_g)
+                parkH_g, parkEh_g,
+                counH_g, counEh_g)%>% 
+  mutate(siteH_g = ifelse(is.na(siteH_g) == TRUE, 0, siteH_g),
+         parkH_g = ifelse(is.na(parkH_g) == TRUE, 0, parkH_g),
+         counH_g = ifelse(is.na(counH_g) == TRUE, 0, counH_g),
+         siteEh_g = ifelse(is.na(siteEh_g) == TRUE, 0, siteEh_g),
+         parkEh_g = ifelse(is.na(parkEh_g) == TRUE, 0, parkEh_g),
+         counEh_g = ifelse(is.na(counEh_g) == TRUE, 0, counEh_g))
 
 ## Basal area large
 X5l <- X %>% 
-  dplyr::select(siteBA_large_s, parkBA_large_s, counPER_late_s)
+  dplyr::select(siteBA_large_s, parkBA_large_s, counPER_late_s)%>% 
+  mutate(siteBA_large_s = ifelse(is.na(siteBA_large_s) == TRUE, 0, siteBA_large_s),
+         parkBA_large_s = ifelse(is.na(parkBA_large_s) == TRUE, 0, parkBA_large_s),
+         counPER_late_s = ifelse(is.na(counPER_late_s) == TRUE, 0, counPER_late_s))
 
 ## Basal area mature
 X5m <- X %>% 
-  dplyr::select(siteBA_mature_s, parkBA_mature_s, counPER_matu_s)
+  dplyr::select(siteBA_mature_s, parkBA_mature_s, counPER_matu_s)%>% 
+  mutate(siteBA_mature_s = ifelse(is.na(siteBA_mature_s) == TRUE, 0, siteBA_mature_s),
+         parkBA_mature_s = ifelse(is.na(parkBA_mature_s) == TRUE, 0, parkBA_mature_s),
+         counPER_matu_s = ifelse(is.na(counPER_matu_s) == TRUE, 0, counPER_matu_s))
 
 ## Basal area pole
 X5p <- X %>% 
-  dplyr::select(siteBA_pole_s, parkBA_pole_s, counPER_pole_s)
+  dplyr::select(siteBA_pole_s, parkBA_pole_s, counPER_pole_s)%>% 
+  mutate(siteBA_pole_s = ifelse(is.na(siteBA_pole_s) == TRUE, 0, siteBA_pole_s),
+         parkBA_pole_s = ifelse(is.na(parkBA_pole_s) == TRUE, 0, parkBA_pole_s),
+         counPER_pole_s = ifelse(is.na(counPER_pole_s) == TRUE, 0, counPER_pole_s))
 
 # if(for_stage == "late") {
 #   X5 <- X5l
