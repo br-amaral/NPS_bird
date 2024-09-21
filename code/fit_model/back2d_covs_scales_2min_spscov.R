@@ -4,7 +4,6 @@
 # Code to run model to estimate the effect of different environmental
 #   covariates on bird occupancy in several national parks and on three
 #   different spatial scales
-#
 #! Input ----------------------------------------------
 #           - data/y_dat8.rds: tibble with bird data (2_create_data_files.R)
 #           - data/X.rds: tibble with covariate data (2_create_data_files.R)
@@ -397,13 +396,14 @@ if(DIV == 1) {cols_covs <- c(cols_covs, 28, 29, 30)} # or 31, 32, 33
 if(EAR == 1) {cols_covs <- c(cols_covs, 19, 20, 21)}
 if(MID == 1) {cols_covs <- c(cols_covs, 22, 23, 24)}
 if(LAT == 1) {cols_covs <- c(cols_covs, 25, 26, 27)}
+(c(BA, DEN, SHR, DIV, EAR, MID,LAT) == cov_key %>% as.numeric())
 
 y_all3.2 <- cbind(y_all3[,c(1:9, cols_covs)]) %>% as_tibble()
 dim(y_all3)
 dim(y_all3.2)
 colnames(y_all3.2)
 
-rm(list = c("y", "X1", "X2", "X3", "X4", "X51", "X52", "X53", "Xa", "Xb", "Xp"))
+rm(list = c("y", "X1", "X2", "X3", "X4", "X5p", "X5m", "X5l", "Xa", "Xb", "Xp"))
 
 y_all4 <- y_all3.2  %>% 
                 distinct()
@@ -507,6 +507,8 @@ object_names <- c("X1", "X2", "X3", "X4", "X51", "X52", "X53")
 
 # Check for existence and filter the names
 existing_objects <- object_names[sapply(object_names, exists)]
+cov_Xs <- rbind(colnames(cov_key), object_names)
+cov_Xs[2,which(cov_key2>0)] == existing_objects
 
 # Create the list with existing objects
 object_list <- mget(existing_objects)
