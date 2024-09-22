@@ -276,14 +276,6 @@ X5p <- X %>%
          parkBA_pole_s = ifelse(is.na(parkBA_pole_s) == TRUE, 0, parkBA_pole_s),
          counPER_pole_s = ifelse(is.na(counPER_pole_s) == TRUE, 0, counPER_pole_s))
 
-# if(for_stage == "late") {
-#   X5 <- X5l
-#   } else {
-#     if(for_stage == "mature") {
-#       X5 <- X5m
-#       } else {
-#         if(for_stage == "pole") { X5 <- X5p} else {stop("wrong stage row 220")}}}
-
 ## park size
 Xp <- X %>% 
   dplyr::select(area_s) %>% 
@@ -511,7 +503,7 @@ dim(Xb)
 
 # number of alphas and betas
 (cov_key2 <- ifelse(cov_key == 1 , 1, 0))
-n_bs <- sum(cov_key2) + 1
+(n_bs <- sum(cov_key2) + 1)
 n_as <- 3
 if(length(sps_loop) > 1) { sps_name <- "commu"} else {sps_name <- sps_loop}
 if(length((unique(y[,2]))) == 1) { park_name <- unique(y[,2])} else {park_name <- "parks"}
