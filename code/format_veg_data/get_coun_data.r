@@ -179,7 +179,6 @@ for(ii in 1:nrow(park_county)){
 }
 
 ###? Canopy cover ---------------------------------------------------------
-# shrub data
 # LIVE_CANOPY_CVR_PCT: Live canopy cover percent. The percentage of live canopy cover for 
 #                      the condition. Included are live tally trees, saplings, and seedlings 
 #                      that cover the sample area.
@@ -201,16 +200,54 @@ for(ii in 1:nrow(park_county)){
 
 # can_tab  %>% select(LIVE_CANOPY_CVR_PCT, park) %>% mutate(LIVE_CANOPY_CVR_PCT = ifelse(is.na(LIVE_CANOPY_CVR_PCT),0,1)) %>% table()
 
+###? proportion of snags ---------------------------------------------------------
+# TREECLCD_NERS: Tree class code, Northeastern Research Station. In annual inventory, this code
+#                represents a classification of the overall quality of a tree that is >5.0 inches d.b.h. It
+#                classifies the quality of a sawtimber tree based on the present condition, or it classifies the
+#                quality of a poletimber tree as a prospective determination (i.e., a forecast of potential
+#                quality when and if the tree becomes sawtimber size). 
+#                Code 6 Snag - Dead tree, or what remains of a dead tree, that is at least 4.5 feet tall and is
+#                missing most of its bark. This category includes a tree covered with bark that is very
+#                loose. This bark can usually be removed, often times in big strips, with very little
+#                effort. A snag is not a recently dead tree. Most often, it has been dead for several
+#                years - sometimes, for more than a decade.
 
+for(ii in 1:nrow(park_county)){
+  snacov <- get(glue("fia_{park_county$park[ii]}"))$TREE %>% 
+                as_tibble() %>% 
+                select(INVYR, STATECD, COUNTYCD, PLOT, TREECLCD_NERS) %>% 
+                mutate(park = park_county$park[ii])
 
+  if(ii == 1){
+    sna_tab <- snacov
+  }
+  
+  if(ii > 1){
+    sna_tab <- rbind(sna_tab, snacov)
+  }
+}
+sna_tab %>% 
+  select(TREECLCD_NERS, park) %>% 
+  mutate(TREECLCD_NERS = ifelse(TREECLCD_NERS < 6, 1,TREECLCD_NERS)) %>% 
+  mutate(TREECLCD_NERS = ifelse(is.na(TREECLCD_NERS),0,TREECLCD_NERS)) %>% 
+  table()
 
+###? Down wood debris ----------------------------------------- 
+# BIO_ACRE: estimate of mean biomass per acre of dwm (short tons/acre)
 
-fia_WEFA$COND$LIVE_CANOPY_CVR_PCT
-fia_WEFA$TREE$TREECLCD_NERS
-
-downwood <- dwm(get(glue("fia_{park_county$park[ii]}"))) %>% 
+for(ii in 1:nrow(park_county)){
+  deb <- dwm(get(glue("fia_{park_county$park[ii]}"))) %>% 
     select(YEAR, FUEL_TYPE, VOL_ACRE, BIO_ACRE, CARB_ACRE) %>% 
     mutate(park = park_county$park[ii])
+ii <- ii +1
+  if(ii == 1){
+    deb_tab <- deb
+  }
+  
+  if(ii > 1){
+    deb_tab <- rbind(deb_tab, deb)
+  }
+}
 
 #? summarize the files by park and merge them -----------------------------------------
 tpa_tab2 <- tpa_tab %>% 
