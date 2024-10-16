@@ -2,9 +2,9 @@
 
 DOOOOO(ing):
 
-- compare old neighbour data (500m, and 1000m) with new neighbour forest type data
+- 
 
-- check covariate variation and correlation; some parks don't have a lot of forest plots in their vicinity
+- 
 
 # --------------------------------------------------------------------
 TO DO:
