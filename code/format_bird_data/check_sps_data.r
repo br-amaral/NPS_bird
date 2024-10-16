@@ -49,15 +49,6 @@ sum_na <- function(df){ # sum fuction to ignore NAs, but keep NA if all entries 
   return(suma)
 }
 
-# Get the script name and time that it started running --
-script_name <- "back2d_covs_scales_2min.R"
-
-cat("\n", "\n", "\n", 
-    'Current script:', script_name, 
-    "\n", "\n", "\n", "\n")
-system_time1 <- Sys.time()
-(date_out <- glue("{substr(system_time1, 1,4)}_{substr(system_time1, 6,7)}_{substr(system_time1, 9,10)}"))
-
 # Import data -----------------------------------------
 ## file paths
 YDAT_PATH <- "data/y_dat8.rds"
@@ -117,14 +108,15 @@ y_dat6 %>%
 ## get only sps that are in at least 3 parks
 sps_3pk <- 
     y_dat6 %>% 
-        filter(bird_detec == 1) %>% 
+        filter(bird_detec == 1) %>%           # at least one detection
         select(AOU_Code, park) %>% 
         table() %>% 
         as_tibble() %>% 
         mutate(n = ifelse(n>0, 1, 0)) %>% 
         group_by(AOU_Code) %>% 
         mutate(n_park = sum(n)) %>% 
-        filter(n_park > 3) %>% 
+        filter(n_park > 1) %>%
+        #filter(n_park > 3) %>%                # at least in four parks
         select(AOU_Code, n_park) %>% 
         distinct() %>% 
         select(AOU_Code) %>% 
@@ -243,13 +235,16 @@ length(sps_yr_site_1)
 
 ## get some literature information to choose the variables for this species!!!
 sps_covs <- tibble(AOU_Code = sps_yr_site_1,
-                   BA = NA,
-                   DEN = NA,
-                   SHR = NA,
-                   DIV = NA,
-                   EAR = NA,
-                   MID = NA,
-                   LAT = NA)
+                   BA = NA,       # tree basal area
+                   DEN = NA,      # tree density
+                   SHR = NA,      # shrub density
+                   DIV = NA,      # diversity
+                   EAR = NA,      # early succession basal area
+                   MID = NA,      # mid succession basal area
+                   LAT = NA,      # late succession basal area
+                   CAN = NA,      # canopy cover
+                   SNA = NA,      # snag density
+                   DEB = NA)      # wood debris density
 
 sps_covs[which(sps_covs$AOU_Code == "BHVI"), 2:ncol(sps_covs)] <- as.list(c(
     # BA   DEN   SHR   DIV   EAR   MID   LAT
