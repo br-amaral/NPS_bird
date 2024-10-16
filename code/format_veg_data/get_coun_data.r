@@ -78,22 +78,23 @@ parks <- park_county$park
 ### Load FIA Data from a local directory
 db <- readFIA('data/FIA/')
 
-#? calculate park means --------------------------------
+#? get county shapefiles and the values for the variables for that county -----------------
 for(ii in 1:nrow(park_county)){
   # get county shapefile
   county_sp <- counties(park_county$state[ii], cb = TRUE)
   
   county_sp2 <- county_sp %>% filter(NAMELSAD == park_county$county[ii])
   
-  # gg <- ggplot()
-  # gg <- gg + geom_sf(data = county_sp2, color="black",
-  #                    fill="white", linewidth=2) + 
-  #   theme_bw() + 
-  #   theme(panel.border = element_blank(), 
-  #         panel.grid.major = element_blank(),
-  #         panel.grid.minor = element_blank(), 
-  #         axis.line = element_blank()) 
-  # gg 
+  gg <- ggplot()
+  gg <- gg + geom_sf(data = county_sp, color="black",
+                     fill="white", linewidth=1) + 
+    theme_bw() + 
+    theme(panel.border = element_blank(), 
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(), 
+          axis.line = element_blank()) 
+  gg + geom_sf(data = county_sp2, color="black",
+                     fill="pink", linewidth=2)
   
   # get the data for the county from FIA
   dbclip2 <- clipFIA(db, mask = county_sp2, mostRecent = FALSE)
@@ -177,6 +178,40 @@ for(ii in 1:nrow(park_county)){
 
 }
 
+###? Canopy cover ---------------------------------------------------------
+# shrub data
+# LIVE_CANOPY_CVR_PCT: Live canopy cover percent. The percentage of live canopy cover for 
+#                      the condition. Included are live tally trees, saplings, and seedlings 
+#                      that cover the sample area.
+
+for(ii in 1:nrow(park_county)){
+  cancov <- get(glue("fia_{park_county$park[ii]}"))$COND %>% 
+                as_tibble() %>% 
+                select(INVYR, STATECD, COUNTYCD, PLOT, LIVE_CANOPY_CVR_PCT) %>% 
+                mutate(park = park_county$park[ii])
+
+  if(ii == 1){
+    can_tab <- cancov
+  }
+  
+  if(ii > 1){
+    can_tab <- rbind(can_tab, cancov)
+  }
+}
+
+# can_tab  %>% select(LIVE_CANOPY_CVR_PCT, park) %>% mutate(LIVE_CANOPY_CVR_PCT = ifelse(is.na(LIVE_CANOPY_CVR_PCT),0,1)) %>% table()
+
+
+
+
+
+fia_WEFA$COND$LIVE_CANOPY_CVR_PCT
+fia_WEFA$TREE$TREECLCD_NERS
+
+downwood <- dwm(get(glue("fia_{park_county$park[ii]}"))) %>% 
+    select(YEAR, FUEL_TYPE, VOL_ACRE, BIO_ACRE, CARB_ACRE) %>% 
+    mutate(park = park_county$park[ii])
+
 #? summarize the files by park and merge them -----------------------------------------
 tpa_tab2 <- tpa_tab %>% 
   group_by(park) %>% 
@@ -231,4 +266,6 @@ coun_covs <- left_join(tpa_tab2, stastr_tab2, by = "ParkUnit") %>%
 write_rds(coun_covs, file = "data/out/coun_covs.rds")
 
 cat(paste("\n\n Done \n\n\n"))
+
+
 
