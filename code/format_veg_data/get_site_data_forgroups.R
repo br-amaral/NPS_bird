@@ -302,9 +302,9 @@ for (ii in 1:nrow(bird_sit_coord2)) {
   print(bird_sit_coord2$bird_sit[ii])
 
   for(jj in 1:nrow(for_sit_coord4)) {
-    
+    # are the bird sites and forest plots in the same forest type?
+    # if the answer is yes, we calculate the distance between them
     if((bird_sit_coord2$bir_veg[ii] == for_sit_coord4$for_veg[jj]) == TRUE){
-    
       print(for_sit_coord4$for_sit[jj])
       print(jj)
 
@@ -333,28 +333,33 @@ for (ii in 1:nrow(bird_sit_coord2)) {
         } 
     } 
   }
-
-  dist_small <- dist1 %>% 
-                  arrange(dist) %>% 
-                  filter(dist <= radi_dist) %>% # diameter of the home range area of birds plus some slack if it is not circular 
-                  arrange(bird_sit, dist)
   
-  table(dist_small$bird_sit)
+  # get only sites and plots that are 500m between each other
+  if("dist1" %in% ls()) {
+    dist_small <- dist1 %>% 
+                    arrange(dist) %>% 
+                    filter(dist <= radi_dist) %>% # diameter of the home range area of birds plus some slack if it is not circular 
+                    arrange(bird_sit, dist)
+    
+    table(dist_small$bird_sit)
 
-# ERROR: NOT REALLY AN ERROR, just choosing how many neighbours
-#!!ERROR: the problem is here! do it by site!!!!!!!!!!!
-  close_points <- dist_small %>%
-                    group_by(bird_sit) %>%
-                    slice(1:5) %>% # TODO: 
-                    ungroup()
+    rm(dist1)
+  #!! ERROR: NOT REALLY AN ERROR, just choosing how many neighbours
+    close_points <- dist_small %>%
+                      group_by(bird_sit) %>%
+                      arrange(dist) %>% 
+                      slice(1:5) %>% # TODO: 
+                      ungroup()
 
-  table(close_points$bird_sit)
+    table(close_points$bird_sit)
 
-  if(ii == 1) {
-    close_points_f <- close_points
-    } else {
-      close_points_f <- rbind(close_points_f, close_points)
-    }
+    if(ii == 1) {
+      close_points_f <- close_points
+      } else {
+        close_points_f <- rbind(close_points_f, close_points)
+      }
+    rm(close_points)
+  }
   print(ii)
 }
 
@@ -412,6 +417,32 @@ table(close_points_f$bird_sit) %>% dim()
 
 table(for_sit$SampleYear) %>% max()
 
+#? get extra covariates
+## canopy cover ---------------------------------------------------------
+path <- glue("{getwd()}/data/veg_kateaaron") 
+importCSV(path, zip_name = "NETN_Forest_20231106.zip")
+can <- forestNETN::joinStandData(park = "all") %>%
+          as_tibble() %>% 
+          select(Plot_Name, SampleYear, ParkUnit, Pct_Crown_Closure)
+
+## wood debris ----------------------------------------------------------
+cwd <- joinCWDData(park = 'all') %>% # coarse wood debris
+          as_tibble() %>% 
+          select(Plot_Name, SampleYear, ParkUnit, CWD_Vol)
+
+## snags ----------------------------------------------------------------
+stand_spp <- joinStandData()
+colnames(stand_spp)
+str(stand_spp)
+tree_den_spp <- joinTreeData()
+str(tree_den_spp)
+TREECLCD_NERS: Tree class code
+treeht <- subset(get("StandTreeHeights_NETN", envir = path),
+                              select = c(Plot_Name, PlotID, EventID, CrownClassCode, CrownClassLabel,
+                                         TagCode, Height))
+                                         
+ treeht_sum <- treeht %>% mutate(crown = ifelse(CrownClassCode == 4, "Inter", "Codom")) %>%
+                             group_by(Plot_Name, PlotID, EventID, crown)
 #? get means for all years ----------------------------------------------
 ## mean for all years
 for_sit2 <- for_sit %>% 
