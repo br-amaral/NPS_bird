@@ -41,6 +41,7 @@ library(reshape2)
 library(ggplot2)
 library(ggh4x)
 library("MetBrewer")
+library(forestNETN)
 
 conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::filter)
@@ -423,29 +424,44 @@ path <- glue("{getwd()}/data/veg_kateaaron")
 importCSV(path, zip_name = "NETN_Forest_20231106.zip")
 can <- forestNETN::joinStandData(park = "all") %>%
           as_tibble() %>% 
-          select(Plot_Name, SampleYear, ParkUnit, Pct_Crown_Closure)
+          select(Plot_Name, SampleYear, ParkUnit, Pct_Crown_Closure) %>% 
+          group_by(Plot_Name) %>% 
+          mutate(can_m = mean(Pct_Crown_Closure, na.rm = T)) %>% 
+          ungroup() %>% 
+          select(-Pct_Crown_Closure) %>% 
+          distinct()
 
 ## wood debris ----------------------------------------------------------
 cwd <- joinCWDData(park = 'all') %>% # coarse wood debris
           as_tibble() %>% 
-          select(Plot_Name, SampleYear, ParkUnit, CWD_Vol)
+          select(Plot_Name, SampleYear, ParkUnit, CWD_Vol) %>% 
+          group_by(Plot_Name) %>% 
+          mutate(deb_m = mean(CWD_Vol, na.rm = T)) %>% 
+          ungroup() %>% 
+          select(-CWD_Vol) %>% 
+          distinct()
 
 ## snags ----------------------------------------------------------------
-stand_spp <- joinStandData()
-colnames(stand_spp)
-str(stand_spp)
-tree_den_spp <- joinTreeData()
-str(tree_den_spp)
-TREECLCD_NERS: Tree class code
-treeht <- subset(get("StandTreeHeights_NETN", envir = path),
-                              select = c(Plot_Name, PlotID, EventID, CrownClassCode, CrownClassLabel,
-                                         TagCode, Height))
+# stand_spp <- joinStandData()
+# colnames(stand_spp)
+# str(stand_spp)
+# tree_den_spp <- joinTreeData()
+# str(tree_den_spp)
+# TREECLCD_NERS: Tree class code
+# treeht <- subset(get("StandTreeHeights_NETN", envir = path),
+#                               select = c(Plot_Name, PlotID, EventID, CrownClassCode, CrownClassLabel,
+#                                          TagCode, Height))
                                          
- treeht_sum <- treeht %>% mutate(crown = ifelse(CrownClassCode == 4, "Inter", "Codom")) %>%
-                             group_by(Plot_Name, PlotID, EventID, crown)
+#  treeht_sum <- treeht %>% mutate(crown = ifelse(CrownClassCode == 4, "Inter", "Codom")) %>%
+#                              group_by(Plot_Name, PlotID, EventID, crown)
+
+for_sit_extra <- for_sit %>% 
+                    left_join(., can, by = c('Plot_Name', 'SampleYear', 'ParkUnit')) %>% 
+                    left_join(., cwd, by = c('Plot_Name', 'SampleYear', 'ParkUnit'))
+
 #? get means for all years ----------------------------------------------
 ## mean for all years
-for_sit2 <- for_sit %>% 
+for_sit2 <- for_sit_extra %>% 
   #filter(SampleYear == 2022) %>% 
   group_by(Plot_Name) %>% 
   mutate(treeden_haM = mean(treeden_ha, na.rm = T),
@@ -457,6 +473,8 @@ for_sit2 <- for_sit %>%
           pctBA_largeM = mean(pctBA_large, na.rm = T),
           sap_den_m2M = mean(sap_den_m2, na.rm = T),
           shrub_covM = mean(shrub_cov, na.rm = T),
+          canop_covM = mean(can_m, na.rm = T),
+          debri_covM = mean(deb_m, na.rm = T),
           X_for = X,      
           Y_for = Y,
           UTMZone_for = UTMZone,
@@ -464,7 +482,8 @@ for_sit2 <- for_sit %>%
   ungroup() %>% 
   select(for_sit, ParkUnit, X_for, Y_for, UTMZone_for,
           treeden_haM, BA_m2haM, tree_richM, StageM, pctBA_poleM, 
-          pctBA_matureM, pctBA_largeM, sap_den_m2M, shrub_covM) %>% 
+          pctBA_matureM, pctBA_largeM, sap_den_m2M, shrub_covM, 
+          canop_covM, debri_covM) %>% 
   distinct()
   
 close_points_f2 <- left_join(close_points_f, for_sit2, by = "for_sit") %>% 
@@ -477,25 +496,75 @@ close_points_f2 <- left_join(close_points_f, for_sit2, by = "for_sit") %>%
           pctBA_matureM = mean(pctBA_matureM, na.rm = T),
           pctBA_largeM = mean(pctBA_largeM, na.rm = T),
           sap_den_m2M = mean(sap_den_m2M, na.rm = T),
-          shrub_covM = mean(shrub_covM, na.rm = T))  %>% 
+          shrub_covM = mean(shrub_covM, na.rm = T),
+          canop_covM = mean(canop_covM, na.rm = T),
+          debri_covM = mean(debri_covM, na.rm = T))  %>% 
   ungroup() %>% 
   mutate(park = substr(bird_sit, 1, 4)) %>%
   select(bird_sit, park,
           treeden_haM, BA_m2haM, tree_richM, StageM, 
           pctBA_poleM, pctBA_matureM, pctBA_largeM, 
           sap_den_m2M, 
-          shrub_covM) %>% 
+          shrub_covM,
+          canop_covM, debri_covM) %>% 
   distinct() %>% 
   rename(ParkUnit = park,
           siteDEN = treeden_haM, siteBA = BA_m2haM, 
           siteRICH = tree_richM, siteSTA = StageM,
           siteBA_pole = pctBA_poleM, siteBA_mature = pctBA_matureM, siteBA_large = pctBA_largeM,
           siteSAPden = sap_den_m2M, 
-          siteSHRUden = shrub_covM)
+          siteSHRUden = shrub_covM,
+          siteCANOden = canop_covM, 
+          siteDEBRden = debri_covM)
 
 neighbor <- left_join(close_points_f, for_sit2, by = "for_sit") %>% 
                       select(for_sit, bird_sit) %>% 
                       distinct()
+
+#? get YEAR SPECIFIC means ----------------------------------------------
+for_sit2_year <- for_sit_extra %>% 
+  rename(X_for = X,      
+         Y_for = Y,
+         UTMZone_for = UTMZone,
+         for_sit = Plot_Name,
+         Year = SampleYear) %>% 
+  select(for_sit, ParkUnit, Year, X_for, Y_for, UTMZone_for,
+          treeden_ha, BA_m2ha, tree_rich, Stage, pctBA_pole, 
+          pctBA_mature, pctBA_large, sap_den_m2, shrub_cov, 
+          can_m, deb_m) %>% 
+  distinct()
+  
+close_points_f2_year <- full_join(for_sit2_year, close_points_f, by = "for_sit") %>% 
+    group_by(bird_sit, Year) %>%
+  mutate(treeden_ha = mean(treeden_ha, na.rm = T),
+          BA_m2ha = mean(BA_m2ha, na.rm = T),
+          tree_rich = mean(tree_rich, na.rm = T),
+          Stage = Modes(Stage),
+          pctBA_pole = mean(pctBA_pole, na.rm = T),
+          pctBA_mature = mean(pctBA_mature, na.rm = T),
+          pctBA_large = mean(pctBA_large, na.rm = T),
+          sap_den_m2 = mean(sap_den_m2, na.rm = T),
+          shrub_cov = mean(shrub_cov, na.rm = T),
+          canop_cov = mean(can_m, na.rm = T),
+          debri_cov = mean(deb_m, na.rm = T))  %>% 
+  ungroup() %>% 
+  mutate(park = substr(bird_sit, 1, 4)) %>%
+  select(bird_sit, park, Year,
+          treeden_ha, BA_m2ha, tree_rich, Stage, 
+          pctBA_pole, pctBA_mature, pctBA_large, 
+          sap_den_m2, 
+          shrub_cov,
+          canop_cov, debri_cov) %>% 
+  distinct() %>% 
+  rename(ParkUnit = park,
+         siteDENYR = treeden_ha, siteBAYR = BA_m2ha, 
+         siteRICHYR = tree_rich, siteSTAYR = Stage,
+         siteBA_poleYR = pctBA_pole, siteBA_matureYR = pctBA_mature, siteBA_largeYR = pctBA_large,
+         siteSAPdenYR = sap_den_m2, 
+         siteSHRUdenYR = shrub_cov,
+         siteCANOdenYR = canop_cov, 
+         siteDEBRdenYR = debri_cov) %>% 
+  filter(!is.na(ParkUnit))
 
 #! Output files ----------------------------------------------
 # forest site information
@@ -504,8 +573,10 @@ write_rds(for_sit2, file = glue("data/out/for_sit2_nei_grp_{radi_dist}m.rds"))
 # information of covariates for each bird site
 write_rds(close_points_f2, file = glue("data/out/site_covs_nei_grp_{radi_dist}m.rds"))
 
+# information of covariates for each bird site BY YEAR
+write_rds(close_points_f2_year, file = glue("data/out/site_covs_nei_grp_{radi_dist}m_year.rds"))
+
 # who is who's neighbor
-# information of covariates for each bird site
 write_rds(neighbor, file = glue("data/out/neighbor_grp_{radi_dist}m.rds"))
 
 cat(paste("\n\n Done \n\n\n"))
