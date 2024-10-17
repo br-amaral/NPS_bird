@@ -534,39 +534,42 @@ for_sit2_year <- for_sit_extra %>%
           can_m, deb_m) %>% 
   distinct()
   
-close_points_f2_year <- full_join(for_sit2_year, close_points_f, by = "for_sit") %>% 
+close_points_f2_year <- suppressWarnings(
+  full_join(for_sit2_year, close_points_f, by = "for_sit") %>% 
     group_by(bird_sit, Year) %>%
-  mutate(treeden_ha = mean(treeden_ha, na.rm = T),
-          BA_m2ha = mean(BA_m2ha, na.rm = T),
-          tree_rich = mean(tree_rich, na.rm = T),
-          Stage = Modes(Stage),
-          pctBA_pole = mean(pctBA_pole, na.rm = T),
-          pctBA_mature = mean(pctBA_mature, na.rm = T),
-          pctBA_large = mean(pctBA_large, na.rm = T),
-          sap_den_m2 = mean(sap_den_m2, na.rm = T),
-          shrub_cov = mean(shrub_cov, na.rm = T),
-          canop_cov = mean(can_m, na.rm = T),
-          debri_cov = mean(deb_m, na.rm = T))  %>% 
-  ungroup() %>% 
-  mutate(park = substr(bird_sit, 1, 4)) %>%
-  select(bird_sit, park, Year,
-          treeden_ha, BA_m2ha, tree_rich, Stage, 
-          pctBA_pole, pctBA_mature, pctBA_large, 
-          sap_den_m2, 
-          shrub_cov,
-          canop_cov, debri_cov) %>% 
-  distinct() %>% 
-  rename(ParkUnit = park,
-         siteDENYR = treeden_ha, siteBAYR = BA_m2ha, 
-         siteRICHYR = tree_rich, siteSTAYR = Stage,
-         siteBA_poleYR = pctBA_pole, siteBA_matureYR = pctBA_mature, siteBA_largeYR = pctBA_large,
-         siteSAPdenYR = sap_den_m2, 
-         siteSHRUdenYR = shrub_cov,
-         siteCANOdenYR = canop_cov, 
-         siteDEBRdenYR = debri_cov) %>% 
-  filter(!is.na(ParkUnit))
+    mutate(treeden_ha = mean(treeden_ha, na.rm = T),
+            BA_m2ha = mean(BA_m2ha, na.rm = T),
+            tree_rich = mean(tree_rich, na.rm = T),
+            Stage = Modes(Stage),
+            pctBA_pole = mean(pctBA_pole, na.rm = T),
+            pctBA_mature = mean(pctBA_mature, na.rm = T),
+            pctBA_large = mean(pctBA_large, na.rm = T),
+            sap_den_m2 = mean(sap_den_m2, na.rm = T),
+            shrub_cov = mean(shrub_cov, na.rm = T),
+            canop_cov = mean(can_m, na.rm = T),
+            debri_cov = mean(deb_m, na.rm = T))  %>% 
+    ungroup() %>% 
+    mutate(park = substr(bird_sit, 1, 4)) %>%
+    select(bird_sit, park, Year,
+            treeden_ha, BA_m2ha, tree_rich, Stage, 
+            pctBA_pole, pctBA_mature, pctBA_large, 
+            sap_den_m2, 
+            shrub_cov,
+            canop_cov, debri_cov) %>% 
+    distinct() %>% 
+    rename(ParkUnit = park,
+          siteDENYR = treeden_ha, siteBAYR = BA_m2ha, 
+          siteRICHYR = tree_rich, siteSTAYR = Stage,
+          siteBA_poleYR = pctBA_pole, siteBA_matureYR = pctBA_mature, siteBA_largeYR = pctBA_large,
+          siteSAPdenYR = sap_den_m2, 
+          siteSHRUdenYR = shrub_cov,
+          siteCANOdenYR = canop_cov, 
+          siteDEBRdenYR = debri_cov) %>% 
+    filter(!is.na(ParkUnit))
+)
 
 #! Output files ----------------------------------------------
+print("save output files!")
 # forest site information
 write_rds(for_sit2, file = glue("data/out/for_sit2_nei_grp_{radi_dist}m.rds"))
 
