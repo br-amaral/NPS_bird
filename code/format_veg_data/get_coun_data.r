@@ -239,7 +239,7 @@ for(ii in 1:nrow(park_county)){
   deb <- dwm(get(glue("fia_{park_county$park[ii]}"))) %>% 
     select(YEAR, FUEL_TYPE, VOL_ACRE, BIO_ACRE, CARB_ACRE) %>% 
     mutate(park = park_county$park[ii])
-ii <- ii +1
+
   if(ii == 1){
     deb_tab <- deb
   }
@@ -295,14 +295,106 @@ div_tab2 <- div_tab %>%
             counS_g = mean(S_g, na.rm = T)) %>%
   rename(ParkUnit = park)
 
+can_tab2 <- can_tab %>% 
+  select(park, LIVE_CANOPY_CVR_PCT) %>% 
+  group_by(park) %>%
+  summarise(Can_cov = mean(LIVE_CANOPY_CVR_PCT, na.rm = T))%>%
+  rename(ParkUnit = park)
+
+deb_tab2 <- deb_tab %>% 
+  select(park, BIO_ACRE) %>% 
+  group_by(park) %>%
+  summarise(Dwn_Dbr = mean(BIO_ACRE, na.rm = T))%>%
+  rename(ParkUnit = park)
+
+#! TODO: make the snag work!!!!!!! TODO:
+# sna_tab2 <- sna_tab
+
+# put everyhing in the same dataframe by county (park) -----------------------------------------
 coun_covs <- left_join(tpa_tab2, stastr_tab2, by = "ParkUnit") %>% 
   left_join(div_tab2, by = "ParkUnit") %>% 
-  left_join(shr_tab2, by = "ParkUnit")
+  left_join(shr_tab2, by = "ParkUnit") %>% 
+  left_join(can_tab2, by = "ParkUnit") %>% 
+  left_join(deb_tab2, by = "ParkUnit")
 
 #! Output files -----------------------------------------
 write_rds(coun_covs, file = "data/out/coun_covs.rds")
 
+#? summarize the files by park AND YEAR and merge them -----------------------------------------
+tpa_tab3 <- tpa_tab %>% 
+  group_by(park, YEAR) %>% 
+  summarise(tpa = mean(TPA, na.rm = T),
+            baa = mean(BAA, na.rm = T),
+            tree_total = mean(TREE_TOTAL, na.rm = T),
+            ba_total = mean(BA_TOTAL, na.rm = T),
+            tpa_se = mean(TPA_SE, na.rm = T),
+            baa_se = mean(BAA_SE, na.rm = T),
+            tree_total_se = mean(TREE_TOTAL_SE, na.rm = T)) %>% 
+  rename(ParkUnit = park,
+         Year = YEAR,
+         counDEN = tpa, counBA = baa) %>% 
+  select(ParkUnit, Year, counDEN, counBA)
+
+shr_tab3 <- shr_tab %>% 
+  group_by(park, INVYR) %>% 
+  summarise(shr_per = mean(shr_per, na.rm = T),
+            shr_ht = mean(shr_ht, na.rm = T)) %>% 
+  rename(ParkUnit = park,
+         Year = INVYR,
+         counSHRUden = shr_per) %>% 
+  select(ParkUnit, Year, counSHRUden)
+
+stastr_tab3 <- stastr_tab %>%
+  select(-COVER_PCT_SE) %>%
+  pivot_wider(names_from = STAGE, values_from = COVER_PCT) %>% 
+  group_by(park, YEAR) %>% 
+  summarise(counPER_late = mean(LATE, na.rm = T),
+            counPER_matu = mean(MATURE, na.rm = T),
+            counPER_mosc = mean(MOSAIC, na.rm = T),
+            counPER_pole = mean(POLE, na.rm = T)) %>% 
+  rename(ParkUnit = park,
+         Year = YEAR)
+
+div_tab3 <- div_tab %>%
+  select(-Eh_a_SE, -S_a_SE) %>%
+  group_by(park, YEAR) %>% 
+  summarise(counH_a = mean(H_a, na.rm = T),
+            counH_b = mean(H_b, na.rm = T),
+            counH_g = mean(H_g, na.rm = T),
+            counEh_a = mean(Eh_a, na.rm = T),
+            counEh_b = mean(Eh_b, na.rm = T),
+            counEh_g = mean(Eh_g, na.rm = T),
+            counS_a = mean(S_a, na.rm = T),
+            counS_b = mean(S_b, na.rm = T),
+            counS_g = mean(S_g, na.rm = T)) %>%
+  rename(ParkUnit = park,
+         Year = YEAR)
+
+can_tab3 <- can_tab %>% 
+  select(park, INVYR, LIVE_CANOPY_CVR_PCT) %>% 
+  group_by(park, INVYR) %>% 
+  summarise(Can_cov = mean(LIVE_CANOPY_CVR_PCT, na.rm = T))%>%
+  rename(ParkUnit = park,
+         Year = INVYR)
+
+deb_tab3 <- deb_tab %>% 
+  select(park, YEAR, BIO_ACRE) %>% 
+  group_by(park, YEAR) %>% 
+  summarise(Dwn_Dbr = mean(BIO_ACRE, na.rm = T))%>%
+  rename(ParkUnit = park,
+         Year = YEAR)
+
+#! TODO: make the snag work!!!!!!! TODO:
+# sna_tab2 <- sna_tab
+
+# put everyhing in the same dataframe by county (park) -----------------------------------------
+coun_covs_year <- left_join(tpa_tab3, stastr_tab3, by = c("ParkUnit", "Year")) %>% 
+  left_join(div_tab3, by = c("ParkUnit", "Year")) %>% 
+  left_join(shr_tab3, by = c("ParkUnit", "Year")) %>% 
+  left_join(can_tab3, by = c("ParkUnit", "Year")) %>% 
+  left_join(deb_tab3, by = c("ParkUnit", "Year"))
+
+#! Output files -----------------------------------------
+write_rds(coun_covs, file = "data/out/coun_covs_year.rds")
+
 cat(paste("\n\n Done \n\n\n"))
-
-
-
