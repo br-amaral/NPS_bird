@@ -784,7 +784,7 @@ if (!file.exists(folder_path)) {
 }
 
 write_rds(samples_jags,
-          file = glue('data/model_res/{file_name2}_yr.rds')
+          file = glue('data/model_res/{file_name2}.rds')
           )
 
 system_time2 <- Sys.time()
