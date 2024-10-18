@@ -715,8 +715,8 @@ params <- c("beta0", "beta", "alpha0", "alpha",
           as.character()
 
 # Define the model file and the output file name
-model_file <- glue("models/mod_1_vector_spscov_{sps_loop}_yr.txt")
-mod_name <- glue("data/ana_file/{date_out}_mod_{sps_name}_{park_name}_yr.txt") %>% as.character()
+model_file <- glue("models/mod_1_vector_spscov_{sps_loop}.txt")
+mod_name <- glue("data/ana_file/{date_out}_mod_{sps_name}_{park_name}.txt") %>% as.character()
 
 # Read the content of the model file
 mod_content <- readLines(model_file)
