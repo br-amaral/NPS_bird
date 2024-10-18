@@ -462,7 +462,7 @@ for_sit_extra <- for_sit %>%
 #? get means for all years ----------------------------------------------
 ## mean for all years
 for_sit2 <- for_sit_extra %>% 
-  #filter(SampleYear == 2022) %>% 
+  filter(SampleYear == 2022) %>% 
   group_by(Plot_Name) %>% 
   mutate(treeden_haM = mean(treeden_ha, na.rm = T),
           BA_m2haM = mean(BA_m2ha, na.rm = T),

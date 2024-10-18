@@ -265,7 +265,7 @@ tpa_tab2 <- tpa_tab %>%
   select(ParkUnit, counDEN, counBA)
 
 shr_tab2 <- shr_tab %>% 
-  filter(INVYR == 2020) %>% 
+  filter(INVYR == 2010) %>% 
   group_by(park) %>% 
   summarise(shr_per = mean(shr_per, na.rm = T),
             shr_ht = mean(shr_ht, na.rm = T)) %>% 
@@ -315,6 +315,13 @@ deb_tab2 <- deb_tab %>%
 
 #! TODO: make the snag work!!!!!!! TODO:
 # sna_tab2 <- sna_tab
+
+nrow(tpa_tab2)
+nrow(stastr_tab2)
+nrow(div_tab2)
+nrow(shr_tab2)
+nrow(can_tab2)
+nrow(deb_tab2)
 
 # put everyhing in the same dataframe by county (park) -----------------------------------------
 coun_covs <- left_join(tpa_tab2, stastr_tab2, by = "ParkUnit") %>% 

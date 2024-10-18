@@ -26,7 +26,13 @@ Assumptions/decisions:
 
 - 500 m for the radius between the sites make sense for bird home range, but is that meaningful? now using 500m
 
-- year of environmental covariates: 2020
+- year of environmental covariates: 2022 (site,park)
+county: stastr_tab(2020)
+        deb_tab(2020)
+        can_tab(2020)
+        div_tab2(2020)
+        shr_tab(2010)  !!!!!!!!!!!!
+        tpa_tab(2020)
 
 # --------------------------------------------------------------------
 Workflow:
