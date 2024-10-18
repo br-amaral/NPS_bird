@@ -251,6 +251,7 @@ for(ii in 1:nrow(park_county)){
 
 #? summarize the files by park and merge them -----------------------------------------
 tpa_tab2 <- tpa_tab %>% 
+  filter(YEAR == 2020) %>% 
   group_by(park) %>% 
   summarise(tpa = mean(TPA, na.rm = T),
             baa = mean(BAA, na.rm = T),
@@ -264,6 +265,7 @@ tpa_tab2 <- tpa_tab %>%
   select(ParkUnit, counDEN, counBA)
 
 shr_tab2 <- shr_tab %>% 
+  filter(INVYR == 2020) %>% 
   group_by(park) %>% 
   summarise(shr_per = mean(shr_per, na.rm = T),
             shr_ht = mean(shr_ht, na.rm = T)) %>% 
@@ -271,7 +273,8 @@ shr_tab2 <- shr_tab %>%
          counSHRUden = shr_per) %>% 
   select(ParkUnit, counSHRUden)
 
-stastr_tab2 <- stastr_tab %>%
+stastr_tab2 <- stastr_tab %>%  
+  filter(YEAR == 2020) %>% 
   select(-COVER_PCT_SE) %>%
   pivot_wider(names_from = STAGE, values_from = COVER_PCT) %>% 
   group_by(park) %>%
@@ -282,6 +285,7 @@ stastr_tab2 <- stastr_tab %>%
   rename(ParkUnit = park)
 
 div_tab2 <- div_tab %>%
+  filter(YEAR == 2020) %>% 
   select(-Eh_a_SE, -S_a_SE) %>%
   group_by(park) %>%
   summarise(counH_a = mean(H_a, na.rm = T),
@@ -296,12 +300,14 @@ div_tab2 <- div_tab %>%
   rename(ParkUnit = park)
 
 can_tab2 <- can_tab %>% 
+  filter(INVYR == 2020) %>% 
   select(park, LIVE_CANOPY_CVR_PCT) %>% 
   group_by(park) %>%
   summarise(Can_cov = mean(LIVE_CANOPY_CVR_PCT, na.rm = T))%>%
   rename(ParkUnit = park)
 
 deb_tab2 <- deb_tab %>% 
+  filter(YEAR == 2020) %>% 
   select(park, BIO_ACRE) %>% 
   group_by(park) %>%
   summarise(Dwn_Dbr = mean(BIO_ACRE, na.rm = T))%>%
