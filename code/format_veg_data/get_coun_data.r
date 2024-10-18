@@ -408,6 +408,6 @@ coun_covs_year <- left_join(tpa_tab3, stastr_tab3, by = c("ParkUnit", "Year")) %
   left_join(deb_tab3, by = c("ParkUnit", "Year"))
 
 #! Output files -----------------------------------------
-write_rds(coun_covs, file = "data/out/coun_covs_year.rds")
+write_rds(coun_covs_year, file = "data/out/coun_covs_yr.rds")
 
 cat(paste("\n\n Done \n\n\n"))

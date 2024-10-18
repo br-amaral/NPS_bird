@@ -577,7 +577,7 @@ write_rds(for_sit2, file = glue("data/out/for_sit2_nei_grp_{radi_dist}m.rds"))
 write_rds(close_points_f2, file = glue("data/out/site_covs_nei_grp_{radi_dist}m.rds"))
 
 # information of covariates for each bird site BY YEAR
-write_rds(close_points_f2_year, file = glue("data/out/site_covs_nei_grp_{radi_dist}m_year.rds"))
+write_rds(close_points_f2_year, file = glue("data/out/site_covs_nei_grp_{radi_dist}m_yr.rds"))
 
 # who is who's neighbor
 write_rds(neighbor, file = glue("data/out/neighbor_grp_{radi_dist}m.rds"))
