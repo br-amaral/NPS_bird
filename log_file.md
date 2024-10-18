@@ -24,9 +24,9 @@ Assumptions/decisions:
                  sair is too different (open areas)
                  elro only has one forest plot
 
-- 500 m for the radius between the sites make sense for bird home range, but is that meaningful? now using with 1000m, ctually back to 500m
+- 500 m for the radius between the sites make sense for bird home range, but is that meaningful? now using 500m
 
-- year of environmental covariates: 2022
+- year of environmental covariates: 2020
 
 # --------------------------------------------------------------------
 Workflow:
