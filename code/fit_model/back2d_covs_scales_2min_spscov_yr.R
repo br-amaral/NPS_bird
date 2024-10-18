@@ -68,7 +68,7 @@ PARK_PATH <- "data/src/key_park.rds"
 y_dat4 <- read_rds(file = YDAT_PATH)
 
 X10 <- read_rds(file = XDAT_PATH)
-table(X10 %>% filter(Point_Name == "HOFR2003") %>% select(Year, counBA))
+
 nsite_pk <- read_rds(SITE_PK_PATH)
 pk <- read_rds(PARK_PATH) %>%
   dplyr::select(parks) %>%
