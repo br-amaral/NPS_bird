@@ -23,7 +23,7 @@
 #           - :
 
 # Print script file name
-context <- "multiple_single_sps_spscovs.R" #rstudioapi::getSourceEditorContext()
+context <- "multiple_single_sps_spscovs_yr.R" #rstudioapi::getSourceEditorContext()
 cat("\n", "\n", "\n", 
     'Current script:', context, #basename(context[[2]]), 
     "\n", "\n", "\n", "\n")
@@ -72,6 +72,13 @@ nthin <- 5
 master_tab <- read_rds("data/out/sps_covs.rds")
 master_tab[6,3] <- 1 # HETH DEN
 master_tab[5,2:3] <- 1 # HAWO BA and DEN
+master_tab$CAN <- 0
+master_tab$DEB <- 0
+
+
+
+
+
 
 for (i in 1:nrow(master_tab)){
     (sps_loop <- master_tab$AOU_Code[i])
@@ -82,18 +89,22 @@ for (i in 1:nrow(master_tab)){
     EAR <- master_tab$EAR[i]   
     MID <- master_tab$MID[i]   
     LAT <- master_tab$LAT[i]
+    CAN <- master_tab$CAN[i]
+    DEB <- master_tab$DEB[i]
     
-    cov_key <- master_tab[i,2:8]
+    cov_key <- master_tab[i,2:ncol(master_tab)]
     print(sps_loop)
     print(cov_key)
     # Print object name if the value is greater than zero
-    if (BA == 1) print("BA")
+    if (BA == 1)  print("BA")
     if (DEN == 1) print("DEN")
     if (SHR == 1) print("SHR")
     if (DIV == 1) print("DIV")
     if (EAR == 1) print("EAR")
     if (MID == 1) print("MID")
     if (LAT == 1) print("LAT")
+    if (CAN == 1) print("CAN")
+    if (DEB == 1) print("DEB")
     source("code/fit_model/back2d_covs_scales_2min_spscov_yr.R")
 }
 
