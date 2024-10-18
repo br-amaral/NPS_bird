@@ -44,6 +44,7 @@ Modes <- function(x) {
 #! Source code -----------------------------------------
 ## Download the state subset or Connecticut (requires an internet connection)
 ## Save as an object to automatically load the data into your current R session!
+# options(timeout = 15000)
 # vt <- getFIA(states = 'VT', dir = 'data/FIA', load = FALSE)
 # me <- getFIA(states = 'ME', dir = 'data/FIA', load = FALSE)
 # nh <- getFIA(states = 'NH', dir = 'data/FIA', load = FALSE)
@@ -67,7 +68,9 @@ park_county <- matrix(c(
   'SAIR', 'Essex County', 'Massachusetts','MA',
   'SARA', 'Saratoga County', 'New York','NY',
   'VAMA', 'Dutchess County', 'New York','NY',
-  'WEFA', 'Western Connecticut Planning Region', 'Connecticut','CT'), # used to be 'Fairfield County'
+ # 'WEFA', 'Western Connecticut Planning Region', 'Connecticut','CT'), # used to be 'Fairfield County'
+  'WEFA', 'Fairfield County', 'Connecticut','CT'), 
+
   ncol = 4, byrow = T) %>% 
   as_tibble()
 colnames(park_county) <- c("park", "county", "state", "state_abbr")
