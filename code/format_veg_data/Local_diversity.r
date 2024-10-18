@@ -1,6 +1,6 @@
-# *********************************************************************************
+#! *********************************************************************************
 # -------------------------------   Amazing Title   -------------------------------
-# *********************************************************************************
+#! *********************************************************************************
 #! Code to ...
 #!
 #
@@ -180,7 +180,28 @@ site_div2 <- left_join(close_points_f, site_div_m, by = "Plot_Name") %>%
                 dplyr::summarise(S_mean = mean(S_mean, na.rm = TRUE),
                                  J_mean = mean(J_mean, na.rm = TRUE))
 
+site_div_yr <- left_join(site_div, close_points_f, by = "Plot_Name") %>% 
+                select(-Plot_Name) %>% 
+                group_by(SampleYear, Point_Name) %>% 
+                mutate(Sm = mean(S, na.rm = T),
+                       Jm = mean(J, na.rm = T)) %>% 
+                select(-S, -J) %>% 
+                distinct() %>% 
+                rename(S = Sm,
+                       J = Jm)
+
+park_div_yr <- park_div %>% 
+                group_by(SampleYear, park) %>% 
+                mutate(Sm = mean(S, na.rm = T),
+                       Jm = mean(J, na.rm = T)) %>% 
+                select(-S, -J) %>% 
+                distinct() %>% 
+                rename(S = Sm,
+                       J = Jm)
+
 write_rds(site_div2, "data/out/site_div.rds")
 write_rds(park_div_m, "data/out/park_div.rds")
+write_rds(site_div_yr, "data/out/site_div_yr.rds")
+write_rds(park_div_yr, "data/out/park_div_yr.rds")
 
 print("Done")
