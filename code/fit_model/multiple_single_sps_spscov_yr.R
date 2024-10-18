@@ -70,15 +70,15 @@ nthin <- 5
 
 ## read files
 master_tab <- read_rds("data/out/sps_covs.rds")
-master_tab[6,3] <- 1 # HETH DEN
-master_tab[5,2:3] <- 1 # HAWO BA and DEN
-master_tab$CAN <- 0
+master_tab$DEN[6] <- 1  # HETH
+master_tab$BA[5] <-  1  # HAWO 
+master_tab$DEN[5] <- 1  # HAWO 
+master_tab$CAN <- 1
 master_tab$DEB <- 0
-
-
-
-
-
+master_tab$DEB[4] <- 1  # DOWO
+master_tab$DEB[5] <- 1  # HAWO
+master_tab$DEB[2] <- 1  # BRCR
+master_tab$DEB[13] <- 1 # YBSA
 
 for (i in 1:nrow(master_tab)){
     (sps_loop <- master_tab$AOU_Code[i])
