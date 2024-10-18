@@ -30,7 +30,7 @@ Assumptions/decisions:
 county: stastr_tab(2020)
         deb_tab(2020)
         can_tab(2020)
-        div_tab2(2020)
+        div_tab(2020)
         shr_tab(2010)  !!!!!!!!!!!!
         tpa_tab(2020)
 
