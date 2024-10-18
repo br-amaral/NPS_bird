@@ -136,5 +136,6 @@ for_park2_yr <- for_park %>%
 
 #! Output files ----------------------------------------------
 write_rds(for_park2, file = "data/out/park_covs.rds")
+write_rds(for_park2_yr, file = "data/out/park_covs_yr.rds")
 
 cat(paste("\n\n Done \n\n\n"))
