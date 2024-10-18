@@ -685,7 +685,7 @@ print(non_numeric_elements)
 # Xb: detection day of the year
 # n_yrM: number of years 
 # n_pkM: number of parks 
-write_rds(jags.data, file = glue("data/ana_file/{date_out}_data_{sps_name}_{park_name}.rds"))
+write_rds(jags.data, file = glue("data/ana_file/{date_out}_data_{sps_name}_{park_name}_yr.rds"))
 
 # source("code/check_data.R") 
 
@@ -715,8 +715,8 @@ params <- c("beta0", "beta", "alpha0", "alpha",
           as.character()
 
 # Define the model file and the output file name
-model_file <- glue("models/mod_1_vector_spscov_{sps_loop}.txt")
-mod_name <- glue("data/ana_file/{date_out}_mod_{sps_name}_{park_name}.txt") %>% as.character()
+model_file <- glue("models/mod_1_vector_spscov_{sps_loop}_yr.txt")
+mod_name <- glue("data/ana_file/{date_out}_mod_{sps_name}_{park_name}_yr.txt") %>% as.character()
 
 # Read the content of the model file
 mod_content <- readLines(model_file)
@@ -770,7 +770,7 @@ samples_jags <- coda.samples(
 cat("\n\n\n third done!!! \n\n\n\n")
 fil_nam <- sps_loop
 
-file_name <- glue("{date_out}_{fil_nam}_{park_name}_{niterations}its_2min_spscov_")
+file_name <- glue("{date_out}_{fil_nam}_{park_name}_{niterations}its_2min_spscov_yr_")
 
 file_name2 <- paste0(file_name, 'run',
                       length(list.files(path = file.path(getwd(),"data/model_res/"),
@@ -784,7 +784,7 @@ if (!file.exists(folder_path)) {
 }
 
 write_rds(samples_jags,
-          file = glue('data/model_res/{file_name2}.rds')
+          file = glue('data/model_res/{file_name2}_yr.rds')
           )
 
 system_time2 <- Sys.time()
@@ -821,11 +821,11 @@ paste('\n ************************************** \n \n \n ---------------- DONE 
       cat()
 
 
-meta_name <- file(glue("data/ana_file/{date_out}_metadata_{sps_name}_{park_name}.txt"))
+meta_name <- file(glue("data/ana_file/{date_out}_metadata_{sps_name}_{park_name}_yr.txt"))
 writeLines(paste(
 
                 'Results File Name = ', glue('{file_name2}.rds'), '\n', 
-                'Data File Name = ', glue("data/ana_file/{date_out}_data_{sps_name}_{park_name}.rds"), '\n', 
+                'Data File Name = ', glue("data/ana_file/{date_out}_data_{sps_name}_{park_name}_yr.rds"), '\n', 
                 'Script = ', script_name, '\n',
                 'Model file =', glue("{mod_name}"), '\n',
                 'Species =', sps_name, '\n',
