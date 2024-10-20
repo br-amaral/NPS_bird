@@ -1,11 +1,11 @@
 #? *********************************************************************************
-#? ---------------------------   multiple_single_sps.R   ---------------------------
+#? ---------------------------   multiple_single_sps_yr.R   ---------------------------
 #? *********************************************************************************
 #
 #! Code to ...
 #
 #! Source ---------------------------------------------
-#           - code/fit_model/back2d_covs_scales_2min.R:
+#           - code/fit_model/back2d_covs_scales_2min_yr.R:
 #!              - Input:
 #                   - data/y_dat8.rds: tibble with bird data
 #                   - data/X.rds: tibble with covariate data
@@ -60,30 +60,31 @@ lenght <- length
 `%!in%` <- Negate(`%in%`)
 
 #! MCMC settings ---------------------------------------
-niterations <- 40000
-nburnin <- 20000
-nchains <- 5
+niterations <- 20000
+nburnin <- 10000
+nchains <- 8
 nthin <- 5
 
-# niterations <- 20
-# nburnin <- 10
-# nchains <- 2
+# niterations <- 10
+# nburnin <- 5
+# nchains <- 1
 # nthin <- 1
 
 #! Source code and Import data -----------------------------------------
 ## file paths
 
 ## read files
-master_tab <- read_rds("data/out/sps_covs.rds")
-master_tab$DEN[6] <- 1  # HETH
-master_tab$BA[5] <-  1  # HAWO 
-master_tab$DEN[5] <- 1  # HAWO 
-master_tab$CAN <- 1
-master_tab$DEB <- 0
-master_tab$DEB[4] <- 1  # DOWO
-master_tab$DEB[5] <- 1  # HAWO
-master_tab$DEB[2] <- 1  # BRCR
-master_tab$DEB[13] <- 1 # YBSA
+master_tab <- read_rds("data/out/sps_covs.rds") %>% 
+    filter(AOU_Code %!in% c("BLBW", "PIWA", "BTNW"))
+# master_tab$DEN[6] <- 1  # HETH
+# master_tab$BA[5] <-  1  # HAWO 
+# master_tab$DEN[5] <- 1  # HAWO 
+# master_tab$CAN <- 1
+# master_tab$DEB <- 0
+# master_tab$DEB[4] <- 1  # DOWO
+# master_tab$DEB[5] <- 1  # HAWO
+# master_tab$DEB[2] <- 1  # BRCR
+# master_tab$DEB[13] <- 1 # YBSA
 
 for (i in 1:nrow(master_tab)){
     (sps_loop <- master_tab$AOU_Code[i])

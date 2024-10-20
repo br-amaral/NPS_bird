@@ -43,7 +43,7 @@ cat("\n", "\n", "\n",
 #update.packages("freshr")
 # detach packages and clear workspace
 #if(!require(freshr)){install.packages('freshr')}
-#freshr::freshr()
+ freshr::freshr()
 
 #! Load packages ---------------------------------------
 #library(conflicted)
@@ -60,20 +60,24 @@ lenght <- length
 `%!in%` <- Negate(`%in%`)
 
 #! MCMC settings ---------------------------------------
-niterations <- 20000
-nburnin <- 10000
-nchains <- 3
+niterations <- 40000
+nburnin <- 20000
+nchains <- 5
 nthin <- 5
+
+niterations <- 10
+nburnin <- 5
+nchains <- 1
+nthin <- 1
 
 #! Source code and Import data -----------------------------------------
 ## file paths
 
 ## read files
-master_tab <- read_rds("data/out/sps_covs.rds")
-master_tab[6,3] <- 1 # HETH DEN
-master_tab[5,2:3] <- 1 # HAWO BA and DEN
+master_tab <- read_rds("data/out/sps_covs.rds") %>% 
+    filter(AOU_Code %!in% c("BLBW", "PIWA", "BTNW"))
 
-for (i in 9:nrow(master_tab)){
+for (i in 1:nrow(master_tab)){
     (sps_loop <- master_tab$AOU_Code[i])
     BA  <- master_tab$BA[i]
     DEN <- master_tab$DEN[i]   
@@ -82,18 +86,22 @@ for (i in 9:nrow(master_tab)){
     EAR <- master_tab$EAR[i]   
     MID <- master_tab$MID[i]   
     LAT <- master_tab$LAT[i]
+    CAN <- master_tab$CAN[i]
+    DEB <- master_tab$DEB[i]
     
-    cov_key <- master_tab[i,2:8]
+    cov_key <- master_tab[i,2:ncol(master_tab)]
     print(sps_loop)
     print(cov_key)
     # Print object name if the value is greater than zero
-    if (BA == 1) print("BA")
+    if (BA == 1)  print("BA")
     if (DEN == 1) print("DEN")
     if (SHR == 1) print("SHR")
     if (DIV == 1) print("DIV")
     if (EAR == 1) print("EAR")
     if (MID == 1) print("MID")
     if (LAT == 1) print("LAT")
+    if (CAN == 1) print("CAN")
+    if (DEB == 1) print("DEB")
     source("code/fit_model/back2d_covs_scales_2min_spscov.R")
 }
 
