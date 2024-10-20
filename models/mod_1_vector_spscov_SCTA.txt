@@ -34,7 +34,7 @@ model {
   scales_beta2 ~ dcat(c(1/3, 1/3, 1/3))
   scales_beta3 ~ dcat(c(1/3, 1/3, 1/3))
   scales_beta4 ~ dcat(c(1/3, 1/3, 1/3))	
-
+  scales_beta5 ~ dcat(c(1/3, 1/3, 1/3))	
 
   ## Vector loops -------------------------------
   # short occupancy loop; only first interval
@@ -46,16 +46,18 @@ model {
     # Covariate effects on the ecological process
     logit(psi[y2[b,2],y2[b,3],y2[b,4]]) <-       # parkey, site_n, year_n
       beta0[y2[b,2],y2[b,4]] +                   # parkey, year_n
-      # BA (tree basal area)
-      beta[1] * X1[b,scales_beta1] +   
-      # DEN (tree density)
-      beta[2] * X2[b,scales_beta2] + 
+      # BA
+      beta[1] * X1[b, scales_beta1] +   
+      # DEN
+      beta[2] * X2[b, scales_beta2] + 
       # DIV
-      beta[3] * X4[b,scales_beta3] + 
-      # per old
+      beta[3] * X4[b, scales_beta3] + 
+      # DEN old
       beta[4] * X53[b,scales_beta4] + 
+      # CAN
+      beta[5] * X6[b, scales_beta5] + 
       # park size
-      beta[5] * Xp[b]                   
+      beta[6] * Xp[b]                   
   }
   
   # longer interval loop, all intervals of the removal sampling (not the first)
