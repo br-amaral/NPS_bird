@@ -22,12 +22,6 @@ freshr::freshr()
 library(conflicted)
 library(tidyverse)
 library(glue)
-library(jagsUI)
-library(rjags)
-#library(MCMCvis)
-library(AHMbook)
-library(fs)
-library(here)
 
 conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::filter)
@@ -243,59 +237,71 @@ sps_covs <- tibble(AOU_Code = sps_yr_site_1,
                    MID = NA,      # mid succession basal area
                    LAT = NA,      # late succession basal area
                    CAN = NA,      # canopy cover
-                   SNA = NA,      # snag density
+                   #SNA = NA,      # snag density
                    DEB = NA)      # wood debris density
 
 sps_covs[which(sps_covs$AOU_Code == "BHVI"), 2:ncol(sps_covs)] <- as.list(c(
-    # BA   DEN   SHR   DIV   EAR   MID   LAT
-       1,   2,    1,    0,    0,    1,    2   )) # https://birdsoftheworld.org/bow/species/buhvir/cur/habitat#breedhab
+    # BA   DEN   SHR   DIV   EAR   MID   LAT   CAN   DEB
+       1,   2,    1,    0,    0,    1,    2,    1,    0   )) # https://birdsoftheworld.org/bow/species/buhvir/cur/habitat#breedhab
+
+sps_covs[which(sps_covs$AOU_Code == "BLBW"), 2:ncol(sps_covs)] <- as.list(c(
+    # BA   DEN   SHR   DIV   EAR   MID   LAT   CAN   DEB
+       0,   1,    0,    0,    0,    0,    1,    1,    0   )) # https://birdsoftheworld.org/bow/species/bkbwar/cur/habitat#breedhab
 
 sps_covs[which(sps_covs$AOU_Code == "BRCR"), 2:ncol(sps_covs)] <- as.list(c(
-    # BA   DEN   SHR   DIV   EAR   MID   LAT
-       2,   1,    0,    1,    0,    0,    1   )) # https://birdsoftheworld.org/bow/species/brncre/cur/habitat#breedhab
+    # BA   DEN   SHR   DIV   EAR   MID   LAT   CAN   DEB
+       2,   1,    0,    1,    0,    0,    1,    1,    1   )) # https://birdsoftheworld.org/bow/species/brncre/cur/habitat#breedhab
 
 sps_covs[which(sps_covs$AOU_Code == "BTBW"), 2:ncol(sps_covs)] <- as.list(c(
-    # BA   DEN   SHR   DIV   EAR   MID   LAT
-       0,   0,     1,   1,    1,    0,     2  )) # https://birdsoftheworld.org/bow/species/btbwar/cur/habitat#breedhab
+    # BA   DEN   SHR   DIV   EAR   MID   LAT   CAN   DEB
+       0,   0,     1,   1,    1,    0,    2,    1,    0  )) # https://birdsoftheworld.org/bow/species/btbwar/cur/habitat#breedhab
+
+sps_covs[which(sps_covs$AOU_Code == "BTNW"), 2:ncol(sps_covs)] <- as.list(c(
+    # BA   DEN   SHR   DIV   EAR   MID   LAT   CAN   DEB
+       1,   1,    0,    0,    0,    2,    2,    1,    0  )) # hhttps://birdsoftheworld.org/bow/species/btnwar/cur/habitat
 
 sps_covs[which(sps_covs$AOU_Code == "DOWO"), 2:ncol(sps_covs)] <- as.list(c(
-    # BA   DEN   SHR   DIV   EAR   MID   LAT
-       1,   1,    0,    1,    0,    0,     0  )) # https://birdsoftheworld.org/bow/species/dowwoo/cur/habitat#breedhab
+    # BA   DEN   SHR   DIV   EAR   MID   LAT   CAN   DEB
+       1,   1,    0,    1,    0,    0,    0,    1,    1  )) # https://birdsoftheworld.org/bow/species/dowwoo/cur/habitat#breedhab
 
 sps_covs[which(sps_covs$AOU_Code == "HAWO"), 2:ncol(sps_covs)] <- as.list(c(
-    # BA   DEN   SHR   DIV   EAR   MID   LAT
-       2,   2,    0,    0,    0,    0,     1  )) # https://birdsoftheworld.org/bow/species/haiwoo/cur/habitat
+    # BA   DEN   SHR   DIV   EAR   MID   LAT   CAN   DEB
+       1,   1,    0,    0,    0,    0,    1,    1,    1  )) # https://birdsoftheworld.org/bow/species/haiwoo/cur/habitat
 
 sps_covs[which(sps_covs$AOU_Code == "HETH"), 2:ncol(sps_covs)] <- as.list(c(
-    # BA   DEN   SHR   DIV   EAR   MID   LAT
-       2,   2,    1,    0,    1,    0,     0  )) # https://birdsoftheworld.org/bow/species/herthr/cur/breeding#nestsite
+    # BA   DEN   SHR   DIV   EAR   MID   LAT   CAN   DEB
+       2,   1,    1,    0,    1,    0,    0,    1,    0  )) # https://birdsoftheworld.org/bow/species/herthr/cur/breeding#nestsite
     
 sps_covs[which(sps_covs$AOU_Code == "OVEN"), 2:ncol(sps_covs)] <- as.list(c(
-    # BA   DEN   SHR   DIV   EAR   MID   LAT
-       1,   0,    1,    0,    2,    2,     1  )) # https://birdsoftheworld.org/bow/species/ovenbi1/cur/habitat#breedhab
+    # BA   DEN   SHR   DIV   EAR   MID   LAT   CAN   DEB
+       1,   0,    1,    0,    2,    2,    1,    1,    0  )) # https://birdsoftheworld.org/bow/species/ovenbi1/cur/habitat#breedhab
+
+sps_covs[which(sps_covs$AOU_Code == "PIWA"), 2:ncol(sps_covs)] <- as.list(c(
+    # BA   DEN   SHR   DIV   EAR   MID   LAT   CAN   DEB
+       0,   1,    0,    0,    1,    0,    1,    0,    1  )) # https://birdsoftheworld.org/bow/species/pilwoo/cur/habitat
 
 sps_covs[which(sps_covs$AOU_Code == "REVI"), 2:ncol(sps_covs)] <- as.list(c(
-    # BA   DEN   SHR   DIV   EAR   MID   LAT
-       1,   0,    1,    1,    0,    0,     0  )) # https://birdsoftheworld.org/bow/species/reevir1/cur/habitat#breedhab
+    # BA   DEN   SHR   DIV   EAR   MID   LAT   CAN   DEB
+       1,   0,    1,    1,    0,    0,    0,    1,    0  )) # https://birdsoftheworld.org/bow/species/reevir1/cur/habitat#breedhab
 
 sps_covs[which(sps_covs$AOU_Code == "SCTA"), 2:ncol(sps_covs)] <- as.list(c(
-    # BA   DEN   SHR   DIV   EAR   MID   LAT
-       1,   1,    0,    1,    0,    2,     1  )) # https://birdsoftheworld.org/bow/species/scatan/cur/habitat#breedhab
+    # BA   DEN   SHR   DIV   EAR   MID   LAT   CAN   DEB
+       1,   1,    0,    1,    0,    2,    1,    1,    0  )) # https://birdsoftheworld.org/bow/species/scatan/cur/habitat#breedhab
 
 sps_covs[which(sps_covs$AOU_Code == "VEER"), 2:ncol(sps_covs)] <- as.list(c(
-    # BA   DEN   SHR   DIV   EAR   MID   LAT
-       0,   1,    1,    0,    1,    0,     0  )) # https://birdsoftheworld.org/bow/species/veery/cur/habitat#breedhab
+    # BA   DEN   SHR   DIV   EAR   MID   LAT   CAN   DEB
+       0,   1,    1,    0,    1,    0,    0,    1,    0  )) # https://birdsoftheworld.org/bow/species/veery/cur/habitat#breedhab
 
 sps_covs[which(sps_covs$AOU_Code == "WBNU"), 2:ncol(sps_covs)] <- as.list(c(
-    # BA   DEN   SHR   DIV   EAR   MID   LAT
-       2,   0,    1,    0,    0,    2,     1  )) # https://birdsoftheworld.org/bow/species/whbnut/cur/habitat
+    # BA   DEN   SHR   DIV   EAR   MID   LAT   CAN   DEB
+       2,   0,    1,    0,    0,    2,    1,    1,    0  )) # https://birdsoftheworld.org/bow/species/whbnut/cur/habitat
 
 sps_covs[which(sps_covs$AOU_Code == "WOTH"), 2:ncol(sps_covs)] <- as.list(c(
-    # BA   DEN   SHR   DIV   EAR   MID   LAT
-       0,   1,    1,    0,    2,    0,    1   )) # https://birdsoftheworld.org/bow/species/woothr/cur/habitat#breedhab
+    # BA   DEN   SHR   DIV   EAR   MID   LAT   CAN   DEB
+       0,   1,    1,    0,    2,    0,    1,    1,    0   )) # https://birdsoftheworld.org/bow/species/woothr/cur/habitat#breedhab
 
 sps_covs[which(sps_covs$AOU_Code == "YBSA"), 2:ncol(sps_covs)] <- as.list(c(
-    # BA   DEN   SHR   DIV   EAR   MID   LAT
-       0,    1,    0,    0,    1,    0,   0   )) # https://birdsoftheworld.org/bow/species/yebsap/cur/habitat#breedhab
+    # BA   DEN   SHR   DIV   EAR   MID   LAT   CAN   DEB
+       0,    1,    0,    0,    1,    0,   0,    1,    1   )) # https://birdsoftheworld.org/bow/species/yebsap/cur/habitat#breedhab
 
 write_rds(sps_covs, file = "data/out/sps_covs.rds")
