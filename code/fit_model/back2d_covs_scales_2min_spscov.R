@@ -60,7 +60,7 @@ system_time1 <- Sys.time()
 # Import data -----------------------------------------
 ## file paths
 YDAT_PATH <- "data/y_dat8.rds"
-XDAT_PATH <- "data/X_1000.rds"
+XDAT_PATH <- "data/X.rds"
 SITE_PK_PATH <- "data/out/nsite_pk.rds"
 PARK_PATH <- "data/src/key_park.rds"
 
@@ -172,19 +172,22 @@ setequal(y_dat6 %>% select(parkey, site_n, year_n, bird_detec) %>%
 
 #? get covariates ----------------------------------------------------------------
 X <- X10 %>% 
-  dplyr::select(Point_Name,
+  dplyr::select(Point_Name, Year,
           siteDEN, siteBA,
           siteH_g, siteEh_g,
           siteBA_pole, siteBA_mature, siteBA_large,
           siteSHRUden,
+          siteCANOden, siteDEBRden,
           parkDEN, parkBA, 
           parkH_g, parkEh_g,
           parkBA_pole, parkBA_mature, parkBA_large,   
           parkSHRUden, 
+          parkCAN, parkDEB,
           counDEN, counBA, 
           counH_g, counEh_g, ## https://rdrr.io/cran/rFIA/man/diversity.html
           counPER_pole, counPER_matu, counPER_late,
           counSHRUden,
+          Can_cov, Dwn_Dbr,
           area,
           EventDate2, StartTime2) %>% 
   rename(date_jul = EventDate2,
@@ -197,6 +200,8 @@ X <- X10 %>%
           siteBA_mature_s = standardize(siteBA_mature),
           siteBA_large_s = standardize(siteBA_large),
           siteSHRUden_s = standardize(siteSHRUden),
+          siteCANcov_s = standardize(siteCANOden),
+          siteDEBden_s = standardize(siteDEBRden),
           parkDEN_s = standardize(parkDEN),
           parkBA_s = standardize(parkBA),
           parkH_g = standardize(parkH_g), 
@@ -205,6 +210,8 @@ X <- X10 %>%
           parkBA_mature_s = standardize(parkBA_mature),
           parkBA_large_s = standardize(parkBA_large),
           parkSHRUden_s = standardize(parkSHRUden),
+          parkCANcov_s = standardize(parkCAN),
+          parkDEBden_s = standardize(parkDEB),
           counDEN_s = standardize(counDEN),
           counBA_s = standardize(counBA),
           counH_g = standardize(counH_g),
@@ -213,6 +220,8 @@ X <- X10 %>%
           counPER_matu_s = standardize(counPER_matu),
           counPER_late_s = standardize(counPER_late),
           counSHRUper_s = standardize(counSHRUden),
+          counCANcov_s = standardize(Can_cov),
+          counDEBden_s = standardize(Dwn_Dbr),
           area_s = standardize(area),
           date_jul_s = standardize(date_jul),
           time_jul_s = standardize(time_jul))
@@ -276,6 +285,19 @@ X5p <- X %>%
          parkBA_pole_s = ifelse(is.na(parkBA_pole_s) == TRUE, 0, parkBA_pole_s),
          counPER_pole_s = ifelse(is.na(counPER_pole_s) == TRUE, 0, counPER_pole_s))
 
+X6 <- X %>% 
+  dplyr::select(siteCANcov_s, parkCANcov_s, counCANcov_s) %>% 
+  mutate(siteCANcov_s = ifelse(is.na(siteCANcov_s) == TRUE, 0, siteCANcov_s),
+         parkCANcov_s = ifelse(is.na(parkCANcov_s) == TRUE, 0, parkCANcov_s),
+         counCANcov_s = ifelse(is.na(counCANcov_s) == TRUE, 0, counCANcov_s))
+
+## Coarse wood debris
+X7 <- X %>% 
+  dplyr::select(siteDEBden_s, parkDEBden_s, counDEBden_s)%>% 
+  mutate(siteDEBden_s = ifelse(is.na(siteDEBden_s) == TRUE, 0, siteDEBden_s),
+         parkDEBden_s = ifelse(is.na(parkDEBden_s) == TRUE, 0, parkDEBden_s),
+         counDEBden_s = ifelse(is.na(counDEBden_s) == TRUE, 0, counDEBden_s))
+
 ## park size
 Xp <- X %>% 
   dplyr::select(area_s) %>% 
@@ -296,7 +318,7 @@ Xb <- X %>%
 
 # put everything together, arrange, and split!
 
-y_all <- cbind(y, X1, X2, X3, X4, X5p, X5m, X5l, Xa, Xb, Xp) %>% 
+y_all <- cbind(y, X1, X2, X3, X4, X5p, X5m, X5l, X6, X7, Xa, Xb, Xp) %>% 
   as_tibble() %>% 
   arrange(parkey, site_n, year_n, interval_n)  %>% 
 # and GROUPING THE INTERVALS IN FIVES  
@@ -335,6 +357,12 @@ y_all2 <- y_all  %>%
                siteEh_g2 = mean(siteEh_g),
                parkEh_g2 = mean(parkEh_g),
                counEh_g2 = mean(counEh_g),
+               siteCANcov_s2 = mean(siteCANcov_s),
+               parkCANcov_s2 = mean(parkCANcov_s),
+               counCANcov_s2 = mean(counCANcov_s),
+               siteDEBden_s2 = mean(siteDEBden_s),
+               parkDEBden_s2 = mean(parkDEBden_s),
+               counDEBden_s2 = mean(counDEBden_s),
                time_jul_s2 = mean(time_jul_s),
                date_jul_s2 = mean(date_jul_s),
                area_s2 = mean(Xp)) %>% 
@@ -350,6 +378,12 @@ table(y_all2$counDEN_s == y_all2$counDEN_s2)
 table(y_all2$siteSHRUden_s == y_all2$siteSHRUden_s2)
 table(y_all2$parkSHRUden_s == y_all2$parkSHRUden_s2)
 table(y_all2$counSHRUper_s == y_all2$counSHRUper_s2)
+table(y_all2$siteCANcov_s2 == y_all2$siteCANcov_s)
+table(y_all2$parkCANcov_s2 == y_all2$parkCANcov_s)
+table(y_all2$counCANcov_s2 == y_all2$counCANcov_s)
+table(y_all2$siteDEBden_s2 == y_all2$siteDEBden_s)
+table(y_all2$parkDEBden_s2 == y_all2$parkDEBden_s)
+table(y_all2$counDEBden_s2 == y_all2$counDEBden_s)
 table(y_all2$date_jul_s2 == y_all2$date_jul_s)
 table(y_all2$area_s2 == y_all2$Xp)
 
@@ -370,7 +404,9 @@ y_all3 <- y_all2 %>%
                        siteBA_mature_s2, parkBA_mature_s2, counPER_matu_s2,
                        siteBA_large_s2, parkBA_large_s2, counPER_late_s2,
                        siteH_g2, parkH_g2, counH_g2,
-                       siteEh_g2, parkEh_g2, counEh_g2) %>% 
+                       siteEh_g2, parkEh_g2, counEh_g2,
+                       siteCANcov_s2, parkCANcov_s2, counCANcov_s2, 
+                       siteDEBden_s2, parkDEBden_s2, counDEBden_s2) %>% 
                 rename(bird_detec      = bird_detec2, 
                        Year            = Year2,
                        interval_n      = interval_2,
@@ -398,28 +434,92 @@ y_all3 <- y_all2 %>%
                        siteEh_g        = siteEh_g2,
                        parkEh_g        = parkEh_g2,
                        counEh_g        = counEh_g2,
+                       siteCAN_s       = siteCANcov_s2,
+                       parkCAN_s       = parkCANcov_s2,
+                       counCAN_s       = counCANcov_s2, 
+                       siteDEB_s       = siteDEBden_s2,
+                       parkDEB_s       = parkDEBden_s2, 
+                       counDEB_s       = counDEBden_s2,
                        time_jul_s      = time_jul_s2,
                        date_jul_s      = date_jul_s2,
                        area_s          = area_s2)
 dim(y_all3)
 dim(y_all2)
 
-cols_covs <- c()
-if(BA  == 1) {cols_covs <- c(cols_covs, 10, 11, 12)}
-if(DEN == 1) {cols_covs <- c(cols_covs, 13, 14, 15)}
-if(SHR == 1) {cols_covs <- c(cols_covs, 16, 17, 18)}
-if(DIV == 1) {cols_covs <- c(cols_covs, 28, 29, 30)} # or 31, 32, 33
-if(EAR == 1) {cols_covs <- c(cols_covs, 19, 20, 21)}
-if(MID == 1) {cols_covs <- c(cols_covs, 22, 23, 24)}
-if(LAT == 1) {cols_covs <- c(cols_covs, 25, 26, 27)}
-(c(BA, DEN, SHR, DIV, EAR, MID,LAT) == cov_key %>% as.numeric())
+col_index_covs <- as_tibble(cbind(colnames(y_all3), seq(1,ncol(y_all3),1))) %>% 
+                    rename(cov = V1, col_num = V2)
 
-y_all3.2 <- cbind(y_all3[,c(1:9, cols_covs)]) %>% as_tibble()
+cols_covs <- c()
+if(BA == 1) {cols_covs <- c(cols_covs,
+                            col_index_covs  %>% 
+                              filter(cov %in% c("siteBA_s", "parkBA_s", "counBA_s")) %>% 
+                              select(col_num) %>%
+                              pull() %>% 
+                              as.numeric())}
+
+if(DEN == 1) {cols_covs <- c(cols_covs,
+                             col_index_covs  %>% 
+                                filter(cov %in% c("siteDEN_s", "parkDEN_s", "counDEN_s")) %>% 
+                                select(col_num) %>%
+                                pull() %>% 
+                                as.numeric())}
+if(SHR == 1) {cols_covs <- c(cols_covs,
+                             col_index_covs  %>% 
+                                filter(cov %in% c("siteSHRUden_s", "parkSHRUden_s", "counSHRUper_s")) %>% 
+                                select(col_num) %>%
+                                pull() %>% 
+                                as.numeric())}
+
+if(DIV == 1) {cols_covs <- c(cols_covs,
+                             col_index_covs  %>% 
+                                filter(cov %in% c("siteH_g", "parkH_g", "counH_g")) %>% 
+                                select(col_num) %>%
+                                pull() %>% 
+                                as.numeric())}
+
+if(EAR == 1) {cols_covs <- c(cols_covs,
+                             col_index_covs  %>% 
+                                filter(cov %in% c("siteBA_pole_s", "parkBA_pole_s", "counPER_pole_s")) %>% 
+                                select(col_num) %>%
+                                pull() %>% 
+                                as.numeric())}
+
+if(MID == 1) {cols_covs <- c(cols_covs,
+                             col_index_covs  %>% 
+                                filter(cov %in% c("siteBA_mature_s", "parkBA_mature_s", "counPER_matu_s")) %>% 
+                                select(col_num) %>%
+                                pull() %>% 
+                                as.numeric())}               
+
+if(LAT == 1) {cols_covs <- c(cols_covs,
+                             col_index_covs  %>% 
+                                filter(cov %in% c("siteBA_large_s", "parkBA_large_s", "counPER_late_s")) %>% 
+                                select(col_num) %>%
+                                pull() %>% 
+                                as.numeric())} 
+
+if(CAN == 1) {cols_covs <- c(cols_covs,
+                             col_index_covs  %>% 
+                                filter(cov %in% c("siteCAN_s", "parkCAN_s", "counCAN_s")) %>% 
+                                select(col_num) %>%
+                                pull() %>% 
+                                as.numeric())}
+
+if(DEB == 1) {cols_covs <- c(cols_covs,
+                             col_index_covs  %>% 
+                                filter(cov %in% c("siteDEB_s", "parkDEB_s", "counDEB_s")) %>% 
+                                select(col_num) %>%
+                                pull() %>% 
+                                as.numeric())}             
+
+(c(BA, DEN, SHR, DIV, EAR, MID, LAT, CAN, DEB) == cov_key %>% as.numeric())
+
+y_all3.2 <- y_all3[,c(1:9, cols_covs)] %>% as_tibble()
 dim(y_all3)
 dim(y_all3.2)
 colnames(y_all3.2)
 
-rm(list = c("y", "X1", "X2", "X3", "X4", "X5p", "X5m", "X5l", "Xa", "Xb", "Xp"))
+rm(list = c("y", "X1", "X2", "X3", "X4", "X5p", "X5m", "X5l", "X6", "X7", "Xa", "Xb", "Xp"))
 
 y_all4 <- y_all3.2  %>% 
                 distinct()
@@ -434,6 +534,8 @@ if(DIV == 1) {X4 <- y_all4 %>% select(siteH_g, parkH_g, counH_g) %>% as.matrix()
 if(EAR == 1) {X51 <- y_all4 %>% select(siteBA_pole_s, parkBA_pole_s, counPER_pole_s) %>% as.matrix()}
 if(MID == 1) {X52 <- y_all4 %>% select(siteBA_mature_s, parkBA_mature_s, counPER_matu_s) %>% as.matrix()}
 if(LAT == 1) {X53 <- y_all4 %>% select(siteBA_large_s, parkBA_large_s, counPER_late_s) %>% as.matrix()}
+if(CAN == 1) {X6 <- y_all4 %>% select(siteCAN_s, parkCAN_s, counCAN_s) %>% as.matrix()}
+if(DEB == 1) {X7 <- y_all4 %>% select(siteDEB_s, parkDEB_s, counDEB_s) %>% as.matrix()}
 
 Xa <- y_all4 %>% select(time_jul_s)
 Xb <- y_all4 %>% select(date_jul_s)
@@ -519,12 +621,12 @@ if(length((unique(y[,2]))) == 1) { park_name <- unique(y[,2])} else {park_name <
 # if(6 %in% rem_covs){bigX[ ,16:18] <- NA ; X52[,] <- NA}
 # if(7 %in% rem_covs){bigX[ ,19:21] <- NA ; X53[,] <- NA}
 # Define the object names
-object_names <- c("X1", "X2", "X3", "X4", "X51", "X52", "X53")
+object_names <- c("X1", "X2", "X3", "X4", "X51", "X52", "X53", "X6", "X7")
 
 # Check for existence and filter the names
-existing_objects <- object_names[sapply(object_names, exists)]
+(existing_objects <- object_names[sapply(object_names, exists)])
 cov_Xs <- rbind(colnames(cov_key), object_names)
-cov_Xs[2,which(cov_key2>0)] == existing_objects
+cov_Xs[2,which(cov_key2==1)] == existing_objects
 
 # Create the list with existing objects
 object_list <- mget(existing_objects)
@@ -547,6 +649,7 @@ jags.data <- c(
   ),
   object_list
 )
+suppressWarnings(rm(list = c("X1", "X2", "X3", "X4", "X51", "X52", "X53", "X6", "X7")))
 
 # Print the structure of jags.data to verify
 str(jags.data)
