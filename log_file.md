@@ -37,7 +37,7 @@ county: stastr_tab(2020)
 # --------------------------------------------------------------------
 Workflow:
 
-# format_veg_data/get_site_data.R
+# format_veg_data/get_site_data_forgroups.R
             in  - data/out/NETNtib.rds
             in  - data/src/key_park.rds
             in  - data/veg_kateaaron/NETN_forest_data_2006-2023.rds
