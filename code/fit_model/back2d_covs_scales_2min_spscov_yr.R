@@ -844,6 +844,15 @@ writeLines(paste(
 
 close(meta_name)
 
+# deal with previous covariates
+all_covs <- c('y', 'X1', 'X2', 'X3', 'X4', 'X5p', 'X5m', 'X5l', 
+               'X6', 'X7', 'Xa', 'Xb', 'Xp', 'X51', 'X52', 'X53')
+for(jj in 1:lenght(all_covs))  {
+    existing_objects <- all_covs[jj]
+    if(exists(existing_objects) == TRUE) {
+      rm(list = existing_objects)
+    }
+  }
 
 # code to check the data and initial values
 # r <- 10   # what is the deal with 7 versus 10? (they both have the same values and 10 does not work)
