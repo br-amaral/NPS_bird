@@ -26,10 +26,14 @@ lenght <- length
 
 #! Import data -----------------------------------------
 ## file paths and read files
-file_name <- "2024_09_22_HETH_parks_70000its_2min_spscov_run1"
+# when loading the model results, get the most updated file?
+file_name <- "2024_10_19_DOWO_parks_40000its_2min_spscov_yr_run1"
 
 samples_jags <- read_rds(glue("data/model_res/{file_name}.rds"))
-# when loading the model results, get the most updated file?
+
+# get parameter names
+scales_names <- grep("^scales_", colnames(samples_jags[[1]]), value = TRUE)
+all_params <- c("mu.alpha0", "mu.beta0", "beta", "alpha", scales_names)
 
 #! Summary --------------------------------------------
 MCMCsummary(samples_jags,
@@ -37,9 +41,7 @@ MCMCsummary(samples_jags,
 
 #! traceplots ----------------------
 MCMCtrace(samples_jags,
-            params = c("mu.alpha0", "mu.beta0",
-                        "beta","alpha",
-                        "scales_beta1","scales_beta2", "scales_beta3"),
+            params = all_params,
             ind = TRUE,
             pdf = FALSE,
             #filename = glue("figures/preliminary/jags_res_GCFL_b0yes_parks_20000its_LESSHRrun1"),
@@ -50,9 +52,7 @@ MCMCtrace(samples_jags,
 #! par estimates ----------------------------------
 #par(mfrow = c(1,1))
 MCMCplot(samples_jags,
-         params = c("mu.beta0","beta", 
-                     "mu.alpha0","alpha",
-                     "scales_beta1","scales_beta2","scales_beta3"),
+         params = all_params,
          ci = c(50, 89),
          ref_ovl = TRUE)
          
@@ -61,10 +61,8 @@ summary(samples_jags)
 
 #NOTE:
 MCMCsummary(samples_jags,
-            params = c("mu.beta0","beta",
-                        "mu.alpha0","alpha",
-                        "scales_beta1","scales_beta2", "scales_beta3"),
-                        round = 2)
+            params = all_params,
+            round = 2)
 
 MCMCtrace(samples_jags,
             params = c("alpha0", "beta0"),
