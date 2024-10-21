@@ -65,10 +65,10 @@ nburnin <- 20000
 nchains <- 5
 nthin <- 5
 
-niterations <- 10
-nburnin <- 5
-nchains <- 1
-nthin <- 1
+# niterations <- 10
+# nburnin <- 5
+# nchains <- 1
+# nthin <- 1
 
 #! Source code and Import data -----------------------------------------
 ## file paths
