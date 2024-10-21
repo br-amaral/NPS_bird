@@ -11,15 +11,16 @@ library(tigris)
 library(corrplot)
 
 ## Download the state subset or Connecticut (requires an internet connection)
-## Save as an object to automatically load the data into your current R session!
-      # vt <- getFIA(states = 'VT', dir = 'data/FIA', load = FALSE)
-      # me <- getFIA(states = 'ME', dir = 'data/FIA', load = FALSE)
-      # nh <- getFIA(states = 'NH', dir = 'data/FIA', load = FALSE)
-      # ny <- getFIA(states = 'NY', dir = 'data/FIA', load = FALSE)
-      # ct <- getFIA(states = 'CT', dir = 'data/FIA', load = FALSE)
-      # ma <- getFIA(states = 'MA', dir = 'data/FIA', load = FALSE)
-      # ri <- getFIA(states = 'RI', dir = 'data/FIA', load = FALSE)
-      # nj <- getFIA(states = 'NJ', dir = 'data/FIA', load = FALSE)
+## Save as an object to automatically load the data into your current R session!\ 
+# options(timeout = 20000)
+# vt <- getFIA(states = 'VT', dir = 'data/FIA', load = FALSE)
+# me <- getFIA(states = 'ME', dir = 'data/FIA', load = FALSE)
+# nh <- getFIA(states = 'NH', dir = 'data/FIA', load = FALSE)
+# ny <- getFIA(states = 'NY', dir = 'data/FIA', load = FALSE)
+# ct <- getFIA(states = 'CT', dir = 'data/FIA', load = FALSE)
+# ma <- getFIA(states = 'MA', dir = 'data/FIA', load = FALSE)
+# ri <- getFIA(states = 'RI', dir = 'data/FIA', load = FALSE)
+# nj <- getFIA(states = 'NJ', dir = 'data/FIA', load = FALSE)
 
 ## Get multiple states worth of data (not saved since 'dir' is not specified)
 ## Load FIA Data from a local directory
@@ -42,7 +43,8 @@ park_county <- matrix(c(
   'SAIR', 'Essex County', 'Massachusetts',
   'SARA', 'Saratoga County', 'New York',
   'VAMA', 'Dutchess County', 'New York',
-  'WEFA', 'Western Connecticut Planning Region', 'Connecticut'), # used to be 'Fairfield County'
+  'WEFA', 'Fairfield County', 'Connecticut'), 
+#  'WEFA', 'Western Connecticut Planning Region', 'Connecticut'), # used to be 'Fairfield County'
   ncol = 3, byrow = T) %>% 
   as_tibble()
 colnames(park_county) <- c("park", "county", "state")
