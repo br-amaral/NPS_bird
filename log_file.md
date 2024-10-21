@@ -93,6 +93,15 @@ in  - data/src/key_park.rds
 
             out - data/model_res/jags_res_{sps}_{park}_run{run_number}.rds
 TODO: for now, im putting zeros in the occasions that have no environmental data (mean)
+
+# multiple_single_sps_spscovs_yr.R
+
+
+# plots.R
+
+# post_hoc
+
+
 # --------------------------------------------------------------------
 
 
