@@ -103,6 +103,8 @@ for (i in 1:nrow(master_tab)){
     if (CAN == 1) print("CAN")
     if (DEB == 1) print("DEB")
     source("code/fit_model/back2d_covs_scales_2min_spscov.R")
+    #source("code/fit_model/get_z.R")
+
 }
 
 cat(paste('\n ************************************** \n \n \n 
