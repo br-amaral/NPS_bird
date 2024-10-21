@@ -56,6 +56,7 @@ cat("\n", "\n", "\n",
     "\n", "\n", "\n", "\n")
 system_time1 <- Sys.time()
 (date_out <- glue("{substr(system_time1, 1,4)}_{substr(system_time1, 6,7)}_{substr(system_time1, 9,10)}"))
+date_out <- as.character()
 
 # Import data -----------------------------------------
 ## file paths
@@ -608,6 +609,11 @@ for(a in 1:nrow(Zst)){
   
 }
 
+# save initial values for post hoc analysis
+z <- list(Zst = Zst,
+          Zst2 = Zst2)
+write_rds(z, file = glue("data/ana_file/{date_out}_data_{sps_loop}_Z.rds"))
+
 y <- data.matrix(y)
 y2 <- data.matrix(y2)
 y_ind <- sort(rep(seq(1, nrow(y2),1),ninterval))
@@ -824,9 +830,9 @@ paste('\n ************************************** \n \n \n ---------------- DONE 
 meta_name <- file(glue("data/ana_file/{date_out}_metadata_{sps_name}_{park_name}_yr.txt"))
 writeLines(paste(
 
-                'Results File Name = ', glue('{file_name2}.rds'), '\n', 
-                'Data File Name = ', glue("data/ana_file/{date_out}_data_{sps_name}_{park_name}_yr.rds"), '\n', 
-                'Script = ', script_name, '\n',
+                ' Results File Name =', glue('{file_name2}.rds'), '\n', 
+                'Data File Name =', glue("data/ana_file/{date_out}_data_{sps_name}_{park_name}_yr.rds"), '\n', 
+                'Script =', script_name, '\n',
                 'Model file =', glue("{mod_name}"), '\n',
                 'Species =', sps_name, '\n',
                 'Parks =', park_name, '\n',
