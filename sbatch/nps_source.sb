@@ -35,5 +35,5 @@ module load R-bundle-CRAN/2023.12-foss-2023a
 export R_DISABLE_BYTECODE=1
 
 # Rscript code/fit_model/teste_hpcc.r 
-Rscript code/the_source.R
+Rscript code/the_source.r
 
