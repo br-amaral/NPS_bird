@@ -27,7 +27,7 @@ lenght <- length
 #! Import data -----------------------------------------
 ## file paths and read files
 # when loading the model results, get the most updated file?
-file_name <- "2024_10_19_DOWO_parks_40000its_2min_spscov_yr_run1"
+file_name <- "2024_09_22_YBSA_parks_20000its_2min_spscov_run1"
 
 samples_jags <- read_rds(glue("data/model_res/{file_name}.rds"))
 
@@ -55,7 +55,23 @@ MCMCplot(samples_jags,
          params = all_params,
          ci = c(50, 89),
          ref_ovl = TRUE)
-         
+
+#! get beta parameters ----------------------------
+(pars_select <- cbind(
+  c(
+    #'beta[2]',
+    'beta[2]',
+    'beta[2]'
+  ),
+  c(1,2)) %>% 
+  as_tibble() %>% 
+  rename(beta = V1,
+         scale = V2))
+write_rds(pars_select, file = glue("data/model_res/{file_name}_PARS.rds"))
+
+
+
+
 #TODO:
 summary(samples_jags)
 
