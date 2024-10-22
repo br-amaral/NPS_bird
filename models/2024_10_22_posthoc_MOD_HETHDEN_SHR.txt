@@ -28,7 +28,7 @@ model {
   ## Sampling process	
   mu.alpha0 ~ dnorm(0, 0.36)
   tau.alpha0 ~ dgamma(0.1,0.1) 
-  
+
   ## Vector loops -------------------------------
   # short occupancy loop; only first interval
   for(b in 1:nrowy2){
@@ -39,10 +39,10 @@ model {
     # Covariate effects on the ecological process
     logit(psi[y2[b,2],y2[b,3],y2[b,4]]) <-       # parkey, site_n, year_n
       beta0[y2[b,2],y2[b,4]] +                   # parkey, year_n
-      # BA (tree basal area)
-      beta[1] * X3[b, sca_mod[1]] +   
-      # SHRUB
-      beta[2] * X52[b, sca_mod[2]] + 
+      # DEN
+      beta[1] * X2[b, sca_mod[1]] +   
+      # shrub
+      beta[2] * X3[b, sca_mod[2]] + 
       # park size
       beta[3] * Xp[b]                   
   }

@@ -444,6 +444,7 @@ y_all3 <- y_all2 %>%
                        time_jul_s      = time_jul_s2,
                        date_jul_s      = date_jul_s2,
                        area_s          = area_s2)
+
 dim(y_all3)
 dim(y_all2)
 

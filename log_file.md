@@ -2,8 +2,8 @@
 
 DOOOOO(ing):
 
-- 
-
+- saving per sps: data, z values, model, results, meta data
+"data/ana_file/{date_out}_data_{sps_loop}_Z.rds
 - 
 
 # --------------------------------------------------------------------
