@@ -49,6 +49,9 @@ PAR_MOD_PATH <- glue('data/model_res/{file_name}_PARS.rds')
 MODEL_RES_PATH <- glue("data/model_res/{file_name}.rds")
 # model data
 MODEL_DATA_PATH <- glue('data/ana_file/{date_out}_data_{sps}_parks.rds') 
+if(grepl("_yr_", file_name)){
+    MODEL_DATA_PATH <- glue('data/ana_file/{date_out}_data_{sps}_parks_yr.txt')
+}
 # meta data 
 # TODO: think about yr in the end
 META_DATA_PATH <- glue('data/ana_file/{date_out}_metadata_{sps}_parks.txt')
