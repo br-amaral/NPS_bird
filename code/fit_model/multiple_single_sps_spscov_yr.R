@@ -60,15 +60,12 @@ lenght <- length
 `%!in%` <- Negate(`%in%`)
 
 #! MCMC settings ---------------------------------------
-niterations <- 20000
-nburnin <- 10000
-nchains <- 8
+niterations <- 10000
+nburnin <- 5000
+nchains <- 5
 nthin <- 5
 
-# niterations <- 10
-# nburnin <- 5
-# nchains <- 1
-# nthin <- 1
+# niterations <- 10 ; nburnin <- 5 ; nchains <- 1 ; nthin <- 1
 
 #! Source code and Import data -----------------------------------------
 ## file paths

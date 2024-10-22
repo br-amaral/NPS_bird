@@ -27,7 +27,7 @@ lenght <- length
 #! Import data -----------------------------------------
 ## file paths and read files
 # when loading the model results, get the most updated file?
-file_name <- "2024_09_22_YBSA_parks_20000its_2min_spscov_run1"
+file_name <- "2024_09_20_BTBW_parks_50000its_2min_spscov_run1"
 
 samples_jags <- read_rds(glue("data/model_res/{file_name}.rds"))
 

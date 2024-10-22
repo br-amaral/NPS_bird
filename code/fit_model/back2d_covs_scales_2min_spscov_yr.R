@@ -56,7 +56,7 @@ cat("\n", "\n", "\n",
     "\n", "\n", "\n", "\n")
 system_time1 <- Sys.time()
 (date_out <- glue("{substr(system_time1, 1,4)}_{substr(system_time1, 6,7)}_{substr(system_time1, 9,10)}"))
-date_out <- as.character()
+date_out <- as.character(date_out)
 
 # Import data -----------------------------------------
 ## file paths
