@@ -27,7 +27,7 @@ lenght <- length
 #! Import data -----------------------------------------
 ## file paths and read files
 # when loading the model results, get the most updated file?
-file_name <- "2024_09_20_BTBW_parks_50000its_2min_spscov_run1"
+file_name <- "2024_10_22_BHVI_parks_10000its_2min_spscov_run1"
 
 samples_jags <- read_rds(glue("data/model_res/{file_name}.rds"))
 
@@ -35,26 +35,28 @@ samples_jags <- read_rds(glue("data/model_res/{file_name}.rds"))
 scales_names <- grep("^scales_", colnames(samples_jags[[1]]), value = TRUE)
 all_params <- c("mu.alpha0", "mu.beta0", "beta", "alpha", scales_names)
 
-#! Summary --------------------------------------------
-MCMCsummary(samples_jags,
-            round = 2)
-
-#! traceplots ----------------------
-MCMCtrace(samples_jags,
-            params = all_params,
-            ind = TRUE,
-            pdf = FALSE,
-            #filename = glue("figures/preliminary/jags_res_GCFL_b0yes_parks_20000its_LESSHRrun1"),
-            exact = TRUE,
-            Rhat = TRUE,
-            n.eff = TRUE) 
-
-#! par estimates ----------------------------------
+#! Par estimates ----------------------------------
 #par(mfrow = c(1,1))
 MCMCplot(samples_jags,
          params = all_params,
-         ci = c(50, 89),
+         #ci = c(50, 89),
+         main = file_name,
          ref_ovl = TRUE)
+
+#! Traceplots ----------------------
+MCMCtrace(samples_jags,
+          params = all_params,
+          #main = file_name,
+          ind = TRUE,
+          pdf = FALSE,
+          #filename = glue("figures/preliminary/jags_res_GCFL_b0yes_parks_20000its_LESSHRrun1"),
+          exact = TRUE,
+          Rhat = TRUE,
+          n.eff = TRUE) 
+
+#! Summary --------------------------------------------
+MCMCsummary(samples_jags,
+            round = 2)
 
 #! get beta parameters ----------------------------
 (pars_select <- cbind(
@@ -67,7 +69,7 @@ MCMCplot(samples_jags,
   as_tibble() %>% 
   rename(beta = V1,
          scale = V2))
-write_rds(pars_select, file = glue("data/model_res/{file_name}_PARS.rds"))
+#write_rds(pars_select, file = glue("data/model_res/{file_name}_PARS.rds"))
 
 
 
