@@ -23,7 +23,7 @@
 #           - :
 
 # Print script file name
-context <- "multiple_single_sps_spscovs.R" #rstudioapi::getSourceEditorContext()
+context <- "multiple_single_sps_posthoc.R" #rstudioapi::getSourceEditorContext()
 cat("\n", "\n", "\n", 
     'Current script:', context, #basename(context[[2]]), 
     "\n", "\n", "\n", "\n")
