@@ -168,46 +168,61 @@ names(jags_data2)
 ## initialize JAGS
 cat("\n\n\n running first jags \n\n\n\n")
 
-jags_model <- rjags::jags.model(
-  file = model_file,
-  data = jags_data2,
-  inits = inits, 
-  n.chains = nchains,
-  n.adapt = max(100, ceiling(.1 * niterations)),
-  quiet = FALSE
-)
+# jags_model <- rjags::jags.model(
+#   file = model_file,
+#   data = jags_data2,
+#   inits = inits, 
+#   n.chains = nchains,
+#   n.adapt = max(100, ceiling(.1 * niterations)),
+#   quiet = FALSE
+# )
 
-cat("\n\n\n first done, running second \n\n\n\n") 
+# cat("\n\n\n first done, running second \n\n\n\n") 
 
-# burn-in
-if (nburnin > 0) {
-  message(paste("burn-in:", nburnin, "iterations"))
-  rjags::jags.samples(
-    jags_model,
-    variable.names = params,
-    n.iter = niterations,
-    thin = nthin,
-    quiet = FALSE
-  )
-}
+# # burn-in
+# if (nburnin > 0) {
+#   message(paste("burn-in:", nburnin, "iterations"))
+#   rjags::jags.samples(
+#     jags_model,
+#     variable.names = params,
+#     n.iter = niterations,
+#     thin = nthin,
+#     quiet = FALSE
+#   )
+# }
 
-# write_rds(jags_model,
-#           file = glue("data/model_res/M12.rds"))
+# # write_rds(jags_model,
+# #           file = glue("data/model_res/M12.rds"))
 
-cat("\n\n\n second done, running third \n\n\n\n")
+# cat("\n\n\n second done, running third \n\n\n\n")
 
-# posterior simulation
-samples_jags <- coda.samples(
-  jags_model,
-  variable.names = params,
-  n.iter = niterations,
-  thin = nthin,
-  quiet = FALSE
-)
+# # posterior simulation
+# samples_jags <- coda.samples(
+#   jags_model,
+#   variable.names = params,
+#   n.iter = niterations,
+#   thin = nthin,
+#   quiet = FALSE
+# )
 
+samples_jags <- jags(data = jags_data2,
+                      inits = inits,
+                      parameters.to.save = params,
+                      model.file = model_file,
+                      n.chains = nchains,
+                      n.adapt = max(100, ceiling(.1 * niterations)),
+                      n.iter = niterations,
+                      n.burnin = nburnin,
+                      n.thin = 2)
+#   file = ,
+#   data = ,
+#   inits = inits, 
+#   n.chains = nchains,
+#   n.adapt = max(100, ceiling(.1 * niterations)),
+#   quiet = FALSE
 cat("\n\n\n third done!!! \n\n\n\n")
 
-file_name <- glue("{date_out}_{sps}_{niterations}its_2min_spscov_yr_POSTHOC_")
+file_name <- glue("{date_out}_{sps}_{niterations}its_2min_spscov_yr_POSTHOCui_")
 
 file_name2 <- paste0(file_name, 'run',
                       length(list.files(path = file.path(getwd(),"data/model_res/"),
