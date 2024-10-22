@@ -108,7 +108,7 @@ inits <- function() {
 
 # Define the model file and the output file name
 model_file <- glue("models/{mod_name2}.txt")
-mod_name   <- mod_name2 %>% as.character()
+mod_name   <- glue("models/{mod_name2}") %>% as.character()
 
 # Read the content of the model file
 mod_content <- readLines(model_file)
