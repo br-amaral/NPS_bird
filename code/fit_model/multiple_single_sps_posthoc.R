@@ -79,7 +79,7 @@ master_tab <- read_csv("data/out/post_hoc_ana.csv")
 for(i in 1:nrow(master_tab)){
     (sps_loop <- master_tab$sps[i])
     file_name <-  master_tab$file[i]
-    source("code/fit_model/post_hoc.R")
+    source("code/fit_model/post_hoc.r")
 
 }
 
