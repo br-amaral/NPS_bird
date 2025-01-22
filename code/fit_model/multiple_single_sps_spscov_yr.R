@@ -76,9 +76,9 @@ master_tab <- read_rds("data/out/sps_covs.rds") %>%
 # master_tab$DEN[6] <- 1  # HETH
 # master_tab$BA[5] <-  1  # HAWO 
 # master_tab$DEN[5] <- 1  # HAWO 
-# master_tab$CAN <- 1
+ master_tab$CAN <- 0
 # master_tab$DEB <- 0
-# master_tab$DEB[4] <- 1  # DOWO
+ master_tab$DEB[4] <- 0  # DOWO
 # master_tab$DEB[5] <- 1  # HAWO
 # master_tab$DEB[2] <- 1  # BRCR
 # master_tab$DEB[13] <- 1 # YBSA
