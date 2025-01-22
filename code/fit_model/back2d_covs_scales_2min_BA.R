@@ -68,7 +68,7 @@ get_script_name <- function() {
 }
 
 # Get the script name and time that it started running --
-#script_name <- get_script_name()
+script_name <- "back2d_covs_scales_2min_BA.R"
 
 cat("\n", "\n", "\n", 
 #    'Current script:', script_name, 
@@ -562,7 +562,7 @@ samples_jags <- coda.samples(
 cat("\n\n\n third done!!! \n\n\n\n")
 fil_nam <- sps_loop2
 
-file_name <- glue("{date_out}_{fil_nam}_{park_name}_{niterations}its_2min_noshrub_")
+file_name <- glue("{date_out}_{fil_nam}_{park_name}_{niterations}its_2min_BA_")
 
 file_name2 <- paste0(file_name, 'run',
                       length(list.files(path = file.path(getwd(),"data/model_res/"),

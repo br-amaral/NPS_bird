@@ -26,33 +26,61 @@ lenght <- length
 
 #! Import data -----------------------------------------
 ## file paths and read files
-file_name <- "2024_09_11_COYE_b0yes_parks_5000its_2min_noshrub_run1"
+# when loading the model results, get the most updated file?
+file_name <- "2024_09_22_VEER_parks_20000its_2min_spscov_run1"
 
 samples_jags <- read_rds(glue("data/model_res/{file_name}.rds"))
-# when loading the model results, get the most updated file?
+
+# get parameter names
+scales_names <- grep("^scales_", colnames(samples_jags[[1]]), value = TRUE)
+all_params <- c("mu.alpha0", "mu.beta0", "beta", "alpha", scales_names)
+
+#! Par estimates ----------------------------------
+par(mfrow = c(1,1))
+MCMCplot(samples_jags,
+         params = all_params,
+         #ci = c(50, 89),
+         main = file_name,
+         ref_ovl = TRUE)
+
+#! Traceplots ----------------------
+MCMCtrace(samples_jags,
+          params = all_params,
+          #main = file_name,
+          ind = TRUE,
+          pdf = FALSE,
+          #filename = glue("figures/preliminary/jags_res_GCFL_b0yes_parks_20000its_LESSHRrun1"),
+          exact = TRUE,
+          Rhat = TRUE,
+          n.eff = TRUE)
 
 #! Summary --------------------------------------------
 MCMCsummary(samples_jags,
             round = 2)
 
-MCMCsummary(samples_jags,
-            params = c("mu.beta0","beta",
-                        "mu.alpha0","alpha",
-                        "scales_beta1","scales_beta2", "scales_beta3"),
-                        round = 2)
-##! traceplots ----------------------
-#print(glue("jags_res_{master_tab[mod_loop,4]}_parks_10000itsrun1"))
+#! get beta parameters ----------------------------
+(pars_select <- cbind(
+  c(
+    #'beta[2]',
+    'beta[2]',
+    'beta[2]'
+  ),
+  c(1,2)) %>% 
+  as_tibble() %>% 
+  rename(beta = V1,
+         scale = V2))
+#write_rds(pars_select, file = glue("data/model_res/{file_name}_PARS.rds"))
 
-MCMCtrace(samples_jags,
-            params = c("mu.alpha0", "mu.beta0",
-                        "beta","alpha",
-                        "scales_beta1","scales_beta2", "scales_beta3"),
-            ind = TRUE,
-            pdf = FALSE,
-            #filename = glue("figures/preliminary/jags_res_GCFL_b0yes_parks_20000its_LESSHRrun1"),
-            exact = TRUE,
-            Rhat = TRUE,
-            n.eff = TRUE) 
+
+
+
+#TODO:
+summary(samples_jags)
+
+#NOTE:
+MCMCsummary(samples_jags,
+            params = all_params,
+            round = 2)
 
 MCMCtrace(samples_jags,
             params = c("alpha0", "beta0"),
@@ -63,15 +91,6 @@ MCMCtrace(samples_jags,
             Rhat = TRUE,
             n.eff = TRUE)
 
-# par estimates ----------------------------------
-par(mfrow = c(1,1))
-
-MCMCplot(samples_jags,
-         params = c("mu.beta0","beta", 
-                     "mu.alpha0","alpha",
-                     "scales_beta1","scales_beta2","scales_beta3"),
-         ref_ovl = TRUE)
-
 MCMCplot(samples_jags,
          params = c("alpha0","beta0"),
          ref_ovl = TRUE)
@@ -80,13 +99,44 @@ MCMCplot(samples_jags,
          params = c("mu.beta0","beta",
                     "mu.alpha0","alpha"),
          ref_ovl = TRUE)
-#MCMCplot(samples_jags,
-#         params = c("mu.beta0","beta1", "beta2","beta3",
-#                    "mu.alpha0","alpha1","alpha2","alpha3",
-#                    "scales_beta1","scales_beta2"),
-#         ref_ovl = TRUE)
-         
-#TODO:
-summary(samples_jags)
 
-#NOTE:
+# scale selection plots and objects:
+
+sca_beta1 <- MCMCchains(samples_jags, params = 'scales_beta3')
+selected_scales = rep(NA, 1)
+#for (i in 1:3) {
+  tb_mcmc_scales_i = table(sca_beta1)
+  
+  selected_scales = as.integer(names(which.max(tb_mcmc_scales_i)))
+#}
+
+sca_beta1
+selected_scales
+
+sca_beta1p <- as_tibble(sca_beta1) %>%  
+  mutate(new = 1)
+sca_beta1p <- pivot_longer(sca_beta1p, -new, names_to = "site", values_to = "selected_scale") %>% 
+  select(site, selected_scale) %>% 
+  arrange(site)
+
+ggplot(aes(x = selected_scale, 
+           y = (..count..)/sum(..count..), 
+           fill = (..count..)/sum(..count..)), 
+           data = sca_beta1p) + 
+  geom_histogram(position = "stack", binwidth = 0.5) + 
+  theme_bw() +
+  ylab("Frequency") + 
+  xlab("Selected scale") +
+  scale_y_continuous(limits = c(0, 1)) +
+  scale_fill_gradient(
+    name = "Frequency",
+    low = "#ecffdd", high = "#0a2701",  # Customize gradient colors
+    limits = c(0, 1),  # Explicitly set the limits for the fill scale
+    guide = guide_colorbar(ticks = FALSE))+  # Remove ticks from legend bar+
+  theme(
+    legend.title = element_text(size = 14),  # Increase legend title size
+    legend.text = element_text(size = 12),   # Increase legend text size
+    legend.key.size = unit(3, "cm")        # Increase legend key size
+  )
+
+

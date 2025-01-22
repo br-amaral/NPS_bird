@@ -2,9 +2,9 @@
 
 DOOOOO(ing):
 
-- compare old neighbour data (500m, and 1000m) with new neighbour forest type data
-
-- check covariate variation and correlation; some parks don't have a lot of forest plots in their vicinity
+- saving per sps: data, z values, model, results, meta data
+"data/ana_file/{date_out}_data_{sps_loop}_Z.rds
+- 
 
 # --------------------------------------------------------------------
 TO DO:
@@ -24,14 +24,20 @@ Assumptions/decisions:
                  sair is too different (open areas)
                  elro only has one forest plot
 
-- 500 m for the radius between the sites make sense for bird home range, but is that meaningful? now using with 1000m, ctually back to 500m
+- 500 m for the radius between the sites make sense for bird home range, but is that meaningful? now using 500m
 
-- year of environmental covariates: 2022
+- year of environmental covariates: 2022 (site,park)
+county: stastr_tab(2020)
+        deb_tab(2020)
+        can_tab(2020)
+        div_tab(2020)
+        shr_tab(2010)  !!!!!!!!!!!!
+        tpa_tab(2020)
 
 # --------------------------------------------------------------------
 Workflow:
 
-# format_veg_data/get_site_data.R
+# format_veg_data/get_site_data_forgroups.R
             in  - data/out/NETNtib.rds
             in  - data/src/key_park.rds
             in  - data/veg_kateaaron/NETN_forest_data_2006-2023.rds
@@ -86,6 +92,16 @@ in  - data/out/nsite_pk.rds
 in  - data/src/key_park.rds
 
             out - data/model_res/jags_res_{sps}_{park}_run{run_number}.rds
+TODO: for now, im putting zeros in the occasions that have no environmental data (mean)
+
+# multiple_single_sps_spscovs_yr.R
+
+
+# plots.R
+
+# post_hoc
+
+
 # --------------------------------------------------------------------
 
 

@@ -11,15 +11,16 @@ library(tigris)
 library(corrplot)
 
 ## Download the state subset or Connecticut (requires an internet connection)
-## Save as an object to automatically load the data into your current R session!
-      # vt <- getFIA(states = 'VT', dir = 'data/FIA', load = FALSE)
-      # me <- getFIA(states = 'ME', dir = 'data/FIA', load = FALSE)
-      # nh <- getFIA(states = 'NH', dir = 'data/FIA', load = FALSE)
-      # ny <- getFIA(states = 'NY', dir = 'data/FIA', load = FALSE)
-      # ct <- getFIA(states = 'CT', dir = 'data/FIA', load = FALSE)
-      # ma <- getFIA(states = 'MA', dir = 'data/FIA', load = FALSE)
-      # ri <- getFIA(states = 'RI', dir = 'data/FIA', load = FALSE)
-      # nj <- getFIA(states = 'NJ', dir = 'data/FIA', load = FALSE)
+## Save as an object to automatically load the data into your current R session!\ 
+# options(timeout = 20000)
+# vt <- getFIA(states = 'VT', dir = 'data/FIA', load = FALSE)
+# me <- getFIA(states = 'ME', dir = 'data/FIA', load = FALSE)
+# nh <- getFIA(states = 'NH', dir = 'data/FIA', load = FALSE)
+# ny <- getFIA(states = 'NY', dir = 'data/FIA', load = FALSE)
+# ct <- getFIA(states = 'CT', dir = 'data/FIA', load = FALSE)
+# ma <- getFIA(states = 'MA', dir = 'data/FIA', load = FALSE)
+# ri <- getFIA(states = 'RI', dir = 'data/FIA', load = FALSE)
+# nj <- getFIA(states = 'NJ', dir = 'data/FIA', load = FALSE)
 
 ## Get multiple states worth of data (not saved since 'dir' is not specified)
 ## Load FIA Data from a local directory
@@ -42,7 +43,8 @@ park_county <- matrix(c(
   'SAIR', 'Essex County', 'Massachusetts',
   'SARA', 'Saratoga County', 'New York',
   'VAMA', 'Dutchess County', 'New York',
-  'WEFA', 'Western Connecticut Planning Region', 'Connecticut'), # used to be 'Fairfield County'
+  'WEFA', 'Fairfield County', 'Connecticut'), 
+#  'WEFA', 'Western Connecticut Planning Region', 'Connecticut'), # used to be 'Fairfield County'
   ncol = 3, byrow = T) %>% 
   as_tibble()
 colnames(park_county) <- c("park", "county", "state")
@@ -835,8 +837,81 @@ tpaRI_MR <- tpa(riMR)
 tpaRI <- tpa(fiaRI)
 
 
+ii <- 1
+db$COND$LIVE_CANOPY_CVR_PCT
 
+db$COND$LIVE_CANOPY_CVR_PCT
 
+for(ii in 1:nrow(park_county)){
+  
+  county_sp <- counties(park_county$state[ii], cb = TRUE)
+  
+  county_sp2 <- county_sp %>% filter(NAMELSAD == park_county$county[ii])
+  
+  gg <- ggplot()
+  gg <- gg + geom_sf(data = county_sp2, color="black",
+                     fill="white", linewidth=2) + 
+    theme_bw() + 
+    theme(panel.border = element_blank(), 
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(), 
+          axis.line = element_blank()) 
+  gg 
+    
+  dbclip2 <- clipFIA(db, mask = county_sp2, mostRecent = FALSE)
+  
+  name1 <- glue("fia_{park_county$park[ii]}")
+  
+  assign(name1, dbclip2)
+  
+  
+  db2_cond <- dbclip2$COND[c("CN", "PLT_CN", "INVYR", "UNITCD", "PLOT", "CONDID","COUNTYCD", "STATECD",
+                             "COND_STATUS_CD", "OWNCD", "OWNGRPCD", "FORTYPCD",
+                             "FLDTYPCD", "STDAGE", "STDSZCD", "SIBASE", "STDORGCD",
+                             #"ALSTKCD", "DSTRBCD1", "DSTRBYR1", "DSTRBCD2", "TRTCD1",
+                             #"PRESNFCD", "BALIVE", "FLDAGE", "ALSTK", "GSSTK", "FORTYPCDCALC",
+                             #"HABTYPCD1", "CARBON_LITTER", "GRAZING_SRS", "HARVEST_TYPE1_SRS",
+                             "LIVE_CANOPY_CVR_PCT", #"NBR_LIVE_STEMS", "DSTRBCD1_P2A", "TRTCD1_P2A",
+                             "LAND_COVER_CLASS_CD")]
+  db2_plot <- dbclip2$PLOT[c("CN", "INVYR","SRV_CN","CTY_CN","UNITCD", "STATECD",
+                             "COUNTYCD","PLOT","KINDCD","LAT","LON", "UNITCD", "PLOT")]
+  db2_sur <- dbclip2$SURVEY[c("STATENM", "CN", "INVYR", "STATECD")]
+  
+  dbclip2$P2VEG_SUBP_STRUCTURE
+  
+  db3 <- dbclip2[[c("PLOT")]]
+  
+  db3 <- db3 %>% 
+    dplyr::select(INVYR, STATECD, UNITCD, COUNTYCD, PLOT, LAT, LON)
+  db2_cond <- left_join(db2_cond, db3)#, by = c("INVYR", "STATECD", "UNITCD", "COUNTYCD", "PLOT"))
 
+  db2_cond$park <- park_county$park[ii]
+  db2_plot$park <- park_county$park[ii]
+  db2_sur$park <- park_county$park[ii]
+  
+  if(ii == 1){
+    fia_cond <- db2_cond
+    fia_plot <- db2_plot
+    fia_sur <- db2_sur
+  }
+  
+  if(ii > 1){
+    fia_cond <- rbind(fia_cond, db2_cond)
+    fia_plot <- rbind(fia_plot, db2_plot)
+    fia_sur <- rbind(fia_sur, db2_sur)
+  }
+  
+  print(nrow(fia_cond))
+  
+  spdf_cond <- SpatialPointsDataFrame(coords = db2_cond[, c("LON","LAT")], data = db2_cond[, c("LON","LAT")],
+                                     proj4string = CRS("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"))
+  spdf_plot <- SpatialPointsDataFrame(coords = db2_plot[, c("LON","LAT")], data = db2_plot[, c("LON","LAT")],
+                                     proj4string = CRS("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"))
+  spdf_sur <- SpatialPointsDataFrame(coords = db2_sur[, c("LON","LAT")], data = db2_sur[, c("LON","LAT")],
+                                      proj4string = CRS("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"))
+}
+plot(spdf_cond)
 
+dowo_fim
 
+dbclip2$TREE$TREECLCD_NERS %>% table()  %>% sum()

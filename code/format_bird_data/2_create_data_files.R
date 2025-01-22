@@ -533,7 +533,7 @@ site_key <- y_dat6 %>%
     distinct()
 
 ## site ----------------------------------------------------------------------------------------------
-#! it is OK if ACAD and SAIR do not have covs now,
+#! it is OK if ACAD, ELRO and SAIR do not have covs now,
 #!   they are gonna be removed from the data in the next step (back2d_covs_scales_3)
 site_covs <- read_rds(PATH_COVS_SITE) %>% 
                 rename(Point_Name = bird_sit,

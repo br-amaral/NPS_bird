@@ -50,7 +50,7 @@ sum_na <- function(df){ # sum fuction to ignore NAs, but keep NA if all entries 
 }
 
 # Get the script name and time that it started running --
-script_name <- "back2d_covs_scales_2min_noshrub.R"
+script_name <- "back2d_covs_scales_2min.R"
 
 cat("\n", "\n", "\n", 
     'Current script:', script_name, 
@@ -100,14 +100,14 @@ X10$unique_index <- seq(1,nrow(y_dat5),1)
 if(setequal(y_dat5$unique_index, X10$unique_index) != "TRUE") stop("ah wrong indexing!!!! #82")
 
 y_dat6 <- y_dat5 %>% 
-  dplyr::filter(sps_it == sps_loop,
+  dplyr::filter(sps_it %in% sps_loop,
                 park %in% pk
   )
 
 if(length(sps_loop) == 1){
   print(glue("analazing one species: {sps_loop}"))
   } else {
-  print('analazing a community: {sps_loop}')
+  print(glue('analazing the community: {sps_loop}'))
 }
 
 X10 <- X10 %>% 
@@ -118,6 +118,11 @@ glu1 <- paste(shQuote(sort(unique(y_dat6$sps_it))), collapse=", ")
 spsglue <- glue("the species are {glu1}, and parks are")
 parkglue <- paste(shQuote(sort(unique(y_dat6$park))), collapse=", ")
 print(paste(spsglue,parkglue))
+
+## check the number of detections for the species
+y_dat6 %>% 
+    filter(detec_occ == 1) %>% 
+    select(AOU_Code, park) %>% table()
 
 ## add a step here to fix parkey
 parkey_right <- y_dat6 %>% 
