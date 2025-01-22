@@ -68,8 +68,8 @@ park_county <- matrix(c(
   'SAIR', 'Essex County', 'Massachusetts','MA',
   'SARA', 'Saratoga County', 'New York','NY',
   'VAMA', 'Dutchess County', 'New York','NY',
- # 'WEFA', 'Western Connecticut Planning Region', 'Connecticut','CT'), # used to be 'Fairfield County'
-  'WEFA', 'Fairfield County', 'Connecticut','CT'), 
+  'WEFA', 'Western Connecticut Planning Region', 'Connecticut','CT'), # used to be 'Fairfield County'
+ # 'WEFA', 'Fairfield County', 'Connecticut','CT'), 
 
   ncol = 4, byrow = T) %>% 
   as_tibble()
@@ -414,3 +414,69 @@ coun_covs_year <- left_join(tpa_tab3, stastr_tab3, by = c("ParkUnit", "Year")) %
 write_rds(coun_covs_year, file = "data/out/coun_covs_yr.rds")
 
 cat(paste("\n\n Done \n\n\n"))
+
+coun_covs_year <- read_rds("data/out/coun_covs_yr.rds")
+coun_covs_year <- coun_covs_year %>% 
+      filter(ParkUnit != "ACAD")%>% 
+      filter(ParkUnit != "ELRO")%>% 
+      filter(ParkUnit != "SAIR")
+table(coun_covs_year$Year,coun_covs_year$ParkUnit)
+
+
+coun_covs <- left_join(tpa_tab, stastr_tab, by = c("park","YEAR")) %>% 
+  left_join(div_tab, by =  c("park","YEAR"))  
+table(coun_covs$YEAR,coun_covs$park)
+
+colnames(coun_covs)
+
+ggplot(coun_covs %>% 
+      filter(park != "ACAD")%>% 
+      filter(park != "ELRO")%>% 
+      filter(park != "SAIR")) +
+  geom_point(aes(x = YEAR, y = TPA, col = park)) +
+  geom_line(aes(x = YEAR, y = TPA, col = park)) +
+  theme_bw()
+
+ggplot(coun_covs %>% 
+      filter(park != "ACAD")%>% 
+      filter(park != "ELRO")%>% 
+      filter(park != "SAIR")) +
+  geom_point(aes(x = YEAR, y = BAA, col = park)) +
+  geom_line(aes(x = YEAR, y = BAA, col = park)) +
+  theme_bw()
+
+  ggplot(coun_covs %>% 
+      filter(park != "ACAD")%>% 
+      filter(park != "ELRO")%>% 
+      filter(park != "SAIR")) +
+  geom_point(aes(x = YEAR, y = Eh_a, col = park)) +
+  geom_line(aes(x = YEAR, y = Eh_a, col = park)) +
+  theme_bw()
+
+    ggplot(coun_covs %>% 
+      filter(park != "ACAD")%>% 
+      filter(park != "ELRO")%>% 
+      filter(park != "SAIR") %>% 
+      filter(STAGE ==  "LATE")) +
+  geom_point(aes(x = YEAR, y = COVER_PCT, col = park)) +
+  geom_line(aes(x = YEAR, y = COVER_PCT, col = park)) +
+  theme_bw()
+
+    ggplot(coun_covs %>% 
+      filter(park != "ACAD")%>% 
+      filter(park != "ELRO")%>% 
+      filter(park != "SAIR") %>% 
+      filter(STAGE ==  "MATURE")) +
+  geom_point(aes(x = YEAR, y = COVER_PCT, col = park)) +
+  geom_line(aes(x = YEAR, y = COVER_PCT, col = park)) +
+  theme_bw()
+
+    ggplot(coun_covs %>% 
+      filter(park != "ACAD")%>% 
+      filter(park != "ELRO")%>% 
+      filter(park != "SAIR") %>% 
+      filter(STAGE ==  "POLE")) +
+  geom_point(aes(x = YEAR, y = COVER_PCT, col = park)) +
+  geom_line(aes(x = YEAR, y = COVER_PCT, col = park)) +
+  theme_bw()
+  "LATE"   "MATURE" "MOSAIC" "POLE" 

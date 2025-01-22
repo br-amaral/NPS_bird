@@ -87,7 +87,7 @@ cwd_yr <- joinCWDData(park = 'all') %>% # coarse wood debris
 ## snags ----------------------------------------------------------------
 
 #! calculate park means --------------------------------
-for_park2 <- for_park %>% 
+for_park <- for_park %>% 
   filter(ParkUnit != "ACAD", 
          SampleYear == 2022) %>% 
   group_by(ParkUnit) %>% 
@@ -139,3 +139,44 @@ write_rds(for_park2, file = "data/out/park_covs.rds")
 write_rds(for_park2_yr, file = "data/out/park_covs_yr.rds")
 
 cat(paste("\n\n Done \n\n\n"))
+
+
+colnames(for_park)
+
+colnames(for_park2_yr)
+
+ggplot(for_park2_yr %>% 
+      filter(ParkUnit != "ACAD")%>% 
+      filter(ParkUnit != "ELRO")%>% 
+      filter(ParkUnit != "SAIR")) +
+  geom_point(aes(x = SampleYear, y = parkBA, col = ParkUnit)) +
+  geom_line(aes(x = SampleYear, y = parkBA, col = ParkUnit)) +
+  theme_bw()
+
+ggplot(for_park2_yr %>% 
+      filter(ParkUnit != "ACAD")%>% 
+      filter(ParkUnit != "ELRO")%>% 
+      filter(ParkUnit != "SAIR")) +
+  geom_point(aes(x = SampleYear, y = parkDEN, col = ParkUnit)) +
+  geom_line(aes(x = SampleYear, y = parkDEN, col = ParkUnit)) +
+  theme_bw()
+
+unique(for_park2_yr$ParkUnit)
+library(ggplot2)
+library(dplyr)
+
+# Assuming for_park is your data frame
+ggplot(for_park %>% filter(ParkUnit == "WEFA")) +
+  geom_boxplot(aes(x = as.factor(SampleYear), y = BA_m2ha, col = ParkUnit)) +
+  ylim(c(0, 80)) +
+  labs(x = "Sample Year", y = "Basal Area", 
+  title = "Boxplot of Basal Area by Year for WEFA") +
+  theme_bw() +
+  theme(legend.position = "none")
+
+ggplot(for_park %>% filter(ParkUnit == "MIMA")) +
+  geom_boxplot(aes(x = as.factor(SampleYear), y = BA_m2ha, col = ParkUnit)) +
+  ylim(c(0, 80)) +
+  labs(x = "Sample Year", y = "Basal Area", title = "Boxplot of Basal Area by Year for MIMA") +
+  theme_bw() +
+  theme(legend.position = "none")
