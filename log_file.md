@@ -87,7 +87,7 @@ out - data/out/y_dat3.rds
             out - data/X.rds 
 out - data/sps_pk_nth.rds
 
-# format_bird_data/back2d_covs_scales.R
+# format_bird_data/back2d_covs_scales_2min_spscov.R
             in  - data/y_dat8.rds
             in  - data/X.rds
 in  - data/out/nsite_pk.rds
@@ -98,6 +98,7 @@ TODO: for now, im putting zeros in the occasions that have no environmental data
 
 # multiple_single_sps_spscovs.R
 
+# sbatch: nps_source.sb
 
 # plots.R
 
