@@ -39,7 +39,7 @@ library(sf)
 library(reshape2)
 library(ggplot2)
 library(ggh4x)
-library("MetBrewer")
+#library("MetBrewer")
 library(forestNETN)
 
 conflicts_prefer(dplyr::select)
