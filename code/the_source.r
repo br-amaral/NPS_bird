@@ -5,15 +5,13 @@ source("code/format_veg_data/FIA_getdata.R")
 source("code/format_veg_data/get_coun_data.R")
 
 source("code/format_bird_data/2_create_data_files.R")
-source("code/format_bird_data/2_create_data_files_yr.R")
 source("code/format_bird_data/check_sps_data.r.R")
 
 source("code/fit_model/multiple_single_sps_spscov.R")
-source("code/fit_model/multiple_single_sps_spscov_yr.R")
 
 # source("code/")
 # source("code/")
 # source("code/")
 
-sbatch sbatch/nps_singlesps_parks_spscov.sb 
-sbatch sbatch/nps_singlesps_parks_spscov_yr.sb 
+# sbatch sbatch/nps_singlesps_parks_spscov.sb 
+# sbatch sbatch/nps_singlesps_parks_spscov_yr.sb 
