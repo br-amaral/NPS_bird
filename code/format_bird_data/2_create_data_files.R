@@ -29,7 +29,6 @@
 #           - data/sps_pk_nth.rds: species code in each park
 
 ## detach packages and clear workspace
-if(!require(freshr)){install.packages("freshr")}
 freshr::freshr()
 
 #! Load packages --------------------------------------
