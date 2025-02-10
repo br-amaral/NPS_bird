@@ -13,7 +13,6 @@
 #           - data/out/coun_covs.rds - county covariate data for model
 #
 # detach packages and clear workspace
-if(!require(freshr)){install.packages('freshr')}
 freshr::freshr()
 #
 #! Load packages ---------------------------------------
@@ -68,8 +67,8 @@ park_county <- matrix(c(
   'SAIR', 'Essex County', 'Massachusetts','MA',
   'SARA', 'Saratoga County', 'New York','NY',
   'VAMA', 'Dutchess County', 'New York','NY',
-  'WEFA', 'Western Connecticut Planning Region', 'Connecticut','CT'), # used to be 'Fairfield County'
- # 'WEFA', 'Fairfield County', 'Connecticut','CT'), 
+  #'WEFA', 'Western Connecticut Planning Region', 'Connecticut','CT'), # used to be 'Fairfield County'
+  'WEFA', 'Fairfield County', 'Connecticut','CT'), 
 
   ncol = 4, byrow = T) %>% 
   as_tibble()
@@ -115,27 +114,39 @@ for(ii in 1:nrow(park_county)){
     mutate(park = park_county$park[ii])
   
   if(ii == 1){
-    tpa_tab <- tpaRI
+    tpa_tab2 <- tpaRI
   }
   
   if(ii > 1){
-    tpa_tab <- rbind(tpa_tab, tpaRI)
+    tpa_tab2 <- rbind(tpa_tab2, tpaRI)
   }
 }
 
-### Stand structure
+tpa_tab <- tpa_tab2 %>% 
+  group_by(park) %>% 
+  summarise(across(c(TPA, BAA, TREE_TOTAL, BA_TOTAL), 
+                   ~ mean(.x, na.rm = TRUE), 
+                   .names = "{.col}"))
+
+###? Stand structure ----------------------------------------------------
 for(ii in 1:nrow(park_county)){
   stastr <- standStruct(get(glue("fia_{park_county$park[ii]}"))) %>% 
     select(YEAR, STAGE, COVER_PCT, COVER_PCT_SE) %>% 
     mutate(park = park_county$park[ii])
   if(ii == 1){
-    stastr_tab <- stastr
+    stastr_tab2 <- stastr
   }
   
   if(ii > 1){
-    stastr_tab <- rbind(stastr_tab, stastr)
+    stastr_tab2 <- rbind(stastr_tab2, stastr)
   }
 }
+
+stastr_tab <- stastr_tab2 %>% 
+  group_by(park,STAGE) %>% 
+  summarise(across(c(YEAR, COVER_PCT), 
+                   ~ mean(.x, na.rm = TRUE), 
+                   .names = "{.col}"))
 
 ###? Tree richness ----------------------------------------- 
 for(ii in 1:nrow(park_county)){
@@ -144,13 +155,19 @@ for(ii in 1:nrow(park_county)){
            Eh_a_SE, S_a_SE) %>% 
     mutate(park = park_county$park[ii])
   if(ii == 1){
-    div_tab <- div
+    div_tab2 <- div
   }
   
   if(ii > 1){
-    div_tab <- rbind(div_tab, div)
+    div_tab2 <- rbind(div_tab2, div)
   }
 }
+
+div_tab <- div_tab2 %>% 
+  group_by(park) %>% 
+  summarise(across(c(H_a, Eh_a, S_a, H_b, Eh_b, S_b, H_g, Eh_g, S_g), 
+                   ~ mean(.x, na.rm = TRUE), 
+                   .names = "{.col}"))
 
 ###? Shrub cover ---------------------------------------------------------
 # shrub data
@@ -172,14 +189,19 @@ for(ii in 1:nrow(park_county)){
            rename(shr_per = LVSHRBCD, 
                   shr_ht = LVSHRBHT)
   if(ii == 1){
-    shr_tab <- county_shr
+    shr_tab2 <- county_shr
   }
   
   if(ii > 1){
-    shr_tab <- rbind(shr_tab, county_shr)
+    shr_tab2 <- rbind(shr_tab2, county_shr)
   }
-
 }
+
+shr_tab <- shr_tab2 %>% 
+  group_by(park) %>% 
+  summarise(across(c(shr_per, shr_ht), 
+                   ~ mean(.x, na.rm = TRUE), 
+                   .names = "{.col}"))
 
 ###? Canopy cover ---------------------------------------------------------
 # LIVE_CANOPY_CVR_PCT: Live canopy cover percent. The percentage of live canopy cover for 
@@ -193,15 +215,20 @@ for(ii in 1:nrow(park_county)){
                 mutate(park = park_county$park[ii])
 
   if(ii == 1){
-    can_tab <- cancov
+    can_tab2 <- cancov
   }
   
   if(ii > 1){
-    can_tab <- rbind(can_tab, cancov)
+    can_tab2 <- rbind(can_tab2, cancov)
   }
 }
 
-# can_tab  %>% select(LIVE_CANOPY_CVR_PCT, park) %>% mutate(LIVE_CANOPY_CVR_PCT = ifelse(is.na(LIVE_CANOPY_CVR_PCT),0,1)) %>% table()
+can_tab <- can_tab2 %>% 
+  group_by(park) %>% 
+  summarise(across(c(LIVE_CANOPY_CVR_PCT), 
+                   ~ mean(.x, na.rm = TRUE), 
+                   .names = "{.col}"))
+
 
 ###? proportion of snags ---------------------------------------------------------
 # TREECLCD_NERS: Tree class code, Northeastern Research Station. In annual inventory, this code
@@ -222,18 +249,18 @@ for(ii in 1:nrow(park_county)){
                 mutate(park = park_county$park[ii])
 
   if(ii == 1){
-    sna_tab <- snacov
+    sna_tab2 <- snacov
   }
   
   if(ii > 1){
-    sna_tab <- rbind(sna_tab, snacov)
+    sna_tab2 <- rbind(sna_tab2, snacov)
   }
 }
-sna_tab %>% 
-  select(TREECLCD_NERS, park) %>% 
-  mutate(TREECLCD_NERS = ifelse(TREECLCD_NERS < 6, 1,TREECLCD_NERS)) %>% 
-  mutate(TREECLCD_NERS = ifelse(is.na(TREECLCD_NERS),0,TREECLCD_NERS)) %>% 
-  table()
+
+sna_tab <- sna_tab2 %>% 
+             select(TREECLCD_NERS, park) %>% 
+             table() %>% 
+             as_tibble()
 
 ###? Down wood debris ----------------------------------------- 
 # BIO_ACRE: estimate of mean biomass per acre of dwm (short tons/acre)
@@ -244,41 +271,35 @@ for(ii in 1:nrow(park_county)){
     mutate(park = park_county$park[ii])
 
   if(ii == 1){
-    deb_tab <- deb
+    deb_tab2 <- deb
   }
   
   if(ii > 1){
-    deb_tab <- rbind(deb_tab, deb)
+    deb_tab2 <- rbind(deb_tab2, deb)
   }
 }
 
-#? summarize the files by park and merge them -----------------------------------------
-tpa_tab2 <- tpa_tab %>% 
-  filter(YEAR == 2020) %>% 
+deb_tab <- deb_tab2 %>% 
   group_by(park) %>% 
-  summarise(tpa = mean(TPA, na.rm = T),
-            baa = mean(BAA, na.rm = T),
-            tree_total = mean(TREE_TOTAL, na.rm = T),
-            ba_total = mean(BA_TOTAL, na.rm = T),
-            tpa_se = mean(TPA_SE, na.rm = T),
-            baa_se = mean(BAA_SE, na.rm = T),
-            tree_total_se = mean(TREE_TOTAL_SE, na.rm = T)) %>% 
-  rename(ParkUnit = park,
-         counDEN = tpa, counBA = baa) %>% 
+  summarise(across(c(BIO_ACRE), 
+                   ~ mean(.x, na.rm = TRUE), 
+                   .names = "{.col}"))
+
+#? summarize the files by park and merge them -----------------------------------------
+tpa_tab3 <- tpa_tab %>% 
+  rename(tree_total = TREE_TOTAL,
+         ba_total = BA_TOTAL,
+         ParkUnit = park,
+         counDEN = TPA, 
+         counBA = BAA) %>% 
   select(ParkUnit, counDEN, counBA)
 
-shr_tab2 <- shr_tab %>% 
-  filter(INVYR == 2010) %>% 
-  group_by(park) %>% 
-  summarise(shr_per = mean(shr_per, na.rm = T),
-            shr_ht = mean(shr_ht, na.rm = T)) %>% 
+shr_tab3 <- shr_tab %>% 
   rename(ParkUnit = park,
          counSHRUden = shr_per) %>% 
   select(ParkUnit, counSHRUden)
 
-stastr_tab2 <- stastr_tab %>%  
-  filter(YEAR == 2020) %>% 
-  select(-COVER_PCT_SE) %>%
+stastr_tab3 <- stastr_tab %>%  
   pivot_wider(names_from = STAGE, values_from = COVER_PCT) %>% 
   group_by(park) %>%
   summarise(counPER_late = mean(LATE, na.rm = T),
@@ -287,51 +308,54 @@ stastr_tab2 <- stastr_tab %>%
             counPER_pole = mean(POLE, na.rm = T)) %>% 
   rename(ParkUnit = park)
 
-div_tab2 <- div_tab %>%
-  filter(YEAR == 2020) %>% 
-  select(-Eh_a_SE, -S_a_SE) %>%
+div_tab3 <- div_tab %>%
   group_by(park) %>%
-  summarise(counH_a = mean(H_a, na.rm = T),
-            counH_b = mean(H_b, na.rm = T),
-            counH_g = mean(H_g, na.rm = T),
-            counEh_a = mean(Eh_a, na.rm = T),
-            counEh_b = mean(Eh_b, na.rm = T),
-            counEh_g = mean(Eh_g, na.rm = T),
-            counS_a = mean(S_a, na.rm = T),
-            counS_b = mean(S_b, na.rm = T),
-            counS_g = mean(S_g, na.rm = T)) %>%
+  rename(counH_a = H_a,
+            counH_b = H_b, 
+            counH_g = H_g,
+            counEh_a = Eh_a,
+            counEh_b = Eh_b,
+            counEh_g = Eh_g,
+            counS_a = S_a,
+            counS_b = S_b,
+            counS_g = S_g) %>%
   rename(ParkUnit = park)
 
-can_tab2 <- can_tab %>% 
-  filter(INVYR == 2020) %>% 
+can_tab3 <- can_tab %>% 
   select(park, LIVE_CANOPY_CVR_PCT) %>% 
   group_by(park) %>%
-  summarise(Can_cov = mean(LIVE_CANOPY_CVR_PCT, na.rm = T))%>%
-  rename(ParkUnit = park)
+  rename(ParkUnit = park,
+         Can_cov = LIVE_CANOPY_CVR_PCT)
 
-deb_tab2 <- deb_tab %>% 
-  filter(YEAR == 2020) %>% 
+deb_tab3 <- deb_tab %>% 
   select(park, BIO_ACRE) %>% 
+  rename(Dwn_Dbr = BIO_ACRE, 
+         ParkUnit = park)
+
+ sna_tab3 <- sna_tab %>% 
+  pivot_wider(names_from = TREECLCD_NERS, values_from = n) %>% 
   group_by(park) %>%
-  summarise(Dwn_Dbr = mean(BIO_ACRE, na.rm = T))%>%
-  rename(ParkUnit = park)
+  rename(ParkUnit = park,
+         sna1 = `1`,
+         sna2 = `2`,
+         sna3 = `3`,
+         sna4 = `4`,
+         sna5 = `5`,
+         sna6 = `6`)
 
-#! TODO: make the snag work!!!!!!! TODO:
-# sna_tab2 <- sna_tab
-
-nrow(tpa_tab2)
-nrow(stastr_tab2)
-nrow(div_tab2)
-nrow(shr_tab2)
-nrow(can_tab2)
-nrow(deb_tab2)
+nrow(tpa_tab3)
+nrow(stastr_tab3)
+nrow(div_tab3)
+nrow(shr_tab3)
+nrow(can_tab3)
+nrow(deb_tab3)
 
 # put everyhing in the same dataframe by county (park) -----------------------------------------
-coun_covs <- left_join(tpa_tab2, stastr_tab2, by = "ParkUnit") %>% 
-  left_join(div_tab2, by = "ParkUnit") %>% 
-  left_join(shr_tab2, by = "ParkUnit") %>% 
-  left_join(can_tab2, by = "ParkUnit") %>% 
-  left_join(deb_tab2, by = "ParkUnit")
+coun_covs <- left_join(tpa_tab3, stastr_tab3, by = "ParkUnit") %>% 
+  left_join(div_tab3, by = "ParkUnit") %>% 
+  left_join(shr_tab3, by = "ParkUnit") %>% 
+  left_join(can_tab3, by = "ParkUnit") %>% 
+  left_join(deb_tab3, by = "ParkUnit")
 
 #! Output files -----------------------------------------
 write_rds(coun_covs, file = "data/out/coun_covs.rds")
@@ -394,51 +418,37 @@ can_tab3 <- can_tab %>%
          Year = INVYR)
 
 deb_tab3 <- deb_tab %>% 
-  select(park, YEAR, BIO_ACRE) %>% 
-  group_by(park, YEAR) %>% 
+  select(park, BIO_ACRE) %>% 
+  group_by(park) %>% 
   summarise(Dwn_Dbr = mean(BIO_ACRE, na.rm = T))%>%
-  rename(ParkUnit = park,
-         Year = YEAR)
+  rename(ParkUnit = park)
 
 #! TODO: make the snag work!!!!!!! TODO:
 # sna_tab2 <- sna_tab
 
 # put everyhing in the same dataframe by county (park) -----------------------------------------
-coun_covs_year <- left_join(tpa_tab3, stastr_tab3, by = c("ParkUnit", "Year")) %>% 
-  left_join(div_tab3, by = c("ParkUnit", "Year")) %>% 
-  left_join(shr_tab3, by = c("ParkUnit", "Year")) %>% 
-  left_join(can_tab3, by = c("ParkUnit", "Year")) %>% 
-  left_join(deb_tab3, by = c("ParkUnit", "Year"))
+coun_covs <- left_join(tpa_tab3, stastr_tab3, by = c("ParkUnit")) %>% 
+  left_join(div_tab3, by = c("ParkUnit")) %>% 
+  left_join(shr_tab3, by = c("ParkUnit")) %>% 
+  left_join(can_tab3, by = c("ParkUnit")) %>% 
+  left_join(deb_tab3, by = c("ParkUnit"))
 
 #! Output files -----------------------------------------
-write_rds(coun_covs_year, file = "data/out/coun_covs_yr.rds")
+# write_rds(coun_covs, file = "data/out/coun_covs_yr.rds")
 
 cat(paste("\n\n Done \n\n\n"))
 
-coun_covs_year <- read_rds("data/out/coun_covs_yr.rds")
-coun_covs_year <- coun_covs_year %>% 
-      filter(ParkUnit != "ACAD")%>% 
-      filter(ParkUnit != "ELRO")%>% 
-      filter(ParkUnit != "SAIR")
-table(coun_covs_year$Year,coun_covs_year$ParkUnit)
-
-
-coun_covs <- left_join(tpa_tab, stastr_tab, by = c("park","YEAR")) %>% 
-  left_join(div_tab, by =  c("park","YEAR"))  
-table(coun_covs$YEAR,coun_covs$park)
-
-colnames(coun_covs)
 
 ggplot(coun_covs %>% 
-      filter(park != "ACAD")%>% 
-      filter(park != "ELRO")%>% 
-      filter(park != "SAIR")) +
+      filter(ParkUnit != "ACAD")%>% 
+      filter(ParkUnit != "ELRO")%>% 
+      filter(ParkUnit != "SAIR")) +
   geom_point(aes(x = YEAR, y = TPA, col = park)) +
   geom_line(aes(x = YEAR, y = TPA, col = park)) +
   theme_bw()
 
 ggplot(coun_covs %>% 
-      filter(park != "ACAD")%>% 
+      filter(ParkUnit != "ACAD")%>% 
       filter(park != "ELRO")%>% 
       filter(park != "SAIR")) +
   geom_point(aes(x = YEAR, y = BAA, col = park)) +
