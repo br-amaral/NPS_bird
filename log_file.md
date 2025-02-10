@@ -34,6 +34,8 @@ county: stastr_tab(2020)
         shr_tab(2010)  !!!!!!!!!!!!
         tpa_tab(2020)
 
+- the _yr files refer to environmental covariates being extracted each year
+
 # --------------------------------------------------------------------
 Workflow:
 
@@ -94,7 +96,7 @@ in  - data/src/key_park.rds
             out - data/model_res/jags_res_{sps}_{park}_run{run_number}.rds
 TODO: for now, im putting zeros in the occasions that have no environmental data (mean)
 
-# multiple_single_sps_spscovs_yr.R
+# multiple_single_sps_spscovs.R
 
 
 # plots.R
