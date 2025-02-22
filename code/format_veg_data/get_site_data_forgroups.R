@@ -27,11 +27,10 @@
 #!          - data/out/close_points_fcovs.rds :
 #
 # detach packages and clear workspace
-if(!require(freshr)){install.packages('freshr')}
 freshr::freshr()
 #
 #! Load packages ---------------------------------------
-library(conflicted)
+#library(conflicted)
 library(tidyverse)
 library(glue)
 library(sp)
@@ -40,11 +39,11 @@ library(sf)
 library(reshape2)
 library(ggplot2)
 library(ggh4x)
-library("MetBrewer")
+#library("MetBrewer")
 library(forestNETN)
 
-conflicts_prefer(dplyr::select)
-conflicts_prefer(dplyr::filter)
+#conflicts_prefer(dplyr::select)
+#conflicts_prefer(dplyr::filter)
 # conflicts_prefer(scales::alpha)
 #
 #! Make functions --------------------------------------
@@ -174,18 +173,21 @@ park_plot_nam <- bird_sit_coord %>%
               filter(row_number()==1) %>%
               ungroup()
 
+library(ggplot2)
+
 ggplot() +
   geom_point(aes(x = bird_sit_coord$lonutm, 
-                  y = bird_sit_coord$latutm),
-              size = 2,
-              color = "red") +
+                 y = bird_sit_coord$latutm),
+             size = 2,
+             color = "red") +
   geom_point(aes(x = for_sit_coord$lonutm, 
-                  y = for_sit_coord$latutm), 
-              color = "darkgreen") +
+                 y = for_sit_coord$latutm), 
+             color = "darkgreen") +
   #geom_text(aes(x= park_plot_nam$lonutm, y =park_plot_nam$latutm),
   #          label = park_plot_nam$park, size = 3, vjust = -1.3) +
   theme_bw() +
-  xlim(697200,700200) + ylim(4833300,4835000)
+  coord_cartesian(xlim = c(697200, 700200), 
+                  ylim = c(4833300, 4835000))
 
 # great - it all alligns very well; now let's get the closest 3 sites
 
@@ -462,7 +464,6 @@ for_sit_extra <- for_sit %>%
 #? get means for all years ----------------------------------------------
 ## mean for all years
 for_sit2 <- for_sit_extra %>% 
-  filter(SampleYear == 2022) %>% 
   group_by(Plot_Name) %>% 
   mutate(treeden_haM = mean(treeden_ha, na.rm = T),
           BA_m2haM = mean(BA_m2ha, na.rm = T),
@@ -584,8 +585,48 @@ write_rds(neighbor, file = glue("data/out/neighbor_grp_{radi_dist}m.rds"))
 
 cat(paste("\n\n Done \n\n\n"))
 
+# neighbours
+table(neighbor$for_sit)
+table(neighbor$for_sit) %>% mean()
+table(neighbor$for_sit) %>% sd()
 
+# number of neightbours per park
+uni_neigh <- full_join(for_sit2_year, close_points_f, by = "for_sit")  %>% 
+                select(bird_sit, for_sit) %>% 
+                filter(!is.na(bird_sit))  %>% 
+                mutate(uni_nei = glue("{substr(bird_sit, 1, 4)}_{substr(for_sit, 6, 8)}")) %>% 
+                mutate(park = glue("{substr(bird_sit, 1, 4)}"))
 
+uni_neigh2 <- uni_neigh %>% 
+                select(park, uni_nei) %>% 
+                distinct() %>% 
+                group_by(park) %>% 
+                summarise(neigh = n()) %>% 
+                ungroup() %>% 
+                arrange(park)
 
+# number of forest sites
+uni_for <- full_join(for_sit2_year, close_points_f, by = "for_sit")  %>% 
+                select(bird_sit, for_sit, ParkUnit) %>% 
+                filter(ParkUnit != "ACAD")  %>%
+                mutate(uni_nei = glue("{substr(bird_sit, 1, 4)}_{substr(for_sit, 6, 8)}")) %>% 
+                mutate(park = glue("{substr(bird_sit, 1, 4)}"))  %>% 
+                mutate(park2 = ifelse(is.na(bird_sit), 
+                                      glue("{substr(for_sit, 1, 4)}"), 
+                                      glue("{substr(uni_nei, 1, 4)}")))
+view(uni_for)
 
+uni_for %>% 
+    select(park2, for_sit) %>% 
+    distinct() %>% 
+    group_by(park2) %>% 
+    summarise(for_sit = n()) %>% 
+    ungroup() %>% 
+    arrange(park2)
+
+for_sit2_year  %>% 
+    group_by(ParkUnit) %>%
+    summarise(min_yr = min(Year),
+              max_yr = max(Year),
+              n_years = length(unique(Year)))
 
