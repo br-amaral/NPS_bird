@@ -5,7 +5,6 @@
 #
 hg <- httpgd::hgd()
 # detach packages and clear workspace
-if(!require(freshr)){install.packages('freshr')}
 freshr::freshr()
 #
 # Load packages ---------------------------------------
@@ -27,7 +26,7 @@ lenght <- length
 #! Import data -----------------------------------------
 ## file paths and read files
 # when loading the model results, get the most updated file?
-file_name <- "2024_09_22_VEER_parks_20000its_2min_spscov_run1"
+file_name <- "2025_02_13_REVI_parks_25000its_2min_spscov_run1"
 
 samples_jags <- read_rds(glue("data/model_res/{file_name}.rds"))
 
@@ -61,15 +60,16 @@ MCMCsummary(samples_jags,
 #! get beta parameters ----------------------------
 (pars_select <- cbind(
   c(
-    #'beta[2]',
-    'beta[2]',
+    #'beta[1]',
+    'beta[1]',
     'beta[2]'
   ),
-  c(1,2)) %>% 
+  c(1,23)) %>% 
   as_tibble() %>% 
   rename(beta = V1,
          scale = V2))
-#write_rds(pars_select, file = glue("data/model_res/{file_name}_PARS.rds"))
+
+#  write_rds(pars_select, file = glue("data/model_res/{file_name}_PARS.rds"))
 
 
 
