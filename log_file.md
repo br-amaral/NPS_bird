@@ -40,60 +40,60 @@ county: stastr_tab(2020)
 Workflow:
 
 # format_veg_data/get_site_data_forgroups.R
-            in  - data/out/NETNtib.rds
-            in  - data/src/key_park.rds
-            in  - data/veg_kateaaron/NETN_forest_data_2006-2023.rds
-            in  - data/veg_kateaaron/NETN_tree_dens_spp_2006-2023.rds
-            in  - data/veg_kateaaron/for_sites.rds
+        in  - data/out/NETNtib.rds
+        in  - data/src/key_park.rds
+        in  - data/veg_kateaaron/NETN_forest_data_2006-2023.rds
+        in  - data/veg_kateaaron/NETN_tree_dens_spp_2006-2023.rds
+        in  - data/veg_kateaaron/for_sites.rds
 
-            out - data/out/for_sit2.rds
-            out - data/out/site_covs_[xx]m.rds
-            out - data/out/park_site.rds
-            out - data/out/for_sit_coord.rds
-            out - data/out/bird_site_coords.rds
-            out - data/out/close_points_f.rds
+        out - data/out/for_sit2.rds
+        out - data/out/site_covs_[xx]m.rds
+        out - data/out/park_site.rds
+        out - data/out/for_sit_coord.rds
+        out - data/out/bird_site_coords.rds
+        out - data/out/close_points_f.rds
 
 # format_veg_data/get_park_data.R
-            in  - data/veg_kateaaron/NETN_forest_data_2006-2023.rds
+        in  - data/veg_kateaaron/NETN_forest_data_2006-2023.rds
 
-            out - data/out/park_covs.rds
+        out - data/out/park_covs.rds
 
 # format_veg_data/local_diversity.R
 
 # format_veg_data/FIA_getdata.R
 
 # format_veg_data/get_coun_data.R
-            in  - 'data/FIA/'
+        in  - 'data/FIA/'
 
-            out - data/out/coun_covs.rds
+        out - data/out/coun_covs.rds
 
 # format_bird_data/2_create_data_files.R
-in  - data/out/close_points_fcovs.rds
-in  - data/NETN-forest/tree_ba_tab_park.rds
-in  - data/NETN-forest/tree_den_tab_park.rds
-in  - data/NETN-forest/stand_struc_tab_park.rds
-in  - data/FIA/out/bas_area_tot_import.rds
-in  - data/FIA/out/tree_acre_tot_import.rds
-in  - data/FIA/out/stand_struc_import.rds
-in  - data/park_raster/{pk[i]}_pb.rds
-in  - y1
-in  - visits (data/out/visits.rds)
-in  - yr_pk
+        in  - data/out/close_points_fcovs.rds
+        in  - data/NETN-forest/tree_ba_tab_park.rds
+        in  - data/NETN-forest/tree_den_tab_park.rds
+        in  - data/NETN-forest/stand_struc_tab_park.rds
+        in  - data/FIA/out/bas_area_tot_import.rds
+        in  - data/FIA/out/tree_acre_tot_import.rds
+        in  - data/FIA/out/stand_struc_import.rds
+        in  - data/park_raster/{pk[i]}_pb.rds
+        in  - y1
+        in  - visits (data/out/visits.rds)
+        in  - yr_pk
 
-            out - data/src/sites_park_tib.rds
-out - data/out/site_n_key.rds
-out - data/out/y_dat3.rds
-            out - data/y_dat8.rds
-            out - data/X.rds 
-out - data/sps_pk_nth.rds
+        out - data/src/sites_park_tib.rds
+        out - data/out/site_n_key.rds
+        out - data/out/y_dat3.rds
+        out - data/y_dat8.rds
+        out - data/X.rds 
+        out - data/sps_pk_nth.rds
 
 # format_bird_data/back2d_covs_scales_2min_spscov.R
-            in  - data/y_dat8.rds
-            in  - data/X.rds
-in  - data/out/nsite_pk.rds
-in  - data/src/key_park.rds
+        in  - data/y_dat8.rds
+        in  - data/X.rds
+        in  - data/out/nsite_pk.rds
+        in  - data/src/key_park.rds
 
-            out - data/model_res/jags_res_{sps}_{park}_run{run_number}.rds
+        out - data/model_res/jags_res_{sps}_{park}_run{run_number}.rds
 TODO: for now, im putting zeros in the occasions that have no environmental data (mean)
 
 # multiple_single_sps_spscovs.R

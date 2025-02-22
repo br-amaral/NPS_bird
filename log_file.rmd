@@ -1,0 +1,66 @@
+---
+title: "NPS project log file"
+output: github_document
+---
+Currently running slurm-50070619.out
+error running SCTA
+run with less covariates for sps
+
+
+
+## Analysis flow
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### What is this document?
+
+This document is a log file with all the steps and information needed to run and understand the NPS bird scale selection analysis, to make sure that I also understand the code!
+
+## Get and format vegetation data
+You can include R code in the document as follows:
+
+```{r site, eval=FALSE}
+
+source("format_veg_data/get_site_data_forgroups.R")
+
+```
+        in  - data/out/NETNtib.rds
+        in  - data/src/key_park.rds
+        in  - data/veg_kateaaron/NETN_forest_data_2006-2023.rds
+        in  - data/veg_kateaaron/NETN_tree_dens_spp_2006-2023.rds
+        in  - data/veg_kateaaron/for_sites.rds
+
+        out - data/out/for_sit2.rds
+        out - data/out/site_covs_[xx]m.rds
+        out - data/out/park_site.rds
+        out - data/out/for_sit_coord.rds
+        out - data/out/bird_site_coords.rds
+        out - data/out/close_points_f.rds
+
+
+```{r park, eval=FALSE}
+
+source("format_veg_data/get_park_data.R")
+
+```
+        in  - data/veg_kateaaron/NETN_forest_data_2006-2023.rds
+
+        out - data/out/park_covs.rds
+
+```{r diversity for site and park, eval=FALSE}
+
+source('format_veg_data/local_diversity.R')
+
+```
+```{r county data export, eval=FALSE}
+
+source("format_veg_data/FIA_getdata.R")
+
+```
+```{r county format data, eval=FALSE}
+source("format_veg_data/get_coun_data.R")
+```
+        
+
+
