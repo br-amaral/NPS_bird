@@ -60,7 +60,7 @@ lenght <- length
 `%!in%` <- Negate(`%in%`)
 
 #! MCMC settings ---------------------------------------
-niterations <- 25000
+niterations <- 30000
 nburnin <- 15000
 nchains <- 8
 nthin <- 5
@@ -73,6 +73,9 @@ nthin <- 5
 ## read files
 master_tab <- read_rds("data/out/sps_covs.rds") %>% 
     filter(AOU_Code %!in% c("BLBW", "PIWA", "BTNW"))
+master_tab <- master_tab %>% 
+    mutate(CAN = 0, DEB = 0)
+master_tab$BA[11] <- 1
 
 for (i in 1:nrow(master_tab)){
     (sps_loop <- master_tab$AOU_Code[i])

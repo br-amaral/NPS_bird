@@ -32,8 +32,8 @@ model {
   # Scales
   scales_beta1 ~ dcat(c(1/2, 1/2))	
   scales_beta2 ~ dcat(c(1/2, 1/2))	
-  scales_beta3 ~ dcat(c(1/2, 1/2))	
-  scales_beta4 ~ dcat(c(1/2, 1/2))	
+  #scales_beta3 ~ dcat(c(1/2, 1/2))	
+  #scales_beta4 ~ dcat(c(1/2, 1/2))	
 
   ## Vector loops -------------------------------
   # short occupancy loop; only first interval
@@ -50,11 +50,11 @@ model {
       # pole ba
       beta[2] * X51[b,scales_beta2] +      
       # CAN
-      beta[3] * X6[b, scales_beta3] + 
+      #beta[3] * X6[b, scales_beta3] + 
       # DEB
-      beta[4] * X7[b, scales_beta4] +
+      #beta[4] * X7[b, scales_beta4] +
       # park size
-      beta[5] * Xp[b]                   
+      beta[3] * Xp[b]                   
   }
   
   # longer interval loop, all intervals of the removal sampling (not the first)

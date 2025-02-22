@@ -34,7 +34,7 @@ model {
   scales_beta2 ~ dcat(c(1/3, 1/3, 1/3))
   scales_beta3 ~ dcat(c(1/3, 1/3, 1/3))
   scales_beta4 ~ dcat(c(1/3, 1/3, 1/3))	
-  scales_beta5 ~ dcat(c(1/3, 1/3, 1/3))	
+  #scales_beta5 ~ dcat(c(1/3, 1/3, 1/3))	
 
   ## Vector loops -------------------------------
   # short occupancy loop; only first interval
@@ -55,9 +55,9 @@ model {
       # DEN old
       beta[4] * X53[b,scales_beta4] + 
       # CAN
-      beta[5] * X6[b, scales_beta5] + 
+      #beta[5] * X6[b, scales_beta5] + 
       # park size
-      beta[6] * Xp[b]                   
+      beta[5] * Xp[b]                   
   }
   
   # longer interval loop, all intervals of the removal sampling (not the first)
