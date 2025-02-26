@@ -26,7 +26,7 @@ lenght <- length
 #! Import data --------------------------------------------------------------------
 ## file paths and read files
 # when loading the model results, get the most updated file?
-file_name <- "2025_02_22_BHVI_parks_30000its_2min_spscov_run1"
+file_name <- "2025_02_23_DOWO_parks_30000its_2min_spscov_run1"
 
 samples_jags <- read_rds(glue("data/model_res/{file_name}.rds"))
 
@@ -65,7 +65,7 @@ betas_name <- paste0(n_betas1[n_betas1 == "beta"][-1], seq(1:n_betas))
 
 beta_key <- tibble(
   betas = betas_name, 
-  overlap = as.character(NA), 
+  overlap0 = as.character(NA), 
   sca_sel = as.character(NA),
   sca1 = as.numeric(NA),
   sca2 = as.numeric(NA),
@@ -83,9 +83,9 @@ for(ii in 1:n_betas) {
   
   # Check if quantiles overlap zero
   if (lower_quantile <= 0 && upper_quantile >= 0) {
-    beta_key$overlap[ii] <- "yes"
+    beta_key$overlap0[ii] <- "yes"
   } else {
-    beta_key$overlap[ii] <- "no"
+    beta_key$overlap0[ii] <- "no"
   }
 
 # scales
@@ -104,6 +104,11 @@ for(ii in 1:n_betas) {
   beta_key$sca3[ii] <- tb_mcmc_scales_i[3]
 
 }
+
+beta_key
+
+# save beta and scale selection values
+write_rds(beta_key, file = glue("data/model_res/{file_name}_SCA_SEL_PARS.rds"))
 
 # check how similar scales are if more than one was selected
 two_sca <- beta_key %>% 
@@ -127,6 +132,5 @@ ggplot(dat_sca) +
                alpha = 0.3) + 
     theme_bw() + ggtitle(glue("correlation = {round(cor(dat_sca[,1], dat_sca[,2], method = 'spearman'),2)}"))
 
-# save beta and scale selection values
-write_rds(beta_key, file = glue("data/model_res/{file_name}_SCA_SEL_PARS.rds"))
+
 
