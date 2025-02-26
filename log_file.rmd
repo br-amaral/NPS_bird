@@ -4,7 +4,7 @@ output: github_document
 ---
 Currently running slurm-51053955.out
 # TODO
-post hoc analysis
+post hoc analysis - remove several scales
 check why "BLBW", "PIWA", "BTNW" give problems
 new covariates for DOWO
 
