@@ -20,8 +20,8 @@
 freshr::freshr()
 
 nchains <- 8
-niterations <- 10000
-nburnin <- 5000
+niterations <- 20000
+nburnin <- 15000
 
 #! Load packages ---------------------------------------
 library(conflicted)
@@ -189,18 +189,6 @@ if (!file.exists(folder_path)) {
 write_rds(samples_jags,
           file = glue('data/model_res/{file_name2}.rds')
           )
-
-system_time2 <- Sys.time()
-if(as.numeric(system_time2 - system_time1) < 60) {
-  time_it_took <- round(difftime(system_time2, system_time1, units = c("mins")),2)
-  unit_time <- "mins"}
-if(as.numeric(system_time2 - system_time1) >= 60 & 
-      as.numeric(system_time2 - system_time1) <= 1440) {
-  time_it_took <- round(difftime(system_time2, system_time1, units = c("hours")),2)
-  unit_time <- "hours"}
-if(as.numeric(system_time2 - system_time1) > 1440) {
-  time_it_took <- round(difftime(system_time2, system_time1, units = c("days")),2)
-  unit_time <- "days"}
 
 # Get covariate names
 covs_names2 <- paste(unique(pars_mod$X), collapse = "_")
