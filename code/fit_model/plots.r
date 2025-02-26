@@ -26,7 +26,7 @@ lenght <- length
 #! Import data --------------------------------------------------------------------
 ## file paths and read files
 # when loading the model results, get the most updated file?
-file_name <- "2025_02_22_BHVI_10000its_2min_spscov_step2_run2"
+file_name <- "2025_02_25_HETH_parks_30000its_2min_spscov_run1"
 
 samples_jags <- read_rds(glue("data/model_res/{file_name}.rds"))
 
@@ -106,28 +106,3 @@ beta_key
 
 # save beta and scale selection values
 write_rds(beta_key, file = glue("data/model_res/{file_name}_SCA_SEL_PARS.rds"))
-
-# check how similar scales are if more than one was selected
-two_sca <- beta_key %>% 
-  filter(grepl("_", sca_sel))
-file_name_data <- glue("data/ana_file/{substr(file_name, 1, 10)}_data_{substr(file_name, 12, 15)}_parks.rds")
-jags_data <- read_rds(file_name_data)
-str(jags_data)
-
-dat_sca <- cbind(jags_data$X52[,2],
-                 jags_data$X52[,1],
-                 jags_data$y[,2]) %>% 
-                 as_tibble() %>% 
-                 rename(cov1 = V1, cov2 = V2, park = V3)  %>% 
-                 mutate(cov1 = as.numeric(cov1),
-                        cov2 = as.numeric(cov2),
-                        park = as.factor(park))
-
-ggplot(dat_sca) +
-    geom_point(aes(x = cov1, y = cov2, 
-                   colour = park),
-               alpha = 0.3) + 
-    theme_bw() + ggtitle(glue("correlation = {round(cor(dat_sca[,1], dat_sca[,2], method = 'spearman'),2)}"))
-
-
-
