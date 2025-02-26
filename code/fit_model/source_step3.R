@@ -52,7 +52,7 @@ nthin <- 5
 for(jj in 1:nrow(mod_specs)){
 
     file_name <- mod_specs$OUTPUT_FILE[jj]
-    source("code/fit_model/step2analysis.R")
+    source("code/fit_model/step2_analysis.R")
 
 }
 
