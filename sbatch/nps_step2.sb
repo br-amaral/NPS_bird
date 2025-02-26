@@ -35,5 +35,5 @@ module load R-bundle-CRAN/2023.12-foss-2023a
 export R_DISABLE_BYTECODE=1
 
 # Rscript 
-Rscript code/fit_model/step2_analysis.R
+Rscript code/fit_model/source_step3.R
 
