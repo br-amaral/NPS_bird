@@ -43,7 +43,7 @@ lenght <- length
 
 #! Import data -----------------------------------------
 # model output
-file_name <- '2025_02_22_BHVI_parks_30000its_2min_spscov_run1'
+file_name <- '2025_02_25_HETH_parks_30000its_2min_spscov_run1'
 (sps <- substr(file_name, 12, 15))
 (date_out <- substr(file_name, 1,  10))
 system_time1 <- Sys.time()

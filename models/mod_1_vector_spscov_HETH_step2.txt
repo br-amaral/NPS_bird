@@ -28,7 +28,7 @@ model {
   ## Sampling process	
   mu.alpha0 ~ dnorm(0, 0.36)
   tau.alpha0 ~ dgamma(0.1,0.1) 
-  
+
   ## Vector loops -------------------------------
   # short occupancy loop; only first interval
   for(b in 1:nrowy2){
@@ -39,18 +39,16 @@ model {
     # Covariate effects on the ecological process
     logit(psi[y2[b,2],y2[b,3],y2[b,4]]) <-       # parkey, site_n, year_n
       beta0[y2[b,2],y2[b,4]] +                   # parkey, year_n
-      # BA (tree basal area)
-      beta[1] * X1[b, 1] +   
-      # SHRUB
-      #beta[2] * X3[b, 2] + 
-      # SHRUB
-      beta[2] * X3[b, 3] + 
-      # MID
-      beta[3] * X52[b, 1] + 
-      # MID
-      #beta[5] * X52[b, 2] + 
+      # DEN
+      beta[1] * X2[b, 1] +   
+      # shrub
+      beta[2] * X3[b, 1] + 
+      # ba pole
+      #beta[3] * X51[b,scales_beta3] + 
+      # CAN
+      #beta[4] * X6[b, scales_beta4] + 
       # park size
-      beta[4] * Xp[b]                   
+      beta[3] * Xp[b]                   
   }
   
   # longer interval loop, all intervals of the removal sampling (not the first)
