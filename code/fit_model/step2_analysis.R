@@ -41,11 +41,13 @@ lenght <- length
 `%!in%` <- Negate(`%in%`)
 
 #! Import data -----------------------------------------
+# model output
 file_name <- '2025_02_22_BHVI_parks_30000its_2min_spscov_run1'
 (sps <- substr(file_name, 12, 15))
 (date_out <- substr(file_name, 1,  10))
 system_time1 <- Sys.time()
 script_name <- "step2_analysis.R"
+
 ## file paths
 # selected parameters
 PAR_MOD_PATH <- glue('data/model_res/{file_name}_SCA_SEL_PARS.rds')
@@ -76,7 +78,7 @@ pars_name_vec <- unlist(split_vector)
 
 (pars_mod <- pars_sca_mod  %>% 
               mutate(X = pars_name_vec) %>% 
-              filter(overlap == "no") %>% 
+              filter(overlap0 == "no") %>% 
               mutate(betas = sub("(.{4})(.*)", "\\1[\\2", betas)) %>% 
               mutate(betas = sub("(.{6})(.*)", "\\1]\\2", betas)) %>% 
               mutate(b_sca_numb = ifelse(grepl("_", sca_sel), 2, 1),
@@ -84,7 +86,7 @@ pars_name_vec <- unlist(split_vector)
               expandRows(.,"b_sca_numb2")) 
 
 sca_mod <- pars_sca_mod  %>% 
-              filter(overlap == "no") %>% 
+              filter(overlap0 == "no") %>% 
               select(sca_sel) %>% 
               pull()
 sca_mod_split <- sca_mod %>% strsplit("_") %>% unlist()  %>% as.numeric()
