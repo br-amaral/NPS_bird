@@ -1,8 +1,8 @@
 # *********************************************************************************
-# -----------------------------   Post hoc analysis   -----------------------------
+# -----------------------------    Step 2 analysis   ------------------------------
 # *********************************************************************************
 # Code to get the results from the multi scale model (multiple_single_sps_spscovs.R)
-#   and analise the selected scales and covariates
+#   and analise the selected scales and covariates (multiple_single_sps_spscovsSTEP2.R)
 #
 # Source ---------------------------------------------
 #           - :
@@ -17,9 +17,12 @@
 #           - :
 #
 # detach packages and clear workspace
-#if(!require(freshr)){install.packages('freshr')}
-#freshr::freshr()
-#
+freshr::freshr()
+
+nchains <- 8
+niterations <- 10000
+nburnin <- 5000
+
 #! Load packages ---------------------------------------
 library(conflicted)
 library(tidyverse)
@@ -27,6 +30,7 @@ library(glue)
 library(MCMCvis)
 library(jagsUI)
 library(rjags)
+library(splitstackshape)
 
 conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::filter)
@@ -37,27 +41,24 @@ lenght <- length
 `%!in%` <- Negate(`%in%`)
 
 #! Import data -----------------------------------------
-# file_name <- '2024_09_19_BHVI_parks_50000its_2min_spscov_run1'
+file_name <- '2025_02_22_BHVI_parks_30000its_2min_spscov_run1'
 (sps <- substr(file_name, 12, 15))
 (date_out <- substr(file_name, 1,  10))
 system_time1 <- Sys.time()
-script_name <- "post_hoc.r"
+script_name <- "step2_analysis.r"
 ## file paths
 # selected parameters
-PAR_MOD_PATH <- glue('data/model_res/{file_name}_PARS.rds')
+PAR_MOD_PATH <- glue('data/model_res/{file_name}_SCA_SEL_PARS.rds')
+
 # model results
 MODEL_RES_PATH <- glue("data/model_res/{file_name}.rds")
+
 # model data
 MODEL_DATA_PATH <- glue('data/ana_file/{date_out}_data_{sps}_parks.rds') 
-if(grepl("_yr_", file_name)){
-    MODEL_DATA_PATH <- glue('data/ana_file/{date_out}_data_{sps}_parks_yr.txt')
-}
+
 # meta data 
-# TODO: think about yr in the end
 META_DATA_PATH <- glue('data/ana_file/{date_out}_metadata_{sps}_parks.txt')
-if(grepl("_yr_", file_name)){
-    META_DATA_PATH <- glue('data/ana_file/{date_out}_metadata_{sps}_parks_yr.txt')
-}
+
 # inital values (z)
 Z_DATA_PATH <- glue("data/ana_file/{date_out}_data_{sps}_Z.rds")
 
@@ -66,47 +67,45 @@ print(meta_data <- readr::read_lines(META_DATA_PATH))
 samples_jags <- read_rds(MODEL_RES_PATH)
 jags_data <- read_rds(MODEL_DATA_PATH) 
 pars_sca_mod <- read_rds(PAR_MOD_PATH)
-pars_mod <- pars_sca_mod$beta
-sca_mod <- pars_sca_mod$scale %>% as.numeric()
+
+# get X objects being used
+pars_mod_name <- substr(meta_data[7], 15, nchar(meta_data[7]))
+pars_mod_name2 <- gsub(" ", "", pars_mod_name)
+split_vector <- strsplit(pars_mod_name2, "_")
+pars_name_vec <- unlist(split_vector)
+
+(pars_mod <- pars_sca_mod  %>% 
+              mutate(X = pars_name_vec) %>% 
+              filter(overlap == "no") %>% 
+              mutate(betas = sub("(.{4})(.*)", "\\1[\\2", betas)) %>% 
+              mutate(betas = sub("(.{6})(.*)", "\\1]\\2", betas)) %>% 
+              mutate(b_sca_numb = ifelse(grepl("_", sca_sel), 2, 1),
+                     b_sca_numb2 = b_sca_numb) %>% 
+              expandRows(.,"b_sca_numb2")) 
+
+sca_mod <- pars_sca_mod  %>% 
+              filter(overlap == "no") %>% 
+              select(sca_sel) %>% 
+              pull()
+sca_mod_split <- sca_mod %>% strsplit("_") %>% unlist()  %>% as.numeric()
+pars_mod$uni_sca <- sca_mod_split
+
 z_mod <- read_rds(Z_DATA_PATH)$Zst2
 
 # get parameter names
 scales_names <- grep("^scales_", colnames(samples_jags[[1]]), value = TRUE)
 (all_params <- c("mu.alpha0", "mu.beta0", "beta", "alpha", scales_names))
 
-pars_mod_name <- substr(meta_data[7], 15, nchar(meta_data[7]))
-pars_mod_name2 <- gsub(" ", "", pars_mod_name)
-split_vector <- strsplit(pars_mod_name2, "_")
-pars_name_vec <- unlist(split_vector)
-
-par_key <- as_tibble(cbind(c("X1", "X2", "X3", "X4", "X51", "X52", "X53", "X6", "X7"),
-                           c("BA", "DEN", "SHR", "DIV", "EAR", "MID", "LAT", "CAN", "DEB"),
-                           c(rep(1,9)))) %>% 
-                    rename(X = V1,
-                           par = V2,
-                           ind = V3) %>% 
-                    mutate(ind = as.numeric(ind))
-
 n_bs <- length(pars_name_vec) + 1
-n_bs_new <- length(pars_mod)
+n_bs_new <- c(length(unique(pars_mod$betas)),nrow(pars_mod))
 beta_numbs <- glue("beta[{seq(1,n_bs-1,1)}]")
 
-mod_par_key <- as_tibble(cbind(as.vector(beta_numbs),
-                               unlist(split_vector)))%>% 
-                    rename(beta = V1,
-                           par = V2)
+par_key <- as_tibble(cbind(c("X1", "X2", "X3", "X4", "X51", "X52", "X53", "X6", "X7"),
+                           c("BA", "DEN", "SHR", "DIV", "EAR", "MID", "LAT", "CAN", "DEB"))) %>% 
+                    rename(xobj = V1,
+                           X = V2)
 
-par_key2 <- par_key %>% 
-                left_join(., mod_par_key, by = 'par')
-
-par_key_fil <- par_key2 %>% 
-                filter(beta %in% pars_mod)
-
-sum(par_key_fil$ind) == n_bs_new
-
-n_bs_new <- n_bs_new + 1
-
-par_key_fil
+pars_mod <- left_join(pars_mod, par_key, by = "X")
 
 #! Get only parameters and scales that are relevant --------------------------------------------
 ## quick check
@@ -114,26 +113,17 @@ MCMCsummary(samples_jags,
             params = all_params,
             round = 2)
 
-#! Run the post hoc model ----------------------------------------------------------------------
-covs_names <- paste(par_key_fil$par, collapse = "_")
-sca_names <- paste(sca_mod, collapse = "_")
-
-paste('\n ************************************* \n \n \n Running JAGS post-hoc for:', '\n',
-      '  Species =', sps, '\n',
-      '  Number of betas =', n_bs_new, '\n',
-      '  Betas =', covs_names, '\n',
-      '  Scales =', sca_names, '\n',
-      '  Iterations =', niterations, '\n',
-      '  Burn-in =', nburnin, '\n',
-      '  Started running on =', Sys.time(),  '\n \n \n',
-      '**************************************
-      ') %>% cat()
+#! Run the step 2 model ------------------------------------------------------------------------
+covs_names <- paste(pars_mod$X, collapse = "_")
+sca_names <- paste(pars_mod$uni_sca, collapse = "_")
 
 params <- c("beta0", "beta", "alpha0", "alpha", 
             "mu.beta0", "tau.beta0", "mu.alpha0", "tau.alpha0") %>% # Z, psi
           as.character()
 
 n_as <- 3
+
+n_bs_new <- n_bs_new[2] + 1
 
 inits <- function() {
     list(
@@ -145,8 +135,8 @@ inits <- function() {
 }
 
 # Define the model file and the output file name
-model_file <- glue("models/mod_1_vector_spscov_{sps}_posthoc.txt")
-mod_name   <- glue("data/ana_file/{date_out}_mod_{sps}_posthoc.txt") %>% as.character()
+model_file <- glue("models/mod_1_vector_spscov_{sps}_step2.txt")
+mod_name   <- glue("data/ana_file/{date_out}_mod_{sps}_step2.txt") %>% as.character()
 
 # Read the content of the model file
 mod_content <- readLines(model_file)
@@ -157,53 +147,19 @@ mod_string <- paste(mod_content, collapse = "\n")
 # Write the content to the output file
 writeLines(mod_string, mod_name)
 
-# get the right data for the model
-rm_xs <- par_key[which(par_key$X %!in% par_key_fil$X),1] %>% pull()
-rm_xs2 <- rm_xs[which(rm_xs %in% names(jags_data))]
+# get the right data for the model - remove the covariates that are no longer in use
+old_pars <- names(jags_data)
+old_pars2 <- old_pars[grep("^X", old_pars)] 
+old_pars3 <- old_pars2[!old_pars2 %in% c("Xp","Xa","Xb")]
 
-jags_data2 <- jags_data[setdiff(names(jags_data), rm_xs2)]
+rm_xs <- old_pars3[which(old_pars3 %!in% pars_mod$xobj)] ## which covs I have to remove from the jags data?
+jags_data2 <- jags_data[setdiff(names(jags_data), rm_xs)] # remove them!!
 jags_data2$n_bs <- n_bs_new
-jags_data2$sca_mod <- sca_mod
 names(jags_data2)
+str(jags_data2)
+
 ## initialize JAGS
-cat("\n\n\n running first jags \n\n\n\n")
-
-# jags_model <- rjags::jags.model(
-#   file = model_file,
-#   data = jags_data2,
-#   inits = inits, 
-#   n.chains = nchains,
-#   n.adapt = max(100, ceiling(.1 * niterations)),
-#   quiet = FALSE
-# )
-
-# cat("\n\n\n first done, running second \n\n\n\n") 
-
-# # burn-in
-# if (nburnin > 0) {
-#   message(paste("burn-in:", nburnin, "iterations"))
-#   rjags::jags.samples(
-#     jags_model,
-#     variable.names = params,
-#     n.iter = niterations,
-#     thin = nthin,
-#     quiet = FALSE
-#   )
-# }
-
-# # write_rds(jags_model,
-# #           file = glue("data/model_res/M12.rds"))
-
-# cat("\n\n\n second done, running third \n\n\n\n")
-
-# # posterior simulation
-# samples_jags <- coda.samples(
-#   jags_model,
-#   variable.names = params,
-#   n.iter = niterations,
-#   thin = nthin,
-#   quiet = FALSE
-# )
+cat("\n\n\n running jags \n\n\n\n")
 
 samples_jags <- jags(data = jags_data2,
                       inits = inits,
@@ -214,15 +170,10 @@ samples_jags <- jags(data = jags_data2,
                       n.iter = niterations,
                       n.burnin = nburnin,
                       n.thin = 2)
-#   file = ,
-#   data = ,
-#   inits = inits, 
-#   n.chains = nchains,
-#   n.adapt = max(100, ceiling(.1 * niterations)),
-#   quiet = FALSE
-cat("\n\n\n third done!!! \n\n\n\n")
 
-file_name <- glue("{date_out}_{sps}_{niterations}its_2min_spscov_yr_POSTHOCui_")
+cat("\n\n\n model is done!!! \n\n\n\n")
+
+file_name <- glue("{date_out}_{sps}_{niterations}its_2min_spscov_step2_")
 
 file_name2 <- paste0(file_name, 'run',
                       length(list.files(path = file.path(getwd(),"data/model_res/"),
@@ -252,7 +203,19 @@ if(as.numeric(system_time2 - system_time1) > 1440) {
   unit_time <- "days"}
 
 # Get covariate names
-covs_names2 <- paste(pars_mod, collapse = "_")
+covs_names2 <- paste(unique(pars_mod$X), collapse = "_")
+
+system_time2 <- Sys.time()
+if(as.numeric(system_time2 - system_time1) < 60) {
+  time_it_took <- round(difftime(system_time2, system_time1, units = c("mins")),2)
+  unit_time <- "mins"}
+if(as.numeric(system_time2 - system_time1) >= 60 & 
+      as.numeric(system_time2 - system_time1) <= 1440) {
+  time_it_took <- round(difftime(system_time2, system_time1, units = c("hours")),2)
+  unit_time <- "hours"}
+if(as.numeric(system_time2 - system_time1) > 1440) {
+  time_it_took <- round(difftime(system_time2, system_time1, units = c("days")),2)
+  unit_time <- "days"}
 
 # Print info in slurm.out file
 paste('\n ************************************** \n \n \n ---------------- DONE ----------------', '\n\n',
@@ -269,25 +232,24 @@ paste('\n ************************************** \n \n \n ---------------- DONE 
       cat()
 
 
-meta_name <- file(glue("data/ana_file/{date_out}_metadata_{sps}_yr_POSTHOC.txt"))
+meta_name <- file(glue("data/ana_file/{date_out}_metadata_{sps}_step2.txt"))
 writeLines(paste(
 
                 ' Results File Name =', glue('{file_name2}.rds'), '\n', 
-                'Data File Name =', glue("data/ana_file/{date_out}_data_{sps}_yr_POSTHOC.rds"), '\n', 
+                'Data File Name =', glue("data/ana_file/{date_out}_data_{sps}_step2.rds"), '\n', 
                 'Script =', script_name, '\n',
                 'Model file =', glue("{mod_name}"), '\n',
                 'Species =', sps, '\n',
+                'Number of betas =', n_bs_new, '\n',
                 'Covariates =', covs_names2, '\n',
+                'Scales =', sca_names, '\n',
                 'Iterations =', niterations, '\n',
                 'Chains =', nchains, '\n',
                 'Burn-in =', nburnin, '\n',
-                'Thinning =', nthin, '\n',
                 'Run number =', str_split(file_name2, 'run', simplify = TRUE)[2], '\n',
                 'Started running on =', system_time1, '\n',
                 'Stopped running on =', system_time2, '\n',
                 'Time it took =', time_it_took , unit_time), 
-
           meta_name)
 
 close(meta_name)
-
