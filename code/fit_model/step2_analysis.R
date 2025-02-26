@@ -17,12 +17,7 @@
 #           - :
 #
 # detach packages and clear workspace
-freshr::freshr()
-
-nchains <- 8
-niterations <- 30000
-nburnin <- 20000
-nthin <- 5
+#freshr::freshr()
 
 #! Load packages ---------------------------------------
 library(conflicted)
@@ -43,7 +38,9 @@ lenght <- length
 
 #! Import data -----------------------------------------
 # model output
-file_name <- '2025_02_25_HETH_parks_30000its_2min_spscov_run1'
+#! Moving this row to a source file for multiple species
+#file_name <- '2025_02_25_HETH_parks_30000its_2min_spscov_run1'
+
 (sps <- substr(file_name, 12, 15))
 (date_out <- substr(file_name, 1,  10))
 system_time1 <- Sys.time()
