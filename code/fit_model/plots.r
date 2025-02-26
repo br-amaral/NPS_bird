@@ -26,7 +26,7 @@ lenght <- length
 #! Import data --------------------------------------------------------------------
 ## file paths and read files
 # when loading the model results, get the most updated file?
-file_name <- "2025_02_22_BHVI_10000its_2min_spscov_step2_run2"
+file_name <- "2025_02_22_BHVI_parks_30000its_2min_spscov_run1"
 
 samples_jags <- read_rds(glue("data/model_res/{file_name}.rds"))
 
@@ -94,11 +94,8 @@ for(ii in 1:n_betas) {
 
   tb_mcmc_scales_i <- table(sca_beta)/sum(table(sca_beta))
   selected_scales <- as.integer(names(which.max(tb_mcmc_scales_i)))
-  ifelse( tb_mcmc_scales_i[selected_scales] > 0.5, 
-     selected_scales2 <- selected_scales,
-     selected_scales2 <- glue("{names(sort(tb_mcmc_scales_i, decreasing = TRUE)[1:2])[1]}_{names(sort(tb_mcmc_scales_i, decreasing = TRUE)[1:2])[2]}"))
 
-  beta_key$sca_sel[ii] <- selected_scales2
+  beta_key$sca_sel[ii] <- selected_scales
   beta_key$sca1[ii] <- tb_mcmc_scales_i[1]
   beta_key$sca2[ii] <- tb_mcmc_scales_i[2]
   beta_key$sca3[ii] <- tb_mcmc_scales_i[3]
