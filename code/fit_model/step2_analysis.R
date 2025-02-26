@@ -20,8 +20,9 @@
 freshr::freshr()
 
 nchains <- 8
-niterations <- 20000
-nburnin <- 15000
+niterations <- 30000
+nburnin <- 20000
+nthin <- 5
 
 #! Load packages ---------------------------------------
 library(conflicted)
@@ -168,10 +169,10 @@ samples_jags <- jags(data = jags_data2,
                       parameters.to.save = params,
                       model.file = model_file,
                       n.chains = nchains,
-                      n.adapt = max(100, ceiling(.1 * niterations)),
+                      n.adapt = max(500, ceiling(.1 * niterations)),
                       n.iter = niterations,
                       n.burnin = nburnin,
-                      n.thin = 2)
+                      n.thin = nthin)
 
 cat("\n\n\n model is done!!! \n\n\n\n")
 
