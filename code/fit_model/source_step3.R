@@ -42,14 +42,17 @@ MOD_RES_PATH <- "results_tracker.xlsx"
 ## read files
 mod_specs <- read_excel(MOD_RES_PATH, sheet = "key") %>%
                 filter(Step == 1) %>% 
-                select(OUTPUT_FILE)
+                filter(SPS %in% c("HETH", "OVEN", "VEER", "BTBW")) %>% 
+                select(OUTPUT_FILE, SPS)
 
 nchains <- 8
 niterations <- 30000
 nburnin <- 20000
 nthin <- 5
 
-for(jj in 6:nrow(mod_specs)){
+for(jj in 1:nrow(mod_specs)){
+
+    if(mod_specs$OUTPUT_FILE[jj] == "BTBW"){nchains <- 8;niterations <- 50000; nburnin <- 30000;nthin <- 5}else{nchains <- 8;niterations <- 30000; nburnin <- 20000;nthin <- 5}
 
     file_name <- mod_specs$OUTPUT_FILE[jj]
     source("code/fit_model/step2_analysis.R")
