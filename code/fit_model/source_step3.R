@@ -49,7 +49,7 @@ niterations <- 30000
 nburnin <- 20000
 nthin <- 5
 
-for(jj in 2:nrow(mod_specs)){
+for(jj in 6:nrow(mod_specs)){
 
     file_name <- mod_specs$OUTPUT_FILE[jj]
     source("code/fit_model/step2_analysis.R")
