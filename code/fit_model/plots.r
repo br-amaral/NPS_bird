@@ -26,7 +26,7 @@ lenght <- length
 #! Import data --------------------------------------------------------------------
 ## file paths and read files
 # when loading the model results, get the most updated file?
-file_name <- "2025_02_25_HETH_parks_30000its_2min_spscov_run1"
+file_name <- "2025_02_24_HAWO_parks_30000its_2min_spscov_run1"
 
 samples_jags <- read_rds(glue("data/model_res/{file_name}.rds"))
 
@@ -37,8 +37,8 @@ all_params <- c("mu.alpha0", "mu.beta0", "beta", "alpha", scales_names)
 #! Par estimates ------------------------------------------------------------------
 par(mfrow = c(1,1))
 MCMCplot(samples_jags,
-         params = all_params,
-         main = file_name,
+         #params = all_params,
+         #main = file_name,
          ref_ovl = TRUE)
 
 #! Traceplots ---------------------------------------------------------------------
