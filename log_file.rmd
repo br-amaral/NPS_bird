@@ -2,13 +2,15 @@
 title: "NPS project log file"
 output: github_document
 ---
-Currently running slurm-50070619.out
-error running SCTA
-run with less covariates for sps
+Currently running slurm-51053955.out
+# TODO
+post hoc analysis - remove several scales
+check why "BLBW", "PIWA", "BTNW" give problems
+new covariates for DOWO
 
 
 
-## Analysis flow
+# Analysis flow
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -18,7 +20,6 @@ knitr::opts_chunk$set(echo = TRUE)
 This document is a log file with all the steps and information needed to run and understand the NPS bird scale selection analysis, to make sure that I also understand the code!
 
 ## Get and format vegetation data
-You can include R code in the document as follows:
 
 ```{r site, eval=FALSE}
 
@@ -62,5 +63,37 @@ source("format_veg_data/FIA_getdata.R")
 source("format_veg_data/get_coun_data.R")
 ```
         
+## Get and format bird data, and merge with vegetation data
 
 
+
+## Run models
+
+### Step 1
+run models
+```{r step 1 run, eval = FALSE}
+
+
+```
+
+get model output (betas and scales selected) to run step 2
+```{r step 1 output, eval = FALSE}
+
+
+```
+
+### Step 2 
+```{r step 2 run, eval = FALSE}
+
+source("code/fit_model/step2.R")
+
+```
+
+```{r step 2 output, eval = FALSE}
+
+
+```
+
+## Calculations
+
+## Figures

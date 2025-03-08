@@ -7,7 +7,7 @@ hg <- httpgd::hgd()
 # detach packages and clear workspace
 freshr::freshr()
 #
-# Load packages ---------------------------------------
+# Load packages -------------------------------------------------------------------
 library(conflicted)
 library(tidyverse)
 library(glue)
@@ -18,15 +18,15 @@ conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::filter)
 # conflicts_prefer(scales::alpha)
 #
-# Make functions --------------------------------------
+# Make functions ------------------------------------------------------------------
 colanmes <- colnames
 lenght <- length
 `%!in%` <- Negate(`%in%`)
 
-#! Import data -----------------------------------------
+#! Import data --------------------------------------------------------------------
 ## file paths and read files
 # when loading the model results, get the most updated file?
-file_name <- "2025_02_13_REVI_parks_25000its_2min_spscov_run1"
+file_name <- "2025_02_28_WOTH_parks_30000its_2min_spscov_run1"
 
 samples_jags <- read_rds(glue("data/model_res/{file_name}.rds"))
 
@@ -34,109 +34,75 @@ samples_jags <- read_rds(glue("data/model_res/{file_name}.rds"))
 scales_names <- grep("^scales_", colnames(samples_jags[[1]]), value = TRUE)
 all_params <- c("mu.alpha0", "mu.beta0", "beta", "alpha", scales_names)
 
-#! Par estimates ----------------------------------
+#! Par estimates ------------------------------------------------------------------
 par(mfrow = c(1,1))
 MCMCplot(samples_jags,
          params = all_params,
-         #ci = c(50, 89),
          main = file_name,
          ref_ovl = TRUE)
 
-#! Traceplots ----------------------
+#! Traceplots ---------------------------------------------------------------------
 MCMCtrace(samples_jags,
           params = all_params,
           #main = file_name,
           ind = TRUE,
           pdf = FALSE,
-          #filename = glue("figures/preliminary/jags_res_GCFL_b0yes_parks_20000its_LESSHRrun1"),
           exact = TRUE,
           Rhat = TRUE,
           n.eff = TRUE)
 
-#! Summary --------------------------------------------
-MCMCsummary(samples_jags,
-            round = 2)
-
-#! get beta parameters ----------------------------
-(pars_select <- cbind(
-  c(
-    #'beta[1]',
-    'beta[1]',
-    'beta[2]'
-  ),
-  c(1,23)) %>% 
-  as_tibble() %>% 
-  rename(beta = V1,
-         scale = V2))
-
-#  write_rds(pars_select, file = glue("data/model_res/{file_name}_PARS.rds"))
-
-
-
-
-#TODO:
-summary(samples_jags)
-
-#NOTE:
+#! Summary ------------------------------------------------------------------------
 MCMCsummary(samples_jags,
             params = all_params,
             round = 2)
 
-MCMCtrace(samples_jags,
-            params = c("alpha0", "beta0"),
-            ind = TRUE,
-            pdf = FALSE,
-            #filename = glue("figures/preliminary/trace2_jags_res_COYE_b0yes_parks_10000its_LESSrun1"),
-            exact = TRUE,
-            Rhat = TRUE,
-            n.eff = TRUE)
+#! get beta parameters and selected scales ----------------------------------------
+# beta parameters that the 50 percent CI does not include 0
+betas <- tidybayes::get_variables(samples_jags)
+n_betas1 <- sub("\\[.*", "", betas) 
+n_betas <- length(n_betas1[n_betas1 == "beta"]) - 1
+betas_name <- paste0(n_betas1[n_betas1 == "beta"][-1], seq(1:n_betas))
 
-MCMCplot(samples_jags,
-         params = c("alpha0","beta0"),
-         ref_ovl = TRUE)
+beta_key <- tibble(
+  betas = betas_name, 
+  overlap0 = as.character(NA), 
+  sca_sel = as.character(NA),
+  sca1 = as.numeric(NA),
+  sca2 = as.numeric(NA),
+  sca3 = as.numeric(NA)
+)
 
-MCMCplot(samples_jags,
-         params = c("mu.beta0","beta",
-                    "mu.alpha0","alpha"),
-         ref_ovl = TRUE)
-
-# scale selection plots and objects:
-
-sca_beta1 <- MCMCchains(samples_jags, params = 'scales_beta3')
-selected_scales = rep(NA, 1)
-#for (i in 1:3) {
-  tb_mcmc_scales_i = table(sca_beta1)
+for(ii in 1:n_betas) {
+# betas
+  beta_loop1 <- MCMCchains(samples_jags, params = glue("beta"))
+  beta_loop2 <- beta_loop1[,ii]
+    
+  quantiles <- quantile(beta_loop2, c(0.25, 0.75))
+  lower_quantile <- quantiles[1]
+  upper_quantile <- quantiles[2]
   
-  selected_scales = as.integer(names(which.max(tb_mcmc_scales_i)))
-#}
+  # Check if quantiles overlap zero
+  if (lower_quantile <= 0 && upper_quantile >= 0) {
+    beta_key$overlap0[ii] <- "yes"
+  } else {
+    beta_key$overlap0[ii] <- "no"
+  }
 
-sca_beta1
-selected_scales
+# scales
+  loop_sca <- glue("scales_beta{ii}")
+  sca_beta <- MCMCchains(samples_jags, params = loop_sca)
 
-sca_beta1p <- as_tibble(sca_beta1) %>%  
-  mutate(new = 1)
-sca_beta1p <- pivot_longer(sca_beta1p, -new, names_to = "site", values_to = "selected_scale") %>% 
-  select(site, selected_scale) %>% 
-  arrange(site)
+  tb_mcmc_scales_i <- table(sca_beta)/sum(table(sca_beta))
+  selected_scales <- as.integer(names(which.max(tb_mcmc_scales_i)))
 
-ggplot(aes(x = selected_scale, 
-           y = (..count..)/sum(..count..), 
-           fill = (..count..)/sum(..count..)), 
-           data = sca_beta1p) + 
-  geom_histogram(position = "stack", binwidth = 0.5) + 
-  theme_bw() +
-  ylab("Frequency") + 
-  xlab("Selected scale") +
-  scale_y_continuous(limits = c(0, 1)) +
-  scale_fill_gradient(
-    name = "Frequency",
-    low = "#ecffdd", high = "#0a2701",  # Customize gradient colors
-    limits = c(0, 1),  # Explicitly set the limits for the fill scale
-    guide = guide_colorbar(ticks = FALSE))+  # Remove ticks from legend bar+
-  theme(
-    legend.title = element_text(size = 14),  # Increase legend title size
-    legend.text = element_text(size = 12),   # Increase legend text size
-    legend.key.size = unit(3, "cm")        # Increase legend key size
-  )
+  beta_key$sca_sel[ii] <- selected_scales
+  beta_key$sca1[ii] <- tb_mcmc_scales_i[1]
+  beta_key$sca2[ii] <- tb_mcmc_scales_i[2]
+  beta_key$sca3[ii] <- tb_mcmc_scales_i[3]
 
+}
 
+beta_key
+
+# save beta and scale selection values
+write_rds(beta_key, file = glue("data/model_res/{file_name}_SCA_SEL_PARS.rds"))
