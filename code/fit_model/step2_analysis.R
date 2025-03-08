@@ -62,6 +62,8 @@ META_DATA_PATH <- glue('data/ana_file/{date_out}_metadata_{sps}_parks.txt')
 # inital values (z)
 Z_DATA_PATH <- glue("data/ana_file/{date_out}_data_{sps}_Z.rds")
 
+#! TODO: change dates so the new file has a new date, not the old one
+
 ## read files
 print(meta_data <- readr::read_lines(META_DATA_PATH))
 samples_jags <- read_rds(MODEL_RES_PATH)
