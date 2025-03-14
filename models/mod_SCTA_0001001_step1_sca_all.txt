@@ -42,9 +42,9 @@ model {
     logit(psi[y2[b,2],y2[b,3],y2[b,4]]) <-        # parkey, site_n, year_n
       beta0[y2[b,2],y2[b,4]] +                    # parkey, year_n
       # DIV
-      beta[1] * X4[b, scales_beta3] + 
+      beta[1] * X4[b, scales_beta1] + 
       # DEN old
-      beta[2] * X53[b,scales_beta4] + 
+      beta[2] * X53[b,scales_beta2] + 
       # park size
       beta[3] * Xp[b]                   
   }
