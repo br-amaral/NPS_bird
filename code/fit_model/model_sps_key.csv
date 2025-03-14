@@ -1,9 +1,9 @@
 AOU_Code,BA,DEN,SHR,DIV,EAR,MID,LAT,CAN,DEB,niterations,nburnin,nchains,nthin,step,scales2,date_step1,mod_name
-BTBW,0,0,0,0,0,0,0,0,0,40000,20000,10,5,1,none,NA,mod_BTBW_0000000_step2_sca_none
+BTBW,0,0,0,0,0,0,0,0,0,40000,20000,10,5,1,none,NA,mod_BTBW_0000000_step1_sca_none
 BTBW,0,0,1,0,1,0,0,0,0,80000,40000,10,10,2,11,2025_02_23,mod_BTBW_0010100_step2_sca_11
 DOWO,1,1,0,0,0,0,0,0,0,40000,20000,10,5,1,all,NA,mod_DOWO_1100000_step1_sca_all
 HAWO,1,1,0,0,0,0,0,0,0,40000,20000,10,5,1,all,NA,mod_HAWO_1100000_step1_sca_all
-HETH,0,0,0,0,0,0,0,0,0,80000,40000,10,10,1,none,NA,mod_HETH_0000000_step2_sca_none
+HETH,0,0,0,0,0,0,0,0,0,80000,40000,10,10,1,none,NA,mod_HETH_0000000_step1_sca_none
 HETH,0,1,1,0,0,0,0,0,0,80000,40000,10,10,2,11,2025_02_25,mod_HETH_0110000_step2_sca_11
 OVEN,1,0,1,0,0,0,0,0,0,80000,40000,10,10,2,12,2025_02_26,mod_OVEN_1010000_step2_sca_12
 REVI,1,0,1,1,0,0,0,0,0,40000,20000,10,5,1,all,NA,mod_REVI_1011000_step1_sca_all
