@@ -23,6 +23,7 @@ library(tidyverse)
 library(glue)
 library(jagsUI)
 library(rjags)
+library(parallel)
 #library(MCMCvis)
 library(AHMbook)
 library(fs)
@@ -227,7 +228,7 @@ X <- X10 %>%
           date_jul_s = standardize(date_jul),
           time_jul_s = standardize(time_jul))
 
-#! TODO: for now, im putting zeros in the occasions that have no environmental data (mean)
+#! zeros in the occasions that have no environmental data (mean)
 table(is.na(X))
 X[is.na(X)] <- 0
 
@@ -745,49 +746,70 @@ mod_string <- paste(mod_content, collapse = "\n")
 # Write the content to the output file
 if(test == FALSE){writeLines(mod_string, mod_name)}
 
-## initialize JAGS
+# Define the JAGS model function
+run_jags_model <- function(chain_id, model_file, jags_data, inits, niterations, nadapt_min) {
+  cat(glue("\n\n\n Running JAGS for chain {chain_id} \n\n\n\n"))
+  
+  cat("\n\n\n running first jags \n\n\n\n")
+  jags_model <- rjags::jags.model(
+    file = model_file,
+    data = jags_data,
+    inits = inits, 
+    n.chains = 1,  # Each chain runs in a separate R session
+    n.adapt = max(nadapt_min, ceiling(.1 * niterations)),
+    quiet = FALSE
+  )
+  
+  cat("\n\n\n first done, running second \n\n\n\n") 
+  # Burn-in
+  if (nburnin > 0) {
+    message(paste("burn-in:", nburnin, "iterations for chain", chain_id))
+    rjags::jags.samples(
+      jags_model,
+      variable.names = params,
+      n.iter = nburnin,
+      thin = nthin,
+      quiet = FALSE
+    )
+  }
 
-cat("\n\n\n running first jags \n\n\n\n")
+  cat("\n\n\n second done, running third \n\n\n\n")
 
-jags_model <- rjags::jags.model(
-  file = model_file,
-  data = jags_data,
-  inits = inits, 
-  n.chains = nchains,
-  n.adapt = max(nadapt_min, ceiling(.1 * niterations)),
-  quiet = FALSE
-)
-
-cat("\n\n\n first done, running second \n\n\n\n") 
-
-# burn-in
-if (nburnin > 0) {
-  message(paste("burn-in:", nburnin, "iterations"))
-  rjags::jags.samples(
+  # Posterior simulation
+  samples_jags <- coda.samples(
     jags_model,
     variable.names = params,
     n.iter = niterations,
     thin = nthin,
-    quiet = FALSE,
-    parallel = TRUE,
-    n.cores = nchains
+    quiet = FALSE
   )
+  
+  cat("\n\n\n third done!!! \n\n\n\n")
+
+  return(samples_jags)
 }
 
-cat("\n\n\n second done, running third \n\n\n\n")
+## initialize JAGS
+results <- mclapply(1:nchains, 
+                    run_jags_model, 
+                    model_file = model_file, 
+                    jags_data = jags_data, 
+                    inits = inits, 
+                    niterations = niterations, 
+                    nadapt_min = nadapt_min, 
+                    mc.cores = nchains)
 
-# posterior simulation
-samples_jags <- coda.samples(
-  jags_model,
-  variable.names = params,
-  n.iter = niterations,
-  thin = nthin,
-  quiet = FALSE,
-  parallel = TRUE,
-  n.cores = nchains
-)
 
-cat("\n\n\n third done!!! \n\n\n\n")
+for(each_ch in 1:nchains){
+  if(each_ch == 1) {
+    loop_chain <- mcmc.list(results[[each_ch]]) 
+  } else {
+    loop_next <- mcmc.list(results[[each_ch]])
+    loop_chain <- c(loop_chain, loop_next)}
+
+}
+samples_jags <- mcmc.list(loop_chain)
+
 file_name <- glue("{sps_loop}_step{step_numb}_output_{date_step1}")
 
 file_name2 <- paste0(file_name, 'run',
