@@ -22,6 +22,9 @@
 #           - :
 #           - :
 
+# detach packages and clear workspace
+freshr::freshr()
+
 # Print script file name
 context <- "run_step1_step2.R" #rstudioapi::getSourceEditorContext()
 cat("\n", "\n", "\n", 
@@ -39,27 +42,18 @@ cat("\n", "\n", "\n",
 
 # Installed new packages?
 #  renv::snapshot()
-#options(repos = c(CRAN = "https://cloud.r-project.org/"))
-#update.packages("freshr")
-# detach packages and clear workspace
-#if(!require(freshr)){install.packages('freshr')}
- freshr::freshr()
+
+test <- TRUE
 
 #! Load packages ---------------------------------------
 #library(conflicted)
 library(tidyverse)
 library(glue)
 
-#conflicts_prefer(dplyr::select)
-#conflicts_prefer(dplyr::filter)
-# conflicts_prefer(scales::alpha)
-
 #! Make functions --------------------------------------
 colanmes <- colnames
 lenght <- length
 `%!in%` <- Negate(`%in%`)
-
-
 
 #! Source code and Import data -----------------------------------------
 ## file paths
@@ -71,28 +65,33 @@ master_tab <- read_csv("code/fit_model/model_sps_key.csv")  %>%
                        mod_name = glue("mod_{AOU_Code}_{BA}{DEN}{SHR}{DIV}{EAR}{MID}{LAT}_step{step}_sca_{scales2}"))
 write.csv(master_tab, "code/fit_model/model_sps_key.csv")
 
-for (ii in 1:nrow(master_tab)){
-    # ii <- 1
-    #! MCMC settings ---------------------------------------
-    niterations <- master_tab$niterations[ii]
-    nburnin <- master_tab$nburnin[ii]
-    nchains <- master_tab$nchains[ii]
-    nthin <- master_tab$nthin[ii]
+for (key_ite in 1:nrow(master_tab)){
+    # key_ite <- 1
+    tib_loop <- master_tab[key_ite, ]
 
+    (sps_loop <- tib_loop$AOU_Code)
+    (step_numb <- tib_loop$step)
+    mod_name_loop <- glue("models/{tib_loop$mod_name}.txt")
+
+    #! MCMC settings ---------------------------------------------------
+    niterations <- tib_loop$niterations
+    nburnin <- tib_loop$nburnin
+    nchains <- tib_loop$nchains
+    nthin <- tib_loop$nthin
     # niterations <- 10 ; nburnin <- 5 ; nchains <- 1 ; nthin <- 1
     
-    (sps_loop <- master_tab$AOU_Code[ii])
-    BA  <- master_tab$BA[ii]
-    DEN <- master_tab$DEN[ii]   
-    SHR <- master_tab$SHR[ii]   
-    DIV <- master_tab$DIV[ii]   
-    EAR <- master_tab$EAR[ii]   
-    MID <- master_tab$MID[ii]   
-    LAT <- master_tab$LAT[ii]
-    CAN <- master_tab$CAN[ii]
-    DEB <- master_tab$DEB[ii]
+    #! Get species and covariates --------------------------------------
+    BA  <- tib_loop$BA
+    DEN <- tib_loop$DEN
+    SHR <- tib_loop$SHR
+    DIV <- tib_loop$DIV
+    EAR <- tib_loop$EAR
+    MID <- tib_loop$MID
+    LAT <- tib_loop$LAT
+    CAN <- tib_loop$CAN
+    DEB <- tib_loop$DEB
     
-    cov_key <- master_tab[ii,2:9]
+    cov_key <- tib_loop[ ,2:9]
     print(sps_loop)
     print(cov_key)
     # Print object name if the value is greater than zero
@@ -106,12 +105,12 @@ for (ii in 1:nrow(master_tab)){
     if (CAN == 1) print("CAN")
     if (DEB == 1) print("DEB")
     
-    if(master_tab$step == 2){
-        # get model name
-
+    if(tib_loop$step == 2){
         # get scales for step 2
-
-        source("code/fit_model/step2_analysis.R")
+        scales_loop <- as.numeric(unlist(strsplit(tib_loop$scales2, split = "")))
+        date_step1 <- tib_loop$date_step1
+        #! not done!!!!
+        #source("code/fit_model/step2_analysis.R")
 
     } else {
         source("code/fit_model/back2d_covs_scales_2min_spscov.R")
