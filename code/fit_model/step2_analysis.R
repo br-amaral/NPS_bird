@@ -53,10 +53,6 @@ SPS_DATA_PATH <- glue('data/ana_file/{date_step1}_data_{sps}_parks.rds')
 # inital values (z)
 Z_DATA_PATH <- glue("data/ana_file/{date_step1}_data_{sps}_Z.rds")
 
-#
-
-#! TODO: change dates so the new file has a new date, not the old one   
-
 ## read files
 jags_data <- read_rds(SPS_DATA_PATH) 
 z_mod <- read_rds(Z_DATA_PATH)$Zst2
