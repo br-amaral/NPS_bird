@@ -741,7 +741,7 @@ cat("\n\n\n running first jags \n\n\n\n")
 
 jags_model <- rjags::jags.model(
   file = model_file,
-  data = jags.data,
+  data = jags_data,
   inits = inits, 
   n.chains = nchains,
   n.adapt = max(100, ceiling(.1 * niterations)),
