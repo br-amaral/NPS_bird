@@ -77,6 +77,7 @@ for (key_ite in 1:nrow(master_tab)){
     nburnin <- tib_loop$nburnin
     nchains <- tib_loop$nchains
     nthin <- tib_loop$nthin
+    nadapt_min <- 100
     # niterations <- 10 ; nburnin <- 5 ; nchains <- 1 ; nthin <- 1
     
     #! Get species and covariates --------------------------------------
