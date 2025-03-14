@@ -109,8 +109,8 @@ for (key_ite in 1:nrow(master_tab)){
         # get scales for step 2
         scales_loop <- as.numeric(unlist(strsplit(tib_loop$scales2, split = "")))
         date_step1 <- tib_loop$date_step1
-        #! not done!!!!
-        #source("code/fit_model/step2_analysis.R")
+
+        source("code/fit_model/step2_analysis.R")
 
     } else {
         source("code/fit_model/back2d_covs_scales_2min_spscov.R")
