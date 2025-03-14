@@ -55,8 +55,8 @@ cat("\n", "\n", "\n",
     'Current script:', script_name, 
     "\n", "\n", "\n", "\n")
 system_time1 <- Sys.time()
-(date_out <- glue("{substr(system_time1, 1,4)}_{substr(system_time1, 6,7)}_{substr(system_time1, 9,10)}"))
-date_out <- as.character(date_out)
+(date_step1 <- glue("{substr(system_time1, 1,4)}_{substr(system_time1, 6,7)}_{substr(system_time1, 9,10)}"))
+date_step1 <- as.character(date_step1)
 
 # Import data -----------------------------------------
 ## file paths
@@ -599,7 +599,10 @@ for(a in 1:nrow(Zst)){
 # save initial values for post hoc analysis
 z <- list(Zst = Zst,
           Zst2 = Zst2)
-write_rds(z, file = glue("data/ana_file/{date_out}_data_{sps_loop}_Z.rds"))
+          
+if(test == FALSE){
+  write_rds(z, file = glue("data/ana_file/{sps_name}_step{step_numb}_Z_{date_step1}.rds"))
+}
 
 y <- data.matrix(y)
 y2 <- data.matrix(y2)
@@ -639,7 +642,7 @@ cov_Xs[2,which(cov_key2==1)] == existing_objects
 object_list <- mget(existing_objects)
 
 # model
-jags.data <- c(
+jags_data <- c(
   list(
     y = y,
     y2 = y2,
@@ -658,14 +661,14 @@ jags.data <- c(
 )
 suppressWarnings(rm(list = c("X1", "X2", "X3", "X4", "X51", "X52", "X53", "X6", "X7")))
 
-# Print the structure of jags.data to verify
-str(jags.data)
+# Print the structure of jags_data to verify
+str(jags_data)
 
-non_numeric_elements <- sapply(jags.data, function(x) !is.numeric(x))
-non_numeric_elements <- names(jags.data)[non_numeric_elements]
+non_numeric_elements <- sapply(jags_data, function(x) !is.numeric(x))
+non_numeric_elements <- names(jags_data)[non_numeric_elements]
 print(non_numeric_elements)
 
-#! jags.data structure:
+#! jags_data structure:
 # y: detection matrix
 # y2: first detection matrix
 # n_bs: number of betas
@@ -679,7 +682,11 @@ print(non_numeric_elements)
 # Xb: detection day of the year
 # n_yrM: number of years 
 # n_pkM: number of parks 
-write_rds(jags.data, file = glue("data/ana_file/{date_out}_data_{sps_name}_{park_name}.rds"))
+
+
+if(test == FALSE){
+  write_rds(jags_data, file = glue("data/ana_file/{sps_name}_step{step_numb}_jagsdata_{date_step1}.rds"))
+}
 
 # source("code/check_data.R") 
 
@@ -709,8 +716,8 @@ params <- c("beta0", "beta", "alpha0", "alpha",
           as.character()
 
 # Define the model file and the output file name
-model_file <- glue("models/mod_1_vector_spscov_{sps_loop}.txt")
-mod_name <- glue("data/ana_file/{date_out}_mod_{sps_name}_{park_name}.txt") %>% as.character()
+model_file <- mod_name_loop
+mod_name <- glue("data/ana_file/{sps_name}_step{step_numb}_model_{date_step1}.txt") %>% as.character()
 
 # Read the content of the model file
 mod_content <- readLines(model_file)
@@ -719,7 +726,7 @@ mod_content <- readLines(model_file)
 mod_string <- paste(mod_content, collapse = "\n")
 
 # Write the content to the output file
-writeLines(mod_string, mod_name)
+if(test == FALSE){writeLines(mod_string, mod_name)}
 
 ## initialize JAGS
 cat("\n\n\n running first jags \n\n\n\n")
@@ -743,12 +750,11 @@ if (nburnin > 0) {
     variable.names = params,
     n.iter = niterations,
     thin = nthin,
-    quiet = FALSE
+    quiet = FALSE,
+    parallel = TRUE,
+    n.cores = nchains
   )
 }
-
-# write_rds(jags_model,
-#           file = glue("data/model_res/M12.rds"))
 
 cat("\n\n\n second done, running third \n\n\n\n")
 
@@ -758,13 +764,13 @@ samples_jags <- coda.samples(
   variable.names = params,
   n.iter = niterations,
   thin = nthin,
-  quiet = FALSE
+  quiet = FALSE,
+  parallel = TRUE,
+  n.cores = nchains
 )
 
 cat("\n\n\n third done!!! \n\n\n\n")
-fil_nam <- sps_loop
-
-file_name <- glue("{date_out}_{fil_nam}_{park_name}_{niterations}its_2min_spscov_")
+file_name <- glue("{sps_name}_step{step_numb}_output_{date_step1}")
 
 file_name2 <- paste0(file_name, 'run',
                       length(list.files(path = file.path(getwd(),"data/model_res/"),
@@ -777,9 +783,17 @@ if (!file.exists(folder_path)) {
   dir.create(folder_path, recursive = TRUE)
 }
 
-write_rds(samples_jags,
-          file = glue('data/model_res/{file_name2}.rds')
-          )
+if(test == FALSE) {
+  write_rds(samples_jags,
+            file = glue('data/model_res/{file_name2}.rds')
+            )
+}
+
+if(niterations > 10000) {
+  write_rds(samples_jags,
+            file = glue('data/model_res/{file_name2}.rds')
+            )
+}
 
 system_time2 <- Sys.time()
 if(as.numeric(system_time2 - system_time1) < 60) {
@@ -815,29 +829,40 @@ paste('\n ************************************** \n \n \n ---------------- DONE 
       cat()
 
 
-meta_name <- file(glue("data/ana_file/{date_out}_metadata_{sps_name}_{park_name}.txt"))
-writeLines(paste(
+meta_name <- file(glue("data/ana_file/{sps_name}_step{step_numb}_metadata_{date_step1}.txt"))
+if(test == FALSE){
+    writeLines(paste(
 
-                ' Results File Name =', glue('{file_name2}.rds'), '\n', 
-                'Data File Name =', glue("data/ana_file/{date_out}_data_{sps_name}_{park_name}.rds"), '\n', 
-                'Script =', script_name, '\n',
-                'Model file =', glue("{mod_name}"), '\n',
-                'Species =', sps_name, '\n',
-                'Parks =', park_name, '\n',
-                'Covariates =', covs_names2, '\n',
-                'Iterations =', niterations, '\n',
-                'Chains =', nchains, '\n',
-                'Burn-in =', nburnin, '\n',
-                'Thinning =', nthin, '\n',
-                'Run number =', str_split(file_name2, 'run', simplify = TRUE)[2], '\n',
-                'Started running on =', system_time1, '\n',
-                'Stopped running on =', system_time2, '\n',
-                'Time it took =', time_it_took , unit_time), 
+                  'Species =', sps_name, '\n',
+                  'Step =', step_numb, '\n',
+                  'Date =', date_step1, '\n',
 
-          meta_name)
+                  'Metadata File Name =', meta_name, '\n', 
+                  'Results File Name =', glue('{file_name2}.rds'), '\n', 
+                  'Model File Name =', glue("{mod_name}"), '\n',
+                  'Data File Name =', glue("data/ana_file/{date_step1}_data_{sps_name}_{park_name}.rds"), '\n', 
+                  'Z File Name =', glue("data/ana_file/{date_step1}_data_{sps_loop}_Z.rds"), '\n', 
 
-close(meta_name)
+                  'Script =', script_name, '\n',
+                  'Covariates =', covs_names2, '\n',
+                  'Iterations =', niterations, '\n',
+                  'Chains =', nchains, '\n',
+                  'Burn-in =', nburnin, '\n',
+                  'Thinning =', nthin, '\n',
 
+                  'Run number =', str_split(file_name2, 'run', simplify = TRUE)[2], '\n',
+                  'Started running on =', system_time1, '\n',
+                  'Stopped running on =', system_time2, '\n',
+                  'Time it took =', time_it_took , unit_time), 
+
+            meta_name)
+
+  close(meta_name)
+}
+
+if(test == TRUE){
+  cat(glue(" \n \n \n Test for {sps_name} and step {step_numb} done!  \n \n \n"))
+}
 
 # code to check the data and initial values
 # r <- 10   # what is the deal with 7 versus 10? (they both have the same values and 10 does not work)
