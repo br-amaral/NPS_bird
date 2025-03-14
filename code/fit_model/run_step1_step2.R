@@ -64,7 +64,7 @@ master_tab <- read_csv("code/fit_model/model_sps_key.csv")  %>%
                 mutate(#mod_name = ascharacter(mod_name),
                        mod_name = glue("mod_{AOU_Code}_{BA}{DEN}{SHR}{DIV}{EAR}{MID}{LAT}_step{step}_sca_{scales2}"))
 
-for (key_ite in 1:nrow(master_tab)){
+for (key_ite in 10:nrow(master_tab)){
     # key_ite <- 1
     tib_loop <- master_tab[key_ite, ]
 
@@ -77,7 +77,7 @@ for (key_ite in 1:nrow(master_tab)){
     nburnin <- tib_loop$nburnin
     nchains <- tib_loop$nchains
     nthin <- tib_loop$nthin
-    nadapt_min <- 100
+    if(test == TRUE){nadapt_min <- 1} else {nadapt_min <- 100}
     # niterations <- 10 ; nburnin <- 5 ; nchains <- 1 ; nthin <- 1
     
     #! Get species and covariates --------------------------------------
