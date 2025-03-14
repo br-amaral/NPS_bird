@@ -700,6 +700,14 @@ inits <- function() {
     )
 }
 
+if(test == TRUE){
+  nchains <- 1
+  niterations <- 6
+  nburnin <- 1
+  nthin <- 1
+  print("test with 5 iterations")
+}
+
 paste('\n ************************************* \n \n \n Running JAGS for:', '\n',
       '  Parks =', park_name, '\n',
       '  Species =', sps_name, '\n',
@@ -737,14 +745,6 @@ mod_string <- paste(mod_content, collapse = "\n")
 if(test == FALSE){writeLines(mod_string, mod_name)}
 
 ## initialize JAGS
-
-if(test == TRUE){
-  nchains <- 1
-  niterations <- 6
-  nburnin <- 1
-  nthin <- 1
-  print("test with 5 iterations")
-}
 
 cat("\n\n\n running first jags \n\n\n\n")
 
