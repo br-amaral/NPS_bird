@@ -705,10 +705,11 @@ if(test == TRUE){
   niterations <- 6
   nburnin <- 1
   nthin <- 1
+  nadapt_min <- 1
   print("test with 5 iterations")
 }
 
-paste('\n ************************************* \n \n \n Running JAGS for:', '\n',
+paste('\n ************************************* \n \n \n    Running JAGS for:', '\n',
       '  Parks =', park_name, '\n',
       '  Species =', sps_name, '\n',
       '  Iterations =', niterations, '\n',
@@ -753,7 +754,7 @@ jags_model <- rjags::jags.model(
   data = jags_data,
   inits = inits, 
   n.chains = nchains,
-  n.adapt = max(100, ceiling(.1 * niterations)),
+  n.adapt = max(nadapt_min, ceiling(.1 * niterations)),
   quiet = FALSE
 )
 
