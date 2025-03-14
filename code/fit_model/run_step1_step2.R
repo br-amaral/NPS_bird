@@ -103,7 +103,9 @@ for (key_ite in 1:nrow(master_tab)){
     if (LAT == 1) print("LAT")
     if (CAN == 1) print("CAN")
     if (DEB == 1) print("DEB")
-    
+
+    cat(glue("\n \n Is it a test? {test} \n \n \n "))
+
     if(tib_loop$step == 2){
         # get scales for step 2
         scales_loop <- as.numeric(unlist(strsplit(tib_loop$scales2, split = "")))
