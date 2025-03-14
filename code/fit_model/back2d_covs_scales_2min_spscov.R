@@ -601,7 +601,7 @@ z <- list(Zst = Zst,
           Zst2 = Zst2)
           
 if(test == FALSE){
-  write_rds(z, file = glue("data/ana_file/{sps_name}_step{step_numb}_Z_{date_step1}.rds"))
+  write_rds(z, file = glue("data/ana_file/{sps}_step{step_numb}_Z_{date_step1}.rds"))
 }
 
 y <- data.matrix(y)
@@ -617,7 +617,7 @@ dim(Xb)
 (cov_key2 <- ifelse(cov_key == 1 , 1, 0))
 (n_bs <- sum(cov_key2) + 1)
 n_as <- 3
-if(length(sps_loop) > 1) { sps_name <- "commu"} else {sps_name <- sps_loop}
+if(length(sps_loop) > 1) { sps <- "commu"} else {sps <- sps_loop}
 if(length((unique(y[,2]))) == 1) { park_name <- unique(y[,2])} else {park_name <- "parks"}
 
 # remove covariates that are not in the sps analysis (set to zero)
@@ -685,7 +685,7 @@ print(non_numeric_elements)
 
 
 if(test == FALSE){
-  write_rds(jags_data, file = glue("data/ana_file/{sps_name}_step{step_numb}_jagsdata_{date_step1}.rds"))
+  write_rds(jags_data, file = glue("data/ana_file/{sps}_step{step_numb}_jagsdata_{date_step1}.rds"))
 }
 
 # source("code/check_data.R") 
@@ -711,7 +711,7 @@ if(test == TRUE){
 
 paste('\n ************************************* \n \n \n   Running JAGS for:', '\n',
       '  Parks =', park_name, '\n',
-      '  Species =', sps_name, '\n',
+      '  Species =', sps, '\n',
       '  Iterations =', niterations, '\n',
       '  Burn-in =', nburnin, '\n',
       '  Data size =', nrow(y), '\n',
@@ -734,7 +734,7 @@ if(n_bs > 1) {
 
 # Define the model file and the output file name
 model_file <- mod_name_loop
-mod_name <- glue("data/ana_file/{sps_name}_step{step_numb}_model_{date_step1}.txt") %>% as.character()
+mod_name <- glue("data/ana_file/{sps}_step{step_numb}_model_{date_step1}.txt") %>% as.character()
 
 # Read the content of the model file
 mod_content <- readLines(model_file)
@@ -788,7 +788,7 @@ samples_jags <- coda.samples(
 )
 
 cat("\n\n\n third done!!! \n\n\n\n")
-file_name <- glue("{sps_name}_step{step_numb}_output_{date_step1}")
+file_name <- glue("{sps}_step{step_numb}_output_{date_step1}")
 
 file_name2 <- paste0(file_name, 'run',
                       length(list.files(path = file.path(getwd(),"data/model_res/"),
@@ -836,7 +836,7 @@ paste('\n ************************************** \n \n \n ---------------- DONE 
       'Output File Name = ', glue('{file_name2}.rds'), '\n', 
       'Script = ', script_name, '\n', 
       'Parks =', park_name, '\n',
-      'Species =', sps_name, '\n',
+      'Species =', sps, '\n',
       'Covariates =', covs_names2, '\n',
       'Iterations =', niterations, '\n',
       'Run number =', str_split(file_name2, 'run', simplify = TRUE)[2], '\n',
@@ -847,18 +847,18 @@ paste('\n ************************************** \n \n \n ---------------- DONE 
       cat()
 
 
-meta_name <- file(glue("data/ana_file/{sps_name}_step{step_numb}_metadata_{date_step1}.txt"))
+meta_name <- file(glue("data/ana_file/{sps}_step{step_numb}_metadata_{date_step1}.txt"))
 if(test == FALSE){
     writeLines(paste(
 
-                  'Species =', sps_name, '\n',
+                  'Species =', sps, '\n',
                   'Step =', step_numb, '\n',
                   'Date =', date_step1, '\n',
 
                   'Metadata File Name =', meta_name, '\n', 
                   'Results File Name =', glue('{file_name2}.rds'), '\n', 
                   'Model File Name =', glue("{mod_name}"), '\n',
-                  'Data File Name =', glue("data/ana_file/{date_step1}_data_{sps_name}_{park_name}.rds"), '\n', 
+                  'Data File Name =', glue("data/ana_file/{date_step1}_data_{sps}_{park_name}.rds"), '\n', 
                   'Z File Name =', glue("data/ana_file/{date_step1}_data_{sps_loop}_Z.rds"), '\n', 
 
                   'Script =', script_name, '\n',
@@ -879,7 +879,7 @@ if(test == FALSE){
 }
 
 if(test == TRUE){
-  cat(glue(" \n \n \n Test for {sps_name} and step {step_numb} done!  \n \n \n"))
+  cat(glue(" \n \n \n Test for {sps} and step {step_numb} done!  \n \n \n"))
 }
 
 # code to check the data and initial values
