@@ -59,7 +59,6 @@ z_mod <- read_rds(Z_DATA_PATH)$Zst2
 
 #! Get only parameters and scales that are relevant --------------------------------------------
 cov_key2 <- cov_key[,which(cov_key != 0)] %>% colnames()
-cov_key2 <- cov_key2[-1]
 
 cov_key2_numb <- which(cov_key != 0) - 1
 cov_key2_numb <- cov_key2_numb[-1]
