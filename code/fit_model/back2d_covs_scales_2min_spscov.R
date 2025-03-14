@@ -737,6 +737,15 @@ mod_string <- paste(mod_content, collapse = "\n")
 if(test == FALSE){writeLines(mod_string, mod_name)}
 
 ## initialize JAGS
+
+if(test == TRUE){
+  nchains <- 1
+  niterations <- 6
+  nburnin <- 1
+  nthin <- 1
+  print("test with 5 iterations")
+}
+
 cat("\n\n\n running first jags \n\n\n\n")
 
 jags_model <- rjags::jags.model(
