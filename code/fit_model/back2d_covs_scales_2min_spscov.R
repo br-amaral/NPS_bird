@@ -709,11 +709,19 @@ paste('\n ************************************* \n \n \n Running JAGS for:', '\n
       '  Started running on =', Sys.time(),  '\n \n \n',
       '**************************************
       ') %>% cat()
-scales_beta <- glue("scales_beta{seq(1,n_bs-1,1)}")
-params <- c("beta0", "beta", "alpha0", "alpha", 
-            scales_beta,
-            "mu.beta0", "tau.beta0", "mu.alpha0", "tau.alpha0") %>% # Z, psi
-          as.character()
+
+if(n_bs > 1) {
+    scales_beta <- glue("scales_beta{seq(1,n_bs-1,1)}")
+
+    params <- c("beta0", "beta", "alpha0", "alpha", 
+                scales_beta,
+                "mu.beta0", "tau.beta0", "mu.alpha0", "tau.alpha0") %>% # Z, psi
+              as.character()
+  } else {
+    scales_beta <- glue("scales_beta_noscale")
+    params <- c("beta0", "beta", "alpha0", "alpha", 
+                "mu.beta0", "tau.beta0", "mu.alpha0", "tau.alpha0") %>% # Z, psi
+              as.character()}
 
 # Define the model file and the output file name
 model_file <- mod_name_loop
