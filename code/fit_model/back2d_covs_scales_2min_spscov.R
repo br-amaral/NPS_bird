@@ -709,7 +709,7 @@ if(test == TRUE){
   print("test with 5 iterations")
 }
 
-paste('\n ************************************* \n \n \n    Running JAGS for:', '\n',
+paste('\n ************************************* \n \n \n   Running JAGS for:', '\n',
       '  Parks =', park_name, '\n',
       '  Species =', sps_name, '\n',
       '  Iterations =', niterations, '\n',
