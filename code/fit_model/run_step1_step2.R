@@ -63,7 +63,6 @@ lenght <- length
 master_tab <- read_csv("code/fit_model/model_sps_key.csv")  %>% 
                 mutate(#mod_name = ascharacter(mod_name),
                        mod_name = glue("mod_{AOU_Code}_{BA}{DEN}{SHR}{DIV}{EAR}{MID}{LAT}_step{step}_sca_{scales2}"))
-write.csv(master_tab, "code/fit_model/model_sps_key.csv")
 
 for (key_ite in 1:nrow(master_tab)){
     # key_ite <- 1
@@ -91,7 +90,7 @@ for (key_ite in 1:nrow(master_tab)){
     CAN <- tib_loop$CAN
     DEB <- tib_loop$DEB
     
-    cov_key <- tib_loop[ ,2:9]
+    cov_key <- tib_loop[ ,2:10]
     print(sps_loop)
     print(cov_key)
     # Print object name if the value is greater than zero
