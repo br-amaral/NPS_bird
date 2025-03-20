@@ -3,10 +3,10 @@
 # *********************************************************************************
 # Code to make plots
 #
-hg <- httpgd::hgd()
 # detach packages and clear workspace
 freshr::freshr()
-#
+
+hg <- httpgd::hgd()
 # Load packages -------------------------------------------------------------------
 library(conflicted)
 library(tidyverse)
@@ -26,17 +26,27 @@ lenght <- length
 #! Import data --------------------------------------------------------------------
 ## file paths and read files
 # when loading the model results, get the most updated file?
-file_name <- "BTBW_step1_output_2025_03_14run2"
+file_name <- "2025_02_28_WOTH_parks_30000its_2min_spscov_run1_SCA_SEL_PARS"
 
 samples_jags <- read_rds(glue("data/model_res/{file_name}.rds"))
-
+  
 # get parameter names
 scales_names <- grep("^scales_", colnames(samples_jags[[1]]), value = TRUE)
 
-if(length(scales_names) != 0) {
-  all_params <- c("mu.alpha0", "mu.beta0", "beta", "alpha", scales_names)
-    } else {if("beta[1]" %in% varnames(samples_jags) | "beta" %in% varnames(samples_jags)) {all_params <- c("mu.alpha0", "mu.beta0", "beta", "alpha")}
-      else { all_params <- c("mu.alpha0", "mu.beta0", "alpha")}}
+if(class(samples_jags) == "jagsUI"){
+    all_params <- c("mu.alpha0", "mu.beta0", "beta", "alpha")
+    all_params <- all_params[which(all_params %in% samples_jags$parameters)]
+  } else {
+    if(length(scales_names) != 0) {
+      all_params <- c("mu.alpha0", "mu.beta0", "beta", "alpha", scales_names)
+        } else {
+          if("beta[1]" %in% varnames(samples_jags) | "beta" %in% varnames(samples_jags)) {
+            all_params <- c("mu.alpha0", "mu.beta0", "beta", "alpha")
+          } else { 
+            all_params <- c("mu.alpha0", "mu.beta0", "alpha")
+        }
+      }
+    }
 
 #! Par estimates ------------------------------------------------------------------
 par(mfrow = c(1,1))
