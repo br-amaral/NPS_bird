@@ -43,7 +43,7 @@ cat("\n", "\n", "\n",
 # Installed new packages?
 #  renv::snapshot()
 
-test <- FALSE
+test <- TRUE
 
 #! Load packages ---------------------------------------
 #library(conflicted)
@@ -57,14 +57,15 @@ lenght <- length
 
 #! Source code and Import data -----------------------------------------
 ## file paths
-
+TAB_FILE_TAB <- "code/fit_model/model_sps_key2.csv"
 ## read files
 # import file, create model names, and save it!
-master_tab <- read_csv("code/fit_model/model_sps_key.csv")  %>% 
+master_tab <- read_csv(TAB_FILE_TAB)  %>% 
                 mutate(#mod_name = ascharacter(mod_name),
                        mod_name = glue("mod_{AOU_Code}_{BA}{DEN}{SHR}{DIV}{EAR}{MID}{LAT}_step{step}_sca_{scales2}"))
+# write.csv(master_tab, file = TAB_FILE_TAB)
 
-for (key_ite in 1:nrow(master_tab)){
+for (key_ite in 1:11){ #nrow(master_tab)){
     # key_ite <- 1
     tib_loop <- master_tab[key_ite, ]
 
