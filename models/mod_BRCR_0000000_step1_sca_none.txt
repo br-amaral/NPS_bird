@@ -3,19 +3,14 @@
 model {	
   # Priors
   ## Sampling process
-  for(r in 1:n_pkM){	        # park r
+  for(r in 1:n_pkM){	      # park r
     for(t in 1:n_yrM) {       # year t
       alpha0[r,t] ~ dnorm(mu.alpha0, tau.alpha0)	
       beta0[r,t] ~ dnorm(mu.beta0, tau.beta0)	
     }
   }
   
-  ## Ecological process
-  for(j in 1:n_bs){           # number of betas
-    beta[j] ~ dnorm(0, 0.36)
-  }
-     
-  for(j in 1:n_as){           # number of alphas
+  for(j in 1:n_as){         # number of alphas
     alpha[j] ~ dnorm(0, 0.36)
   }
   
@@ -37,17 +32,16 @@ model {
     Z[y2[b,2],y2[b,3],y2[b,4]] ~ dbern(psi[y2[b,2],y2[b,3],y2[b,4]])	 # parkey, site_n, year_n
     
     # Covariate effects on the ecological process
-    logit(psi[y2[b,2],y2[b,3],y2[b,4]]) <-        # parkey, site_n, year_n
-      beta0[y2[b,2],y2[b,4]]                      # parkey, year_n
-               
+    logit(psi[y2[b,2],y2[b,3],y2[b,4]]) <-       # parkey, site_n, year_n
+      beta0[y2[b,2],y2[b,4]]                     # parkey, year_n               
   }
   
   # longer interval loop, all intervals of the removal sampling (not the first)
   for(a in 1:nrowy){
     logit(p[y[a,2],y[a,3],y[a,4],y[a,5]]) <-      # parkey, site_n, year_n, interval_n
       alpha0[y[a,2],y[a,4]] +                     # intercept - parkey, year_n
-      alpha[1] * (Xa[a,1]) +                      # time - spskey
-      alpha[2] * (Xb[a,1]) +                      # day - spskey
+      alpha[1] * Xa[a,1] +                        # time - spskey
+      alpha[2] * Xb[a,1] +                        # day - spskey
       alpha[3] * (Xb[a,1])^2                      # day squared - spskey,
     
     # y[a,1] ~ dbern(p[y[a,2],y[a,3],y[a,4],y[a,5]] * Z[y2[y_ind[a],2],y2[y_ind[a],3],y2[y_ind[a],4]])
