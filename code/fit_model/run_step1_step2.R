@@ -43,7 +43,7 @@ cat("\n", "\n", "\n",
 # Installed new packages?
 #  renv::snapshot()
 
-test <- TRUE
+test <- FALSE
 
 #! Load packages ---------------------------------------
 #library(conflicted)
