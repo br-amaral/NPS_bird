@@ -43,7 +43,7 @@ cat("\n", "\n", "\n",
 # Installed new packages?
 #  renv::snapshot()
 
-test <- FALSE
+test <- TRUE
 
 #! Load packages ---------------------------------------
 #library(conflicted)
@@ -98,24 +98,15 @@ for (key_ite in 1:nrow(master_tab)){
     cov_key <- tib_loop[ ,2:10]
     print(sps_loop)
     print(cov_key)
-    # Print object name if the value is greater than zero
-    if (BA == 1)  print("BA")
-    if (DEN == 1) print("DEN")
-    if (SHR == 1) print("SHR")
-    if (DIV == 1) print("DIV")
-    if (EAR == 1) print("EAR")
-    if (MID == 1) print("MID")
-    if (LAT == 1) print("LAT")
-    if (CAN == 1) print("CAN")
-    if (DEB == 1) print("DEB")
 
     cat(glue("\n \n Is it a test? {test} \n \n \n "))
+
 
     if(tib_loop$step == 2){
         # get scales for step 2
         scales_loop <- as.numeric(unlist(strsplit(tib_loop$scales2, split = "")))
-        date_step1 <- tib_loop$date_step1
-
+        system_time_stp2 <- Sys.time()
+        (date_step2 <- glue("{substr(system_time_stp2, 1,4)}_{substr(system_time_stp2, 6,7)}_{substr(system_time_stp2, 9,10)}"))
         source("code/fit_model/step2_analysis.R")
 
     } else {
