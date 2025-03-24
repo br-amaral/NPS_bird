@@ -43,7 +43,7 @@ cat("\n", "\n", "\n",
 # Installed new packages?
 #  renv::snapshot()
 
-test <- FALSE
+test <- TRUE
 
 #! Load packages ---------------------------------------
 #library(conflicted)
@@ -65,8 +65,7 @@ master_tab <- read_csv(TAB_FILE_TAB)  %>%
                        mod_name = glue("mod_{AOU_Code}_{BA}{DEN}{SHR}{DIV}{EAR}{MID}{LAT}_step{step}_sca_{scales2}"))
 # write.csv(master_tab, file = TAB_FILE_TAB)
 master_tab <- master_tab %>% 
-                slice(1:11) %>% 
-                filter(step == 2) 
+                slice(11:39) 
 
 for (key_ite in 1:nrow(master_tab)){
     # key_ite <- 1
