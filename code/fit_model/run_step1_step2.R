@@ -66,7 +66,7 @@ master_tab <- read_csv(TAB_FILE_TAB)  %>%
 # write.csv(master_tab, file = TAB_FILE_TAB)
 master_tab <- master_tab %>% 
                 slice(1:11) %>% 
-                filter(step == 1) 
+                filter(step == 2) 
 
 for (key_ite in 1:nrow(master_tab)){
     # key_ite <- 1
@@ -81,7 +81,7 @@ for (key_ite in 1:nrow(master_tab)){
     nburnin <- tib_loop$nburnin
     nchains <- tib_loop$nchains
     nthin <- tib_loop$nthin
-    if(test == TRUE){nadapt_min <- 1} else {nadapt_min <- 100}
+    if(test == TRUE){nadapt_min <- 1} else {nadapt_min <- 500}
     # niterations <- 10 ; nburnin <- 5 ; nchains <- 1 ; nthin <- 1
     
     #! Get species and covariates --------------------------------------
@@ -112,7 +112,7 @@ for (key_ite in 1:nrow(master_tab)){
     } else {
         source("code/fit_model/back2d_covs_scales_2min_spscov.R")
     }
-
+    closeAllConnections()
 }
 
 cat(paste('\n ************************************** \n \n \n 

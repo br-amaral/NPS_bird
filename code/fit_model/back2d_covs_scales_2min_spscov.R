@@ -900,6 +900,8 @@ if(test == FALSE){
   close(meta_name)
 }
 
+close(meta_name)
+
 if(test == TRUE){
   cat(glue(" \n \n \n Test for {sps_loop} and step {step_numb} done!  \n \n \n"))
 }

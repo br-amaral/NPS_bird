@@ -135,6 +135,8 @@ if(test == TRUE){
   niterations <- 6
   nburnin <- 1
   nthin <- 1
+  nadapt_min <- 5
+
   print("test with 5 iterations")
 }
 
@@ -146,7 +148,7 @@ samples_jags <- jags(data = jags_data2,
                       parameters.to.save = params,
                       model.file = model_file,
                       n.chains = nchains,
-                      n.adapt = max(500, ceiling(.1 * niterations)),
+                      n.adapt = max(nadapt_min, ceiling(.1 * niterations)),
                       n.iter = niterations,
                       n.burnin = nburnin,
                       n.thin = nthin,
@@ -208,38 +210,39 @@ paste('\n ************************************** \n \n \n ---------------- DONE 
       cat()
 
 
+# Open the metadata file
 meta_name <- file(glue("data/ana_file/{sps}_step{step_numb}_metadata_{date_step2}.txt"))
-if(test == FALSE){
-    writeLines(paste(
 
-                  'Species =', sps, '\n',
-                  'Step =', step_numb, '\n',
-                  'Date =', date_step2, '\n',
+if (test == FALSE) {
+  # Write metadata to the file
+  writeLines(paste(
+    'Species =', sps, '\n',
+    'Step =', step_numb, '\n',
+    'Date =', date_step2, '\n',
+    'Metadata File Name =', meta_name, '\n', 
+    'Results File Name =', glue('{file_name2}.rds'), '\n', 
+    'Model File Name =', glue("{mod_name}"), '\n',
+    'Data File Name =', SPS_DATA_PATH, '\n', 
+    'Z File Name =', Z_DATA_PATH, '\n', 
+    'Covariates =', covs_names, '\n',
+    'Scales =', sca_names, '\n',
+    'Script =', script_name, '\n',
+    'Iterations =', niterations, '\n',
+    'Chains =', nchains, '\n',
+    'Burn-in =', nburnin, '\n',
+    'Thinning =', nthin, '\n',
+    'Run number =', str_split(file_name2, 'run', simplify = TRUE)[2], '\n',
+    'Started running on =', system_time1, '\n',
+    'Stopped running on =', system_time2, '\n',
+    'Time it took =', time_it_took, unit_time
+  ), meta_name)
 
-                  'Metadata File Name =', meta_name, '\n', 
-                  'Results File Name =', glue('{file_name2}.rds'), '\n', 
-                  'Model File Name =', glue("{mod_name}"), '\n',
-                  'Data File Name =', SPS_DATA_PATH, '\n', 
-                  'Z File Name =', Z_DATA_PATH, '\n', 
-
-                  'Covariates =', covs_names, '\n',
-                  'Scales =', sca_names, '\n',
-                                  
-                  'Script =', script_name, '\n',
-                  'Iterations =', niterations, '\n',
-                  'Chains =', nchains, '\n',
-                  'Burn-in =', nburnin, '\n',
-                  'Thinning =', nthin, '\n',
-
-                  'Run number =', str_split(file_name2, 'run', simplify = TRUE)[2], '\n',
-                  'Started running on =', system_time1, '\n',
-                  'Stopped running on =', system_time2, '\n',
-                  'Time it took =', time_it_took , unit_time), 
-
-            meta_name)
-
+  # Close the file connection
   close(meta_name)
 }
+
+close(meta_name)
+
 
 if(test == TRUE){
   cat(glue("\n \n \n \n Test for {sps} and step {step_numb} done!  \n \n \n \n \n"))
