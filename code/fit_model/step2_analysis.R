@@ -43,25 +43,24 @@ lenght <- length
 
 (sps <- sps_loop)
 system_time1 <- Sys.time()
-(date_step2 <- glue("{substr(system_time1, 1,4)}_{substr(system_time1, 6,7)}_{substr(system_time1, 9,10)}"))
 script_name <- "step2_analysis.R"
 
+source("code/fit_model/step2data.R")
 ## file paths
 # data
-SPS_DATA_PATH <- glue('data/ana_file/{date_step1}_data_{sps}_parks.rds') 
+#SPS_DATA_PATH <- glue('data/ana_file/{date_step1}_data_{sps}_parks.rds') 
 
 # inital values (z)
-Z_DATA_PATH <- glue("data/ana_file/{date_step1}_data_{sps}_Z.rds")
+#Z_DATA_PATH <- glue("data/ana_file/{date_step1}_data_{sps}_Z.rds")
 
 ## read files
-jags_data <- read_rds(SPS_DATA_PATH) 
-z_mod <- read_rds(Z_DATA_PATH)$Zst2
+#jags_data <- read_rds(SPS_DATA_PATH) 
+z_mod <- z # read_rds(Z_DATA_PATH)$Zst2
 
 #! Get only parameters and scales that are relevant --------------------------------------------
 cov_key2 <- cov_key[,which(cov_key != 0)] %>% colnames()
 
-cov_key2_numb <- which(cov_key != 0) - 1
-cov_key2_numb <- cov_key2_numb[-1]
+cov_key2_numb <- which(cov_key != 0) 
 
 # get X objects being used
 pars_sca_mod <- cbind(cov_key2, cov_key2_numb, scales_loop) %>% 
@@ -98,15 +97,17 @@ n_as <- 3
 
 inits <- function() {
     list(
-        Z = z_mod,
+        Z = z_mod$Zst2,
         beta = rnorm(n_bs_new, 0.5),
         mu.alpha0 = rnorm(1, 0.5),
         alpha = rnorm(n_as, 0.5)
     )
 }
 
+
 # Define the model file and the output file name
 model_file <- mod_name_loop
+
 mod_name   <- glue("data/ana_file/{sps}_step{step_numb}_model_{date_step2}.txt") %>% as.character()
 
 # Read the content of the model file
@@ -116,7 +117,7 @@ mod_content <- readLines(model_file)
 mod_string <- paste(mod_content, collapse = "\n")
 
 # Write the content to the output file
-if(test == FALSE){writeLines(mod_string, mod_name)}
+writeLines(mod_string, mod_name)
 
 # get the right data for the model - remove the covariates that are no longer in use
 old_pars <- names(jags_data)
