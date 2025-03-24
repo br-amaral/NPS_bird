@@ -106,7 +106,7 @@ X10 <- X10 %>%
 
 nrow(X10) == nrow(y_dat6)
 glu1 <- paste(shQuote(sort(unique(y_dat6$sps_it))), collapse=", ")
-spsglue <- glue("the species are {glu1}, and parks are")
+spsglue <- glue("the species is {glu1}, and parks are")
 parkglue <- paste(shQuote(sort(unique(y_dat6$park))), collapse=", ")
 print(paste(spsglue,parkglue))
 
