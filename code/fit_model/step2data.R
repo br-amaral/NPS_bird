@@ -671,6 +671,8 @@ print(non_numeric_elements)
 # Xb: detection day of the year
 # n_yrM: number of years 
 # n_pkM: number of parks 
+SPS_DATA_PATH <- glue("{sps_loop}_step{step_numb}_jagsdata_{date_step2}.rds")
+
 write_rds(jags_data, file = glue("data/ana_file/{sps_loop}_step{step_numb}_jagsdata_{date_step2}.rds"))
 
 
