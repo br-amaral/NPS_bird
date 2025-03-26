@@ -46,16 +46,9 @@ system_time1 <- Sys.time()
 script_name <- "step2_analysis.R"
 
 source("code/fit_model/step2data.R")
-## file paths
-# data
-#SPS_DATA_PATH <- glue('data/ana_file/{date_step1}_data_{sps}_parks.rds') 
-
-# inital values (z)
-#Z_DATA_PATH <- glue("data/ana_file/{date_step1}_data_{sps}_Z.rds")
 
 ## read files
-#jags_data <- read_rds(SPS_DATA_PATH) 
-z_mod <- z # read_rds(Z_DATA_PATH)$Zst2
+z_mod <- z 
 
 #! Get only parameters and scales that are relevant --------------------------------------------
 cov_key2 <- cov_key[,which(cov_key != 0)] %>% colnames()

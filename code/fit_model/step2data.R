@@ -590,8 +590,9 @@ for(a in 1:nrow(Zst)){
 # save initial values for post hoc analysis
 z <- list(Zst = Zst,
           Zst2 = Zst2)
-          
-write_rds(z, file = glue("data/ana_file/{sps_loop}_step{step_numb}_Z_{date_step2}.rds"))
+        
+Z_DATA_PATH <- glue("{sps_loop}_step{step_numb}_Z_{date_step2}")
+write_rds(z, file = glue("data/ana_file/{Z_DATA_PATH}.rds"))
 
 y <- data.matrix(y)
 y2 <- data.matrix(y2)
