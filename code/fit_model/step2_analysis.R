@@ -204,7 +204,7 @@ paste('\n ************************************** \n \n \n ---------------- DONE 
 
 
 # Open the metadata file
-meta_name <- file(glue("data/ana_file/{sps}_step{step_numb}_metadata_{date_step2}.txt"))
+meta_name <- glue("data/ana_file/{sps}_step{step_numb}_metadata_{date_step2}.txt")
 
 if (test == FALSE) {
   # Write metadata to the file
@@ -231,10 +231,10 @@ if (test == FALSE) {
   ), meta_name)
 
   # Close the file connection
-  close(meta_name)
+  #close(meta_name)
 }
 
-close(meta_name)
+#close(meta_name)
 
 
 if(test == TRUE){
