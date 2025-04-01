@@ -616,7 +616,7 @@ dim(Xb)
 
 # number of alphas and betas
 (cov_key2 <- ifelse(cov_key == 1 , 1, 0))
-(n_bs <- sum(cov_key2) + 1)
+ifelse(sum(cov_key2) == 0, n_bs <- sum(cov_key2), n_bs <- sum(cov_key2) + 1)
 n_as <- 3
 if(length(sps_loop) > 1) { sps_loop <- "commu"} else {sps_loop <- sps_loop}
 if(length((unique(y[,2]))) == 1) { park_name <- unique(y[,2])} else {park_name <- "parks"}
@@ -691,16 +691,6 @@ if(test == FALSE){
 
 # source("code/check_data.R") 
 
-inits <- function() {
-    list(
-        Z = Zst2,
-        # mu_beta0 = rnorm(1, 0.5), # check this!!!!!
-        beta = rnorm(n_bs, 0.5),
-        mu.alpha0 = rnorm(1, 0.5),
-        alpha = rnorm(n_as, 0.5)
-    )
-}
-
 if(test == TRUE){
   nchains <- 1
   niterations <- 6
@@ -722,16 +712,57 @@ paste('\n ************************************* \n \n \n   Running JAGS for:', '
 
 if(n_bs > 1) {
     scales_beta <- glue("scales_beta{seq(1,n_bs-1,1)}")
-
     params <- c("beta0", "beta", "alpha0", "alpha", 
                 scales_beta,
                 "mu.beta0", "tau.beta0", "mu.alpha0", "tau.alpha0") %>% # Z, psi
               as.character()
-  } else {
+              
+    inits <- function() {
+      list(
+          Z = Zst2,
+          # mu_beta0 = rnorm(1, 0.5), # check this!!!!!
+          beta = rnorm(n_bs, 0.5),
+          mu.alpha0 = rnorm(1, 0.5),
+          alpha = rnorm(n_as, 0.5)
+      )
+  }
+} 
+  
+if(n_bs == 1){
     scales_beta <- glue("scales_beta_noscale")
     params <- c("beta0", "beta", "alpha0", "alpha", 
                 "mu.beta0", "tau.beta0", "mu.alpha0", "tau.alpha0") %>% # Z, psi
-              as.character()}
+              as.character()
+
+    inits <- function() {
+      list(
+          Z = Zst2,
+          # mu_beta0 = rnorm(1, 0.5), # check this!!!!!
+          beta = rnorm(n_bs, 0.5),
+          mu.alpha0 = rnorm(1, 0.5),
+          alpha = rnorm(n_as, 0.5)
+      )
+  }
+} 
+              
+if(n_bs == 0){
+    scales_beta <- glue("scales_beta_noscale")
+    params <- c("beta0", "alpha0", "alpha", 
+                "mu.beta0", "tau.beta0", "mu.alpha0", "tau.alpha0") %>% # Z, psi
+              as.character()
+
+    # Remove beta objects from data
+    objects_to_remove <- c("n_bs", "Xp", "beta")
+    jags_data <- jags_data[!(names(jags_data) %in% objects_to_remove)]
+    
+    inits <- function() {
+      list(
+          Z = Zst2,
+          mu.alpha0 = rnorm(1, 0.5),
+          alpha = rnorm(n_as, 0.5)
+      )
+  }
+}
 
 # Define the model file and the output file name
 model_file <- mod_name_loop
