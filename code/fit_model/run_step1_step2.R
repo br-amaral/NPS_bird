@@ -67,7 +67,7 @@ master_tab <- read_csv(TAB_FILE_TAB)  %>%
 master_tab <- master_tab %>% 
                 slice(11:39) 
 
-for (key_ite in 1:nrow(master_tab)){
+for (key_ite in 2:nrow(master_tab)){
     # key_ite <- 1
     tib_loop <- master_tab[key_ite, ]
 
