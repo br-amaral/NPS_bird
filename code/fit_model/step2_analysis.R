@@ -231,10 +231,8 @@ if (test == FALSE) {
   ), meta_name)
 
   # Close the file connection
-  #close(meta_name)
+  close(meta_name)
 }
-
-#close(meta_name)
 
 
 if(test == TRUE){

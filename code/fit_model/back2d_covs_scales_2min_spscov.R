@@ -931,33 +931,8 @@ if(test == FALSE){
   close(meta_name)
 }
 
-close(meta_name)
 
 if(test == TRUE){
   cat(glue(" \n \n \n Test for {sps_loop} and step {step_numb} done!  \n \n \n"))
 }
-
-# code to check the data and initial values
-# r <- 10   # what is the deal with 7 versus 10? (they both have the same values and 10 does not work)
-# j <- 1
-# t <- 1
-# Zst %>% filter(parkey == r, site_n == j, year_s == t)
-# y_dat6 %>% filter(parkey == r, site_n == j, year_s == t)
-# Zst2[r,j,t]
-# # row 73 has the values in the loop
-
-# #################################################################################
-# MCMCsummary(samples_jags,
-#              #params = params[c(2,4,5,7)],
-#              round = 2) 
-
-# MCMCtrace(samples_jags,
-#           params = params[c(10,8,2,4,5,7)],
-#           ind = TRUE,
-#           pdf = FALSE)
-
-# par(mfrow = c(1,1))
-# MCMCplot(samples_jags,
-#          #params = params[c(2,4,5,7)],
-#          ref_ovl = TRUE)
 
