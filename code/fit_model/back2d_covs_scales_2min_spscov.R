@@ -928,7 +928,6 @@ if(test == FALSE){
 
             meta_name)
 
-  close(meta_name)
 }
 
 

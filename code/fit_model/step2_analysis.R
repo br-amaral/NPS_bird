@@ -230,8 +230,6 @@ if (test == FALSE) {
     'Time it took =', time_it_took, unit_time
   ), meta_name)
 
-  # Close the file connection
-  close(meta_name)
 }
 
 
