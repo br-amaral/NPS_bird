@@ -232,6 +232,7 @@ if (test == FALSE) {
 
 }
 
+master_tab$res_name[key_ite] <- glue('{file_name2}')
 
 if(test == TRUE){
   cat(glue("\n \n \n \n Test for {sps} and step {step_numb} done!  \n \n \n \n \n"))

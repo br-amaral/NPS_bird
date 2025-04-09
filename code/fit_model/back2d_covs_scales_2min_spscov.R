@@ -899,6 +899,7 @@ paste('\n ************************************** \n \n \n ---------------- DONE 
       '**************************************  \n') %>% 
       cat()
 
+master_tab$res_name[key_ite] <- glue('{file_name2}')
 
 meta_name <- file(glue("data/ana_file/{sps_loop}_step{step_numb}_metadata_{date_step1}.txt"))
 if(test == FALSE){

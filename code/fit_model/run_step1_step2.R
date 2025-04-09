@@ -57,17 +57,18 @@ lenght <- length
 
 #! Source code and Import data -----------------------------------------
 ## file paths
-TAB_FILE_TAB <- "code/fit_model/model_sps_key2.csv"
+TAB_FILE_TAB <- "code/fit_model/model_sps_key3.csv"
 ## read files
 # import file, create model names, and save it!
-master_tab <- read_csv(TAB_FILE_TAB)  %>% 
-                mutate(#mod_name = ascharacter(mod_name),
-                       mod_name = glue("mod_{AOU_Code}_{BA}{DEN}{SHR}{DIV}{EAR}{MID}{LAT}_step{step}_sca_{scales2}"))
+master_tab <- read_csv(TAB_FILE_TAB)  #%>% 
+               # mutate(#mod_name = ascharacter(mod_name),
+                #       mod_name = glue("mod_{AOU_Code}_{BA}{DEN}{SHR}{DIV}{EAR}{MID}{LAT}_step{step}_sca_{scales2}"))
 # write.csv(master_tab, file = TAB_FILE_TAB)
-master_tab <- master_tab %>% 
-                slice(11:39) 
+mt_dtime1 <- Sys.time()
+(mt_dt1 <- glue("{substr(mt_dtime1, 1,4)}_{substr(mt_dtime1, 6,7)}_{substr(mt_dtime1, 9,10)}"))
+mt_dt <- as.character(mt_dt1)
 
-for (key_ite in 16:nrow(master_tab)){
+for (key_ite in 1:nrow(master_tab)){
     # key_ite <- 1
     tib_loop <- master_tab[key_ite, ]
 
@@ -117,3 +118,6 @@ for (key_ite in 16:nrow(master_tab)){
 cat(paste('\n ************************************** \n \n \n 
         ---------------- all DONE Lol ----------------', 
         '\n\n \n ************************************** \n'))
+
+# note I'm saving in rds, not over it as a csv
+write_rds(master_tab, file = glue("data/model_res/master_tab_{mt_dt}.rds"))
