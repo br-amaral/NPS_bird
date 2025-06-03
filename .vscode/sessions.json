@@ -32,16 +32,8 @@
                 "icon": "location",
                 "color": "terminal.ansiBrightGreen",
                 "commands": [
-                    "cd ..",
-                    "cd ..",
-                    "cd ..",
-                    "cd ..",
-                    "cd ..",
-                    "cd ..",
-                    "cd ..",
-                    "cd ..",
-                    "cd Volumes/bamaral",
-                    "echo Find your repo now!"
+                    "cd /",
+                    "cd Volumes/zipkinlab/bamaral/dataNPS_bird_copy"
                 ]
             },
             {
@@ -50,6 +42,8 @@
                 "icon": "run",
                 "color": "terminal.ansiBrightCyan",
                 "commands": [
+                    "cd /",
+                    "cd /Users/bamaral/Library/Mobile\ Documents/com~apple~CloudDocs/GitHub_data/dataNPS_bird_copy/",
                     "R"
                 ]
             },
@@ -60,15 +54,8 @@
                 "color": "terminal.ansiBrightCyan",
                 "commands": [
                     "cd ..",
-                    "cd ..",
-                    "cd ..",
-                    "cd ..",
-                    "cd ..",
-                    "cd ..",
-                    "cd ..",
-                    "cd ..",
-                    "cd Volumes/bamaral",
-                    "echo Find your repo now!"
+                    "cd Volumes/zipkinlab/bamaral/dataNPS_bird_copy",
+                    "R"
                 ]
             }
         ]
