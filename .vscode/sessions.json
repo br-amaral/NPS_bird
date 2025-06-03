@@ -43,7 +43,7 @@
                 "color": "terminal.ansiBrightCyan",
                 "commands": [
                     "cd /",
-                    "cd /Users/bamaral/Library/Mobile\ Documents/com~apple~CloudDocs/GitHub_data/dataNPS_bird_copy/",
+                    "cd Users/bamaral/Library/Mobile\ Documents/com~apple~CloudDocs/GitHub_data/dataNPS_bird_copy/",
                     "R"
                 ]
             },
