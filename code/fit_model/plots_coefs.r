@@ -176,6 +176,7 @@ dat_col <- as_tibble(cbind(sca_col, sca))  %>%
                         levels = c("Site Scale","Park Scale","Landscape Scale")))
 library(ggh4x)
 
+data_zero$sps %>% unique()
 
 ggplot() +
   geom_rect(data = dat_col, aes(fill = sca_col),
@@ -217,6 +218,6 @@ ggplot() +
 
 
 
-ggsave("manus_figs/fig3new.svg", plot = last_plot(), device = "svg", width = 9, height = 8)
+ggsave("manus_figs/fig3new.svg", plot = last_plot(), device = "svg", width = 12, height = 8)
 
 
