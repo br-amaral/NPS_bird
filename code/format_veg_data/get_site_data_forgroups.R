@@ -72,8 +72,24 @@ FOR_SITE_PATH     <- "data/veg_kateaaron/for_sites.rds"
 BIRD_FOR_PATH     <- "data/out/key_bsite.rds"
 FOR_FOR_PATH      <- "data/out/key_fsite.rds"
 VEG_TYP_PATH      <- "data/out/tab_veg3_AW.csv"    #  "data/veg_parks.csv"
+VAMA_PARK_PATH    <- "data/VAMA_sites.rds"
+HOFR_PARK_PATH    <- "data/HOFR_sites.rds"
+ELRO_PARK_PATH    <- "data/ELRO_sites.rds"
 
 ## read files
+## get site names for ROVA parks 
+VAMA_sites <- read_rds(file = VAMA_PARK_PATH) %>% 
+                select(park, for_sit)
+
+HOFR_sites <- read_rds(file = HOFR_PARK_PATH) %>% 
+                select(park, for_sit)
+
+ELRO_sites <- read_rds(file = ELRO_PARK_PATH) %>% 
+                select(park, for_sit)
+
+ROVA_sites <- rbind(VAMA_sites, HOFR_sites, ELRO_sites)  %>% 
+                rename(ParkUnit = park, Plot_Name = for_sit)
+
 bird_sit      <- read_rds(file = BIRD_SITE_PATH)
 parks         <- read_rds(file = PARK_SITE_PATH) 
 for_sit       <- read_rds(file = FORCOVS_SITE_PATH)
@@ -87,9 +103,10 @@ veg_type      <- read_csv(file = VEG_TYP_PATH)
 parks <- parks %>% 
   dplyr::select(parks) %>% 
   distinct() %>% 
+  filter(parks %!in% c("ACAD", "ELRO", "SAIR")) %>%
   pull()
 
-parks <- sort(parks)
+parks <- sort(parks) 
 
 for(ii in 1:length(bird_sit$points)){
   coord_loop <- 
@@ -173,8 +190,6 @@ park_plot_nam <- bird_sit_coord %>%
               filter(row_number()==1) %>%
               ungroup()
 
-library(ggplot2)
-
 ggplot() +
   geom_point(aes(x = bird_sit_coord$lonutm, 
                  y = bird_sit_coord$latutm),
@@ -208,42 +223,31 @@ bird_sit_coord2 <- left_join(bird_sit_coord2,
                               by = "bird_sit") %>% 
                     filter(!is.na(b_for))
 
-for_sit_coord2 <- left_join(for_sit_coord  %>% 
-                              mutate(park = substr(for_sit, 1, 4)), #%>% 
-                              #filter(park != "ACAD") %>% 
-                              #filter(park != "SAIR"), 
+# change Rova names to actual parks
+ROVA_sites <- ROVA_sites  %>% rename(park = ParkUnit, ID = Plot_Name)
+
+for(ii in 1:nrow(key_fsite)){
+    for(jj in 1:nrow(ROVA_sites)){
+      if(key_fsite$ID[ii] == ROVA_sites$ID[jj]) {
+         key_fsite$park[ii] <- ROVA_sites$park[jj]
+      }
+    }
+}
+
+for_sit_coord2 <- left_join(for_sit_coord, 
                             key_fsite %>% 
                               rename(for_sit = ID,
                                       f_for = MapUnit_ID) %>% 
-                              select(for_sit, f_for, geometry),
+                              select(for_sit, f_for, geometry, park),
                             by = "for_sit") %>% 
-                    filter(!is.na(f_for))
-
-# make sure parks patch with forest sites only within the same park
-for_sit_coord_minusrova <- for_sit_coord2 %>% 
-  filter(park != "ROVA")
-
-for_sit_coord_rova <- for_sit_coord2 %>% 
-  filter(park == "ROVA") %>% 
-  select(-park)
-
-for_sit_coord_elro <- for_sit_coord_rova %>% 
-  mutate(park = "ELRO")
-for_sit_coord_vama <- for_sit_coord_rova %>% 
-  mutate(park = "VAMA")
-for_sit_coord_hofr <- for_sit_coord_rova %>% 
-  mutate(park = "HOFR")
-
-for_sit_coord3 <- rbind(for_sit_coord_minusrova, 
-                        for_sit_coord_elro, 
-                        for_sit_coord_vama, 
-                        for_sit_coord_hofr)
+                    filter(!is.na(f_for)) %>% 
+                    filter(park != "ROVA")
 
 #bird_sit_coord2 <- bird_sit_coord2[1:11,]
 
 # get a table with all the forest types to compare to the key, 
 #    and possible combine them into smaller groups
-veg_type_indata <- c(unique(for_sit_coord3$f_for),
+veg_type_indata <- c(unique(for_sit_coord2$f_for),
                       unique(bird_sit_coord2$b_for)) %>% 
                       unique() %>% 
                       sort() %>% 
@@ -254,19 +258,20 @@ dim(veg_type_indata)
 length(unique(veg_type_indata$MapUnit_ID))
 #writexl::write_xlsx(tab_veg3, path = "data/out/tab_veg3.xlsx")
 
+# bird_sit_coord2 <- bird_sit_coord2 %>% mutate(park = substr(bird_sit,1,4))  %>% filter(park %in% c("ELRO", "HOFR", "VAMA")) %>% select(-park)
 bird_sit_coord2 <- bird_sit_coord2 %>% 
       rename(MapUnit_ID = b_for) %>% 
       left_join(., veg_type, by = "MapUnit_ID")  %>% 
       rename(bir_veg = Cover_Type)
 
-for_sit_coord3 <- for_sit_coord3 %>% 
+for_sit_coord3 <- for_sit_coord2 %>% 
       rename(MapUnit_ID = f_for) %>% 
       left_join(., veg_type, by = "MapUnit_ID") %>% 
       rename(for_veg = Cover_Type)
 
 rbind(
-  bird_sit_coord2 %>% filter(is.na(bir_veg)) %>% select(MapUnit_ID) %>% distinct(),
-  for_sit_coord3 %>% filter(is.na(for_veg)) %>% select(MapUnit_ID) %>% distinct()) %>% 
+  bird_sit_coord2 %>% filter(!is.na(bir_veg)) %>% select(MapUnit_ID) %>% distinct(),
+  for_sit_coord3 %>% filter(!is.na(for_veg)) %>% select(MapUnit_ID) %>% distinct()) %>% 
   distinct() %>% 
   arrange(MapUnit_ID)
 
@@ -277,15 +282,15 @@ bir_test <- bird_sit_coord2 %>%
               mutate(park = substr(bird_sit,1,4)) %>% 
               select(park, lonutm, latutm, bir_veg)
 parks_sub <- sort(unique(for_test$park))
-par(mfrow = c(1,1))
 
+par(mfrow = c(1,1))
 for(ii in 1:length(parks_sub)){
   for_test2 <- for_test %>% filter(park == parks_sub[ii])
   bir_test2 <- bir_test %>% filter(park == parks_sub[ii])
 
   plot(for_test2$lonutm, for_test2$latutm, col = "darkgreen", 
-      main = for_test2$park[1])
-  points(bir_test2$lonutm, bir_test2$latutm, col = "violet")
+      main = for_test2$park[1], pch = 19, cex = 3)
+  points(bir_test2$lonutm, bir_test2$latutm, col = "violet", pch = 15, cex = 3)
 }
 # get neighbors
 for (ii in 1:nrow(bird_sit_coord2)) {
@@ -405,9 +410,11 @@ for(ii in 1:lenght(parks)){
               size = 3,
               color = "#186A3B",
               shape = 15) +
-    #geom_text(aes(x= park_plot_nam$lonutm, y =park_plot_nam$latutm),
-    #          label = park_plot_nam$park, size = 3, vjust = -1.3) +
-    theme_bw()
+geom_text(aes(x = lonutmb, y = latutmb, 
+              label = substr(bird_sit, 5, nchar(bird_sit))), 
+              size = 5, vjust = -1.3) +
+    theme_bw() +
+    labs(title = parks[ii])
     #)
   print(p2)
   #library(plotly)
@@ -425,7 +432,20 @@ table(for_sit$SampleYear) %>% max()
 path <- glue("{getwd()}/data/veg_kateaaron") 
 importCSV(path, zip_name = "NETN_Forest_20231106.zip")
 can <- forestNETN::joinStandData(park = "all") %>%
-          as_tibble() %>% 
+          as_tibble() 
+
+ROVA_sites <- ROVA_sites  %>% rename(ParkUnit = park, Plot_Name = ID)
+
+for(ii in 1:nrow(can)){
+    for(jj in 1:nrow(ROVA_sites)){
+      if(can$Plot_Name[ii] == ROVA_sites$Plot_Name[jj]) {
+         can$ParkUnit[ii] <-  ROVA_sites$ParkUnit[jj]
+      }
+    }
+}
+
+can <- can %>%        
+          filter(ParkUnit != "ROVA") %>% 
           select(Plot_Name, SampleYear, ParkUnit, Pct_Crown_Closure) %>% 
           group_by(Plot_Name) %>% 
           mutate(can_m = mean(Pct_Crown_Closure, na.rm = T)) %>% 
@@ -435,7 +455,18 @@ can <- forestNETN::joinStandData(park = "all") %>%
 
 ## wood debris ----------------------------------------------------------
 cwd <- joinCWDData(park = 'all') %>% # coarse wood debris
-          as_tibble() %>% 
+          as_tibble()          
+
+for(ii in 1:nrow(cwd)){
+    for(jj in 1:nrow(ROVA_sites)){
+      if(cwd$Plot_Name[ii] == ROVA_sites$Plot_Name[jj]) {
+         cwd$ParkUnit[ii] <-  ROVA_sites$ParkUnit[jj]
+      }
+    }
+}
+
+cwd <- cwd %>%        
+          filter(ParkUnit != "ROVA") %>%    
           select(Plot_Name, SampleYear, ParkUnit, CWD_Vol) %>% 
           group_by(Plot_Name) %>% 
           mutate(deb_m = mean(CWD_Vol, na.rm = T)) %>% 

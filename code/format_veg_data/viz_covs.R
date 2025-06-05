@@ -102,6 +102,8 @@ geom_tile(color = "white")+
 library(ggplot2)
 library(viridis)
 
+X10 <- X
+
 X2 <- X10 %>% dplyr::filter(park != "ACAD") %>% 
   select(park, Year, siteDEN_s, parkDEN_s, counDEN_s) %>% 
   mutate(siteDEN_s = as.numeric(siteDEN_s), 
@@ -149,3 +151,5 @@ ggplot(X2 %>% select(park, Year, counDEN_s) %>% distinct(),
     geom_tile() +
   scale_fill_viridis(discrete=FALSE) +
     theme_bw()
+
+    

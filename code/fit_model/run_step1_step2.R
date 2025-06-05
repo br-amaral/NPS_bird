@@ -43,7 +43,7 @@ cat("\n", "\n", "\n",
 # Installed new packages?
 #  renv::snapshot()
 
-test <- FALSE
+test <- TRUE
 
 #! Load packages ---------------------------------------
 #library(conflicted)
@@ -60,7 +60,7 @@ lenght <- length
 
 ## read files
 # import file, create model names, and save it!
-master_tab <- read_csv("code/fit_model/model_sps_key.csv")  %>% 
+master_tab <- read_csv("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/fit_model/model_sps_key.csv")  %>% 
                 mutate(#mod_name = ascharacter(mod_name),
                        mod_name = glue("mod_{AOU_Code}_{BA}{DEN}{SHR}{DIV}{EAR}{MID}{LAT}_step{step}_sca_{scales2}"))
 

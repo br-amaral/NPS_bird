@@ -67,8 +67,8 @@ park_county <- matrix(c(
   'SAIR', 'Essex County', 'Massachusetts','MA',
   'SARA', 'Saratoga County', 'New York','NY',
   'VAMA', 'Dutchess County', 'New York','NY',
-  #'WEFA', 'Western Connecticut Planning Region', 'Connecticut','CT'), # used to be 'Fairfield County'
-  'WEFA', 'Fairfield County', 'Connecticut','CT'), 
+  'WEFA', 'Western Connecticut Planning Region', 'Connecticut','CT'), # used to be 'Fairfield County'
+  #'WEFA', 'Fairfield County', 'Connecticut','CT'), 
 
   ncol = 4, byrow = T) %>% 
   as_tibble()

@@ -1,6 +1,8 @@
+freshr::freshr()
 library(reshape2)
+library(tidyverse)
 
-XDAT_PATH <- "data/X_1000.rds"
+XDAT_PATH <- "data/X.rds"
 X10 <- read_rds(file = XDAT_PATH)
 
 X_corr <- X10 %>% 
@@ -24,6 +26,8 @@ X_corr <- X10 %>%
                 time_jul = StartTime2) %>% 
             mutate(#AOU_code = sps_loop2,
                    park = substr(Point_Name,1,4))
+
+write_rds(X_corr, file = "data/X_corr.rds")
 
 cbind(colnames(X_corr), seq(1,ncol(X_corr),1))
 

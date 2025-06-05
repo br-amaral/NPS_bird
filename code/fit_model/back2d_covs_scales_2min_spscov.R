@@ -13,10 +13,6 @@
 #! Output ---------------------------------------------
 #           - data/model_res/jags_res_{sps}_{park}_run{run_number}.rds: file with result of jags model
 
-# detach packages and clear workspace
-#if(!require(freshr)){install.packages("freshr")}
-#freshr::freshr()
-
 # Load packages --------------------------------------
 library(conflicted)
 library(tidyverse)
