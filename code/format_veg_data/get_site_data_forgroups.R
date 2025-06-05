@@ -71,7 +71,7 @@ FORSPS_SITE_PATH  <- "data/veg_kateaaron/NETN_tree_dens_spp_2006-2023.rds"
 FOR_SITE_PATH     <- "data/veg_kateaaron/for_sites.rds"
 BIRD_FOR_PATH     <- "data/out/key_bsite.rds"
 FOR_FOR_PATH      <- "data/out/key_fsite.rds"
-VEG_TYP_PATH      <- "data/out/tab_veg3_AW.csv"    #  "data/veg_parks.csv"
+VEG_TYP_PATH      <- "data/out/tab_veg3_AW.csv"    # vegetation types (3) of the parks
 VAMA_PARK_PATH    <- "data/VAMA_sites.rds"
 HOFR_PARK_PATH    <- "data/HOFR_sites.rds"
 ELRO_PARK_PATH    <- "data/ELRO_sites.rds"
@@ -473,6 +473,7 @@ cwd <- cwd %>%
           ungroup() %>% 
           select(-CWD_Vol) %>% 
           distinct()
+
 
 ## snags ----------------------------------------------------------------
 # stand_spp <- joinStandData()

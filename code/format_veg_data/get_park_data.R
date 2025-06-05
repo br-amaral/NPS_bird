@@ -151,8 +151,6 @@ for_park2 <- for_park %>%
 #! Output files ----------------------------------------------
 write_rds(for_park2, file = "data/out/park_covs.rds")
 
-cat(paste("\n\n Done \n\n\n"))
-
 ggplot(for_park2 %>% 
       filter(ParkUnit != "ACAD")%>% 
       filter(ParkUnit != "ELRO")%>% 
@@ -161,3 +159,29 @@ ggplot(for_park2 %>%
   theme_bw()
 
 
+#! calculate park means PER YEAR --------------------------------
+for_park2_yr <- for_park %>% 
+  group_by(ParkUnit, SampleYear) %>% 
+  mutate(parkDEN = mean(treeden_ha, na.rm = T),
+         parkBA = mean(BA_m2ha, na.rm = T),
+         parkRICH = mean(tree_rich, na.rm = T),
+         parkSTA = Modes(Stage),
+         parkBA_pole = mean(pctBA_pole, na.rm = T),
+         parkBA_mature = mean(pctBA_mature, na.rm = T),
+         parkBA_large = mean(pctBA_large, na.rm = T),
+         #parkDIV = mean(, na.rm = T),
+         parkSAPden = mean(sap_den_m2, na.rm = T),
+         parkSHRUden = mean(shrub_cov, na.rm = T))  %>% 
+  ungroup() %>% 
+  select(ParkUnit, SampleYear,
+         parkDEN, parkBA, parkRICH, parkSTA,
+         parkBA_pole, parkBA_mature, parkBA_large,
+         parkSAPden, 
+         parkSHRUden) %>% 
+  distinct() %>% 
+  left_join(., can, by = "ParkUnit") %>% 
+  left_join(., cwd, by = "ParkUnit")
+
+write_rds(for_park2_yr, file = "data/out/park_covs_yr.rds")
+
+cat(paste("\n\n Done \n\n\n"))
