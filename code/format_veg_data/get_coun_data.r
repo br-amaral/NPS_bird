@@ -427,7 +427,7 @@ deb_tab3 <- deb_tab %>%
 # sna_tab2 <- sna_tab
 
 # put everyhing in the same dataframe by county (park) -----------------------------------------
-coun_covs <- left_join(tpa_tab3, stastr_tab3, by = c("ParkUnit")) %>% 
+coun_covs <- left_join(tpa_tab3, stastr_tab3, by = c("ParkUnit","Year")) %>% 
   left_join(div_tab3, by = c("ParkUnit")) %>% 
   left_join(shr_tab3, by = c("ParkUnit")) %>% 
   left_join(can_tab3, by = c("ParkUnit")) %>% 
@@ -489,4 +489,3 @@ ggplot(coun_covs %>%
   geom_point(aes(x = YEAR, y = COVER_PCT, col = park)) +
   geom_line(aes(x = YEAR, y = COVER_PCT, col = park)) +
   theme_bw()
-  "LATE"   "MATURE" "MOSAIC" "POLE" 
