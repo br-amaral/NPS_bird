@@ -60,7 +60,6 @@ Modes <- function(x) {
       ux[tab == max(tab)]}
 }
 #! Define settings -------------------------------------
-radi_dist <- 500
 
 #! Import data -----------------------------------------
 ## file paths
