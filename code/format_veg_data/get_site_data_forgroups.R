@@ -1,8 +1,10 @@
 #? *********************************************************************************
 #? ------------------------------   get_site_data.R   ------------------------------
 #? *********************************************************************************
-#! Code to ...
-#
+#! Code to get site values for forest covariates. First, it gets the locations and forest types
+#!    of each bird site and forest plot, and connect them. Bird sites are characterized with forest
+#!    structure variables for all the forest plots that are within the same forest type as all the
+#!    forest plots.
 #
 #! Source ---------------------------------------------
 #           - :
@@ -60,6 +62,7 @@ Modes <- function(x) {
       ux[tab == max(tab)]}
 }
 #! Define settings -------------------------------------
+# radi_dist <- 100000   # distance removed. 
 
 #! Import data -----------------------------------------
 ## file paths
@@ -125,7 +128,7 @@ for(ii in 1:length(bird_sit$points)){
 
 nrow(park_site)
 
-## write_rds "data/out/park_site.rds"
+#? write_rds "data/out/park_site.rds"
 # write_rds(park_site, file = "data/out/park_site.rds")
 
 # get coordinates from bird plots
@@ -148,6 +151,7 @@ for_sit_coord <- for_sit_coord %>%
   mutate(UTMZone = substr(UTMZone, 1 , 2))
 
 colnmaes(for_sit_coord); colnmaes(bird_sit_coord)
+#? write_rds for_sit_coord
 # write_rds(for_sit_coord, file = "data/out/for_sit_coord.rds")
 
 par(mfrow = c(1,2))
@@ -210,7 +214,9 @@ ggplot() +
 bird_sit_coord2 <- bird_sit_coord %>% 
     as_tibble() %>% 
     mutate(park = substr(bird_sit, 1 , 4)) %>%
-    filter(park != "SAIR") %>% 
+    filter(park != "ACAD",
+           park != "ELRO",
+           park != "SAIR") %>% 
     select(-park)
 
 # link forest types with sites
@@ -291,7 +297,7 @@ for(ii in 1:length(parks_sub)){
       main = for_test2$park[1], pch = 19, cex = 3)
   points(bir_test2$lonutm, bir_test2$latutm, col = "violet", pch = 15, cex = 3)
 }
-# get neighbors
+# get ALL neighbors within the same park, and only keep the ones that have the forest type
 for (ii in 1:nrow(bird_sit_coord2)) {
 
   band <- as.numeric(bird_sit_coord2$UTMZone[ii])
