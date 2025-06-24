@@ -1,7 +1,7 @@
 #! *********************************************************************************
 #! ------------------------------   veg_maps_park.R   ------------------------------
 #! *********************************************************************************
-# Code to get gdb files from parks and classifi all bird and forest sites
+# Code to get gdb files from parks and classify all bird and forest sites
 #   according to vegetation type. Also add which ones are in the same forest patch
 #
 #! Source ---------------------------------------------
@@ -50,28 +50,25 @@ PARK_KEY_PATH   <- "data/src/key_park.rds"
 PARK_SITE_PATH  <- "data/out/park_site.rds"
 BIRD_SITE_COORD <- "data/out/bird_site_coords.rds"
 FOR_SITE_COORD  <- "data/out/for_sit_coord.rds"
+FOR_COOR_PATH <- "data/out/for_sit_coord.rds"
+
 # FOR_CATE_PATH   <- "data/out/tab_veg3_EDITED_AW.xlsx"
 FOR_CATE_PATH   <- "data/out/for_cats.csv"
+VEG_TYP_PATH    <- "data/out/tab_veg3_AW.csv"    # vegetation types (3) of the parks
+
 
 ##? read files
-parks <- read_rds(file = PARK_KEY_PATH) 
-park_site <- read_rds(file = PARK_SITE_PATH) 
-xy <- read_rds(file = BIRD_SITE_COORD)
-xy2 <- read_rds(file = FOR_SITE_COORD)
+parks <- read_rds(file = PARK_KEY_PATH)        # park, code, network and number id
+park_site <- read_rds(file = PARK_SITE_PATH)   # park and bird site names and lat long 
+xy <- read_rds(file = BIRD_SITE_COORD)         # bird points sp file
+xy2 <- read_rds(file = FOR_SITE_COORD)         # forest plots points and coordinates
 # for_cats <- read_xlsx(FOR_CATE_PATH)
-for_cats <- read_csv(FOR_CATE_PATH)
+for_cats <- read_csv(FOR_CATE_PATH)            # vegetation codes, types, conifer vs hardwood
 
 #? maybe the only sites with forest - double check:
-VEG_TYP_PATH      <- "data/out/tab_veg3_AW.csv"    # vegetation types (3) of the parks
-veg_type <- read_csv(file = VEG_TYP_PATH)
-veg_type <- veg_type  %>% 
-       mutate(Cover_Type = str_to_sentence(Cover_Type))
-
-for_catsU <- for_cats %>% select(MapUnit_ID, Cover_Type)
-
-for_catsU <- rbind(for_catsU, veg_type) %>% distinct()
-
-for_cats <- left_join(for_catsU, for_cats  %>% select(MapUnit_ID, Cover_Type, MapUnit_Name), by = c("MapUnit_ID", "Cover_Type"))
+# veg_type <- read_csv(file = VEG_TYP_PATH)
+# veg_type <- veg_type  %>% 
+#        mutate(Cover_Type = str_to_sentence(Cover_Type))
 
 ##? format files
 parks <- parks %>% 
@@ -287,8 +284,7 @@ key_fsite %>% tail()
 # write_rds(key_fsite, file = "data/out/key_fsite.rds")
 # write_rds(key_bsite, file = "data/out/key_bsite.rds")
 
-FOR_COOR_PATH <- "data/out/for_sit_coord.rds"
-for_plots <- read_rds(FOR_COOR_PATH) %>% 
+for_plots <- read_rds(FOR_SITE_COORD) %>% 
     mutate(park = substr(for_sit, 1, 4)) %>% 
     filter(park %!in% parks_remove) %>% 
     arrange(park)
