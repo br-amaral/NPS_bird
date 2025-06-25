@@ -50,12 +50,10 @@ PARK_KEY_PATH   <- "data/src/key_park.rds"
 PARK_SITE_PATH  <- "data/out/park_site.rds"
 BIRD_SITE_COORD <- "data/out/bird_site_coords.rds"
 FOR_SITE_COORD  <- "data/out/for_sit_coord.rds"
-FOR_COOR_PATH <- "data/out/for_sit_coord.rds"
 
 # FOR_CATE_PATH   <- "data/out/tab_veg3_EDITED_AW.xlsx"
 FOR_CATE_PATH   <- "data/out/for_cats.csv"
 VEG_TYP_PATH    <- "data/out/tab_veg3_AW.csv"    # vegetation types (3) of the parks
-
 
 ##? read files
 parks <- read_rds(file = PARK_KEY_PATH)        # park, code, network and number id
@@ -303,14 +301,18 @@ for_cats2 <- for_cats  %>%
 # not forest
 
 not_for <- unique(c("GPL", "FLD", "PD", "GG", "G059", "G125", "G556", "G597", "G745", "G771", "G789", "4290", "6107", "4290",
-             "6107", "6567", "UP", "US", "UU", "2386", "6062", "6107", "6536", "7944", "AG", "EM-SSS", "STRM",
+             "6107", "6567", "UP", "US", "UU", "2386", "6062", "6107", "6536", #"7944", 
+             "AG", "EM-SSS", "STRM",
              "2256", "2381", "2382", "4141", "5106", "5142", "5451", "6044", "6069", "6074", "6105", "6107", "6153",
              "6191", "6333", "6349", "6403", "6446", "6447", "6453", "6519", "6567", "6571", "6966", "AP", "BCL", "BLD",
              "C/FC", "C/FC/SEM", "C/RC", "C/RMS", "CANAL", "CROP", "DAM", "DEV", "FP/AP", "ICP", "IES", "JUNK", 
              "MCS", "MHS", "MHS/SEM", "MHS/SS", "ML", "MLWT", "MON", "MR/P", "MR/P/D/AIS", "MS", "ORCH", "PAST", "PR/P", "R/AI",
              "R/ECR", "RHS", "RHS/SS", "UNCLASS", "UR/P", "BBSS", "BCF", "BWT", "C", "CC", "I", "IFRMSS", "JWRMSS", "MC", 
              "NF", "OFS", "P", "R", "RD", "RMBGS", "T", "TF", "W", "WCAG", "WCDG", "4141", "4201", "4202", "4472", "5451",
-             "6002", "6014", "6069", "6107", "6119", "6134", "6153", "6193", "6196", "6226", "6284", "6403", "6414", "6446", "6453", 
+             "6002", #"6014", 
+             "6069", "6107", #"6119", #"6134", 
+             "6153", "6193", "6196", #"6226", 
+             "6284", "6403", "6414", "6446", "6453", 
              "6461", "6567", "6571", "AP", "BCL", "BLD", "C/RMS", "D/AIS", "DEV", "F/HG", "FP/AP", "H-SR/P", "IM", "IS", "MHS",       
              "ML", "MLWT", "MR/P", "MR/P//SUCS", "ORCH", "PR/P", "R/AI", "RC/S", "RES", "RHS", "RR", "TC", "TR", "UR/P", "WCB", "WRB", "WT"))
 
@@ -355,10 +357,46 @@ not_for2 <- as_tibble(not_for2)
 #! overwrite forest categories with new classifications
 for_cats1 <- read_csv("data/out/for_cats.csv")  %>% 
                 select(MapUnit_ID, Cover_Type)
-for_cats1 <- rbind(for_cats1, not_for2)
+for_cats1 <- rbind(for_cats1, not_for2)  %>% distinct()  %>% 
+                rbind(c("5058", "Hardwood")) %>% 
+                rbind(c("7944", "Conifer")) %>%     # White Pine Successional Forest
+                rbind(c("7178", "Conifer"))  %>%    # White Pine Plantation
+                rbind(c("6313", "Mixed"))           # Mixed Conifer Plantation
+
+miss_veg_type <- c(
+   "Hardwood",
+   "Mixed",
+   "Mixed",
+   "Hardwood",
+   "Hardwood",
+   "Hardwood",
+   "Hardwood",
+   "Mixed",                    
+   "Mixed",                    
+   "Hardwood",                       
+   "Mixed")
+
+miss_veg_type_code <- c(
+   "6613",
+   "6226",
+   "6566",
+   "6240",
+   "6014",
+   "6119",
+   "6134",
+   "G045",                    
+   "G030",                    
+   "G650",                       
+   "G742")
+
+miss_veg <- cbind(miss_veg_type_code, miss_veg_type_code) 
+colnames(miss_veg) <- c("MapUnit_ID", "Cover_Type")
+
+for_cats1 <- rbind(for_cats1, miss_veg)  %>% 
+    distinct()
 
 # MABI: 
-mabi_miss_veg <- c("Mixed Conifer Plantation")      #!TODO: overlap with forest plot
+#mabi_miss_veg <- c("Mixed Conifer Plantation")      #!TODO: overlap with forest plot
 x <- mabi_vegmap
 for_plots_sf <- st_as_sf(for_plots, 
                             coords = c("lonutm", "latutm"), 
@@ -396,7 +434,7 @@ ggplot(data = mabi_vegmap2 #%>% filter(MapUnit_Name %in% mabi_miss_veg)
 ggplot(data = mabi_vegmap2) +
     geom_sf(data = mabi_vegmap2) +
     geom_sf(aes(fill = Cover_Type)) +
-    geom_sf(data = mabi_vegmap2 %>% filter(MapUnit_Name %in% mabi_miss_veg) %>% rename(Missing_Cat = MapUnit_Name),fill = "pink")+
+    #geom_sf(data = mabi_vegmap2 %>% filter(MapUnit_Name %in% mabi_miss_veg) %>% rename(Missing_Cat = MapUnit_Name),fill = "pink")+
     geom_sf(data = for_plots_sf %>% filter(park == "MABI"), color = "black", shape = 21, size = 3, fill = "red") +
     geom_sf(data = xy_sf %>% filter(park == "MABI"), color = "black", shape = 24, size = 3, fill = "black") +
     theme_bw() +
@@ -410,7 +448,7 @@ morr_miss_veg <- c(
     #"Northeastern Modified Successional Forest"
     )    
 
-ggplot(data = morr_vegmap %>% filter(MapUnit_Name %in% morr_miss_veg)) +
+ggplot(data = morr_vegmap) +
     geom_sf(data = morr_vegmap) +
     geom_sf(aes(fill = MapUnit_Name)) +
     geom_sf(data = for_plots_sf %>% filter(park == "MORR"), color = "black", shape = 21, size = 3, fill = "red") +
@@ -436,9 +474,9 @@ for(jj in 1:nrow(morr_vegmap2)){
 }
 
 ggplot(data = morr_vegmap2) +
+    #geom_sf(data = morr_vegmap2 %>% filter(MapUnit_Name %in% morr_miss_veg) %>% rename(Missing_Cat = MapUnit_Name),fill = "pink")+
     geom_sf(data = morr_vegmap2) +
     geom_sf(aes(fill = Cover_Type)) +
-    geom_sf(data = morr_vegmap2 %>% filter(MapUnit_Name %in% morr_miss_veg) %>% rename(Missing_Cat = MapUnit_Name),fill = "pink")+
     geom_sf(data = for_plots_sf %>% filter(park == "MORR"), color = "black", shape = 21, size = 3, fill = "red") +
     geom_sf(data = xy_sf %>% filter(park == "MORR"), color = "black", shape = 24, size = 3, fill = "black") +
     theme_bw() +
@@ -449,9 +487,10 @@ ggplot(data = morr_vegmap2) +
     xlim(538000, 541250) 
 
 # SAGA: 
-saga_miss_veg <- "White Pine Successional Forest"   #!TODO: overlaps forest plot
+#saga_miss_veg <- "White Pine Successional Forest"   #!TODO: overlaps forest plot
 
-ggplot(data = saga_vegmap %>% filter(MapUnit_Name %in% saga_miss_veg)) +
+ggplot(data = saga_vegmap #%>% filter(MapUnit_Name %in% saga_miss_veg)
+       ) +
     geom_sf(data = saga_vegmap) +
     geom_sf(aes(fill = MapUnit_Name)) +
     geom_sf(data = for_plots_sf %>% filter(park == "SAGA"), color = "black", shape = 21, size = 3, fill = "red") +
@@ -475,9 +514,9 @@ for(jj in 1:nrow(saga_vegmap2)){
 }
 
 ggplot(data = saga_vegmap2) +
+   #geom_sf(data = saga_vegmap2 %>% filter(MapUnit_Name %in% saga_miss_veg) %>% rename(Missing_Cat = MapUnit_Name),fill = "pink")+
     geom_sf(data = saga_vegmap2) +
     geom_sf(aes(fill = Cover_Type)) +
-    geom_sf(data = saga_vegmap2 %>% filter(MapUnit_Name %in% saga_miss_veg) %>% rename(Missing_Cat = MapUnit_Name),fill = "pink")+
     geom_sf(data = for_plots_sf %>% filter(park == "SAGA"), color = "black", shape = 21, size = 3, fill = "red") +
     geom_sf(data = xy_sf %>% filter(park == "SAGA"), color = "black", shape = 24, size = 3, fill = "black") +
     theme_bw() +
@@ -494,8 +533,9 @@ sara_miss_veg <- c(
         #"Silver Maple Floodplain Levee Forest" ,          #!TODO: not key
         #"Swamp White Oak Floodplain Forest",              #!TODO: not key
         #"Terrace Hardwood Floodplain Forest",             #!TODO: not key
-        "White Pine Plantation",                           #!TODO: overlaps forest plot
-        "White Pine Successional Forest")                  #!TODO: overlaps forest plot
+        #"White Pine Plantation",                           #!TODO: overlaps forest plot
+        #"White Pine Successional Forest"
+        )                  #!TODO: overlaps forest plot
 
 ggplot(data = sara_vegmap %>% filter(MapUnit_Name %in% sara_miss_veg)) +
     geom_sf(data = sara_vegmap) +
@@ -525,7 +565,7 @@ for(jj in 1:nrow(sara_vegmap2)){
 ggplot(data = sara_vegmap2) +
     geom_sf(data = sara_vegmap2) +
     geom_sf(aes(fill = Cover_Type)) +
-    geom_sf(data = sara_vegmap2 %>% filter(MapUnit_Name %in% sara_miss_veg) %>% rename(Missing_Cat = MapUnit_Name),fill = "pink")+
+    #geom_sf(data = sara_vegmap2 %>% filter(MapUnit_Name %in% sara_miss_veg) %>% rename(Missing_Cat = MapUnit_Name),fill = "pink")+
     geom_sf(data = for_plots_sf %>% filter(park == "SARA"), color = "black", shape = 21, size = 3, fill = "red") +
     geom_sf(data = xy_sf %>% filter(park == "SARA"), color = "black", shape = 24, size = 3, fill = "black") +
     theme_bw() +
@@ -571,9 +611,9 @@ for(jj in 1:nrow(wefa_vegmap2)){
 }
 
 ggplot(data = wefa_vegmap2) +
+    geom_sf(data = wefa_vegmap2 %>% filter(MapUnit_Name %in% wefa_miss_veg) %>% rename(Missing_Cat = MapUnit_Name),fill = "pink")+
     geom_sf(data = wefa_vegmap2) +
     geom_sf(aes(fill = Cover_Type)) +
-    geom_sf(data = wefa_vegmap2 %>% filter(MapUnit_Name %in% wefa_miss_veg) %>% rename(Missing_Cat = MapUnit_Name),fill = "pink")+
     geom_sf(data = for_plots_sf %>% filter(park == "WEFA"), color = "black", shape = 21, size = 3, fill = "red") +
     geom_sf(data = xy_sf %>% filter(park == "WEFA"), color = "black", shape = 24, size = 3, fill = "black") +
     theme_bw() +
@@ -593,7 +633,7 @@ rova_miss_veg <- c(
    "Red Maple - Blackgum Basin Swamp",
    "Red Maple / Tussock Sedge Wooded Marsh",
    "Red Oak - Heath Woodland / Rocky Summit",
-   "White Pine Plantation")
+   "White Pine Plantation")    
 
 hofr_miss_veg <- c(
    #"Eastern White Pine Successional Forest",   # not overlapping forest plot
