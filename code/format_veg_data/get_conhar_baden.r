@@ -15,7 +15,7 @@
 #           - data/out/close_points_f.rds : tibble with combinations of forest and bird sites, and the distances between them
 #
 # detach packages and clear workspace
-#freshr::freshr()
+# freshr::freshr()
 #
 #! Load packages ---------------------------------------
 library(conflicted)
