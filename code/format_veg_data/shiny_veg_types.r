@@ -1,23 +1,78 @@
-# shiny for parks, forest type, and new covariates
-# cd Users/bamaral/Library/Mobile\ Documents/com~apple~CloudDocs/GitHub_data/dataNPS_bird_copy 
+#? *********************************************************************************
+#? ------------------------------   shiny_veg_types   ------------------------------
+#? *********************************************************************************
+#
+#! Code to plot park vegetation types, bird sites, and forest plots, and classify them
+#!    according to conifer, mixed, hardwood and not forest, as well as average BA and
+#!    and density of trees of each of the three groups. This code will help us understand
+#!    whether our environmental covariates are all matching our expectations and representing
+#!    the forest properly 
+#
+#! Source ---------------------------------------------
+#           - format_veg_data/veg_maps_park.R : get park shape files with vegetation types and classify each as conifer, hardwood, mixed, or not forest
+#           - format_veg_data/get_conhar_baden.R : gets all forest plots and calculates what percentage and value of density and BA is conifer and hardwood
+#
+#! Input ----------------------------------------------
+#           - :
+#           - :
+#
+#! Output ----------------------------------------------
+#           - :
+#           - :
 
-source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_veg_data/veg_maps_park.R")
-source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_veg_data/get_conhar_baden.R")
+#! Package library and versions -------------------------
+#  Created a library repo?
+#  (  )yes  (  )no
+#  renv::init()
 
+# Load an existing library?
+#  renv::restore()
+
+# Installed new packages?
+#  renv::snapshot()
+
+# detach packages and clear workspace
+freshr::freshr()
+
+#! Load packages ---------------------------------------
+library(tidyverse)
+library(conflicted)
+library(glue)
 library(shiny)
 library(ggplot2)
 library(sf)
 library(dplyr)
 library(plotly)
 
+conflicts_prefer(dplyr::select)
+conflicts_prefer(dplyr::filter)
+# conflicts_prefer(scales::alpha)
+
+#! Make functions --------------------------------------
+colanmes <- colnames
+lenght <- length
+`%!in%` <- Negate(`%in%`)
+
+#! Source code -----------------------------------------
+# get park shape files with vegetation types and classify each as conifer, hardwood, mixed, or not forest
+source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_veg_data/veg_maps_park.R")
+# gets all forest plots and calculates what percentage and value of density and BA is conifer and hardwood
+source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_veg_data/get_conhar_baden.R")
+
+#! Import data -----------------------------------------
+## file paths
+
+## read files
+
+# shiny for parks, forest type_plot, and new covariates
 for_plots_sf <- for_plots_sf  %>% rename(PlotID = for_sit)
-for_plots_sfh <- for_plots_sf  %>% filter(park == "ROVA"); for_plots_sfh$park <- "HOFR"
-for_plots_sfv <- for_plots_sf  %>% filter(park == "ROVA"); for_plots_sfv$park <- "VAMA"
-for_plots_sfm <- for_plots_sfm  %>% rename(PlotID = for_sit)
+for_plots_sfh <- for_plots_sf  %>% filter(park == "ROVA"); for_plots_sfh$park <- "HOFR"   # hofr
+for_plots_sfv <- for_plots_sf  %>% filter(park == "ROVA"); for_plots_sfv$park <- "VAMA"   # vama
+for_plots_sfm <- for_plots_sfm  %>% rename(PlotID = for_sit)                              # mima
 
-tre_cov2 <- tre_cov2  %>% mutate(ParkUnit = substr(PlotID, 1, 4))
+tre_cov3 <- tre_cov3  %>% mutate(ParkUnit = substr(PlotID, 1, 4))
 
-tre_cov2percent_con <- tre_cov2  %>% 
+tre_cov3percent_con <- tre_cov3  %>% 
   group_by(PlotID) %>% 
   mutate(
     tot_ba = sum(BA_m2ha),
@@ -27,7 +82,7 @@ tre_cov2percent_con <- tre_cov2  %>%
     per_ba = BA_m2ha / tot_ba,
     per_den = density / tot_den
   ) %>% 
-  filter(type == "Conifer")
+  filter(type_plot == "Conifer")
 
 park_list <- list(
   "MABI" = list(map = mabi_vegmap2, for_plots = for_plots_sf, xy = xy_sf),
@@ -35,8 +90,8 @@ park_list <- list(
   "SAGA" = list(map = saga_vegmap2, for_plots = for_plots_sf, xy = xy_sf),
   "SARA" = list(map = sara_vegmap2, for_plots = for_plots_sf, xy = xy_sf),
   "WEFA" = list(map = wefa_vegmap2, for_plots = for_plots_sf, xy = xy_sf),
-  "HOFR" = list(map = hofr_vegmap2, for_plots = for_plots_sfh, xy = xy_sf),
-  "VAMA" = list(map = vama_vegmap2, for_plots = for_plots_sfv, xy = xy_sf),
+  "HOFR" = list(map = rova_vegmap2, for_plots = for_plots_sfh, xy = xy_sf),
+  "VAMA" = list(map = rova_vegmap2, for_plots = for_plots_sfv, xy = xy_sf),
   "MIMA" = list(map = mima_vegmap2, for_plots = for_plots_sfm, xy = xy_sf)
 )
 
@@ -85,8 +140,8 @@ server <- function(input, output, session) {
     park_data <- park_list[[input$park]]
     # Join percent conifer BA to plot points for annotation
     plot_points <- park_data$for_plots %>%
-      left_join(tre_cov2, by = "PlotID") %>%
-      left_join(tre_cov2percent_con %>% 
+      left_join(tre_cov3, by = "PlotID") %>%
+      left_join(tre_cov3percent_con %>% 
       filter(ParkUnit == input$park), by = "PlotID", suffix = c("", "_con")) %>% 
       filter(ParkUnit == input$park)
     p <- ggplot(data = park_data$map) +
@@ -97,7 +152,7 @@ server <- function(input, output, session) {
         aes(
           text = paste0(
             "Plot: ", PlotID, "<br>",
-            "Type: ", type, "<br>",
+            "Type: ", type_plot, "<br>",
             "Percent Conifer Den: ", round(per_den, 2), "<br>",
             "Percent Conifer BA: ", round(per_ba, 2)
           )
@@ -114,11 +169,11 @@ server <- function(input, output, session) {
   })
 
   output$per_ba_plot <- renderPlotly({
-    df <- tre_cov2percent_con %>% filter(ParkUnit == input$park) %>% arrange(PlotID)
+    df <- tre_cov3percent_con %>% filter(ParkUnit == input$park) %>% arrange(PlotID)
     p <- ggplot(df) +
-      geom_point(aes(x = PlotID, y = per_ba, col = type, text = paste0(
+      geom_point(aes(x = PlotID, y = per_ba, col = type_plot, text = paste0(
         "Plot: ", PlotID, "<br>",
-        "Type: ", type, "<br>",
+        "Type: ", type_plot, "<br>",
         "Percent BA: ", round(per_ba, 2)
       )), size = 2) +
       labs(x = "Plot", y = "Percent Conifer BA", color = "Type") +
@@ -129,11 +184,11 @@ server <- function(input, output, session) {
   })
 
   output$per_den_plot <- renderPlotly({
-    df <- tre_cov2percent_con %>% filter(ParkUnit == input$park) %>% arrange(PlotID)
+    df <- tre_cov3percent_con %>% filter(ParkUnit == input$park) %>% arrange(PlotID)
     p <- ggplot(df) +
-      geom_point(aes(x = PlotID, y = per_den, col = type, text = paste0(
+      geom_point(aes(x = PlotID, y = per_den, col = type_plot, text = paste0(
         "Plot: ", PlotID, "<br>",
-        "Type: ", type, "<br>",
+        "Type: ", type_plot, "<br>",
         "Percent Density: ", round(per_den, 2)
       )), size = 2) +
       labs(x = "Plot", y = "Percent Conifer Density", color = "Type") +
@@ -144,11 +199,11 @@ server <- function(input, output, session) {
   })
 
   output$ba_plot <- renderPlotly({
-    df <- tre_cov2 %>% filter(ParkUnit == input$park) %>% arrange(PlotID)
+    df <- tre_cov3 %>% filter(ParkUnit == input$park) %>% arrange(PlotID)
     p <- ggplot(df) +
-      geom_point(aes(x = PlotID, y = BA_m2ha, col = type, text = paste0(
+      geom_point(aes(x = PlotID, y = BA_m2ha, col = type_plot, text = paste0(
         "Plot: ", PlotID, "<br>",
-        "Type: ", type, "<br>",
+        "Type: ", type_plot, "<br>",
         "BA_m2ha: ", round(BA_m2ha, 2)
       )), size = 2) +
       labs(x = "Plot", y = "BA (m²/ha)", color = "Type") +
@@ -159,11 +214,11 @@ server <- function(input, output, session) {
   })
 
   output$density_plot <- renderPlotly({
-    df <- tre_cov2 %>% filter(ParkUnit == input$park) %>% arrange(PlotID)
+    df <- tre_cov3 %>% filter(ParkUnit == input$park) %>% arrange(PlotID)
     p <- ggplot(df) +
-      geom_point(aes(x = PlotID, y = density, col = type, text = paste0(
+      geom_point(aes(x = PlotID, y = density, col = type_plot, text = paste0(
         "Plot: ", PlotID, "<br>",
-        "Type: ", type, "<br>",
+        "Type: ", type_plot, "<br>",
         "Density: ", density
       )), size = 2) +
       labs(x = "Plot", y = "Density", color = "Type") +
@@ -176,9 +231,5 @@ server <- function(input, output, session) {
 
 shinyApp(ui, server)
 
-## reclassify the forest plots!!!
 
-## kriging
-
-## elevation (find a mask), forest types
 

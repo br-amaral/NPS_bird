@@ -1,7 +1,7 @@
 #? *********************************************************************************
-#? ------------------------------   get_site_data.R   ------------------------------
+#? ------------------------------   get_conhar_baden.R   ------------------------------
 #? *********************************************************************************
-#! Code to ...
+#! Code to get the percentage of conifer and hardwood basal area in each forest plot
 #
 #
 #! Source ---------------------------------------------
@@ -9,10 +9,11 @@
 #           - :
 #
 #! Input ----------------------------------------------
-#           - data/out/for_sit_covs_nei.rds : matrix with info on who's is who's neighbour (forest plot and bird site)
+#           - data/tree_sps_harcon.csv :
+#           - NETN_Forest_20231106.zip :
 #
 #! Output ----------------------------------------------
-#           - data/out/close_points_f.rds : tibble with combinations of forest and bird sites, and the distances between them
+#           - :
 #
 # detach packages and clear workspace
 # freshr::freshr()
@@ -28,8 +29,7 @@ library(reshape2)
 library(ggplot2)
 library(ggh4x)
 #library("MetBrewer")
-library(forestNETN)
-library(ggbiplot) #For graphing PCA's in ggplot style.
+library(forestNETN)  # remotes::install_github("KateMMiller/forestNETN")
 
 conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::filter)
@@ -53,9 +53,10 @@ Modes <- function(x) {
 #! Import data -----------------------------------------
 ## file paths
 path <- glue("{getwd()}/data/veg_kateaaron") 
+importCSV(path, zip_name = "NETN_Forest_20231106.zip")
+
 tree_cat <- read_csv("data/tree_sps_harcon.csv")
 
-importCSV(path, zip_name = "NETN_Forest_20231106.zip")
 
 tre_cov <- joinTreeData(park = 'all', status = "live") %>% 
                 as_tibble() 
@@ -81,9 +82,10 @@ tre_cov2 <- left_join(tre_cov %>% rename(sps = ScientificName), tree_sps, by = "
                 distinct() %>% 
                 rename(PlotID = Plot_Name)
 
+tre_cov3 <- tre_cov2 %>% 
+              group_by(PlotID) %>%
+              mutate(type_plot = type[which.max(BA_m2ha)])
 
-
-
-ggplot(data = tre_cov2) +
-        geom_point(aes(x = density, y = BA_m2ha, color = type))
+ggplot(data = tre_cov3) +
+        geom_point(aes(x = density, y = BA_m2ha, color = type_plot))
 
