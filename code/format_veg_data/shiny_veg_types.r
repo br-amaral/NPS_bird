@@ -78,11 +78,18 @@ tre_cov3percent_con <- tre_cov3  %>%
     tot_ba = sum(BA_m2ha),
     tot_den = sum(density)
   ) %>% 
+  arrange(PlotID, type_plot)  %>% 
   mutate(
     per_ba = BA_m2ha / tot_ba,
     per_den = density / tot_den
   ) %>% 
-  filter(type_plot == "Conifer")
+  filter(#type_plot == "Conifer",
+         type == "Conifer")
+
+datatable(tre_cov3percent_con)
+
+## if it is hardwood, put 0% conifer
+## color the points according to type_plot
 
 park_list <- list(
   "MABI" = list(map = mabi_vegmap2, for_plots = for_plots_sf, xy = xy_sf),
@@ -230,6 +237,4 @@ server <- function(input, output, session) {
 }
 
 shinyApp(ui, server)
-
-
 

@@ -24,14 +24,16 @@
 # freshr::freshr()
 #
 #! Load packages ---------------------------------------
-library(conflicted)
-library(tidyverse)
+library(tidyverse)   # Load tidyverse first (includes ggplot2, dplyr, readr, etc.)
+library(conflicted)  # Load conflicted after tidyverse
 library(glue)
 library(sf)
 library(readxl)
 library(DT)
+library(bcmaps)      # Added bcmaps since it's used in the script
 #library(rgdal)
 #
+# Set conflict preferences after loading all packages
 conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::filter)
 # conflicts_prefer(scales::alpha)
