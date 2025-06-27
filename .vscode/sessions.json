@@ -8,53 +8,48 @@
         "default": [
             {
                 "name": "Github",
-                "autoExecuteCommands": false,
+                "autoExecuteCommands": true,
                 "icon": "logo-github",
                 "color": "terminal.ansiBrightMagenta",
                 "commands": [
-                    "git status",
-                    ""
+                    "git status"
                 ]
             },
             {
                 "name": "HPCC",
-                "autoExecuteCommands": false,
+                "autoExecuteCommands": true,
                 "icon": "squirrel",
                 "color": "terminal.ansiRed",
                 "commands": [
-                    "ssh -XY bamaral@hpcc.msu.edu",
-                    ""
+                    "ssh -XY bamaral@hpcc.msu.edu"
                 ]
             },
             {
                 "name": "Mapped",
-                "autoExecuteCommands": false,
+                "autoExecuteCommands": true,
                 "icon": "location",
                 "color": "terminal.ansiBrightGreen",
                 "commands": [
-                    "cd /",
-                    "cd Volumes/zipkinlab/bamaral/dataNPS_bird_copy"
+                    "cd /Volumes/zipkinlab/bamaral/dataNPS_bird_copy"
                 ]
             },
             {
                 "name": "R local",
-                "autoExecuteCommands": false,
+                "autoExecuteCommands": true,
                 "icon": "run",
                 "color": "terminal.ansiBrightCyan",
                 "commands": [
-                    "cd /",
-                    "cd Users/bamaral/Library/Mobile\ Documents/com~apple~CloudDocs/GitHub_data/dataNPS_bird_copy/",
+                    "cd ~/Library/Mobile\\ Documents/com~apple~CloudDocs/GitHub_data/dataNPS_bird_copy/",
                     "R"
                 ]
             },
             {
                 "name": "R mapped",
-                "autoExecuteCommands": false,
+                "autoExecuteCommands": true,
                 "icon": "run",
                 "color": "terminal.ansiBrightCyan",
                 "commands": [
-                    "cd ..",
-                    "cd Volumes/zipkinlab/bamaral/dataNPS_bird_copy",
+                    "cd /Volumes/zipkinlab/bamaral/dataNPS_bird_copy",
                     "R"
                 ]
             }
