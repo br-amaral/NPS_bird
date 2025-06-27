@@ -50,9 +50,7 @@ PARK_KEY_PATH   <- "data/src/key_park.rds"
 PARK_SITE_PATH  <- "data/out/park_site.rds"
 BIRD_SITE_COORD <- "data/out/bird_site_coords.rds"
 FOR_SITE_COORD  <- "data/out/for_sit_coord.rds"
-# FOR_CATE_PATH   <- "data/out/tab_veg3_EDITED_AW.xlsx"
 FOR_CATE_PATH   <- "data/out/updated_for_cats.csv"
-# VEG_TYP_PATH    <- "data/out/tab_veg3_AW.csv"    # vegetation types (3) of the parks
 
 ##? read files
 parks <- read_rds(file = PARK_KEY_PATH)        # park, code, network and number id
@@ -589,35 +587,20 @@ ggplot(data = mima_vegmap2) +
     xlim(c(308500, 314450)) +
     ylim(c(4701532, 4704100))
 
-#? put the missing all together:
-
-miss_veg <- c(mima_miss_veg,
-              rova_miss_veg,
-              wefa_miss_veg,
-              sara_miss_veg,
-              hofr_miss_veg,
-              morr_miss_veg,
-              mabi_miss_veg) %>% 
-            unique() %>% 
-            as_tibble() %>% 
-            rename(MapUnit_Name = value) %>% 
-            arrange(MapUnit_Name)
-
-write_csv(miss_veg, file = "data/out/vegclass_miss.csv")
-
 #! now: plots forest and non forest and missing on the figures - check: MABI, MORR, SARA, WEFA, VAMA, MIMA, HOFR
 # ah well check all :( after classifiyng forest plots
 #! next - remove forest plots that are NOT IN FOREST
 
 miss_veg <- rbind(mima_vegmap2 %>% as_tibble() %>% select(MapUnit_ID, MapUnit_Name, Cover_Type),
-                  vama_vegmap2 %>% as_tibble() %>% select(MapUnit_ID, MapUnit_Name, Cover_Type),
+                  rova_vegmap2 %>% as_tibble() %>% select(MapUnit_ID, MapUnit_Name, Cover_Type),
                   wefa_vegmap2 %>% as_tibble() %>% select(MapUnit_ID, MapUnit_Name, Cover_Type),
                   sara_vegmap2 %>% as_tibble() %>% select(MapUnit_ID, MapUnit_Name, Cover_Type),
-                  hofr_vegmap2 %>% as_tibble() %>% select(MapUnit_ID, MapUnit_Name, Cover_Type),
                   morr_vegmap2 %>% as_tibble() %>% select(MapUnit_ID, MapUnit_Name, Cover_Type),
                   mabi_vegmap2 %>% as_tibble() %>% select(MapUnit_ID, MapUnit_Name, Cover_Type)) %>% 
             distinct() %>% 
             as_tibble() %>% 
             arrange(MapUnit_Name)
  
+ # this part might seem circular, but that's how all categories of land use/forest type were extracted to 
+ #    be classified as conifer, mixed, not forest and hardwood
  # write_csv(miss_veg, file = 'data/out/updated_for_cats.csv')
