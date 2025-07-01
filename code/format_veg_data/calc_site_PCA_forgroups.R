@@ -21,12 +21,12 @@ freshr::freshr()
 library(conflicted)
 library(tidyverse)
 library(glue)
-library(sp)
+#library(sp)
 #library(rgdal)
-library(sf)
-library(reshape2)
-library(ggplot2)
-library(ggh4x)
+#library(sf)
+#library(reshape2)
+#library(ggplot2)
+#library(ggh4x)
 #library("MetBrewer")
 library(forestNETN)
 library(ggbiplot) #For graphing PCA's in ggplot style.
@@ -49,25 +49,22 @@ Modes <- function(x) {
       ux[tab == max(tab)]}
 }
 #! Define settings -------------------------------------
-radi_dist <- 500
 
 #! Import data -----------------------------------------
 ## file paths
-NEIGH_FILE_PATH <- glue("data/out/neighbor_grp_{radi_dist}m.rds")
-
-neighbor <- read_rds(file = NEIGH_FILE_PATH)
-
 path <- glue("{getwd()}/data/veg_kateaaron") 
 importCSV(path, zip_name = "NETN_Forest_20231106.zip")
 
+# coverage by stratum
 for_cov <- forestNETN::joinStandData(park = "all") %>%
-          as_tibble()  %>% 
+          as_tibble() %>% 
                  group_by(Plot_Name) %>% 
                  mutate(pct_cro = mean(Pct_Crown_Closure, na.rm = T),
                         pct_low = mean(Pct_Understory_Low, na.rm = T), 
                         pct_mid = mean(Pct_Understory_Mid, na.rm = T), 
                         pct_hig = mean(Pct_Understory_High, na.rm = T), 
                         pct_wat = mean(Pct_Water, na.rm = T), 
+                        # Avg_Height_Codom
                         sta_str = Modes(Stand_Structure)) %>% 
                  ungroup() %>% 
                  arrange(Plot_Name) %>% 
@@ -87,13 +84,15 @@ cwd_cov <- joinCWDData(park = 'all') %>% # coarse wood debris
 tre_cov <- joinTreeData(park = 'all', status = "live") %>% 
                 as_tibble() %>% 
                 group_by(Plot_Name) %>% 
-                mutate(BA_m2ha = sum(BA_cm2, na.rm = T)/400)  %>% #cm2 to m2 cancels out, so just /400m2 plot.
+                mutate(BA_m2ha = sum(BA_cm2, na.rm = T)/400,
+                       treeden_ha = sum(num_stems, na.rm = T)*25)  %>% #cm2 to m2 cancels out, so just /400m2 plot.
                 ungroup() %>% 
                 arrange(Plot_Name) %>% 
-                select(Plot_Name, ParkUnit, BA_m2ha, ScientificName) %>% 
+                select(Plot_Name, ParkUnit, BA_m2ha, treeden_ha) %>% 
                 distinct()
 
-div_cov <- for_tre %>% 
+div_cov <- joinTreeData(park = 'all', status = "live") %>% 
+                as_tibble() %>% 
                 group_by(Plot_Name) %>% 
                 mutate(tree_rich = n_distinct(ScientificName)) %>%   #!TODO:
                 ungroup() %>%
@@ -101,15 +100,11 @@ div_cov <- for_tre %>%
                 select(Plot_Name, ParkUnit, tree_rich) %>% 
                 distinct()
 
-tre_cov <- tre_cov  %>% 
-             select(-ScientificName) %>% 
-                distinct()
-
 shr_cov <- joinMicroShrubData(park = 'all') %>% 
-              filter(InvasiveNETN == T,
+              filter(#InvasiveNETN == F,
                      Shrub == 1) %>%   #!TODO:
               group_by(Plot_Name) %>% 
-              mutate(pct_shr = mean(shrub_pct_freq, na.rm = T)) %>% 
+              mutate(pct_shr = mean(shrub_avg_cov, na.rm = T)) %>% 
               ungroup() %>% 
               select(Plot_Name, ParkUnit, pct_shr) %>% 
               arrange(Plot_Name) %>% 
@@ -117,14 +112,13 @@ shr_cov <- joinMicroShrubData(park = 'all') %>%
 
 stg_cov <- sumStrStage(park = "all") %>% 
               as_tibble() %>% 
-              mutate(pct_sum1 = rowSums(across(c(pctBA_mature, pctBA_large)), na.rm = TRUE)) %>% 
               group_by(Plot_Name) %>% 
-              mutate(pct_sum = mean(pct_sum1, na.rm = T),
+              mutate(pct_pol = mean(pctBA_pole, na.rm = T),
                      pct_mat = mean(pctBA_mature, na.rm = T),
                      pct_lar = mean(pctBA_large, na.rm = T),
                      stg = Modes(Stage)) %>% 
               ungroup() %>% 
-              select(Plot_Name, ParkUnit, pct_sum, pct_mat, pct_lar, stg) %>% 
+              select(Plot_Name, ParkUnit, pct_pol, pct_mat, pct_lar, stg) %>% 
               distinct()  %>% 
               arrange(Plot_Name)
 
@@ -137,15 +131,30 @@ forest_covs <- left_join(for_cov, cwd_cov, by = c("Plot_Name", "ParkUnit")) %>%
                      filter(ParkUnit %!in% c("ACAD", "ELRO", "SAIR"))  %>%
                      rename(for_sit = Plot_Name)
 
+#? Check for NAs 
+forest_covs %>% 
+  summarise(across(everything(), ~ sum(is.na(.)), .names = "NA_{.col}")) %>% 
+  pivot_longer(everything(), names_to = "column", values_to = "na_count") %>% 
+  print()
 
-bird_covs <- left_join(neighbor, forest_covs, by = "for_sit")  %>% 
-                     relocate(bird_sit)
+#? Replace NA values with zeros
+forest_covs <- forest_covs %>% 
+  mutate(across(where(is.numeric), ~ replace_na(.x, 0)))
 
+# Check if NAs are gone
+cat("NA counts after replacing with zeros:\n")
+forest_covs %>% 
+  summarise(across(everything(), ~ sum(is.na(.)), .names = "NA_{.col}")) %>% 
+  pivot_longer(everything(), names_to = "column", values_to = "na_count") %>% 
+  print()
 
 #? run PCA!!!
 # site 
-site_data_full <- bird_covs %>%
-  select(-bird_sit, -for_sit, -xCoordinate, -yCoordinate, -sta_str, -stg) %>%
+
+ifelse(is.na(forest_covs$pct_shr), forest_covs$pct_shr <- 0, forest_covs$pct_shr <- forest_covs$pct_shr)
+site_data_full <- forest_covs %>%
+  select(-for_sit, -xCoordinate, -yCoordinate, -sta_str, -stg#, -pct_shr
+              ) %>%
   filter(complete.cases(.))
 
 site_data_full1 <- site_data_full  %>% select(-ParkUnit)
@@ -159,31 +168,5 @@ summary(site.pca)
 
 site.pca$rotation
 
-# park INCORRECT FOR NOW!!!!!!!!
-park_data_full <- site_data_full  %>% 
-                    group_by(ParkUnit) %>% 
-                    mutate(pct_cro = mean(pct_cro, na.rm = T),
-                           pct_low = mean(pct_low, na.rm = T),
-                           pct_mid = mean(pct_mid, na.rm = T),
-                           pct_hig  = mean(pct_hig, na.rm = T),
-                           CWD_vol_mean  = mean(CWD_vol_mean, na.rm = T),
-                           BA_m2ha  = mean(BA_m2ha, na.rm = T),
-                           tree_rich  = mean(tree_rich, na.rm = T),
-                           pct_shr  = mean(pct_shr, na.rm = T),
-                           pct_sum  = mean(pct_sum, na.rm = T),
-                           pct_mat  = mean(pct_mat, na.rm = T),
-                           pct_lar = mean(pct_lar, na.rm = T))  %>% 
-                    ungroup() %>% 
-                    distinct()
-
-park_data_full1 <- park_data_full  %>% select(-ParkUnit) 
 
 
-park.pca <- prcomp(park_data_full1, center = TRUE, scale. = TRUE)
-
-ggbiplot(park.pca, groups = park_data_full$ParkUnit, ellipse = TRUE) +
-  scale_color_discrete(name = "ParkUnit")
-  
-summary(park.pca)
-
-park.pca$rotation
