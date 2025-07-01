@@ -102,6 +102,8 @@ park_list <- list(
   "MIMA" = list(map = mima_vegmap2, for_plots = for_plots_sfm, xy = xy_sf)
 )
 
+write_rds(park_list, file = "data/out/park_list.rds")
+
 all_cover_types <- unique(unlist(lapply(park_list, function(x) unique(x$map$Cover_Type))))
 palette <- c("#605d5d", "#1e7b1e", "#3a78dc", "#c98b19", "#dcdada")
 cover_type_colors <- setNames(palette[seq_along(all_cover_types)], all_cover_types)
@@ -156,20 +158,25 @@ server <- function(input, output, session) {
       scale_fill_manual(values = cover_type_colors, na.value = "grey80") +
       geom_sf(
         data = plot_points,
+        color = "black", 
+        size = 3, 
+        fill = "red",
         aes(
+          shape = type_plot,
           text = paste0(
             "Plot: ", PlotID, "<br>",
             "Type: ", type_plot, "<br>",
             "Percent Conifer Den: ", round(per_den, 2), "<br>",
             "Percent Conifer BA: ", round(per_ba, 2)
-          )
-        ),
-        color = "black", shape = 21, size = 3, fill = "red"
-      ) +
+          ))
+      ) +       
+      scale_shape_manual(values = c("Conifer" = 24, "Hardwood" = 21)) + 
       geom_sf(data = park_data$xy %>%
-                filter(park == input$park), color = "black", shape = 24, size = 3, fill = "black") +
+                filter(park == input$park), color = "black", shape = 18, size = 2, fill = "black") +
       theme_bw() +
       theme(legend.position = "bottom",
+            legend.text = element_text(size = 8),
+            legend.title = element_text(size = 9),
             plot.title = element_text(hjust = 0.5, size = 22)) +
       ggtitle(input$park)
     ggplotly(p, tooltip = "text")
@@ -178,60 +185,78 @@ server <- function(input, output, session) {
   output$per_ba_plot <- renderPlotly({
     df <- tre_cov3percent_con %>% filter(ParkUnit == input$park) %>% arrange(PlotID)
     p <- ggplot(df) +
-      geom_point(aes(x = PlotID, y = per_ba, col = type_plot, text = paste0(
+      geom_point(aes(x = PlotID, y = per_ba, col = type_plot, shape = type_plot, text = paste0(
         "Plot: ", PlotID, "<br>",
         "Type: ", type_plot, "<br>",
         "Percent BA: ", round(per_ba, 2)
       )), size = 2) +
       labs(x = "Plot", y = "Percent Conifer BA", color = "Type") +
       theme_bw() +
-      scale_color_manual(values = c("Conifer" = "#1e7b1e")) +
-      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+      scale_color_manual(values = c("Conifer" = "#1e7b1e", "Hardwood" = "#c98b19")) +
+      scale_shape_manual(values = c("Conifer" = 16, "Hardwood" = 17)) + 
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+            legend.text = element_text(size = 8),
+            legend.title = element_text(size = 9))
     ggplotly(p, tooltip = "text")
   })
 
   output$per_den_plot <- renderPlotly({
     df <- tre_cov3percent_con %>% filter(ParkUnit == input$park) %>% arrange(PlotID)
     p <- ggplot(df) +
-      geom_point(aes(x = PlotID, y = per_den, col = type_plot, text = paste0(
+      geom_point(aes(x = PlotID, y = per_den, col = type_plot, shape = type_plot, text = paste0(
         "Plot: ", PlotID, "<br>",
         "Type: ", type_plot, "<br>",
         "Percent Density: ", round(per_den, 2)
       )), size = 2) +
       labs(x = "Plot", y = "Percent Conifer Density", color = "Type") +
       theme_bw() +
-      scale_color_manual(values = c("Conifer" = "#1e7b1e")) +
-      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+      scale_color_manual(values = c("Conifer" = "#1e7b1e", "Hardwood" = "#c98b19")) +
+      scale_shape_manual(values = c("Conifer" = 16, "Hardwood" = 17)) + 
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+            legend.text = element_text(size = 8),
+            legend.title = element_text(size = 9))
     ggplotly(p, tooltip = "text")
   })
 
   output$ba_plot <- renderPlotly({
     df <- tre_cov3 %>% filter(ParkUnit == input$park) %>% arrange(PlotID)
     p <- ggplot(df) +
-      geom_point(aes(x = PlotID, y = BA_m2ha, col = type_plot, text = paste0(
+      geom_point(aes(x = PlotID, y = BA_m2ha, 
+                     col = type, 
+                     shape = type_plot,
+                     text = paste0(
         "Plot: ", PlotID, "<br>",
         "Type: ", type_plot, "<br>",
         "BA_m2ha: ", round(BA_m2ha, 2)
       )), size = 2) +
-      labs(x = "Plot", y = "BA (m²/ha)", color = "Type") +
+      labs(x = "Plot", y = "BA (m²/ha)", color = "Type", shape = "Plot Type") +
       theme_bw() +
       scale_color_manual(values = c("Conifer" = "#1e7b1e", "Hardwood" = "#c98b19")) +
-      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+      scale_shape_manual(values = c("Conifer" = 16, "Hardwood" = 17)) +  # 16=circle, 17=triangle
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+            legend.text = element_text(size = 8),
+            legend.title = element_text(size = 9))
     ggplotly(p, tooltip = "text")
   })
 
   output$density_plot <- renderPlotly({
     df <- tre_cov3 %>% filter(ParkUnit == input$park) %>% arrange(PlotID)
     p <- ggplot(df) +
-      geom_point(aes(x = PlotID, y = density, col = type_plot, text = paste0(
+      geom_point(aes(x = PlotID, y = density, 
+                     col = type, 
+                     shape = type_plot,
+                     text = paste0(
         "Plot: ", PlotID, "<br>",
         "Type: ", type_plot, "<br>",
         "Density: ", density
       )), size = 2) +
-      labs(x = "Plot", y = "Density", color = "Type") +
+      labs(x = "Plot", y = "Density", color = "Type", shape = "Plot Type") +
       theme_bw() +
       scale_color_manual(values = c("Conifer" = "#1e7b1e", "Hardwood" = "#c98b19")) +
-      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+      scale_shape_manual(values = c("Conifer" = 16, "Hardwood" = 17)) +  # 16=circle, 17=triangle
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+            legend.text = element_text(size = 8),
+            legend.title = element_text(size = 9))
     ggplotly(p, tooltip = "text")
   })
 }
