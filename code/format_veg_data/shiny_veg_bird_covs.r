@@ -92,27 +92,79 @@ tre_cov3percent_con <- tre_cov3  %>%
   filter(#type_plot == "Conifer",
          type == "Conifer")
 
-datatable(tre_cov3percent_con)
+# datatable(tre_cov3percent_con)
 
 ## if it is hardwood, put 0% conifer
 ## color the points according to type_plot
 
 park_list <- list(
-  "MABI" = list(map = mabi_vegmap2, for_plots = for_plots_sf, xy = xy_sf),
-  "MORR" = list(map = morr_vegmap2, for_plots = for_plots_sf, xy = xy_sf),
-  "SAGA" = list(map = saga_vegmap2, for_plots = for_plots_sf, xy = xy_sf),
-  "SARA" = list(map = sara_vegmap2, for_plots = for_plots_sf, xy = xy_sf),
-  "WEFA" = list(map = wefa_vegmap2, for_plots = for_plots_sf, xy = xy_sf),
-  "HOFR" = list(map = rova_vegmap2, for_plots = for_plots_sfh, xy = xy_sf),
-  "VAMA" = list(map = rova_vegmap2, for_plots = for_plots_sfv, xy = xy_sf),
-  "MIMA" = list(map = mima_vegmap2, for_plots = for_plots_sfm, xy = xy_sf)
+  "MABI" = list(map = mabi_vegmap2, for_plots = for_plots_sf, xy = xy_sf, close_points = close_points_f2 %>% filter(ParkUnit == "MABI")),
+  "MORR" = list(map = morr_vegmap2, for_plots = for_plots_sf, xy = xy_sf, close_points = close_points_f2 %>% filter(ParkUnit == "MORR")),
+  "SAGA" = list(map = saga_vegmap2, for_plots = for_plots_sf, xy = xy_sf, close_points = close_points_f2 %>% filter(ParkUnit == "SAGA")),
+  "SARA" = list(map = sara_vegmap2, for_plots = for_plots_sf, xy = xy_sf, close_points = close_points_f2 %>% filter(ParkUnit == "SARA")),
+  "WEFA" = list(map = wefa_vegmap2, for_plots = for_plots_sf, xy = xy_sf, close_points = close_points_f2 %>% filter(ParkUnit == "WEFA")),
+  "HOFR" = list(map = rova_vegmap2, for_plots = for_plots_sfh, xy = xy_sf, close_points = close_points_f2 %>% filter(ParkUnit == "HOFR")),
+  "VAMA" = list(map = rova_vegmap2, for_plots = for_plots_sfv, xy = xy_sf, close_points = close_points_f2 %>% filter(ParkUnit == "VAMA")),
+  "MIMA" = list(map = mima_vegmap2, for_plots = for_plots_sfm, xy = xy_sf, close_points = close_points_f2 %>% filter(ParkUnit == "MIMA"))
 )
+
+#? veggie types to only forest or not-forest (Cover_Type2)
+for(kk in 1:lenght(park_list)){
+    
+    park_list[[kk]]$map$Cover_Type2 <- NA
+
+    for(ll in 1:nrow(park_list[[kk]]$map)){
+      current_type <- park_list[[kk]]$map$Cover_Type[ll]
+      
+      if(!is.na(current_type)) {
+        if(current_type == "Not forest") {
+          park_list[[kk]]$map$Cover_Type2[ll] <- "Not forest"
+        } else {
+          park_list[[kk]]$map$Cover_Type2[ll] <- "Forest"
+        }
+      }
+      # If it's NA, Cover_Type2 remains NA
+    }
+}
 
 write_rds(park_list, file = "data/out/park_list.rds")
 
 all_cover_types <- unique(unlist(lapply(park_list, function(x) unique(x$map$Cover_Type))))
 palette <- c("#605d5d", "#1e7b1e", "#3a78dc", "#c98b19", "#dcdada")
 cover_type_colors <- setNames(palette[seq_along(all_cover_types)], all_cover_types)
+
+for_nofor <- unique(unlist(lapply(park_list, function(x) unique(x$map$Cover_Type2))))
+palette2 <- c("#605d5d", "#1e7b1e")
+for_nofor_colors <- setNames(palette2[seq_along(for_nofor)], for_nofor)
+
+plot_id <- unique(unlist(lapply(park_list, function(x) unique(x$close_points$bird_sit))))
+plot_id_park <- substr(plot_id, 1,4) 
+#plot_id <- cbind(plot_id, plot_id_park) %>% as_tibble()
+
+# Create a large color palette with enough colors for all bird sites
+# Using a combination of different color palettes to get enough distinct colors
+plot_palette <- c(
+  # Primary colors (12)
+  "#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#ffff33", 
+  "#a65628", "#f781bf", "#999999", "#66c2a5", "#fc8d62", "#8da0cb",
+  # Additional vibrant colors (12)
+  "#1f78b4", "#33a02c", "#e31a1c", "#ff7f00", "#cab2d6", "#6a3d9a",
+  "#b15928", "#fb9a99", "#a6cee3", "#b2df8a", "#fdbf6f", "#ffff99",
+  # More distinct colors (12)  
+  "#8dd3c7", "#ffffb3", "#bebada", "#fb8072", "#80b1d3", "#fdb462",
+  "#b3de69", "#fccde5", "#d9d9d9", "#bc80bd", "#ccebc5", "#ffed6f",
+  # Even more colors (12)
+  "#a50026", "#d73027", "#f46d43", "#fdae61", "#fee08b", "#ffffbf",
+  "#e6f598", "#abd9e9", "#74add1", "#4575b4", "#313695", "#006837"
+)
+
+# Ensure we have enough colors by repeating if needed
+total_bird_sites <- length(plot_id[!is.na(plot_id)])
+if(length(plot_palette) < total_bird_sites) {
+  plot_palette <- rep(plot_palette, ceiling(total_bird_sites / length(plot_palette)))
+}
+
+plot_id_colors <- setNames(plot_palette[1:total_bird_sites], plot_id[!is.na(plot_id)])
 
 ui <- fluidPage(
   titlePanel("NPS Park Vegetation Maps"),
@@ -150,41 +202,62 @@ ui <- fluidPage(
   )
 )
 
+
+## test code
+# park_data <- park_list[["MABI"]]
+# plot_points <- park_data$for_plots %>%
+#   left_join(tre_cov3, by = "PlotID") %>%
+#   left_join(tre_cov3percent_con %>% 
+#   filter(ParkUnit == "MABI"), by = "PlotID", suffix = c("", "_con")) %>% 
+#   filter(ParkUnit == "MABI")
+
+
 server <- function(input, output, session) {
   output$vegmap <- renderPlotly({
     park_data <- park_list[[input$park]]
+    
     # Join percent conifer BA to plot points for annotation
     plot_points <- park_data$for_plots %>%
       left_join(tre_cov3, by = "PlotID") %>%
       left_join(tre_cov3percent_con %>% 
       filter(ParkUnit == input$park), by = "PlotID", suffix = c("", "_con")) %>% 
       filter(ParkUnit == input$park)
+    
+    # Create park-specific color palette for current park's bird_sit values
+    current_bird_sits <- unique(park_data$close_points$bird_sit)
+    current_colors <- setNames(plot_palette[1:length(current_bird_sits)], current_bird_sits)
+    
     p <- ggplot(data = park_data$map) +
-      geom_sf(aes(fill = Cover_Type, text = paste("MapUnit:", MapUnit_Name, "<br>Cover Type:", Cover_Type))) +
-      scale_fill_manual(values = cover_type_colors, na.value = "grey80") +
+      geom_sf(aes(fill = Cover_Type2, text = paste("MapUnit:", MapUnit_Name, "<br>Cover Type:", Cover_Type2))) +
+      scale_fill_manual(values = for_nofor_colors, na.value = "grey80") +
+       geom_segment(data = park_data$close_points,
+                    aes(x = lonutmb, y = latutmb, 
+                         xend = lonutmf, yend = latutmf, 
+                         colour = bird_sit)) +
+      scale_color_manual(values = current_colors) + 
       geom_sf(
         data = plot_points,
-        color = "black", 
         size = 3, 
-        fill = "red",
-        aes(
-          shape = type_plot,
-          text = paste0(
-            "Plot: ", PlotID, "<br>",
-            "Type: ", type_plot, "<br>",
-            "Percent Conifer Den: ", round(per_den, 2), "<br>",
-            "Percent Conifer BA: ", round(per_ba, 2)
-          ))
-      ) +       
-      scale_shape_manual(values = c("Conifer" = 24, "Hardwood" = 21)) + 
+        color = "black",
+        aes(text = paste0(
+              "Plot: ", PlotID, "<br>",
+              "Type: ", type_plot, "<br>",
+              "Percent Conifer Den: ", round(per_den, 2), "<br>",
+              "Percent Conifer BA: ", round(per_ba, 2)
+          ))) +       
       geom_sf(data = park_data$xy %>%
-                filter(park == input$park), color = "black", shape = 18, size = 2, fill = "black") +
+                filter(park == input$park), 
+                #filter(park == "MABI"), 
+              aes(color = Point_Name),
+              shape = 18, size = 3) +
+      scale_color_manual(values = current_colors) + 
       theme_bw() +
-      theme(legend.position = "bottom",
+      theme(legend.position = "none",
             legend.text = element_text(size = 8),
             legend.title = element_text(size = 9),
             plot.title = element_text(hjust = 0.5, size = 22)) +
       ggtitle(input$park)
+    
     ggplotly(p, tooltip = "text")
   })
 
@@ -308,10 +381,16 @@ server <- function(input, output, session) {
 shinyApp(ui, server)
 ## send bird sites values to aaron
 
-## classify everything as forest and not forest
-## get percentage hardwood and conifer for bird sites
-## get some measure of stand structure (how much vegetation in each strata)
-## get same covariates as birds (close_points_etc) for the forest sites
-## remove the red circles and triangles - same symbol
-## gradient of color for the covariates for each bird site and plot (e.g. ba 0.2 is blue and 0.8 is green)
-## connect bird and forest sites
+## ( x ) classify everything as forest and not forest
+## ( x ) connect bird and forest sites
+## ( x ) remove the red circles and triangles - same symbol
+## (   ) get percentage hardwood and conifer for bird sites
+## (   ) sensitivity analysis - how many neighbours I get and how estimates changes as the radius gets bigger
+## (   ) compare with aarons estimates
+
+
+## (   ) get some measure of stand structure (how much vegetation in each strata)
+## (   ) get same covariates as birds (close_points_etc) for the forest sites
+## (   ) toggle for each covariate
+## (   ) gradient of color for the covariates for each bird site and plot (e.g. ba 0.2 is blue and 0.8 is green)
+## (   ) HOFR and VAMA error 

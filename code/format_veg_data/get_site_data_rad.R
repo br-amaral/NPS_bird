@@ -469,7 +469,7 @@ for_sit2 <- for_sit %>%
           pctBA_matureM, pctBA_largeM, shrub_covM) %>% 
   distinct()
   
-close_points_f2 <- left_join(close_points_f, for_sit2, by = "for_sit") %>% 
+close_points_f2 <- left_join(close_points_f2, for_sit2, by = "for_sit") %>% 
     group_by(bird_sit) %>%
   mutate(treeden_haM = mean(treeden_haM, na.rm = T),
           BA_m2haM = mean(BA_m2haM, na.rm = T),
@@ -484,7 +484,7 @@ close_points_f2 <- left_join(close_points_f, for_sit2, by = "for_sit") %>%
   select(bird_sit, park,
           treeden_haM, BA_m2haM, tree_richM, StageM, 
           pctBA_poleM, pctBA_matureM, pctBA_largeM, 
-          shrub_covM) %>% 
+          shrub_covM, lonutmb, latutmb, lonutmf, latutmf) %>% 
   distinct() %>% 
   rename(ParkUnit = park,
           siteDEN = treeden_haM, siteBA = BA_m2haM, 
@@ -495,7 +495,6 @@ close_points_f2 <- left_join(close_points_f, for_sit2, by = "for_sit") %>%
 neighbor <- left_join(close_points_f, for_sit2, by = "for_sit") %>% 
                       select(for_sit, bird_sit) %>% 
                       distinct()
-
 
 #! Output files ----------------------------------------------
 print("save output files!")
