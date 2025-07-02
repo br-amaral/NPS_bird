@@ -54,8 +54,11 @@ lenght <- length
 `%!in%` <- Negate(`%in%`)
 
 #! Source code -----------------------------------------
+#? veggie maps -----------------------------------------
 # get park shape files with vegetation types and classify each as conifer, hardwood, mixed, or not forest
 source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_veg_data/veg_maps_park.R")
+
+#? forest covariates -----------------------------------
 # gets all forest plots and calculates what percentage and value of density and BA is conifer and hardwood
 source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_veg_data/get_conhar_baden.R")
 
@@ -63,8 +66,9 @@ source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_veg_data/get_c
 ## file paths
 
 ## read files
+#? bird site covariates
 radi_dist <- 250
-close_points_f2 <- read_rds(file = glue("data/out/site_covs_fornofor_grp_{radi_dist}m.rds"))
+close_points_f2 <- read_rds(file = glue("data/out/site_covs_fornofor_{radi_dist}m.rds"))
 
 # shiny for parks, forest type_plot, and new covariates
 for_plots_sf <- for_plots_sf  %>% rename(PlotID = for_sit)
