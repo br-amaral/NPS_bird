@@ -57,7 +57,6 @@ importCSV(path, zip_name = "NETN_Forest_20231106.zip")
 
 tree_cat <- read_csv("data/tree_sps_harcon.csv")
 
-
 tre_cov <- joinTreeData(park = 'all', status = "live") %>% 
                 as_tibble() 
 
@@ -71,20 +70,15 @@ tree_sps$genus %>% unique()
 
 tree_sps <- left_join(tree_sps, tree_cat, by = "genus")
 
+# tre_cov_test <- left_join(tre_cov %>% rename(sps = ScientificName), tree_sps, by = "sps")  %>% 
+#                 select(Plot_Name, Network, ParkUnit, SampleYear,
+#                     sps, genus, type, BA_cm2) %>% 
+#         filter(Plot_Name == "MABI-013") 
 
-tre_cov_test <- left_join(tre_cov %>% rename(sps = ScientificName), tree_sps, by = "sps")  %>% 
-                select(Plot_Name, Network, ParkUnit, SampleYear,
-                    sps, genus, type, BA_cm2) %>% 
-        filter(Plot_Name == "MABI-013") 
+# table(tre_cov_test$genus)
 
-table(tre_cov_test$genus)
-table(tre_cov_test$type)
-
-tre_cov_test %>% filter(Plot_Name == "MABI-013") %>% filter(type == "Conifer")  %>% pull(BA_cm2)  %>% sum()
-tre_cov_test %>% filter(Plot_Name == "MABI-013") %>% filter(type == "Hardwood")  %>% pull(BA_cm2)  %>% sum()  ## hardwood
-
-tre_cov_test %>% filter(Plot_Name == "MABI-014") %>% filter(type == "Conifer")  %>% pull(BA_cm2)  %>% sum()
-tre_cov_test %>% filter(Plot_Name == "MABI-014") %>% filter(type == "Hardwood")  %>% pull(BA_cm2)  %>% sum()  ## hardwood
+# table(tre_cov %>% 
+#         filter(Plot_Name == "MABI-013")  %>% select(SampleYear))
 
 tre_cov2 <- left_join(tre_cov %>% rename(sps = ScientificName), tree_sps, by = "sps")  %>% 
                 select(Plot_Name, Network, ParkUnit, SampleYear,
@@ -107,6 +101,6 @@ tre_cov3 <- tre_cov2 %>%
 #! only have forest not forest
 
 
-ggplot(data = tre_cov3) +
-        geom_point(aes(x = density, y = BA_m2ha, color = type_plot))
+# ggplot(data = tre_cov3) +
+#         geom_point(aes(x = density, y = BA_m2ha, color = type_plot))
 
