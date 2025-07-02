@@ -76,7 +76,21 @@ for_plots_sfh <- for_plots_sf  %>% filter(park == "ROVA"); for_plots_sfh$park <-
 for_plots_sfv <- for_plots_sf  %>% filter(park == "ROVA"); for_plots_sfv$park <- "VAMA"   # vama
 for_plots_sfm <- for_plots_sfm  %>% rename(PlotID = for_sit)                              # mima
 
-tre_cov3 <- tre_cov3  %>% mutate(ParkUnit = substr(PlotID, 1, 4))
+tre_cov3_key <- expand.grid(sort(unique(tre_cov3$PlotID)), c('Hardwood', 'Conifer'))  %>% 
+                    as_tibble() %>% 
+                    rename(PlotID = Var1,
+                           type = Var2) %>% 
+                    mutate(PlotID = as.character(PlotID),
+                           type = as.character(type)) %>% 
+                    arrange(PlotID)
+
+tre_cov4 <- left_join(tre_cov3_key, tre_cov3, by = c('PlotID', 'type')) %>% 
+                mutate(ParkUnit = substr(PlotID, 1, 4),
+                       BA_m2ha = ifelse(is.na(BA_m2ha), 0, BA_m2ha),
+                       density = ifelse(is.na(density), 0, density),
+                       type_plot = ifelse(is.na(type_plot), 
+                                          ifelse(type == 'Conifer', 'Hardwood', 'Conifer'), 
+                                          type_plot))
 
 tre_cov3percent_con <- tre_cov3  %>% 
   group_by(PlotID) %>% 
@@ -91,8 +105,20 @@ tre_cov3percent_con <- tre_cov3  %>%
   ) %>% 
   filter(#type_plot == "Conifer",
          type == "Conifer")
+## TODO: where did ROVA-023 went? if it is all hardwood is getting NA - FIX
 
 # datatable(tre_cov3percent_con)
+
+## get neighbours to calculate % of conifer and hardwood for each bird point
+neighbor <- read_rds(file = glue("data/out/neighbor_fornofor_{radi_dist}m.rds"))
+
+neighbor2 <- left_join(neighbor %>% 
+                          rename(PlotID = for_sit), 
+                       tre_cov3percent_con %>% 
+                          select(PlotID, ParkUnit, tot_ba, tot_den, per_ba, per_den),
+                        by = "PlotID")  %>% 
+                       arrange(bird_sit)
+
 
 ## if it is hardwood, put 0% conifer
 ## color the points according to type_plot
