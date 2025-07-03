@@ -392,7 +392,7 @@ close_points_f <- close_points_f %>%
                     distinct()
 
 # write_rds data/out/close_points_f.rds
-# write_rds(close_points_f, file = "data/out/close_points_f.rds")
+write_rds(close_points_f, file = "data/out/close_points_dist.rds")
 
 # plot close points by park
 ## join coordinates

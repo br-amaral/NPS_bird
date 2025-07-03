@@ -3,7 +3,6 @@
 #? *********************************************************************************
 #
 #! Code to plot park vegetation types, bird sites, and forest plots, and classify them
-#!    according to conifer, mixed, hardwood and not forest, as well as average BA and
 #!    and density of trees of each of the three groups. This code will help us understand
 #!    whether our environmental covariates are all matching our expectations and representing
 #!    the forest properly 
@@ -43,6 +42,8 @@ library(ggplot2)
 library(sf)
 library(dplyr)
 library(plotly)
+library(weights)  ## package for weighted means
+library(ggnewscale)  ## package for multiple scales
 
 conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::filter)
@@ -92,7 +93,7 @@ tre_cov4 <- left_join(tre_cov3_key, tre_cov3, by = c('PlotID', 'type')) %>%
                                           ifelse(type == 'Conifer', 'Hardwood', 'Conifer'), 
                                           type_plot))
 
-tre_cov3percent_con <- tre_cov3  %>% 
+tre_cov3percent_con <- tre_cov4  %>% 
   group_by(PlotID) %>% 
   mutate(
     tot_ba = sum(BA_m2ha),
@@ -104,34 +105,101 @@ tre_cov3percent_con <- tre_cov3  %>%
     per_den = density / tot_den
   ) %>% 
   filter(#type_plot == "Conifer",
-         type == "Conifer")
-## TODO: where did ROVA-023 went? if it is all hardwood is getting NA - FIX
+         type == "Conifer") %>% 
+  ungroup()
 
 # datatable(tre_cov3percent_con)
 
 ## get neighbours to calculate % of conifer and hardwood for each bird point
-neighbor <- read_rds(file = glue("data/out/neighbor_fornofor_{radi_dist}m.rds"))
+neighbor <- read_rds(file = "data/out/close_points_dist.rds") %>% 
+                      select(dist, for_sit, bird_sit)
 
 neighbor2 <- left_join(neighbor %>% 
                           rename(PlotID = for_sit), 
                        tre_cov3percent_con %>% 
-                          select(PlotID, ParkUnit, tot_ba, tot_den, per_ba, per_den),
-                        by = "PlotID")  %>% 
-                       arrange(bird_sit)
+                          select(PlotID, ParkUnit, BA_m2ha, density, tot_ba, tot_den, per_ba, per_den),
+                       by = "PlotID")  %>% 
+                  arrange(bird_sit) %>%
+                  select(-ParkUnit) %>% 
+                  mutate(BA_m2ha = ifelse(BA_m2ha == 0, BA_m2ha + 0.001, BA_m2ha)) %>% 
+                  group_by(bird_sit) %>% 
+                  mutate(BA_m2ha_m   = mean(BA_m2ha, na.rm = T),
+                         density_m   = mean(density, na.rm = T), 
+                         tot_ba_m    = mean(tot_ba,  na.rm = T), 
+                         tot_den_m   = mean(tot_den, na.rm = T), 
+                         per_ba_m    = mean(per_ba,  na.rm = T), 
+                         per_den_m   = mean(per_den, na.rm = T),
+                         BA_m2ha_wei = (sum(BA_m2ha * 1/dist))/sum(1/dist),
+                         density_wei = (sum(density * 1/dist))/sum(1/dist), 
+                         tot_ba_wei  = (sum(tot_ba *  1/dist))/sum(1/dist), 
+                         tot_den_wei = (sum(tot_den * 1/dist))/sum(1/dist),
+                         per_ba_wei  = (sum(per_ba *  1/dist))/sum(1/dist),
+                         per_den_wei = (sum(per_den * 1/dist))/sum(1/dist)) %>% 
+                  ungroup() %>% 
+                  select(-PlotID, -dist, -BA_m2ha, -density, -tot_ba, -tot_den, -per_ba, -per_den) %>%
+                  distinct() %>% 
+                  mutate(type = "Conifer")
 
+xy_sf2 <- xy_sf %>% 
+            filter(park %!in% c("ACAD", "ELRO", "SAIR")) %>% 
+            left_join(., 
+                      neighbor2 %>% 
+                        rename(Point_Name = bird_sit), 
+                      by = c('Point_Name')) %>% 
+            mutate(BApercent_type = ifelse(per_ba_m > 0.5, 'Conifer', 'Hardwood')) %>%
+            distinct()
 
-## if it is hardwood, put 0% conifer
-## color the points according to type_plot
+#? aaron data
+aar_con <- read_rds(file = "data/conifer_final_aaron.rds")  %>% 
+              mutate(Point_Name = paste0(substr(PT_CODE, 1, 4), substr(PT_CODE, 6, 7), substr(PT_CODE, 9, 10))) %>% 
+              select(Point_Name, BA_SUM)  
+
+aar_con <- left_join(xy_sf, aar_con, by = "Point_Name") %>% 
+              mutate(BA_sum_ha = BA_SUM/19.63) %>%  ## The area of a circle with a 250-meter radius is approximately 19.63 hectares.
+              rename(ParkUnit = park)
+
+par(mfrow = c(1,3))
+hist(as_tibble(aar_con) %>% pull(BA_sum_ha)) 
+hist(as_tibble(xy_sf2) %>% pull(tot_ba_m)) 
+hist(as_tibble(xy_sf2) %>% pull(tot_ba_wei))
+
+par(mfrow = c(1,1))
+plot(as_tibble(xy_sf2) %>% pull(tot_ba_m), as_tibble(xy_sf2) %>% pull(tot_ba_wei))
+
+left_join(as_tibble(aar_con) %>% select(Point_Name, BA_sum_ha),
+          as_tibble(xy_sf2) %>% select(Point_Name, tot_ba_m),
+          by = "Point_Name") %>% 
+      arrange(Point_Name) %>% 
+      as_tibble() %>% 
+      mutate(difference = tot_ba_m - BA_sum_ha)  %>% 
+      pull(difference) %>% 
+      hist()
 
 park_list <- list(
-  "MABI" = list(map = mabi_vegmap2, for_plots = for_plots_sf, xy = xy_sf, close_points = close_points_f2 %>% filter(ParkUnit == "MABI")),
-  "MORR" = list(map = morr_vegmap2, for_plots = for_plots_sf, xy = xy_sf, close_points = close_points_f2 %>% filter(ParkUnit == "MORR")),
-  "SAGA" = list(map = saga_vegmap2, for_plots = for_plots_sf, xy = xy_sf, close_points = close_points_f2 %>% filter(ParkUnit == "SAGA")),
-  "SARA" = list(map = sara_vegmap2, for_plots = for_plots_sf, xy = xy_sf, close_points = close_points_f2 %>% filter(ParkUnit == "SARA")),
-  "WEFA" = list(map = wefa_vegmap2, for_plots = for_plots_sf, xy = xy_sf, close_points = close_points_f2 %>% filter(ParkUnit == "WEFA")),
-  "HOFR" = list(map = rova_vegmap2, for_plots = for_plots_sfh, xy = xy_sf, close_points = close_points_f2 %>% filter(ParkUnit == "HOFR")),
-  "VAMA" = list(map = rova_vegmap2, for_plots = for_plots_sfv, xy = xy_sf, close_points = close_points_f2 %>% filter(ParkUnit == "VAMA")),
-  "MIMA" = list(map = mima_vegmap2, for_plots = for_plots_sfm, xy = xy_sf, close_points = close_points_f2 %>% filter(ParkUnit == "MIMA"))
+  "MABI" = list(map = mabi_vegmap2, for_plots = for_plots_sf,  xy = xy_sf2, 
+                close_points = close_points_f2 %>% filter(ParkUnit == "MABI"),
+                aar_coni_cov = aar_con %>% filter(ParkUnit == "MABI")),
+  "MORR" = list(map = morr_vegmap2, for_plots = for_plots_sf,  xy = xy_sf2, 
+                close_points = close_points_f2 %>% filter(ParkUnit == "MORR"),
+                aar_coni_cov = aar_con %>% filter(ParkUnit == "MORR")),
+  "SAGA" = list(map = saga_vegmap2, for_plots = for_plots_sf,  xy = xy_sf2, 
+                close_points = close_points_f2 %>% filter(ParkUnit == "SAGA"),
+                aar_coni_cov = aar_con %>% filter(ParkUnit == "SAGA")),
+  "SARA" = list(map = sara_vegmap2, for_plots = for_plots_sf,  xy = xy_sf2, 
+                close_points = close_points_f2 %>% filter(ParkUnit == "SARA"),
+                aar_coni_cov = aar_con %>% filter(ParkUnit == "SARA")),
+  "WEFA" = list(map = wefa_vegmap2, for_plots = for_plots_sf,  xy = xy_sf2, 
+                close_points = close_points_f2 %>% filter(ParkUnit == "WEFA"),
+                aar_coni_cov = aar_con %>% filter(ParkUnit == "WEFA")),
+  "HOFR" = list(map = rova_vegmap2, for_plots = for_plots_sfh, xy = xy_sf2, 
+                close_points = close_points_f2 %>% filter(ParkUnit == "HOFR"),
+                aar_coni_cov = aar_con %>% filter(ParkUnit == "HOFR")),
+  "VAMA" = list(map = rova_vegmap2, for_plots = for_plots_sfv, xy = xy_sf2, 
+                close_points = close_points_f2 %>% filter(ParkUnit == "VAMA"),
+                aar_coni_cov = aar_con %>% filter(ParkUnit == "VAMA")),
+  "MIMA" = list(map = mima_vegmap2, for_plots = for_plots_sfm, xy = xy_sf2, 
+                close_points = close_points_f2 %>% filter(ParkUnit == "MIMA"),
+                aar_coni_cov = aar_con %>% filter(ParkUnit == "MIMA"))
 )
 
 #? veggie types to only forest or not-forest (Cover_Type2)
@@ -156,11 +224,11 @@ for(kk in 1:lenght(park_list)){
 write_rds(park_list, file = "data/out/park_list.rds")
 
 all_cover_types <- unique(unlist(lapply(park_list, function(x) unique(x$map$Cover_Type))))
-palette <- c("#605d5d", "#1e7b1e", "#3a78dc", "#c98b19", "#dcdada")
+palette <- c("#a0a0a0", "#68c568", "#3a78dc", "#c98b19", "#dcdada")
 cover_type_colors <- setNames(palette[seq_along(all_cover_types)], all_cover_types)
 
 for_nofor <- unique(unlist(lapply(park_list, function(x) unique(x$map$Cover_Type2))))
-palette2 <- c("#605d5d", "#1e7b1e")
+palette2 <- c("#a0a0a0", "#68c568")
 for_nofor_colors <- setNames(palette2[seq_along(for_nofor)], for_nofor)
 
 plot_id <- unique(unlist(lapply(park_list, function(x) unique(x$close_points$bird_sit))))
@@ -200,43 +268,21 @@ ui <- fluidPage(
     ),
     mainPanel(
       plotlyOutput("vegmap", height = "500px"),
-      fluidRow(
-        column(
-          width = 6,
-          h4("Percent Conifer BA by Plot"),
-          plotlyOutput("per_ba_plot", height = "200px")
-        ),
-        column(
-          width = 6,
-          h4("Percent Conifer Density by Plot"),
-          plotlyOutput("per_den_plot", height = "200px")
-        )
+      plotOutput("vegmap2", height = "500px"),
+      plotOutput("vegmap3", height = "500px"),
+      plotlyOutput("complot", height = "500px"),
       ),
-      fluidRow(
-        column(
-          width = 6,
-          h4("BA_m2ha by Plot"),
-          plotlyOutput("ba_plot", height = "250px")
-        ),
-        column(
-          width = 6,
-          h4("Density by Plot"),
-          plotlyOutput("density_plot", height = "250px")
-        )
-      )
     )
   )
-)
 
 
 ## test code
 # park_data <- park_list[["MABI"]]
 # plot_points <- park_data$for_plots %>%
-#   left_join(tre_cov3, by = "PlotID") %>%
+#   left_join(tre_cov4, by = "PlotID") %>%
 #   left_join(tre_cov3percent_con %>% 
 #   filter(ParkUnit == "MABI"), by = "PlotID", suffix = c("", "_con")) %>% 
 #   filter(ParkUnit == "MABI")
-
 
 server <- function(input, output, session) {
   output$vegmap <- renderPlotly({
@@ -244,7 +290,7 @@ server <- function(input, output, session) {
     
     # Join percent conifer BA to plot points for annotation
     plot_points <- park_data$for_plots %>%
-      left_join(tre_cov3, by = "PlotID") %>%
+      left_join(tre_cov4, by = "PlotID") %>%
       left_join(tre_cov3percent_con %>% 
       filter(ParkUnit == input$park), by = "PlotID", suffix = c("", "_con")) %>% 
       filter(ParkUnit == input$park)
@@ -253,154 +299,144 @@ server <- function(input, output, session) {
     current_bird_sits <- unique(park_data$close_points$bird_sit)
     current_colors <- setNames(plot_palette[1:length(current_bird_sits)], current_bird_sits)
     
-    p <- ggplot(data = park_data$map) +
-      geom_sf(aes(fill = Cover_Type2, text = paste("MapUnit:", MapUnit_Name, "<br>Cover Type:", Cover_Type2))) +
+    p <- 
+      ggplot(data = park_data$map) +
+        geom_sf(aes(fill = Cover_Type2, text = paste("MapUnit:", MapUnit_Name, "<br>Cover Type:", Cover_Type2))) +
+        scale_fill_manual(values = for_nofor_colors, na.value = "grey80") +
+        geom_segment(data = park_data$close_points,
+                      aes(x = lonutmb, y = latutmb, 
+                          xend = lonutmf, yend = latutmf, 
+                          colour = bird_sit)) +
+        scale_color_manual(values = current_colors) + 
+        geom_sf(
+          data = plot_points,
+          size = 3, 
+          color = "black",
+          aes(text = paste0(
+                "Plot: ", PlotID, "<br>",
+                "Type: ", type_plot, "<br>",
+                "Percent Conifer Den: ", round(per_den, 2), "<br>",
+                "Percent Conifer BA: ", round(per_ba, 2)
+            ))) +       
+        geom_sf(data = park_data$xy %>%
+                  filter(park == input$park), 
+                  #filter(park == "MABI"), 
+                aes(color = Point_Name,
+                text = paste0(
+                "Bird Site: ", Point_Name, "<br>",
+                "Type: ", BApercent_type, "<br>",
+                "Percent Conifer Den: ", round(per_den_wei, 2), "<br>",
+                "Percent Conifer BA: ", round(per_ba_wei, 2)
+            )),
+                shape = 18, size = 4) +
+        scale_color_manual(values = current_colors, na.value = "#615e5e") + 
+        theme_bw() +
+        theme(legend.position = "none",
+              legend.text = element_text(size = 8),
+              legend.title = element_text(size = 9),
+              plot.title = element_text(hjust = 0.5, size = 22)) +
+        ggtitle(input$park)
+      
+    ggplotly(p, tooltip = "text")
+  })
+
+  output$vegmap2 <- renderPlot({
+    park_data <- park_list[[input$park]]
+    
+    # Join percent conifer BA to plot points for annotation
+    plot_points <- park_data$for_plots %>%
+      left_join(tre_cov4, by = "PlotID") %>%
+      left_join(tre_cov3percent_con %>% 
+      filter(ParkUnit == input$park), by = "PlotID", suffix = c("", "_con")) %>% 
+      filter(ParkUnit == input$park)
+    
+    ggplot(data = park_data$map) +
+      geom_sf(aes(fill = Cover_Type2)) +
       scale_fill_manual(values = for_nofor_colors, na.value = "grey80") +
-       geom_segment(data = park_data$close_points,
+      geom_segment(data = park_data$close_points,
                     aes(x = lonutmb, y = latutmb, 
-                         xend = lonutmf, yend = latutmf, 
-                         colour = bird_sit)) +
-      scale_color_manual(values = current_colors) + 
+                        xend = lonutmf, yend = latutmf), 
+                        colour = "black", linewidth = 1) +
+      ggnewscale::new_scale_fill() +
       geom_sf(
         data = plot_points,
-        size = 3, 
-        color = "black",
-        aes(text = paste0(
-              "Plot: ", PlotID, "<br>",
-              "Type: ", type_plot, "<br>",
-              "Percent Conifer Den: ", round(per_den, 2), "<br>",
-              "Percent Conifer BA: ", round(per_ba, 2)
-          ))) +       
+        shape = 22,
+        size = 10, 
+        stroke = 1,
+        color = "red",
+        aes(fill = BA_m2ha)) +
       geom_sf(data = park_data$xy %>%
                 filter(park == input$park), 
-                #filter(park == "MABI"), 
-              aes(color = Point_Name),
-              shape = 18, size = 3) +
-      scale_color_manual(values = current_colors) + 
+          aes(fill = BA_m2ha_wei),
+          shape = 21, 
+          size = 10,
+          stroke = 1,
+          color = "black") +
+      scale_fill_viridis_c(name = "BA (m²/ha)", option = "plasma") +
       theme_bw() +
-      theme(legend.position = "none",
-            legend.text = element_text(size = 8),
-            legend.title = element_text(size = 9),
-            plot.title = element_text(hjust = 0.5, size = 22)) +
-      ggtitle(input$park)
+      theme(legend.position = "right",
+            legend.text = element_text(size = 10),
+            legend.title = element_text(size = 12),
+            plot.title = element_text(hjust = 0.5, size = 16)) +
+      ggtitle(paste("Basal Area Map -", input$park))
+  })
+
+  output$vegmap3 <- renderPlot({
+    park_data <- park_list[[input$park]]
+        
+    ggplot(data = park_data$map) +
+      geom_sf(aes(fill = Cover_Type2)) +
+      scale_fill_manual(values = for_nofor_colors, na.value = "grey80") +
+      ggnewscale::new_scale_fill() +
+      geom_sf(
+        data =  park_data$aar_coni_cov,
+        shape = 21,
+        size = 10, 
+        stroke = 1,
+        color = "black",
+        aes(fill = BA_sum_ha)) +
+      scale_fill_viridis_c(name = "BA (m²/ha)", option = "plasma") +
+      theme_bw() +
+      theme(legend.position = "right",
+            legend.text = element_text(size = 10),
+            legend.title = element_text(size = 12),
+            plot.title = element_text(hjust = 0.5, size = 16)) +
+      ggtitle(paste("Basal Area Map GIS-", input$park))
+  })
+
+  output$complot <- renderPlotly({
+    park_data <- park_list[[input$park]]
+        
+    comp <- left_join(park_data$aar_coni_cov %>% select(Point_Name, BA_sum_ha),
+                      as_tibble(park_data$xy) %>% filter(park == input$park) %>% select(Point_Name, tot_ba_m),
+                      by = "Point_Name") %>% 
+                arrange(Point_Name)  %>% 
+                as_tibble()
+
+    max_sca <- ceiling(max(comp %>% select(BA_sum_ha, tot_ba_m), na.rm = T) / 10) * 10
+    min_sca <- floor(min(comp %>% select(BA_sum_ha, tot_ba_m), na.rm = T) / 10) * 10
+
+    # Create base plot without text aesthetic to avoid warnings
+    q <- ggplot(data = comp) +
+      geom_point(aes(x = tot_ba_m, y = BA_sum_ha, 
+                     text = paste0("Bird Point: ", Point_Name, "<br>",
+                                  "Your BA: ", round(tot_ba_m, 2), " m²/ha<br>",
+                                  "Aaron's BA: ", round(BA_sum_ha, 2), " m²/ha")), 
+                 size = 2) +
+      geom_smooth(aes(x = tot_ba_m, y = BA_sum_ha), method = "lm", se = FALSE) +
+      geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed", size = 1) +
+      xlim(min_sca, max_sca) +
+      ylim(min_sca, max_sca) +
+      labs(x = "For Plot BA Estimates (m²/ha)", y = "Aaron's BA Estimates (m²/ha)", 
+           title = paste("Comparison of BA Estimates -", input$park)) +
+      theme_bw() +
+      theme(legend.position = "right",
+            legend.text = element_text(size = 12),
+            plot.title = element_text(hjust = 0.5, size = 16))
     
-    ggplotly(p, tooltip = "text")
-  })
+    # Convert to plotly with tooltip
+    ggplotly(q, tooltip = "text")
 
-  output$per_ba_plot <- renderPlotly({
-    df <- tre_cov3percent_con %>% filter(ParkUnit == input$park) %>% arrange(PlotID)
-    p <- ggplot(df) +
-      geom_point(aes(x = PlotID, y = per_ba, col = type_plot, shape = type_plot, text = paste0(
-        "Plot: ", PlotID, "<br>",
-        "Type: ", type_plot, "<br>",
-        "Percent BA: ", round(per_ba, 2)
-      )), size = 2) +
-      labs(x = "Plot", y = "Percent Conifer BA", color = "Type") +
-      theme_bw() +
-      scale_color_manual(values = c("Conifer" = "#1e7b1e", "Hardwood" = "#c98b19")) +
-      scale_shape_manual(values = c("Conifer" = 16, "Hardwood" = 17)) + 
-      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
-            legend.text = element_text(size = 8),
-            legend.title = element_text(size = 9))
-    ggplotly(p, tooltip = "text")
-  })
-
-  output$per_den_plot <- renderPlotly({
-    df <- tre_cov3percent_con %>% filter(ParkUnit == input$park) %>% arrange(PlotID)
-    p <- ggplot(df) +
-      geom_point(aes(x = PlotID, y = per_den, col = type_plot, shape = type_plot, text = paste0(
-        "Plot: ", PlotID, "<br>",
-        "Type: ", type_plot, "<br>",
-        "Percent Density: ", round(per_den, 2)
-      )), size = 2) +
-      labs(x = "Plot", y = "Percent Conifer Density", color = "Type") +
-      theme_bw() +
-      scale_color_manual(values = c("Conifer" = "#1e7b1e", "Hardwood" = "#c98b19")) +
-      scale_shape_manual(values = c("Conifer" = 16, "Hardwood" = 17)) + 
-      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
-            legend.text = element_text(size = 8),
-            legend.title = element_text(size = 9))
-    ggplotly(p, tooltip = "text")
-  })
-
-  output$ba_plot <- renderPlotly({
-    df <- tre_cov3 %>% filter(ParkUnit == input$park) %>% arrange(PlotID)
-    p <- ggplot(df) +
-      geom_point(aes(x = PlotID, y = BA_m2ha, 
-                     col = type, 
-                     shape = type_plot,
-                     text = paste0(
-        "Plot: ", PlotID, "<br>",
-        "Type: ", type_plot, "<br>",
-        "BA_m2ha: ", round(BA_m2ha, 2)
-      )), size = 2) +
-      labs(x = "Plot", y = "BA (m²/ha)", color = "Type", shape = "Plot Type") +
-      theme_bw() +
-      scale_color_manual(values = c("Conifer" = "#1e7b1e", "Hardwood" = "#c98b19")) +
-      scale_shape_manual(values = c("Conifer" = 16, "Hardwood" = 17)) +  # 16=circle, 17=triangle
-      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
-            legend.text = element_text(size = 8),
-            legend.title = element_text(size = 9))
-    ggplotly(p, tooltip = "text")
-  })
-
-  output$density_plot <- renderPlotly({
-    df <- tre_cov3 %>% filter(ParkUnit == input$park) %>% arrange(PlotID)
-    p <- ggplot(df) +
-      geom_point(aes(x = PlotID, y = density, 
-                     col = type, 
-                     shape = type_plot,
-                     text = paste0(
-        "Plot: ", PlotID, "<br>",
-        "Type: ", type_plot, "<br>",
-        "Density: ", density
-      )), size = 2) +
-      labs(x = "Plot", y = "Density", color = "Type", shape = "Plot Type") +
-      theme_bw() +
-      scale_color_manual(values = c("Conifer" = "#1e7b1e", "Hardwood" = "#c98b19")) +
-      scale_shape_manual(values = c("Conifer" = 16, "Hardwood" = 17)) +  # 16=circle, 17=triangle
-      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
-            legend.text = element_text(size = 8),
-            legend.title = element_text(size = 9))
-    ggplotly(p, tooltip = "text")
-  })
-
-   output$plot <- renderPlotly({
-    covar <- input$cov_type
-    site_col <- paste0("site", covar)
-    df <- var_site_freq %>% ungroup() %>% arrange(.data[[site_col]]) %>% mutate(tnrow = row_number())
-    limits <- c(0, round(max(df[[site_col]], na.rm = TRUE) + 2))
-    p <- ggplot(
-      df,
-      aes(y = .data[[site_col]], color = park, x = tnrow,
-          text = paste("Park:", park, "<br>Point:", Point_Name))) +
-      geom_jitter(height = 0.1, width = 0.1) +
-      scale_color_discrete() +
-      theme_bw() +
-      labs(title = paste("Average SITE", site_col)) + 
-      theme(plot.title = element_text(hjust = 0.5),
-            axis.title.x = element_blank(),
-            legend.text = element_text(size = 12),
-            legend.title = element_blank())
-    ggplotly(p, tooltip = "text")
-  })
-  
-  output$plot2 <- renderPlotly({
-    covar <- input$cov_type
-    park_col <- paste0("park", covar)
-    df <- var_park_freq %>% ungroup() %>% arrange(.data[[park_col]]) %>% mutate(tnrow = row_number())
-    limits <- c(0, round(max(df[[park_col]], na.rm = TRUE) + 2))
-    p2 <- ggplot(
-      df,
-      aes(x = tnrow, y = .data[[park_col]], color = park, text = paste("Park:", park))) +
-      geom_point(size = 3) +
-      theme_bw() +
-      labs(title = paste("Average PARK", park_col)) + 
-      theme(plot.title = element_text(hjust = 0.5),
-            axis.title.x = element_blank(),
-            legend.text = element_text(size = 12),
-            legend.title = element_blank()) 
-    ggplotly(p2, tooltip = "text")
   })
 }
 
@@ -410,13 +446,16 @@ shinyApp(ui, server)
 ## ( x ) classify everything as forest and not forest
 ## ( x ) connect bird and forest sites
 ## ( x ) remove the red circles and triangles - same symbol
-## (   ) get percentage hardwood and conifer for bird sites
+## ( x ) get percentage hardwood and conifer for bird sites
+## ( x ) weight that percentage according to distance to point
+## ( x ) create same map with surface heat map
 ## (   ) sensitivity analysis - how many neighbours I get and how estimates changes as the radius gets bigger
-## (   ) compare with aarons estimates
+## ( x ) compare with aarons estimates
 
 
 ## (   ) get some measure of stand structure (how much vegetation in each strata)
 ## (   ) get same covariates as birds (close_points_etc) for the forest sites
-## (   ) toggle for each covariate
 ## (   ) gradient of color for the covariates for each bird site and plot (e.g. ba 0.2 is blue and 0.8 is green)
 ## (   ) HOFR and VAMA error 
+
+
