@@ -1,5 +1,8 @@
 
 
+library(gstat)  
+library(sp)
+library(geoR)
 
 tre_cov2percent_har <- tre_cov2  %>% 
   group_by(PlotID) %>% 
@@ -11,20 +14,10 @@ tre_cov2percent_har <- tre_cov2  %>%
     per_ba = BA_m2ha / tot_ba,
     per_den = density / tot_den
   ) %>% 
-  filter(type == "Hardwood")
-
-
-library(gstat)  
-library(sp)
-library(geoR)
-
-
-for_plots_sf
-
-
+  filter(type == "Conifer")
 
 # Extract the variable of interest (e.g., per_ba)
-data_var <- test_spa$BA_m2ha
+data_var <- tre_cov2percent_har$BA_m2ha
 
 GEODATA  <-  as.geodata(cbind(coords,data_var))
 plot(GEODATA)
@@ -133,14 +126,15 @@ vt <- variogram(f, data = meuse)
 
 lz <- krige(data_var ~ 1, df, grid, v.fit)
 
-
+#! TODO: here!!!
 ##  https://rpubs.com/leydetd/spatialinterpolation1
 library(raster)
 library(sf)
 library(gstat)
 
-test_spa <- left_join(for_plots_sf, tre_cov2percent_har, by = "PlotID")  %>% filter(park == "MABI")
-test_spa2 <- as_Spatial(test_spa%>% filter(BA_m2ha < 250))
+test_spa <- left_join(for_plots_sf, tre_cov2percent_har, by = "PlotID")  %>% filter(park == "MABI")  
+test_spa <- test_spa[complete.cases(st_drop_geometry(test_spa)), ]
+test_spa2 <- as_Spatial(test_spa)
 
 # Extract coordinates as a matrix
 coords <- sf::st_coordinates(test_spa)
@@ -156,6 +150,8 @@ soil_matched <- projectRaster(soil, crs = st_crs(test_spa)$proj4string)
 
 crs(r_matched)
 crs(test_spa)
+crs(soil_matched)
+
 
 e <- extent(min(df$X) - 150, max(df$X) + 150,
             min(df$Y) - 150, max(df$Y) + 150)  # <-- change to your desired area
@@ -185,10 +181,7 @@ ba.var <- variogram(BA_m2ha ~ , data = test_spa2, locations = coords)
 plot(ba.var, plot.numbers = TRUE, pch = '+')
 
 ##Build the model
-ppt.vgm1 = vgm(psill = modsill2,
-               model = "Sph",
-               range = modrange2,
-               nugget = modnug)
+
 
 ppt.vgm2 <- fit.variogram(ba.var, vgm("Exp"))
 
@@ -225,10 +218,10 @@ combined_sf <- rbind(ele_sf, soil_sf)
 
 elesoil.pred <- krige(BA_m2ha ~ 1,
                     locations = test_spa,
-                    newdata = soil_sf,
+                    newdata = combined_sf,
                     model = ppt.vgm2)
 
-plot(ele.pred["var1.pred"],
+plot(elesoil.pred["var1.pred"],
      main = "Interpolated Basal Area Values",
      reset = FALSE, cex = 1.5, pch = 15)
 points(coords, cex = 1, col = "black", pch = 16)
@@ -242,7 +235,7 @@ points(coords, cex = 1, col = "black", pch = 16)
 points(xy_sf %>% filter(park == "MABI") %>% st_coordinates(), cex = 1, col = "white", pch = 16)
 
 
-plot(elesoil.pred["var1.pred"],
+plot(elesoil.pred["var1.var"],
      main = "Interpolated Basal Area Values",
      reset = FALSE, cex = 1.5, pch = 15)
 points(coords, cex = 1, col = "black", pch = 16)
