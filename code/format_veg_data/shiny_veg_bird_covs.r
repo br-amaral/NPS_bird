@@ -163,6 +163,9 @@ hist(as_tibble(aar_con) %>% pull(BA_sum_ha))
 hist(as_tibble(xy_sf2) %>% pull(tot_ba_m)) 
 hist(as_tibble(xy_sf2) %>% pull(tot_ba_wei))
 
+t.test(as_tibble(aar_con) %>% pull(BA_sum_ha), 
+           as_tibble(xy_sf2) %>% pull(tot_ba_wei))
+
 par(mfrow = c(1,1))
 plot(as_tibble(xy_sf2) %>% pull(tot_ba_m), as_tibble(xy_sf2) %>% pull(tot_ba_wei))
 
