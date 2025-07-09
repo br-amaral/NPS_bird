@@ -42,7 +42,6 @@ library(ggplot2)
 library(sf)
 library(dplyr)
 library(plotly)
-library(weights)  ## package for weighted means
 library(ggnewscale)  ## package for multiple scales
 
 conflicts_prefer(dplyr::select)
