@@ -79,22 +79,22 @@ parks         <- read_rds(file = PARK_SITE_PATH)
 veg_type      <- read_csv(file = VEG_TYP_PATH)
 bird_sit      <- read_rds(file = BIRD_SITE_PATH)
 
-bird_cats      <- read_rds(file = BIRD_FOR_PATH)
-for_cats       <- read_rds(file = FOR_FOR_PATH)
+bird_cat      <- read_rds(file = BIRD_FOR_PATH)
+for_cats      <- read_rds(file = FOR_FOR_PATH)
 for_plt       <- read_rds(file = FOR_PLOT_COVS)
 
 ## get site names for ROVA parks 
 VAMA_sites <- read_rds(file = VAMA_PARK_PATH) %>% 
-                select(park, for_plt)
+                select(park, for_sit)
 
 HOFR_sites <- read_rds(file = HOFR_PARK_PATH) %>% 
-                select(park, for_plt)
+                select(park, for_sit)
 
 ELRO_sites <- read_rds(file = ELRO_PARK_PATH) %>% 
-                select(park, for_plt)
+                select(park, for_sit)
 
 ROVA_sites <- rbind(VAMA_sites, HOFR_sites, ELRO_sites)  %>% 
-                rename(ParkUnit = park, Plot_Name = for_plt)
+                rename(ParkUnit = park, Plot_Name = for_sit)
 
 #! get coordinates from the bird sites ------------------------------
 parks <- parks %>% 
@@ -216,7 +216,7 @@ bird_sit_coord15 <- bird_sit_coord %>%
 # link forest types with sites
 ## first clkassify all forest types, so we can classify them in forest and not forest
 bird_sit_coord2 <- left_join(bird_sit_coord15, 
-                              bird_cats %>% 
+                              bird_cat %>% 
                                 rename(bird_sit = Point_Name,
                                         b_for = MapUnit_ID) %>% 
                                 select(bird_sit, b_for),
@@ -234,11 +234,10 @@ for(ii in 1:nrow(for_cats)){
     }
 }
 
-for_plt_coord2 <- left_join(for_plt_coord %>% 
-                              rename(for_plt = for_sit), 
+for_plt_coord2 <- left_join(for_plt_coord, 
                             for_cats %>% 
                               rename(for_plt = ID,
-                                      f_for = MapUnit_ID) %>% 
+                                     f_for = MapUnit_ID) %>% 
                               select(for_plt, f_for, geometry, park),
                             by = "for_plt") %>% 
                     filter(!is.na(f_for)) %>% 
@@ -377,7 +376,7 @@ for (ii in 1:nrow(bird_sit_coord2)) {
       }
     rm(close_points)
   }
-  print(ii)
+  #print(ii)
 }
 
 # connects forest and bird sites
@@ -436,8 +435,6 @@ table(close_points_f$for_b) %>% sort()
 
 table(close_points_f$for_f) %>% sort()
 
-table(for_plt$SampleYear) %>% max()
-
 #? get means for all bird sites ----------------------------------------------
 for_plt2 <- for_plt %>% 
                 rename(for_plt = Plot_Name)
@@ -476,29 +473,8 @@ bird_sit_covs1 <- bird_sit_covs  %>%
                              regen_den_m2 =        ifelse(regen_den_m2 == 0, regen_den_m2 + 0.001, regen_den_m2),
                              shrub_cov_nat =       ifelse(shrub_cov_nat == 0, shrub_cov_nat + 0.001, shrub_cov_nat),
                              shrub_cov_nonat =     ifelse(shrub_cov_nonat == 0, shrub_cov_nonat + 0.001, shrub_cov_nonat),
-                             cwd =                 ifelse(cwd == 0, cwd + 0.001, cwd)) # %>%
-                      # group_by(bird_sit) %>% 
-                      # summarise(BA_m2ha_wei =             (sum(BA_m2ha * 1/dist))/sum(1/dist),
-                      #           BA_m2ha_Conifer_wei =     (sum(BA_m2ha_Conifer * 1/dist))/sum(1/dist),
-                      #           BA_m2ha_Hardwood_wei =    (sum(BA_m2ha_Hardwood * 1/dist))/sum(1/dist),
-                      #           BA_m2ha_large_wei =       (sum(BA_m2ha_large * 1/dist))/sum(1/dist),
-                      #           BA_m2ha_mature_wei =      (sum(BA_m2ha_mature * 1/dist))/sum(1/dist),
-                      #           BA_m2ha_pole_wei =        (sum(BA_m2ha_pole * 1/dist))/sum(1/dist),
-                      #           treeden_ha_wei =          (sum(treeden_ha * 1/dist))/sum(1/dist),
-                      #           treeden_ha_Conifer_wei =  (sum(treeden_ha_Conifer * 1/dist))/sum(1/dist),
-                      #           treeden_ha_Hardwood_wei = (sum(treeden_ha_Hardwood * 1/dist))/sum(1/dist),
-                      #           treeden_ha_large_wei =    (sum(treeden_ha_large * 1/dist))/sum(1/dist),
-                      #           treeden_ha_mature_wei =   (sum(treeden_ha_mature * 1/dist))/sum(1/dist),
-                      #           treeden_ha_pole_wei =     (sum(treeden_ha_pole * 1/dist))/sum(1/dist),
-                      #           seed_den_m2_wei =         (sum(seed_den_m2 * 1/dist))/sum(1/dist),
-                      #           sap_den_m2_wei =          (sum(sap_den_m2 * 1/dist))/sum(1/dist),
-                      #           regen_den_m2_wei =        (sum(regen_den_m2 * 1/dist))/sum(1/dist),
-                      #           shrub_cov_nat_wei =       (sum(shrub_cov_nat * 1/dist))/sum(1/dist),
-                      #           shrub_cov_nonat_wei =     (sum(shrub_cov_nonat * 1/dist))/sum(1/dist),
-                      #           cwd_wei =                 (sum(cwd * 1/dist))/sum(1/dist)
-                      #          ) %>% 
-                      # ungroup()
-
+                             cwd =                 ifelse(cwd == 0, cwd + 0.001, cwd)) 
+                             
 # Get list of columns to calculate weighted means for
 weight_cols <- c("BA_m2ha", "BA_m2ha_Conifer", "BA_m2ha_Hardwood", "BA_m2ha_large", "BA_m2ha_mature", "BA_m2ha_pole", 
                  "treeden_ha", "treeden_ha_Conifer", "treeden_ha_Hardwood", "treeden_ha_large", "treeden_ha_mature", "treeden_ha_pole", 
