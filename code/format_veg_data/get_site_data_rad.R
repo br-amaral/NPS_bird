@@ -402,24 +402,24 @@ for(ii in 1:lenght(parks)){
                       filter(substr(bird_sit, 1, 4) == plop)
 
   p2 <- 
-  ggplot(close_points_f3) +
-    geom_segment(aes(x = lonutmb, y = latutmb, 
-                      xend = lonutmf, yend = latutmf, 
-                      colour = bird_sit)) +
-    geom_point(aes(x = lonutmb, 
-                    y = latutmb,
-                    colour = bird_sit),
-              size = 3) +
-    geom_point(aes(x = lonutmf, 
-                    y = latutmf),
-              size = 3,
-              color = "#186A3B",
-              shape = 15) +
-geom_text(aes(x = lonutmb, y = latutmb, 
-              label = substr(bird_sit, 5, nchar(bird_sit))), 
-              size = 5, vjust = -1.3) +
-    theme_bw() +
-    labs(title = parks[ii])
+    ggplot(close_points_f3) +
+      geom_segment(aes(x = lonutmb, y = latutmb, 
+                        xend = lonutmf, yend = latutmf, 
+                        colour = bird_sit)) +
+      geom_point(aes(x = lonutmb, 
+                      y = latutmb,
+                      colour = bird_sit),
+                size = 3) +
+      geom_point(aes(x = lonutmf, 
+                      y = latutmf),
+                size = 3,
+                color = "#186A3B",
+                shape = 15) +
+      geom_text(aes(x = lonutmb, y = latutmb, 
+                    label = substr(bird_sit, 5, nchar(bird_sit))), 
+                    size = 5, vjust = -1.3) +
+      theme_bw() +
+      labs(title = parks[ii])
     #)
   print(p2)
   #library(plotly)
