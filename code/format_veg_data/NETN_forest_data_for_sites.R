@@ -1,5 +1,5 @@
 #? *********************************************************************************
-#? -------------------------------   Amazing Title   -------------------------------
+#? ------------------------  NETN_forest_data_for_sites.R  -------------------------
 #? *********************************************************************************
 #! Code to ...
 #
@@ -19,10 +19,10 @@
 #           - data/veg_kateaaron/NETN_forest_metadata.csv : meta data with info of the columns of the forest variables
 #
 # detach packages and clear workspace
-if(!require(freshr)){install.packages('freshr')}
 freshr::freshr()
 #
-# Load packages ---------------------------------------
+#? Load packages ---------------------------------------
+library(tidyr)
 library(conflicted)
 library(tidyverse)
 library(glue)
@@ -32,80 +32,261 @@ conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::filter)
 # conflicts_prefer(scales::alpha)
 #
-# Make functions --------------------------------------
+#? Make functions --------------------------------------
 colanmes <- colnames
 lenght <- length
 `%!in%` <- Negate(`%in%`)
+
+Modes <- function(x) {
+  ux <- unique(x)
+  tab <- tabulate(match(x, ux))
+  if(length(ux[tab == max(tab)]) > 1) {
+    sample(ux[tab == max(tab)], 1)
+    } else {
+      ux[tab == max(tab)]}
+}
+
 #
-# Source code -----------------------------------------
+#? Source code -----------------------------------------
 #
-# Import data -----------------------------------------
+#? Import data -----------------------------------------
 ## file paths
 path <- glue("{getwd()}/data/veg_kateaaron") #"C:/NETN/collaborators/Bruna/"
 
 ## read files
 importCSV(path, zip_name = "NETN_Forest_20231106.zip")
 
-plots <- joinLocEvent() |> #filter(!ParkUnit %in% "ACAD") |> 
-  select(Plot_Name, SampleYear, ParkUnit, X = xCoordinate, Y = yCoordinate, UTMZone = ZoneCode)
+tree_cat <- read_csv("data/tree_sps_harcon.csv")
 
-tree_den_spp <- joinTreeData(status = "live") |> #filter(!ParkUnit %in% "ACAD") |> 
-  group_by(Plot_Name, SampleYear, ScientificName) |> 
-  summarize(treeden_ha = sum(num_stems, na.rm = T)*25, # conversion to stems/ha = 10000/400
-            BA_m2ha = sum(BA_cm2, na.rm = T)/400) #cm2 to m2 cancels out, so just /400m2 plot.
+#? Unique Forest Plots
+plots <- joinLocEvent() %>%
+  select(Plot_Name, ParkUnit, X = xCoordinate, Y = yCoordinate, UTMZone = ZoneCode) %>% 
+  distinct()
 
-tree_rich <- tree_den_spp |> group_by(Plot_Name, SampleYear) |> 
-                summarize(tree_rich = sum(!is.na(ScientificName)))
+#? Density and Basal Area
+# by species
+table(table(joinTreeData(status = "live") %>% select(Plot_Name, SampleYear))>1)
 
-tree_den <- joinTreeData(status = "live") |> #filter(!ParkUnit %in% "ACAD") |> 
-  group_by(Plot_Name, SampleYear) |> 
-  summarize(treeden_ha = sum(num_stems, na.rm = T)*25, # conversion to stems/ha = 10000/400
-            BA_m2ha = sum(BA_cm2, na.rm = T)/400) #cm2 to m2 cancels out, so just /400m2 plot.
+tree_den_spp <- joinTreeData(status = "live") %>% 
+                    filter(ParkUnit %!in% c("ACAD", "ELRO", "SAIR"),
+                                  ScientificName != "None present") %>% 
+                    group_by(Plot_Name, SampleYear, ScientificName) %>%
+                    summarize(treeden_ha = sum(num_stems, na.rm = T)*25, # conversion to stems/ha = 10000/400
+                              BA_m2ha = sum(BA_cm2, na.rm = T)/400) %>%  # cm2 to m2 cancels out, so just /400m2 plot.
+                    group_by(Plot_Name, ScientificName) %>%
+                    summarize(treeden_ha = mean(treeden_ha, na.rm = T),  
+                              BA_m2ha = mean(BA_m2ha, na.rm = T))
+                              
+# total
+tree_den <- tree_den_spp %>% 
+                    group_by(Plot_Name) %>%
+                    summarize(treeden_ha = sum(treeden_ha, na.rm = T),  
+                              BA_m2ha = sum(BA_m2ha, na.rm = T))
 
-stand <- sumStrStage() |> #filter(!ParkUnit %in% "ACAD") |> 
-select(Plot_Name, SampleYear, Stage, pctBA_pole, pctBA_mature, pctBA_large) 
+# by size class: classify each tree accoding to DBH in BA and density of pole, mature, and large
+# size classes are 10-25.9 cm DBH (pole), 26-45.9 cm DBH (mature) and ≥ 46 cm DBH (large).
+tree_den_sizeclass <- joinTreeData(status = "live") %>% 
+                          filter(ParkUnit %!in% c("ACAD", "ELRO", "SAIR"),
+                                  ScientificName != "None present") %>% 
+                          mutate(size_class = case_when(
+                                  DBHcm >= 10 & DBHcm < 26 ~ "pole",
+                                  DBHcm >= 26 & DBHcm < 46 ~ "mature", 
+                                  DBHcm >= 46 ~ "large",
+                                  TRUE ~ "other"  # for DBH < 10cm or any other cases
+                              )) %>%
+                          group_by(Plot_Name, SampleYear, size_class) %>%
+                          summarize(treeden_ha = sum(num_stems, na.rm = T)*25, # conversion to stems/ha = 10000/400
+                                    BA_m2ha = sum(BA_cm2, na.rm = T)/400) %>%  # cm2 to m2 cancels out, so just /400m2 plot.
+                          group_by(Plot_Name, size_class) %>%
+                          summarize(treeden_ha = mean(treeden_ha, na.rm = T),  
+                                    BA_m2ha = mean(BA_m2ha, na.rm = T)) %>% 
+                          ungroup() %>% 
+                          distinct()
 
-reg <- joinRegenData(units = "sq.m") |> #filter(!ParkUnit %in% "ACAD") |> 
-  select(Plot_Name, SampleYear, sap_den) |> 
-  group_by(Plot_Name, SampleYear) |> 
-  summarize(sap_den_m2 = sum(sap_den, na.rm = T))
+tree_den_sizeclass  %>%  filter(size_class == "other")
 
-shrub <- joinMicroShrubData() |> #filter(!ParkUnit %in% "ACAD") |> 
-  select(Plot_Name, SampleYear, shrub_avg_cov) |> 
-  group_by(Plot_Name, SampleYear) |> 
-  summarize(shrub_cov = sum(shrub_avg_cov)) 
+tree_sizeclass <- pivot_wider(tree_den_sizeclass, names_from = size_class, values_from = c(treeden_ha, BA_m2ha))
 
-# Combine data 
-comb <- purrr::reduce(list(plots, tree_den, tree_rich, stand, reg, shrub), left_join, by = c("Plot_Name", "SampleYear"))
-comb <- as_tibble(comb)
+# Only olds: BA > 60? Kate's suggestion
+
+#? Percent conifer and hardwood
+conha_cov <- joinTreeData(park = 'all', status = "live") %>% 
+                as_tibble() 
+
+tree_sps <- as_tibble(sort(unique((conha_cov$ScientificName))))  %>% 
+                rename(ScientificName = value) %>% 
+                mutate(genus = word(ScientificName, 1)) %>% 
+                filter(genus != "Unknown",
+                       genus != "None")
+
+tree_sps$genus %>% unique()
+
+tree_sps <- left_join(tree_sps, tree_cat, by = "genus")
+
+# tre_cov_test <- left_join(tre_cov %>% rename(sps = ScientificName), tree_sps, by = "sps")  %>% 
+#                 select(Plot_Name, Network, ParkUnit, SampleYear,
+#                     sps, genus, type, BA_cm2) %>% 
+#         filter(Plot_Name == "MABI-013") 
+
+# table(tre_cov_test$genus)
+
+# table(tre_cov %>% 
+#         filter(Plot_Name == "MABI-013")  %>% select(SampleYear))
+
+har_con <- joinTreeData(status = "live") %>% 
+                filter(ParkUnit %!in% c("ACAD", "ELRO", "SAIR"),
+                       ScientificName != "None present") %>% 
+                left_join(., tree_sps  %>% select(-genus), by = "ScientificName") %>% 
+                group_by(Plot_Name, SampleYear, type) %>%
+                summarize(treeden_ha = sum(num_stems, na.rm = T)*25, # conversion to stems/ha = 10000/400
+                          BA_m2ha = sum(BA_cm2, na.rm = T)/400) %>%
+                arrange(Plot_Name, type)  %>% 
+                group_by(Plot_Name, type) %>% 
+                summarize(treeden_ha = mean(treeden_ha, na.rm = T),  
+                          BA_m2ha = mean(BA_m2ha, na.rm = T)) %>% 
+                ungroup()
+
+# fill in 0% of conifer or hardwood in plots with only one forest type
+all_plots <- sort(unique(har_con$Plot_Name))
+all_types <- c("Conifer", "Hardwood")
+
+# Complete the har_con data to include all combinations
+har_con <- har_con %>%
+              complete(Plot_Name = all_plots, 
+                      type = all_types, 
+                      fill = list(treeden_ha = 0, BA_m2ha = 0)) %>% 
+              #group_by(Plot_Name) %>% 
+              #mutate(per_con_den = treeden_ha[type == "Conifer"] / sum(treeden_ha),
+              #      per_con_BA = BA_m2ha[type == "Conifer"] / sum(BA_m2ha)) %>%
+              #ungroup()
+              pivot_wider(names_from = "type", values_from = c("treeden_ha", "BA_m2ha"))
+
+#? percentage of each state
+table(table(sumStrStage() %>% select(Plot_Name, SampleYear))>1)
+
+stand <- sumStrStage() %>% 
+            select(Plot_Name, SampleYear, Stage, pctBA_pole, pctBA_mature, pctBA_large) %>% 
+             group_by(Plot_Name, SampleYear) %>%
+                summarize(Stage = Modes(Stage),
+                          pctBA_pole = mean(pctBA_pole), 
+                          pctBA_mature = mean(pctBA_mature), 
+                          pctBA_large = mean(pctBA_large)) %>% 
+             group_by(Plot_Name) %>%
+                summarize(Stage = Modes(Stage),
+                          #test = sum(pctBA_pole, pctBA_mature, pctBA_large),
+                          pctBA_pole = mean(pctBA_pole), 
+                          pctBA_mature = mean(pctBA_mature), 
+                          pctBA_large = mean(pctBA_large))
+
+#? density of sapling 
+table(table(joinRegenData(units = "sq.m") %>% select(Plot_Name, SampleYear))>1)
+
+reg <- joinRegenData(units = "sq.m") %>% 
+          select(Plot_Name, SampleYear, seed_den, sap_den, regen_den) %>%
+          group_by(Plot_Name, SampleYear) %>%
+                    summarize(seed_den = sum(seed_den, na.rm = T), 
+                              sap_den = sum(sap_den, na.rm = T), 
+                              regen_den = sum(regen_den, na.rm = T)) %>%  
+          group_by(Plot_Name) %>%
+          summarize(seed_den_m2 = mean(seed_den, na.rm = T),
+                    sap_den_m2 = mean(sap_den, na.rm = T),
+                    regen_den_m2 = mean(regen_den, na.rm = T))
+
+table(table(joinMicroShrubData() %>% select(Plot_Name, SampleYear))>1)
+table(joinMicroShrubData() %>% select(InvasiveNETN))
+table(joinMicroShrubData() %>% select(Shrub))
+table(joinMicroShrubData() %>% select(Vine))
+
+#? shrub
+shrub <- joinMicroShrubData() %>%  
+            as_tibble() %>% 
+            filter(Shrub == 1) %>% 
+            select(Plot_Name, SampleYear, Shrub, shrub_avg_cov, Exotic, InvasiveNETN) %>% 
+            filter(!is.na(shrub_avg_cov)) %>% 
+            #mutate(test = ifelse(Exotic == InvasiveNETN, T, F))  %>% 
+            mutate(non_nat = (Exotic == TRUE | InvasiveNETN == TRUE)) %>% 
+# shrub[,c(29,24,25,26,28)] %>% distinct()
+            group_by(Plot_Name, SampleYear, non_nat) %>%
+            summarize(shrub_avg_cov = sum(shrub_avg_cov, na.rm = T)) %>%  
+            group_by(Plot_Name, non_nat) %>%
+            summarize(shrub_avg_cov = mean(shrub_avg_cov, na.rm = T))  %>% 
+            pivot_wider(names_from = non_nat, 
+                        values_from = shrub_avg_cov, 
+                        names_prefix = "shrub_cov_invasive_") %>% 
+            mutate(across(everything(), ~replace_na(.x, 0))) %>% 
+            rename(shrub_cov_nat = shrub_cov_invasive_FALSE,
+                   shrub_cov_nonat = shrub_cov_invasive_TRUE)
+
+#? Coarse wood debris?
+cwd <- joinCWDData(park = 'all') %>% # coarse wood debris
+          as_tibble() %>%        
+          filter(ParkUnit %!in% c("ACAD", "ELRO", "SAIR"),
+                 ScientificName != "None present") %>%    
+          select(Plot_Name, SampleYear, ParkUnit, CWD_Vol) %>% 
+          group_by(Plot_Name, SampleYear) %>% 
+          summarize(deb_m = sum(CWD_Vol, na.rm = T)) %>% 
+          group_by(Plot_Name) %>% 
+          summarize(cwd = mean(deb_m, na.rm = T)) %>%
+          distinct()
+
+#? Combine data 
+comb <- left_join(plots , tree_den, by = "Plot_Name") %>% 
+              left_join(., shrub, by = "Plot_Name") %>% 
+              left_join(., har_con, by = "Plot_Name") %>% 
+              left_join(., reg, by = "Plot_Name") %>% 
+              left_join(., stand, by = "Plot_Name") %>% 
+              left_join(., tree_sizeclass, by = "Plot_Name") %>% 
+              left_join(., cwd, by = "Plot_Name") %>% 
+              as_tibble() %>% 
+              filter(ParkUnit %in% c( "MABI", "MIMA", "MORR", "SAGA", "SARA", "ROVA", "WEFA"))
+
+comb %>% DT::datatable()
+
+table(comb$ParkUnit)
+table(comb %>% filter(!is.na(shrub_cov_nat)) %>% select(ParkUnit))  # SAGA has a lot of NAs here
 
 comb_sites <- comb %>% 
     select(Plot_Name, X, Y, UTMZone) %>% 
     distinct() %>% 
     arrange()
 
-# Brief metadata for each column name
-metadata <- data.frame(column = names(comb), 
-                       description = c("Unique name of the plot", 
-                                       "Year plot was sampled",
-                                       "4-letter park code",
-                                       "X coordinate in UTM NAD83",
-                                       "Y coordinate in UTM NAD83",
-                                       "UTM Zone- either 18N or 19N",
-                                       "Density of live trees >=10cm DBH in stems/ha",
-                                       "Basal area of live trees >=10cm DBH in m2/ha",
-                                       "Number of species in the live tree strata per 400m2 plot",
-                                       "Structural stage of tree stand",
-                                       "percent BA in pole size (>=10 and < 26cm)",
-                                       "percent BA in mature size (>=26 and < 45.9cm)",
-                                       "percent BA in large size (>=45.9cm DBH)",
-                                       "sapling density in stems/m2",
-                                       "Average percent shrub cover. Note that we started collecting this in 2010, the start of cycle 2."
-                                       ))
+write_rds(comb, file = "data/out/for_plot_covs.rds")
 
-# Write to file
-write_rds(comb, paste0(path, "/", "NETN_forest_data_2006-2023.rds"))
-write_rds(comb_sites, paste0(path, "/", "for_sites.rds"))
-write_rds(tree_den_spp, paste0(path, "/", "NETN_tree_dens_spp_2006-2023.rds"))
-write.csv(metadata, paste0(path, "/", "NETN_forest_metadata.csv"), row.names = F)
+# # Brief metadata for each column name
+# metadata <- data.frame(column = names(comb), 
+#                        description = c("Unique name of the plot", 
+#                                        "Year plot was sampled",
+#                                        "4-letter park code",
+#                                        "X coordinate in UTM NAD83",
+#                                        "Y coordinate in UTM NAD83",
+#                                        "UTM Zone- either 18N or 19N",
+#                                        "Density of live trees >=10cm DBH in stems/ha",
+#                                        "Basal area of live trees >=10cm DBH in m2/ha",
+#                                        "Number of species in the live tree strata per 400m2 plot",
+#                                        "Structural stage of tree stand",
+#                                        "percent BA in pole size (>=10 and < 26cm)",
+#                                        "percent BA in mature size (>=26 and < 45.9cm)",
+#                                        "percent BA in large size (>=45.9cm DBH)",
+#                                        "sapling density in stems/m2",
+#                                        "Average percent shrub cover. Note that we started collecting this in 2010, the start of cycle 2."
+#                                        ))
 
+# # Write to file
+# write_rds(comb, paste0(path, "/", "NETN_forest_data_2006-2023.rds"))
+# write_rds(comb_sites, paste0(path, "/", "for_sites.rds"))
+# write_rds(tree_den_spp, paste0(path, "/", "NETN_tree_dens_spp_2006-2023.rds"))
+# write.csv(metadata, paste0(path, "/", "NETN_forest_metadata.csv"), row.names = F)
+
+site_data_full <- comb %>%
+                      filter(complete.cases(.)) %>%
+                      filter(if_all(where(is.numeric), is.finite))
+
+site.pca <- prcomp(site_data_full %>% select(-Plot_Name, -ParkUnit, -X, -Y, -UTMZone, -Stage), center = TRUE, scale. = TRUE)
+
+ggbiplot::ggbiplot(site.pca, groups = site_data_full$ParkUnit, ellipse = TRUE) +
+  scale_color_discrete(name = "ParkUnit") +
+  theme_bw()
+  
+summary(site.pca)
+
+site.pca$rotation
