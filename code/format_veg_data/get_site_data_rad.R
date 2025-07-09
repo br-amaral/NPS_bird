@@ -321,8 +321,8 @@ for (ii in 1:nrow(bird_sit_coord2)) {
     # are the bird sites and forest plots in the same forest type?
     # if the answer is yes, we calculate the distance between them
     if((bird_sit_coord2$bir_veg[ii] == for_plt_coord4$for_veg[jj]) == TRUE){
-      print(for_plt_coord4$for_plt[jj])
-      print(jj)
+      #print(for_plt_coord4$for_plt[jj])
+      #print(jj)
 
       band2 <- as.numeric(for_plt_coord4$UTMZone[jj])
       x <- spTransform(xy[ii,], CRS(glue("+proj=utm +zone={band2} +datum=WGS84 +units=m")))
@@ -474,7 +474,7 @@ bird_sit_covs1 <- bird_sit_covs  %>%
                              shrub_cov_nat =       ifelse(shrub_cov_nat == 0, shrub_cov_nat + 0.001, shrub_cov_nat),
                              shrub_cov_nonat =     ifelse(shrub_cov_nonat == 0, shrub_cov_nonat + 0.001, shrub_cov_nonat),
                              cwd =                 ifelse(cwd == 0, cwd + 0.001, cwd)) 
-                             
+
 # Get list of columns to calculate weighted means for
 weight_cols <- c("BA_m2ha", "BA_m2ha_Conifer", "BA_m2ha_Hardwood", "BA_m2ha_large", "BA_m2ha_mature", "BA_m2ha_pole", 
                  "treeden_ha", "treeden_ha_Conifer", "treeden_ha_Hardwood", "treeden_ha_large", "treeden_ha_mature", "treeden_ha_pole", 
