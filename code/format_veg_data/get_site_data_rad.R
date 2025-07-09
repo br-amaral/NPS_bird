@@ -70,6 +70,7 @@ FOR_FOR_PATH      <- "data/out/key_fsite.rds"
 PARK_SITE_PATH    <- "data/src/key_park.rds"
 FOR_PLOT_COVS     <- "data/out/for_plot_covs.rds"
 VEG_TYP_PATH      <- "data/out/updated_for_cats.csv"   
+
 VAMA_PARK_PATH    <- "data/VAMA_sites.rds"
 HOFR_PARK_PATH    <- "data/HOFR_sites.rds"
 ELRO_PARK_PATH    <- "data/ELRO_sites.rds"
