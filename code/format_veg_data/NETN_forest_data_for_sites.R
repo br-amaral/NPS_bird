@@ -230,13 +230,13 @@ cwd <- joinCWDData(park = 'all') %>% # coarse wood debris
           distinct()
 
 #? Combine data 
-comb <- left_join(plots , tree_den, by = "Plot_Name") %>% 
-              left_join(., shrub, by = "Plot_Name") %>% 
-              left_join(., har_con, by = "Plot_Name") %>% 
-              left_join(., reg, by = "Plot_Name") %>% 
-              left_join(., stand, by = "Plot_Name") %>% 
-              left_join(., tree_sizeclass, by = "Plot_Name") %>% 
-              left_join(., cwd, by = "Plot_Name") %>% 
+comb <- full_join(plots , tree_den, by = "Plot_Name") %>% 
+              full_join(., shrub, by = "Plot_Name") %>% 
+              full_join(., har_con, by = "Plot_Name") %>% 
+              full_join(., reg, by = "Plot_Name") %>% 
+              full_join(., stand, by = "Plot_Name") %>% 
+              full_join(., tree_sizeclass, by = "Plot_Name") %>% 
+              full_join(., cwd, by = "Plot_Name") %>% 
               as_tibble() %>% 
               filter(ParkUnit %in% c( "MABI", "MIMA", "MORR", "SAGA", "SARA", "ROVA", "WEFA"))
 
