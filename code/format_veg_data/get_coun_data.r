@@ -57,14 +57,14 @@ Modes <- function(x) {
 # master table with parks and counties
 # county location of each park
 park_county <- matrix(c(
-  'ACAD', 'Hancock County', 'Maine','ME',
+  #'ACAD', 'Hancock County', 'Maine','ME',
   'ELRO', 'Dutchess County', 'New York','NY',
   'HOFR', 'Dutchess County', 'New York','NY',
   'MABI', 'Windsor County', 'Vermont','VT',
   'MIMA', 'Middlesex County', 'Massachusetts','MA',  
   'MORR', 'Morris County', 'New Jersey','NJ',
   'SAGA', 'Sullivan County', 'New Hampshire','NH',
-  'SAIR', 'Essex County', 'Massachusetts','MA',
+  #'SAIR', 'Essex County', 'Massachusetts','MA',
   'SARA', 'Saratoga County', 'New York','NY',
   'VAMA', 'Dutchess County', 'New York','NY',
   'WEFA', 'Western Connecticut Planning Region', 'Connecticut','CT'), # used to be 'Fairfield County'
@@ -107,176 +107,221 @@ for(ii in 1:nrow(park_county)){
 
 }
 
+# conifer area Estimate forest land area from FIADB
+## or TPA by bySpecies
+## TPA bySizeClass
+
 ###? Tree basal area and density -----------------------------------------
+# conversion to stems/ha = 10000/400
+# cm2 to m2 cancels out, so just /400m2 plot.
+
+# by species
 for(ii in 1:nrow(park_county)){
-  tpaRI <- tpa(get(glue("fia_{park_county$park[ii]}")), totals = TRUE) %>% 
-    select(YEAR, TPA, BAA, TREE_TOTAL, BA_TOTAL, TPA_SE, BAA_SE, TREE_TOTAL_SE) %>% 
-    mutate(park = park_county$park[ii])
-  
+  tpaRI <- tpa(get(glue("fia_{park_county$park[ii]}")), 
+               #totals = TRUE, 
+               byPlot = TRUE, 
+               treeType = 'live',
+               bySpecies = TRUE,
+               treeDomain =  DIA <5.0) %>%    # exclude saplings
+               group_by(pltID, YEAR, SCIENTIFIC_NAME) %>%
+               # sum all trees of the same sps to get sps ba and den
+               summarize(treeden_ha = sum(TPA, na.rm = T) * 2.47105,    # convert trees per acre to trees per hectare 
+                         BA_m2ha = sum(BAA, na.rm = T) * 0.229568) %>%  # convert ft²/acre to m²/ha
+               group_by(pltID, SCIENTIFIC_NAME) %>%
+               # take the mean over the years to capture diferences between plots
+               summarize(treeden_ha = mean(treeden_ha, na.rm = T),  
+                         BA_m2ha = mean(BA_m2ha, na.rm = T)) %>% 
+               mutate(park = park_county$park[ii])  %>% 
+               ungroup() %>% 
+               distinct()
+
   if(ii == 1){
-    tpa_tab2 <- tpaRI
+    tpa_tab_sps <- tpaRI
   }
   
   if(ii > 1){
-    tpa_tab2 <- rbind(tpa_tab2, tpaRI)
+    tpa_tab_sps <- rbind(tpa_tab_sps, tpaRI)
   }
 }
 
-tpa_tab <- tpa_tab2 %>% 
-  group_by(park) %>% 
-  summarise(across(c(TPA, BAA, TREE_TOTAL, BA_TOTAL), 
-                   ~ mean(.x, na.rm = TRUE), 
-                   .names = "{.col}"))
+tree_cat <- read_csv("data/tree_sps_harcon.csv")
+
+tree_sps <- as_tibble(sort(unique((tpa_tab_sps$SCIENTIFIC_NAME))))  %>% 
+                rename(sps = value) %>% 
+                mutate(genus = word(sps, 1)) %>% 
+                filter(genus != "Unknown",
+                       genus != "None")
+
+tree_sps$genus %>% unique()
+
+tree_sps <- left_join(tree_sps, tree_cat, by = "genus")  %>% 
+                select(-genus) %>% 
+                rename(SCIENTIFIC_NAME = sps)
+
+table(is.na(tree_sps$type))
+
+tree_sps %>% filter(is.na(type))
+
+tpa_covs <- tpa_tab_sps  %>% 
+                  left_join(., tree_sps, by = "SCIENTIFIC_NAME")  %>% 
+                  group_by(pltID, type) %>% 
+                  mutate(treeden_ha = sum(treeden_ha, na.rm = T), 
+                         BA_m2ha = sum(BA_m2ha, na.rm = T)) %>% 
+                  ungroup() %>% 
+                  select(-SCIENTIFIC_NAME) %>% 
+                  distinct() %>% 
+                  arrange(pltID) %>% 
+                  pivot_wider(names_from = "type", values_from = c("treeden_ha", "BA_m2ha"), values_fill = 0) %>% 
+# total
+                  mutate(treeden_ha = (treeden_ha_Hardwood + treeden_ha_Conifer),
+                         BA_m2ha = (BA_m2ha_Hardwood + BA_m2ha_Conifer))
+
+# by size class: classify each tree accoding to DBH in BA and density of pole, mature, and large
+# size classes are 10-25.9 cm DBH (pole), 26-45.9 cm DBH (mature) and ≥ 46 cm DBH (large).
+
+for(ii in 1:nrow(park_county)){
+    tpa_pole <- tpa(get(glue("fia_{park_county$park[ii]}")), 
+                  #totals = TRUE, 
+                  byPlot = TRUE,
+                  treeDomain =  DIA >= 10/2.54 & DIA < 26/2.54,   ## cm to inches
+                  treeType = 'live') %>% 
+                  mutate(siz_cla = "pole") %>% 
+                  group_by(pltID) %>% 
+                  summarise(treeden_ha_pole = sum(TPA, na.rm = T) * 2.47105,    # convert trees per acre to trees per hectare 
+                            BA_m2ha_pole = sum(BAA, na.rm = T) * 0.229568)
+
+    tpa_mature <- tpa(get(glue("fia_{park_county$park[ii]}")), 
+                  #totals = TRUE, 
+                  byPlot = TRUE,
+                  treeDomain =  DIA >= 26/2.54 & DIA < 46/2.54,   ## cm to inches
+                  treeType = 'live') %>% 
+                  mutate(siz_cla = "mature") %>% 
+                  group_by(pltID) %>% 
+                  summarise(treeden_ha_mature = sum(TPA, na.rm = T) * 2.47105,    # convert trees per acre to trees per hectare 
+                            BA_m2ha_mature = sum(BAA, na.rm = T) * 0.229568)
+
+    tpa_large <- tpa(get(glue("fia_{park_county$park[ii]}")), 
+                  #totals = TRUE, 
+                  byPlot = TRUE,
+                  treeDomain =  DIA >= 46/2.54,   ## cm to inches
+                  treeType = 'live') %>% 
+                  mutate(siz_cla = "large") %>% 
+                  group_by(pltID) %>% 
+                  summarise(treeden_ha_large = sum(TPA, na.rm = T) * 2.47105,    # convert trees per acre to trees per hectare 
+                            BA_m2ha_large = sum(BAA, na.rm = T) * 0.229568)
+
+    tpa_stage_loop <- full_join(tpa_pole, tpa_mature, by = "pltID") %>% 
+                          full_join(., tpa_large, by = "pltID") %>% 
+                          mutate(park = park_county$park[ii]) 
+
+    if(ii == 1){
+      tpa_stage <- tpa_stage_loop
+    }
+    
+    if(ii > 1){
+      tpa_stage <- rbind(tpa_stage, tpa_stage_loop)
+    }
+  }
+
 
 ###? Stand structure ----------------------------------------------------
 for(ii in 1:nrow(park_county)){
-  stastr <- standStruct(get(glue("fia_{park_county$park[ii]}"))) %>% 
-    select(YEAR, STAGE, COVER_PCT, COVER_PCT_SE) %>% 
-    mutate(park = park_county$park[ii])
-  if(ii == 1){
-    stastr_tab2 <- stastr
-  }
-  
-  if(ii > 1){
-    stastr_tab2 <- rbind(stastr_tab2, stastr)
-  }
-}
+    stastr <- standStruct(get(glue("fia_{park_county$park[ii]}")), 
+                  byPlot = TRUE) %>% arrange(pltID) %>% 
+                  group_by(pltID, STAGE) %>% 
+                  summarise(percen_cov = mean(PROP_STAGE)) %>% 
+                  pivot_wider(names_from = STAGE, values_from = percen_cov, values_fill = 0) %>% 
+                  select(-MOSAIC) %>% 
+                  rename(pctCANCOV_pole = POLE,
+                         pctCANCOV_mature = MATURE,
+                         pctCANCOV_late = LATE) %>% 
+                  mutate(park = park_county$park[ii])
 
-stastr_tab <- stastr_tab2 %>% 
-  group_by(park,STAGE) %>% 
-  summarise(across(c(YEAR, COVER_PCT), 
-                   ~ mean(.x, na.rm = TRUE), 
-                   .names = "{.col}"))
+    if(ii == 1){
+      stastr_tab2 <- stastr
+    }
+    
+    if(ii > 1){
+      stastr_tab2 <- rbind(stastr_tab2, stastr)
+    }
+  }
 
-###? Tree richness ----------------------------------------- 
+# seedling
 for(ii in 1:nrow(park_county)){
-  div <- diversity(get(glue("fia_{park_county$park[ii]}"))) %>% 
-    select(YEAR, H_a, Eh_a, S_a, H_b, Eh_b, S_b, H_g, Eh_g, S_g,
-           Eh_a_SE, S_a_SE) %>% 
-    mutate(park = park_county$park[ii])
-  if(ii == 1){
-    div_tab2 <- div
-  }
-  
-  if(ii > 1){
-    div_tab2 <- rbind(div_tab2, div)
-  }
-}
 
-div_tab <- div_tab2 %>% 
-  group_by(park) %>% 
-  summarise(across(c(H_a, Eh_a, S_a, H_b, Eh_b, S_b, H_g, Eh_g, S_g), 
-                   ~ mean(.x, na.rm = TRUE), 
-                   .names = "{.col}"))
+    seed_cov_loop <- seedling(get(glue("fia_{park_county$park[ii]}")), 
+                        byPlot = TRUE) %>% 
+                        group_by(pltID) %>% 
+                        summarise(seed_tpa = mean(TPA, na.rm = T) * 2.47105) %>%   ## acre to ha
+                        mutate(park = park_county$park[ii])
+    if(ii == 1){
+      seed_cov <- seed_cov_loop
+    }
+    
+    if(ii > 1){
+      seed_cov <- rbind(seed_cov, seed_cov_loop)
+    }
+  }
+
+# saplings: saplings per acre unadjusted (TREE.TPA_UNADJ where TREE.DIA <5.0)
+for(ii in 1:nrow(park_county)){
+    tpa_sap_loop <- tpa(get(glue("fia_{park_county$park[ii]}")), 
+                        #totals = TRUE, 
+                        byPlot = TRUE,
+                        treeDomain =  DIA < 5.0,   ## cm to inches
+                        treeType = 'live') %>% 
+                        mutate(siz_cla = "sap") %>% 
+                        group_by(pltID) %>% 
+                        summarise(treeden_ha_sap = sum(TPA, na.rm = T) * 2.47105,    # convert trees per acre to trees per hectare 
+                                  BA_m2ha_sap = sum(BAA, na.rm = T) * 0.229568) %>% 
+                        mutate(park = park_county$park[ii])
+ 
+    if(ii == 1){
+      tpa_sap <- tpa_sap_loop
+    }
+    
+    if(ii > 1){
+      tpa_sap <- rbind(tpa_sap, tpa_sap_loop)
+    }
+  }
 
 ###? Shrub cover ---------------------------------------------------------
-# shrub data
-# LVSHRBCD: Live shrub code. A cover class code indicating the percent cover of 
-#           the forested microplot area covered with live shrubs.
-# LVSHRBHT: Live shrub height. Indicates the height of the tallest live shrub to the
-#           nearest 0.1 foot. Heights <6 feet are measured and heights 6 feet are estimated.
+##? shrub
+shrub <- vegStruct(get(glue("fia_{park_county$park[ii]}")), 
+                        #totals = TRUE, 
+                        byPlot = TRUE)  %>% 
+              filter(GROWTH_HABIT == 'Shrubs/vines', # maybe also 'Forbs'
+                     LAYER %in% c("0 to 2.0 feet", "2.1 to 6.0 feet")) %>% 
+              group_by(pltID) %>% 
+              summarise(shrub_cov = mean(PROP_COVER, na.rm = T))
 
-for(ii in 1:nrow(park_county)){
-  
-  county_l <- park_county$state_abbr[ii]
-  
-  county_shr <- read_csv(glue("data/FIA/{county_l}_DWM_MICROPLOT_FUEL.csv"),
-                         col_types = cols(PLT_CN = col_character(), 
-                                          CN = col_character())) %>% 
-    select(INVYR, STATECD, COUNTYCD, PLOT, SUBP, MEASYEAR,
-           LVSHRBCD, LVSHRBHT) %>%  # , DSHRBCD, DSHRBHT) # the D's are dead shrubs
-           mutate(park = park_county$park[ii])  %>% 
-           rename(shr_per = LVSHRBCD, 
-                  shr_ht = LVSHRBHT)
-  if(ii == 1){
-    shr_tab2 <- county_shr
-  }
-  
-  if(ii > 1){
-    shr_tab2 <- rbind(shr_tab2, county_shr)
-  }
-}
-
-shr_tab <- shr_tab2 %>% 
-  group_by(park) %>% 
-  summarise(across(c(shr_per, shr_ht), 
-                   ~ mean(.x, na.rm = TRUE), 
-                   .names = "{.col}"))
-
-###? Canopy cover ---------------------------------------------------------
-# LIVE_CANOPY_CVR_PCT: Live canopy cover percent. The percentage of live canopy cover for 
-#                      the condition. Included are live tally trees, saplings, and seedlings 
-#                      that cover the sample area.
-
-for(ii in 1:nrow(park_county)){
-  cancov <- get(glue("fia_{park_county$park[ii]}"))$COND %>% 
-                as_tibble() %>% 
-                select(INVYR, STATECD, COUNTYCD, PLOT, LIVE_CANOPY_CVR_PCT) %>% 
-                mutate(park = park_county$park[ii])
-
-  if(ii == 1){
-    can_tab2 <- cancov
-  }
-  
-  if(ii > 1){
-    can_tab2 <- rbind(can_tab2, cancov)
-  }
-}
-
-can_tab <- can_tab2 %>% 
-  group_by(park) %>% 
-  summarise(across(c(LIVE_CANOPY_CVR_PCT), 
-                   ~ mean(.x, na.rm = TRUE), 
-                   .names = "{.col}"))
-
-
-###? proportion of snags ---------------------------------------------------------
-# TREECLCD_NERS: Tree class code, Northeastern Research Station. In annual inventory, this code
-#                represents a classification of the overall quality of a tree that is >5.0 inches d.b.h. It
-#                classifies the quality of a sawtimber tree based on the present condition, or it classifies the
-#                quality of a poletimber tree as a prospective determination (i.e., a forecast of potential
-#                quality when and if the tree becomes sawtimber size). 
-#                Code 6 Snag - Dead tree, or what remains of a dead tree, that is at least 4.5 feet tall and is
-#                missing most of its bark. This category includes a tree covered with bark that is very
-#                loose. This bark can usually be removed, often times in big strips, with very little
-#                effort. A snag is not a recently dead tree. Most often, it has been dead for several
-#                years - sometimes, for more than a decade.
-
-for(ii in 1:nrow(park_county)){
-  snacov <- get(glue("fia_{park_county$park[ii]}"))$TREE %>% 
-                as_tibble() %>% 
-                select(INVYR, STATECD, COUNTYCD, PLOT, TREECLCD_NERS) %>% 
-                mutate(park = park_county$park[ii])
-
-  if(ii == 1){
-    sna_tab2 <- snacov
-  }
-  
-  if(ii > 1){
-    sna_tab2 <- rbind(sna_tab2, snacov)
-  }
-}
-
-sna_tab <- sna_tab2 %>% 
-             select(TREECLCD_NERS, park) %>% 
-             table() %>% 
-             as_tibble()
 
 ###? Down wood debris ----------------------------------------- 
 # BIO_ACRE: estimate of mean biomass per acre of dwm (short tons/acre)
 
-for(ii in 1:nrow(park_county)){
-  deb <- dwm(get(glue("fia_{park_county$park[ii]}"))) %>% 
-    select(YEAR, FUEL_TYPE, VOL_ACRE, BIO_ACRE, CARB_ACRE) %>% 
-    mutate(park = park_county$park[ii])
+cwd <- joinCWDData(park = 'all') %>% # coarse wood debris
+          as_tibble() %>%        
+          filter(ParkUnit %!in% c("ACAD", "ELRO", "SAIR"),
+                 ScientificName != "None present") %>%    
+          select(Plot_Name, SampleYear, ParkUnit, CWD_Vol) %>% 
+          group_by(Plot_Name, SampleYear) %>% 
+          summarize(deb_m = sum(CWD_Vol, na.rm = T)) %>% 
+          group_by(Plot_Name) %>% 
+          summarize(cwd = mean(deb_m, na.rm = T)) %>%
+          distinct()
 
-  if(ii == 1){
-    deb_tab2 <- deb
-  }
-  
-  if(ii > 1){
-    deb_tab2 <- rbind(deb_tab2, deb)
-  }
+for(ii in 1:nrow(park_county)){
+    deb <- dwm(get(glue("fia_{park_county$park[ii]}"))) %>% 
+      select(YEAR, FUEL_TYPE, VOL_ACRE, BIO_ACRE, CARB_ACRE) %>% 
+      mutate(park = park_county$park[ii])
+
+    if(ii == 1){
+      deb_tab2 <- deb
+    }
+    
+    if(ii > 1){
+      deb_tab2 <- rbind(deb_tab2, deb)
+    }
 }
 
 deb_tab <- deb_tab2 %>% 

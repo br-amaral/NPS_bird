@@ -200,7 +200,7 @@ table(joinMicroShrubData() %>% select(Vine))
 #? shrub
 shrub <- joinMicroShrubData() %>%  
             as_tibble() %>% 
-            filter(Shrub == 1) %>% 
+            filter(Shrub == 1) %>% # shrub and vine? to match FIA - forbes?
             select(Plot_Name, SampleYear, Shrub, shrub_avg_cov, Exotic, InvasiveNETN) %>% 
             filter(!is.na(shrub_avg_cov)) %>% 
             #mutate(test = ifelse(Exotic == InvasiveNETN, T, F))  %>% 
