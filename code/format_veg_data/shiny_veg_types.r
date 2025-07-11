@@ -67,13 +67,16 @@ lenght <- length
 radi_dist <- 250
 
 ## file paths
-COV_FOR_PLY  <- "data/out/for_plot_covs.rds"
-COV_BRD_SIT  <- glue("data/out/site_covs_fornofor_{radi_dist}m.rds")
+COV_FOR_PLY <- "data/out/for_plot_covs.rds"
+COV_BRD_SIT <- glue("data/out/site_covs_fornofor_{radi_dist}m.rds")
+#AAR_BIR_COV <- 
+AAR_FOR_COV <- "data/conifer_final_aaron.rds"
 
 ## read files
 # get info on site and plot level for bird sites and forest plots
 for_plots_covs <- read_rds(file = COV_FOR_PLY)
 bird_sit_covs  <- read_rds(file = COV_BRD_SIT)
+aa_covs_for <- read_rds(AAR_FOR_COV) 
 
 # shiny for parks, forest type_plot, and new covariates
 for_plots_sfh <- for_plots_sf  %>% filter(park == "ROVA"); for_plots_sfh$park <- "HOFR"   # hofr
