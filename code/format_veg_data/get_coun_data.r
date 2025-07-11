@@ -286,7 +286,6 @@ for(ii in 1:nrow(park_county)){
   }
 
 ###? Shrub cover ---------------------------------------------------------
-##? shrub
 shrub <- vegStruct(get(glue("fia_{park_county$park[ii]}")), 
                         #totals = TRUE, 
                         byPlot = TRUE)  %>% 
@@ -294,7 +293,6 @@ shrub <- vegStruct(get(glue("fia_{park_county$park[ii]}")),
                      LAYER %in% c("0 to 2.0 feet", "2.1 to 6.0 feet")) %>% 
               group_by(pltID) %>% 
               summarise(shrub_cov = mean(PROP_COVER, na.rm = T))
-
 
 ###? Down wood debris ----------------------------------------- 
 # BIO_ACRE: estimate of mean biomass per acre of dwm (short tons/acre)
@@ -311,96 +309,27 @@ cwd <- joinCWDData(park = 'all') %>% # coarse wood debris
           distinct()
 
 for(ii in 1:nrow(park_county)){
-    deb <- dwm(get(glue("fia_{park_county$park[ii]}"))) %>% 
-      select(YEAR, FUEL_TYPE, VOL_ACRE, BIO_ACRE, CARB_ACRE) %>% 
-      mutate(park = park_county$park[ii])
+    deb_cov_loop <- dwm(get(glue("fia_{park_county$park[ii]}")), 
+                        byPlot = TRUE) %>% 
+                      group_by(pltID) %>%
+                      summarise(dwd_bio = mean(BIO_ACRE, na.rm = T)) %>% 
+                      mutate(park = park_county$park[ii])
 
     if(ii == 1){
-      deb_tab2 <- deb
+      deb_cov <- deb_cov_loop
     }
     
     if(ii > 1){
-      deb_tab2 <- rbind(deb_tab2, deb)
+      deb_cov <- rbind(deb_cov, deb_cov_loop)
     }
 }
 
-deb_tab <- deb_tab2 %>% 
-  group_by(park) %>% 
-  summarise(across(c(BIO_ACRE), 
-                   ~ mean(.x, na.rm = TRUE), 
-                   .names = "{.col}"))
-
-#? summarize the files by park and merge them -----------------------------------------
-tpa_tab3 <- tpa_tab %>% 
-  rename(tree_total = TREE_TOTAL,
-         ba_total = BA_TOTAL,
-         ParkUnit = park,
-         counDEN = TPA, 
-         counBA = BAA) %>% 
-  select(ParkUnit, counDEN, counBA)
-
-shr_tab3 <- shr_tab %>% 
-  rename(ParkUnit = park,
-         counSHRUden = shr_per) %>% 
-  select(ParkUnit, counSHRUden)
-
-stastr_tab3 <- stastr_tab %>%  
-  pivot_wider(names_from = STAGE, values_from = COVER_PCT) %>% 
-  group_by(park) %>%
-  summarise(counPER_late = mean(LATE, na.rm = T),
-            counPER_matu = mean(MATURE, na.rm = T),
-            counPER_mosc = mean(MOSAIC, na.rm = T),
-            counPER_pole = mean(POLE, na.rm = T)) %>% 
-  rename(ParkUnit = park)
-
-div_tab3 <- div_tab %>%
-  group_by(park) %>%
-  rename(counH_a = H_a,
-            counH_b = H_b, 
-            counH_g = H_g,
-            counEh_a = Eh_a,
-            counEh_b = Eh_b,
-            counEh_g = Eh_g,
-            counS_a = S_a,
-            counS_b = S_b,
-            counS_g = S_g) %>%
-  rename(ParkUnit = park)
-
-can_tab3 <- can_tab %>% 
-  select(park, LIVE_CANOPY_CVR_PCT) %>% 
-  group_by(park) %>%
-  rename(ParkUnit = park,
-         Can_cov = LIVE_CANOPY_CVR_PCT)
-
-deb_tab3 <- deb_tab %>% 
-  select(park, BIO_ACRE) %>% 
-  rename(Dwn_Dbr = BIO_ACRE, 
-         ParkUnit = park)
-
- sna_tab3 <- sna_tab %>% 
-  pivot_wider(names_from = TREECLCD_NERS, values_from = n) %>% 
-  group_by(park) %>%
-  rename(ParkUnit = park,
-         sna1 = `1`,
-         sna2 = `2`,
-         sna3 = `3`,
-         sna4 = `4`,
-         sna5 = `5`,
-         sna6 = `6`)
-
-nrow(tpa_tab3)
-nrow(stastr_tab3)
-nrow(div_tab3)
-nrow(shr_tab3)
-nrow(can_tab3)
-nrow(deb_tab3)
-
-# put everyhing in the same dataframe by county (park) -----------------------------------------
-coun_covs <- left_join(tpa_tab3, stastr_tab3, by = "ParkUnit") %>% 
-  left_join(div_tab3, by = "ParkUnit") %>% 
-  left_join(shr_tab3, by = "ParkUnit") %>% 
-  left_join(can_tab3, by = "ParkUnit") %>% 
-  left_join(deb_tab3, by = "ParkUnit")
+#? put everyhing in the same dataframe by county (park) -----------------------------------------
+coun_covs <- full_join(tpa_tab3, stastr_tab3, by = "ParkUnit") %>% 
+  full_join(div_tab3, by = "ParkUnit") %>% 
+  full_join(shr_tab3, by = "ParkUnit") %>% 
+  full_join(can_tab3, by = "ParkUnit") %>% 
+  full_join(deb_tab3, by = "ParkUnit")
 
 #! Output files -----------------------------------------
 write_rds(coun_covs, file = "data/out/coun_covs.rds")
