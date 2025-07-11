@@ -48,50 +48,40 @@ conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::filter)
 # conflicts_prefer(scales::alpha)
 
+#! Source code -----------------------------------------
+# get park shape files with vegetation types and classify each as conifer, hardwood, mixed, or not forest
+source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_veg_data/veg_maps_park.R")
+# keep only relevant files
+keep_objects <- c("for_plots_sf", "for_plots_sfm", "xy_sf", 
+                  "mabi_vegmap2", "morr_vegmap2", "saga_vegmap2", "sara_vegmap2",
+                  "wefa_vegmap2", "rova_vegmap2", "mima_vegmap2")
+
+rm(list = setdiff(ls(), keep_objects))
+
 #! Make functions --------------------------------------
 colanmes <- colnames
 lenght <- length
 `%!in%` <- Negate(`%in%`)
 
-#! Source code -----------------------------------------
-# get park shape files with vegetation types and classify each as conifer, hardwood, mixed, or not forest
-source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_veg_data/veg_maps_park.R")
-# gets all forest plots and calculates what percentage and value of density and BA is conifer and hardwood
-source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_veg_data/get_conhar_baden.R")
-
 #! Import data -----------------------------------------
+radi_dist <- 250
+
 ## file paths
+COV_FOR_PLY  <- "data/out/for_plot_covs.rds"
+COV_BRD_SIT  <- glue("data/out/site_covs_fornofor_{radi_dist}m.rds")
 
 ## read files
+# get info on site and plot level for bird sites and forest plots
+for_plots_covs <- read_rds(file = COV_FOR_PLY)
+bird_sit_covs  <- read_rds(file = COV_BRD_SIT)
 
 # shiny for parks, forest type_plot, and new covariates
-for_plots_sf <- for_plots_sf  %>% rename(PlotID = for_sit)
 for_plots_sfh <- for_plots_sf  %>% filter(park == "ROVA"); for_plots_sfh$park <- "HOFR"   # hofr
 for_plots_sfv <- for_plots_sf  %>% filter(park == "ROVA"); for_plots_sfv$park <- "VAMA"   # vama
-for_plots_sfm <- for_plots_sfm  %>% rename(PlotID = for_sit)                              # mima
+for_plots_sfm <- for_plots_sfm                                                            # mima
 
-tre_cov3 <- tre_cov3  %>% mutate(ParkUnit = substr(PlotID, 1, 4))
-
-tre_cov3percent_con <- tre_cov3  %>% 
-  group_by(PlotID) %>% 
-  mutate(
-    tot_ba = sum(BA_m2ha),
-    tot_den = sum(density)
-  ) %>% 
-  arrange(PlotID, type_plot)  %>% 
-  mutate(
-    per_ba = BA_m2ha / tot_ba,
-    per_den = density / tot_den
-  ) %>% 
-  filter(#type_plot == "Conifer",
-         type == "Conifer")
-
-datatable(tre_cov3percent_con)
-
-## if it is hardwood, put 0% conifer
-## color the points according to type_plot
-
-park_list <- list(
+bird_sit_covs2 <- bird_sit_covs %>% 
+                      mutate(ParkUnit = substr(bird_sit, 1, 4)) park_list <- list(
   "MABI" = list(map = mabi_vegmap2, for_plots = for_plots_sf, xy = xy_sf),
   "MORR" = list(map = morr_vegmap2, for_plots = for_plots_sf, xy = xy_sf),
   "SAGA" = list(map = saga_vegmap2, for_plots = for_plots_sf, xy = xy_sf),
