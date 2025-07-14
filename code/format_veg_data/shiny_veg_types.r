@@ -43,6 +43,7 @@ library(ggplot2)
 library(sf)
 library(dplyr)
 library(plotly)
+library(ggnewscale)
 
 conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::filter)
@@ -74,9 +75,23 @@ AAR_FOR_COV <- "data/conifer_final_aaron.rds"
 
 ## read files
 # get info on site and plot level for bird sites and forest plots
-for_plots_covs <- read_rds(file = COV_FOR_PLY)
-bird_sit_covs  <- read_rds(file = COV_BRD_SIT)
+bird_sit_covs  <- read_rds(file = COV_BRD_SIT) %>%
+  # Remove "_wei" suffix from all column names
+  rename_with(~str_remove(.x, "_wei$"))
+
 aa_covs_for <- read_rds(AAR_FOR_COV) 
+
+for_plots_covs <- read_rds(file = COV_FOR_PLY) %>% 
+                      rename(for_sit = Plot_Name) %>% 
+                      select(-UTMZone) %>% 
+                      mutate(type = as.character(NA))
+
+for(ii in 1:nrow(for_plots_covs)){
+
+    if(for_plots_covs$BA_m2ha_Conifer[ii] > for_plots_covs$BA_m2ha_Hardwood[ii]) {
+        for_plots_covs$type[ii] <- "Conifer"
+    } else { for_plots_covs$type[ii] <- "Hardwood" }
+}
 
 # shiny for parks, forest type_plot, and new covariates
 for_plots_sfh <- for_plots_sf  %>% filter(park == "ROVA"); for_plots_sfh$park <- "HOFR"   # hofr
@@ -84,7 +99,12 @@ for_plots_sfv <- for_plots_sf  %>% filter(park == "ROVA"); for_plots_sfv$park <-
 for_plots_sfm <- for_plots_sfm                                                            # mima
 
 bird_sit_covs2 <- bird_sit_covs %>% 
-                      mutate(ParkUnit = substr(bird_sit, 1, 4)) park_list <- list(
+                      mutate(park = substr(bird_sit, 1, 4)) %>% 
+                      filter(park %!in% c("ACAD", "ELRO", "SAIR")) %>%
+                      rename(Point_Name = bird_sit) 
+
+xy_sf <- left_join(xy_sf, bird_sit_covs2, by = c("Point_Name", "park"))
+park_list <- list(
   "MABI" = list(map = mabi_vegmap2, for_plots = for_plots_sf, xy = xy_sf),
   "MORR" = list(map = morr_vegmap2, for_plots = for_plots_sf, xy = xy_sf),
   "SAGA" = list(map = saga_vegmap2, for_plots = for_plots_sf, xy = xy_sf),
@@ -105,32 +125,28 @@ ui <- fluidPage(
   titlePanel("NPS Park Vegetation Maps"),
   sidebarLayout(
     sidebarPanel(
-      selectInput("park", "Choose a Park:", choices = names(park_list), selected = "MABI")
+      selectInput("park", "Choose a Park:", choices = names(park_list), selected = "MABI"),
+      selectInput("variable", "Choose Variable:", 
+                  choices = c("treeden_ha", "BA_m2ha", "shrub_cov_nat", "shrub_cov_nonat", 
+                             "treeden_ha_Conifer", "treeden_ha_Hardwood", "BA_m2ha_Conifer", 
+                             "BA_m2ha_Hardwood", "seed_den_m2", "sap_den_m2", "regen_den_m2", 
+                             "Stage", "pctBA_pole", "pctBA_mature", "pctBA_large", 
+                             "treeden_ha_large", "treeden_ha_mature", "treeden_ha_pole", 
+                             "BA_m2ha_large", "BA_m2ha_mature", "BA_m2ha_pole", "cwd"), 
+                  selected = "BA_m2ha")
     ),
     mainPanel(
       plotlyOutput("vegmap", height = "500px"),
       fluidRow(
         column(
           width = 6,
-          h4("Percent Conifer BA by Plot"),
-          plotlyOutput("per_ba_plot", height = "200px")
+          h4(textOutput("plot_title")),
+          plotlyOutput("variable_plot", height = "400px")
         ),
         column(
           width = 6,
-          h4("Percent Conifer Density by Plot"),
-          plotlyOutput("per_den_plot", height = "200px")
-        )
-      ),
-      fluidRow(
-        column(
-          width = 6,
-          h4("BA_m2ha by Plot"),
-          plotlyOutput("ba_plot", height = "250px")
-        ),
-        column(
-          width = 6,
-          h4("Density by Plot"),
-          plotlyOutput("density_plot", height = "250px")
+          h4(textOutput("bird_plot_title")),
+          plotlyOutput("bird_variable_plot", height = "400px")
         )
       )
     )
@@ -138,121 +154,128 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session) {
-  output$vegmap <- renderPlotly({
+  
+  output$vegmap <- renderPlot({
     park_data <- park_list[[input$park]]
-    # Join percent conifer BA to plot points for annotation
-    plot_points <- park_data$for_plots %>%
-      left_join(tre_cov3, by = "PlotID") %>%
-      left_join(tre_cov3percent_con %>% 
-      filter(ParkUnit == input$park), by = "PlotID", suffix = c("", "_con")) %>% 
-      filter(ParkUnit == input$park)
+    
+    # Prepare forest plot data
+    forest_points <- park_data$for_plots %>%
+      left_join(.,for_plots_covs, by = "for_sit") %>%
+      filter(park == input$park)
+    
+    # Prepare bird site data  
+    bird_points <- park_data$xy %>%
+      filter(park == input$park)
+    
+    # Get the combined range for shared scale
+    forest_values <- forest_points[[input$variable]]
+    bird_values <- if(input$variable %in% colnames(bird_points)) bird_points[[input$variable]] else numeric(0)
+    combined_range <- range(c(forest_values, bird_values), na.rm = TRUE)
+    
     p <- ggplot(data = park_data$map) +
-      geom_sf(aes(fill = Cover_Type, text = paste("MapUnit:", MapUnit_Name, "<br>Cover Type:", Cover_Type))) +
-      scale_fill_manual(values = cover_type_colors, na.value = "grey80") +
+      geom_sf(aes(fill = Cover_Type)) +
+      scale_fill_manual(values = cover_type_colors, na.value = "grey80", name = "Cover Type") +
+      ggnewscale::new_scale_fill() +
+      # Add forest plots with variable coloring
       geom_sf(
-        data = plot_points,
+        data = forest_points,
         color = "black", 
-        size = 3, 
-        fill = "red",
-        aes(
-          shape = type_plot,
-          text = paste0(
-            "Plot: ", PlotID, "<br>",
-            "Type: ", type_plot, "<br>",
-            "Percent Conifer Den: ", round(per_den, 2), "<br>",
-            "Percent Conifer BA: ", round(per_ba, 2)
-          ))
-      ) +       
-      scale_shape_manual(values = c("Conifer" = 24, "Hardwood" = 21)) + 
-      geom_sf(data = park_data$xy %>%
-                filter(park == input$park), color = "black", shape = 18, size = 2, fill = "black") +
+        size = 6, 
+        shape = 21,
+        stroke = 1,
+        aes(fill = get(input$variable))
+      ) +
+      # Add bird sites with variable coloring (same variable as forest plots)
+        geom_sf(
+          data = bird_points,
+          color = "black", 
+          size = 5, 
+          shape = 23,
+          stroke = 1,
+          aes(fill = get(input$variable))
+        ) +
+      # Single shared scale for both forest plots and bird sites with combined range
+      scale_fill_viridis_c(
+        name = paste(input$variable), 
+        option = "plasma", 
+        na.value = "grey50",
+        limits = combined_range
+      ) +
       theme_bw() +
       theme(legend.position = "bottom",
             legend.text = element_text(size = 8),
             legend.title = element_text(size = 9),
-            plot.title = element_text(hjust = 0.5, size = 22)) +
-      ggtitle(input$park)
+            plot.title = element_text(hjust = 0.5, size = 22),
+            axis.text = element_text(size = 6),
+            axis.title = element_text(size = 8)) +
+      ggtitle(paste(input$park, "- Forest Plots (circles) & Bird Sites (diamonds)"))
+    
+    print(p)
+  })
+
+  output$plot_title <- renderText({
+    paste(input$variable, "by Forest Plot")
+  })
+
+  output$variable_plot <- renderPlotly({
+    # Handle all variables as single variables (no conifer/hardwood splitting)
+    df <- for_plots_covs %>% 
+      filter(ParkUnit == input$park) %>% 
+      arrange(for_sit)
+
+    p <- ggplot(df, aes(x = for_sit, y = !!sym(input$variable))) +
+      geom_point(aes(text = paste0(
+                    "Plot: ", for_sit, "<br>",
+                    input$variable, ": ", round(!!sym(input$variable), 2)
+                  )), size = 2, color = "#1e7b1e") +
+      labs(x = "Plot", y = input$variable, title = "Forest Plot Data") +
+      theme_bw() +
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+            legend.text = element_text(size = 8),
+            legend.title = element_text(size = 9),
+            plot.title = element_text(hjust = 0.5))
+    
     ggplotly(p, tooltip = "text")
   })
 
-  output$per_ba_plot <- renderPlotly({
-    df <- tre_cov3percent_con %>% filter(ParkUnit == input$park) %>% arrange(PlotID)
-    p <- ggplot(df) +
-      geom_point(aes(x = PlotID, y = per_ba, col = type_plot, shape = type_plot, text = paste0(
-        "Plot: ", PlotID, "<br>",
-        "Type: ", type_plot, "<br>",
-        "Percent BA: ", round(per_ba, 2)
-      )), size = 2) +
-      labs(x = "Plot", y = "Percent Conifer BA", color = "Type") +
-      theme_bw() +
-      scale_color_manual(values = c("Conifer" = "#1e7b1e", "Hardwood" = "#c98b19")) +
-      scale_shape_manual(values = c("Conifer" = 16, "Hardwood" = 17)) + 
-      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
-            legend.text = element_text(size = 8),
-            legend.title = element_text(size = 9))
-    ggplotly(p, tooltip = "text")
+  output$bird_plot_title <- renderText({
+    paste(input$variable, "by Bird Site")
   })
 
-  output$per_den_plot <- renderPlotly({
-    df <- tre_cov3percent_con %>% filter(ParkUnit == input$park) %>% arrange(PlotID)
-    p <- ggplot(df) +
-      geom_point(aes(x = PlotID, y = per_den, col = type_plot, shape = type_plot, text = paste0(
-        "Plot: ", PlotID, "<br>",
-        "Type: ", type_plot, "<br>",
-        "Percent Density: ", round(per_den, 2)
-      )), size = 2) +
-      labs(x = "Plot", y = "Percent Conifer Density", color = "Type") +
-      theme_bw() +
-      scale_color_manual(values = c("Conifer" = "#1e7b1e", "Hardwood" = "#c98b19")) +
-      scale_shape_manual(values = c("Conifer" = 16, "Hardwood" = 17)) + 
-      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
-            legend.text = element_text(size = 8),
-            legend.title = element_text(size = 9))
-    ggplotly(p, tooltip = "text")
+  output$bird_variable_plot <- renderPlotly({
+    # Get bird site data
+    df <- bird_sit_covs2 %>% 
+      filter(park == input$park) %>% 
+      arrange(Point_Name)
+
+    # Check if the variable exists in the data
+    if(input$variable %in% colnames(df)) {
+      p <- ggplot(df, aes(x = Point_Name, y = !!sym(input$variable))) +
+        geom_point(aes(text = paste0(
+                      "Site: ", Point_Name, "<br>",
+                      input$variable, ": ", round(!!sym(input$variable), 2)
+                    )), size = 2, color = "#3a78dc") +
+        labs(x = "Bird Site", y = input$variable, title = "Bird Site Data") +
+        theme_bw() +
+        theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+              legend.text = element_text(size = 8),
+              legend.title = element_text(size = 9),
+              plot.title = element_text(hjust = 0.5))
+      
+      ggplotly(p, tooltip = "text")
+    } else {
+      # If variable doesn't exist, show empty plot with message
+      ggplot() + 
+        annotate("text", x = 0.5, y = 0.5, label = paste("Variable", input$variable, "not found"), size = 5) +
+        theme_void()
+    }
   })
 
-  output$ba_plot <- renderPlotly({
-    df <- tre_cov3 %>% filter(ParkUnit == input$park) %>% arrange(PlotID)
-    p <- ggplot(df) +
-      geom_point(aes(x = PlotID, y = BA_m2ha, 
-                     col = type, 
-                     shape = type_plot,
-                     text = paste0(
-        "Plot: ", PlotID, "<br>",
-        "Type: ", type_plot, "<br>",
-        "BA_m2ha: ", round(BA_m2ha, 2)
-      )), size = 2) +
-      labs(x = "Plot", y = "BA (m²/ha)", color = "Type", shape = "Plot Type") +
-      theme_bw() +
-      scale_color_manual(values = c("Conifer" = "#1e7b1e", "Hardwood" = "#c98b19")) +
-      scale_shape_manual(values = c("Conifer" = 16, "Hardwood" = 17)) +  # 16=circle, 17=triangle
-      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
-            legend.text = element_text(size = 8),
-            legend.title = element_text(size = 9))
-    ggplotly(p, tooltip = "text")
-  })
-
-  output$density_plot <- renderPlotly({
-    df <- tre_cov3 %>% filter(ParkUnit == input$park) %>% arrange(PlotID)
-    p <- ggplot(df) +
-      geom_point(aes(x = PlotID, y = density, 
-                     col = type, 
-                     shape = type_plot,
-                     text = paste0(
-        "Plot: ", PlotID, "<br>",
-        "Type: ", type_plot, "<br>",
-        "Density: ", density
-      )), size = 2) +
-      labs(x = "Plot", y = "Density", color = "Type", shape = "Plot Type") +
-      theme_bw() +
-      scale_color_manual(values = c("Conifer" = "#1e7b1e", "Hardwood" = "#c98b19")) +
-      scale_shape_manual(values = c("Conifer" = 16, "Hardwood" = 17)) +  # 16=circle, 17=triangle
-      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
-            legend.text = element_text(size = 8),
-            legend.title = element_text(size = 9))
-    ggplotly(p, tooltip = "text")
-  })
+  
 }
 
 shinyApp(ui, server)
 
+## add hover
+## add neighbour conection
+## two tabs, second comparing satelite vs netn
