@@ -72,8 +72,13 @@ COV_FOR_PLY <- "data/out/for_plot_covs.rds"
 COV_BRD_SIT <- glue("data/out/site_covs_fornofor_{radi_dist}m.rds")
 #AAR_BIR_COV <- 
 AAR_FOR_COV <- "data/conifer_final_aaron.rds"
+NEI_PATH <- glue("data/out/neighbor_fornofor_{radi_dist}m.rds")
 
 ## read files
+# get neighbors
+neighbor <- read_rds(NEI_PATH) %>% 
+                mutate(park = substr(bird_sit,1,4))
+
 # get info on site and plot level for bird sites and forest plots
 bird_sit_covs  <- read_rds(file = COV_BRD_SIT) %>%
   # Remove "_wei" suffix from all column names
@@ -103,16 +108,17 @@ bird_sit_covs2 <- bird_sit_covs %>%
                       filter(park %!in% c("ACAD", "ELRO", "SAIR")) %>%
                       rename(Point_Name = bird_sit) 
 
-xy_sf <- left_join(xy_sf, bird_sit_covs2, by = c("Point_Name", "park"))
+xy_sf <- left_join(xy_sf, bird_sit_covs2, by = c("Point_Name", "park")) %>% 
+                      filter(park %!in% c("ACAD", "ELRO", "SAIR"))
 park_list <- list(
-  "MABI" = list(map = mabi_vegmap2, for_plots = for_plots_sf, xy = xy_sf),
-  "MORR" = list(map = morr_vegmap2, for_plots = for_plots_sf, xy = xy_sf),
-  "SAGA" = list(map = saga_vegmap2, for_plots = for_plots_sf, xy = xy_sf),
-  "SARA" = list(map = sara_vegmap2, for_plots = for_plots_sf, xy = xy_sf),
-  "WEFA" = list(map = wefa_vegmap2, for_plots = for_plots_sf, xy = xy_sf),
-  "HOFR" = list(map = rova_vegmap2, for_plots = for_plots_sfh, xy = xy_sf),
-  "VAMA" = list(map = rova_vegmap2, for_plots = for_plots_sfv, xy = xy_sf),
-  "MIMA" = list(map = mima_vegmap2, for_plots = for_plots_sfm, xy = xy_sf)
+  "MABI" = list(map = mabi_vegmap2, for_plots = for_plots_sf, xy = xy_sf, neighbor = neighbor),
+  "MORR" = list(map = morr_vegmap2, for_plots = for_plots_sf, xy = xy_sf, neighbor = neighbor),
+  "SAGA" = list(map = saga_vegmap2, for_plots = for_plots_sf, xy = xy_sf, neighbor = neighbor),
+  "SARA" = list(map = sara_vegmap2, for_plots = for_plots_sf, xy = xy_sf, neighbor = neighbor),
+  "WEFA" = list(map = wefa_vegmap2, for_plots = for_plots_sf, xy = xy_sf, neighbor = neighbor),
+  "HOFR" = list(map = rova_vegmap2, for_plots = for_plots_sfh, xy = xy_sf, neighbor = neighbor),
+  "VAMA" = list(map = rova_vegmap2, for_plots = for_plots_sfv, xy = xy_sf, neighbor = neighbor),
+  "MIMA" = list(map = mima_vegmap2, for_plots = for_plots_sfm, xy = xy_sf, neighbor = neighbor)
 )
 
 write_rds(park_list, file = "data/out/park_list.rds")
@@ -136,7 +142,7 @@ ui <- fluidPage(
                   selected = "BA_m2ha")
     ),
     mainPanel(
-      plotlyOutput("vegmap", height = "500px"),
+      plotOutput("vegmap", height = "500px"),
       fluidRow(
         column(
           width = 6,
@@ -173,34 +179,30 @@ server <- function(input, output, session) {
     combined_range <- range(c(forest_values, bird_values), na.rm = TRUE)
     
     p <- ggplot(data = park_data$map) +
-      geom_sf(aes(fill = Cover_Type)) +
+      geom_sf(aes(fill = Cover_Type), alpha = 0.4) +
       scale_fill_manual(values = cover_type_colors, na.value = "grey80", name = "Cover Type") +
       ggnewscale::new_scale_fill() +
       # Add forest plots with variable coloring
+      geom_segment(data = park_data$neighbor %>% filter(park == input$park), 
+                   aes(x = lonutmb, y = latutmb, 
+                       xend = lonutmf, yend = latutmf, 
+                       colour = bird_sit)) +
       geom_sf(
         data = forest_points,
         color = "black", 
-        size = 3, 
+        size = 7, 
         shape = 21,
-        stroke = 0.5,
-        aes(fill = !!sym(input$variable),
-        text = paste0(
-                    "Plot: ", for_sit, "<br>",
-                    input$variable, ": ", round(!!sym(input$variable), 2)
-                  ))
+        stroke = 1,
+        aes(fill = !!sym(input$variable))
       ) +
       # Add bird sites with variable coloring
       geom_sf(
         data = bird_points,
-        color = "black", 
-        size = 2.5, 
+        #color = "black", 
+        size = 7, 
         shape = 23,
-        stroke = 0.5,
-        aes(fill = !!sym(input$variable),
-        text = paste0(
-                    "Plot: ", Point_Name, "<br>",
-                    input$variable, ": ", round(!!sym(input$variable), 2)
-                  ))
+        stroke = 1,
+        aes(fill = !!sym(input$variable), color = Point_Name)
       ) +
       # Single shared scale for both forest plots and bird sites with combined range
       scale_fill_viridis_c(
@@ -209,6 +211,7 @@ server <- function(input, output, session) {
         na.value = "grey50",
         limits = combined_range
       ) +
+      guides(color = "none") +  # Remove color legend but keep fill legend
       theme_bw() +
       theme(legend.position = "bottom",
             legend.text = element_text(size = 8),
@@ -218,9 +221,7 @@ server <- function(input, output, session) {
             axis.title = element_text(size = 8)) +
       ggtitle(paste(input$park, "- Forest Plots (circles) & Bird Sites (diamonds)"))
     
-    #print(p)
-        ggplotly(p, tooltip = "text")
-
+    print(p)
   })
 
   output$plot_title <- renderText({
@@ -279,12 +280,10 @@ server <- function(input, output, session) {
         annotate("text", x = 0.5, y = 0.5, label = paste("Variable", input$variable, "not found"), size = 5) +
         theme_void()
     }
-  })
-
-  
+  })  
 }
 
 shinyApp(ui, server)
 
-## add neighbour conection
 ## two tabs, second comparing satelite vs netn
+## add variation between parks
