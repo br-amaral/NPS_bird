@@ -285,5 +285,4 @@ server <- function(input, output, session) {
 
 shinyApp(ui, server)
 
-## two tabs, second comparing satelite vs netn
-## add variation between parks
+## add variation between parks and counties

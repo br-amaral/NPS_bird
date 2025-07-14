@@ -99,6 +99,8 @@ for(ii in 1:nrow(for_plots_covs)){
     } else { for_plots_covs$type[ii] <- "Hardwood" }
 }
 
+for_plots_sf1 <- for_plots_sf
+
 # Prepare forest plot data
 for_plots_sf <- for_plots_sf %>%
       rename(for_sit = for_sit) %>% 
@@ -128,19 +130,43 @@ aar_con_sf <- left_join(xy_sf, aar_con, by = c("Point_Name", "park")) %>%
 
 hist(as_tibble(aar_con) %>% pull(BA_SUM)) 
 
-#
-aaron2 <- read_csv("data/NETNForestPlot_Conifer_BA.csv")
+# forest sdatelite plots?
+aaron2 <- read_csv("data/NETNForestPlot_Conifer_BA.csv") %>%
+  mutate(plot_num = as.numeric(str_extract(Plot_Numbe, "\\d+")),  # Extract numbers
+         for_sit = paste0(substr(Unit_ID, 1, 4), "-", str_pad(plot_num, width = 3, side = "left", pad = "0")))
+
+comp_for_plot <- full_join(for_plots_sf, aaron2, by = "for_sit")  %>% 
+                    select("for_sit","UTMZone","park","geometry","ParkUnit","X","Y" , "BA_m2ha_Conifer", "Merged_Conifer_BA_2009")
+
+
+t.test(as_tibble(comp_for_plot) %>% pull(Merged_Conifer_BA_2009), 
+           as_tibble(comp_for_plot) %>% pull(BA_m2ha_Conifer))
+
+par(mfrow = c(1,1))
+ggplot(comp_for_plot) +
+    geom_point(aes(x = Merged_Conifer_BA_2009, y = BA_m2ha_Conifer)) +
+    geom_smooth(aes(x = Merged_Conifer_BA_2009, y = BA_m2ha_Conifer), method = "lm") +
+    theme_bw()
+
+aaron2 <- left_join(for_plots_sf1, aaron2, by = "for_sit")
 
 aaron2 %>% filter(Unit_ID == "MABI")  %>% ggplot() + geom_point(aes(x = X_Coord, y = Y_Coord))
+
+colnames(aaron2)
+
 
 xy_sf <- left_join(xy_sf, bird_sit_covs2, by = c("Point_Name", "park")) %>% 
                       filter(park %!in% c("ACAD", "ELRO", "SAIR"))
 
-comp_net_sat <- full_join(xy_sf, aar_con_sf, by = "Point_Name")
+comp_net_sat <- full_join(as_tibble(xy_sf), as_tibble(aar_con_sf), by = c( "ID","park","Point_Name", "UTM_ZONE","geometry" ))
 
 par(mfrow = c(1,2))
 hist(as_tibble(comp_net_sat) %>% pull(BA_SUM)) 
 hist(as_tibble(comp_net_sat) %>% pull(BA_m2ha_Conifer)) 
+
+ggplot() + 
+  geom_sf(data = aar_con_sf %>% filter(park == "MABI"), color = "blue") + 
+  geom_sf(data = xy_sf %>% filter(park == "MABI"), color = "red", size = 2, shape = 21)
 
 t.test(as_tibble(comp_net_sat) %>% pull(BA_SUM), 
            as_tibble(comp_net_sat) %>% pull(BA_m2ha_Conifer))
@@ -151,29 +177,38 @@ ggplot(comp_net_sat) +
     geom_smooth(aes(x = BA_SUM, y = BA_m2ha_Conifer), method = "lm") +
     theme_bw()
 
-comp_net_sat %>% 
-      arrange(Point_Name) %>% 
-      as_tibble() %>% 
-      mutate(difference = BA_SUM - BA_m2ha_Conifer)  %>% 
-      pull(difference) %>% 
-      hist()
+comp_net_sat1 <- 
+  comp_net_sat %>% 
+        arrange(Point_Name) %>% 
+        as_tibble() %>% 
+        mutate(difference = BA_SUM - BA_m2ha_Conifer)
 
+hist(comp_net_sat1$difference)
 park_list <- list(
-  "MABI" = list(map = mabi_vegmap2, for_plots = for_plots_sf,  xy = xy_sf %>% filter(park == "MABI"), neighbor = neighbor%>% filter(park == "MABI"),
+  "MABI" = list(map = mabi_vegmap2, for_plots = for_plots_sf,  xy = xy_sf %>% filter(park == "MABI"), 
+                neighbor = neighbor%>% filter(park == "MABI"),
                 aar_coni_cov = aar_con_sf %>% filter(park == "MABI")),
-  "MORR" = list(map = morr_vegmap2, for_plots = for_plots_sf,  xy = xy_sf %>% filter(park == "MORR"), neighbor = neighbor %>% filter(park == "MORR"),
+
+  "MORR" = list(map = morr_vegmap2, for_plots = for_plots_sf,  xy = xy_sf %>% filter(park == "MORR"), 
+                neighbor = neighbor %>% filter(park == "MORR"),
                 aar_coni_cov = aar_con_sf %>% filter(park == "MORR")),
-  "SAGA" = list(map = saga_vegmap2, for_plots = for_plots_sf,  xy = xy_sf %>% filter(park == "SAGA"), neighbor = neighbor %>% filter(park == "SAGA"),
+  "SAGA" = list(map = saga_vegmap2, for_plots = for_plots_sf,  xy = xy_sf %>% filter(park == "SAGA"), 
+                neighbor = neighbor %>% filter(park == "SAGA"),
                 aar_coni_cov = aar_con_sf %>% filter(park == "SAGA")),
-  "SARA" = list(map = sara_vegmap2, for_plots = for_plots_sf,  xy = xy_sf %>% filter(park == "SARA"), neighbor = neighbor %>% filter(park == "SARA"),
+  "SARA" = list(map = sara_vegmap2, for_plots = for_plots_sf,  xy = xy_sf %>% filter(park == "SARA"), 
+                neighbor = neighbor %>% filter(park == "SARA"),
                 aar_coni_cov = aar_con_sf %>% filter(park == "SARA")),
-  "WEFA" = list(map = wefa_vegmap2, for_plots = for_plots_sf,  xy = xy_sf %>% filter(park == "WEFA"), neighbor = neighbor %>% filter(park == "WEFA"),
+  "WEFA" = list(map = wefa_vegmap2, for_plots = for_plots_sf,  xy = xy_sf %>% filter(park == "WEFA"), 
+                neighbor = neighbor %>% filter(park == "WEFA"),
                 aar_coni_cov = aar_con_sf %>% filter(park == "WEFA")),
-  "HOFR" = list(map = rova_vegmap2, for_plots = for_plots_sfh, xy = xy_sf %>% filter(park == "HOFR"), neighbor = neighbor %>% filter(park == "HOFR"),
+  "HOFR" = list(map = rova_vegmap2, for_plots = for_plots_sfh, xy = xy_sf %>% filter(park == "HOFR"), 
+                neighbor = neighbor %>% filter(park == "HOFR"),
                 aar_coni_cov = aar_con_sf %>% filter(park == "HOFR")),
-  "VAMA" = list(map = rova_vegmap2, for_plots = for_plots_sfv, xy = xy_sf %>% filter(park == "VAMA"), neighbor = neighbor %>% filter(park == "VAMA"),
+  "VAMA" = list(map = rova_vegmap2, for_plots = for_plots_sfv, xy = xy_sf %>% filter(park == "VAMA"), 
+                neighbor = neighbor %>% filter(park == "VAMA"),
                 aar_coni_cov = aar_con_sf %>% filter(park == "VAMA")),
-  "MIMA" = list(map = mima_vegmap2, for_plots = for_plots_sfm, xy = xy_sf %>% filter(park == "MIMA"), neighbor = neighbor %>% filter(park == "MIMA"),
+  "MIMA" = list(map = mima_vegmap2, for_plots = for_plots_sfm, xy = xy_sf %>% filter(park == "MIMA"), 
+                neighbor = neighbor %>% filter(park == "MIMA"),
                 aar_coni_cov = aar_con_sf %>% filter(park == "MIMA"))
 )
 
@@ -236,16 +271,18 @@ if(length(plot_palette) < total_bird_sites) {
 plot_id_colors <- setNames(plot_palette[1:total_bird_sites], plot_id[!is.na(plot_id)])
 
 ui <- fluidPage(
-  titlePanel("NPS Park Vegetation Maps"),
+  titlePanel("NPS Park Bird sites"),
   sidebarLayout(
     sidebarPanel(
       selectInput("park", "Choose a Park:", choices = names(park_list), selected = "MABI")
     ),
     mainPanel(
-      plotlyOutput("vegmap", height = "500px"),
-      plotOutput("vegmap2", height = "500px"),
+      plotOutput("vegmap", height = "500px"),
       plotOutput("vegmap3", height = "500px"),
       plotlyOutput("complot", height = "500px"),
+      plotOutput("vegmap2", height = "500px"),
+      plotOutput("vegmap32", height = "500px"),
+      plotlyOutput("complot2", height = "500px"),
       ),
     )
   )
@@ -260,124 +297,141 @@ ui <- fluidPage(
 #   filter(park == "MABI")
 
 server <- function(input, output, session) {
-  output$vegmap <- renderPlotly({
+  output$vegmap <- renderPlot({
     park_data <- park_list[[input$park]]
     
-    # Join percent conifer BA to plot points for annotation
     plot_points <- park_data$for_plots %>%
       filter(park == input$park)
     
-    # Create park-specific color palette for current park's bird_sit values
     current_bird_sits <- unique(park_data$xy$Point_Name)
     current_colors <- setNames(plot_palette[1:length(current_bird_sits)], current_bird_sits)
     
+    bird_values_sat <- park_data$aar_coni_cov %>%
+                  filter(park == input$park) %>% 
+                  pull(BA_SUM)
+    bird_values_netn <- park_data$xy$BA_m2ha_Conifer
+    combined_range <- range(c(bird_values_sat, bird_values_netn), na.rm = TRUE)
+
     p <- 
       ggplot(data = park_data$map) +
-        geom_sf(aes(fill = Cover_Type2, text = paste("MapUnit:", MapUnit_Name, "<br>Cover Type:", Cover_Type2))) +
+        geom_sf(aes(fill = Cover_Type2, 
+                    text = paste("MapUnit:", MapUnit_Name, "<br>Cover Type:", Cover_Type2))) +
         scale_fill_manual(values = for_nofor_colors, na.value = "grey80") +
+        
+        # Add new scale for the continuous fill
+        ggnewscale::new_scale_fill() +
+        
         geom_segment(data = park_data$neighbor,
                       aes(x = lonutmb, y = latutmb, 
                           xend = lonutmf, yend = latutmf, 
                           colour = bird_sit)) +
         scale_color_manual(values = current_colors) + 
-        geom_sf(
-          data = plot_points,
-          size = 3, 
-          color = "black",
-          aes(text = paste0(
-                "Plot: ", for_sit, "<br>",
-                #"Type: ", type_plot, "<br>",
-                "Conifer Den: ", treeden_ha_Conifer, "<br>",
-                "Conifer BA: ", BA_m2ha_Conifer 
-            ))) +       
-        geom_sf(data = park_data$xy %>%
-                  #filter(park == input$park), 
-                  filter(park == "MABI"), 
-                aes(color = Point_Name,
-                text = paste0(
-                "Bird Site: ", Point_Name, "<br>",
-                "Conifer Den: ", treeden_ha_Conifer, "<br>",
-                "Conifer BA: ", BA_m2ha_Conifer 
-            )),
-                shape = 18, size = 4) +
-        scale_color_manual(values = current_colors, na.value = "#615e5e") + 
+        
+        geom_sf(data = plot_points,
+                size = 2, 
+                color = "black",
+                aes(text = paste0("Plot: ", for_sit, "<br>",
+                                 "Conifer Den: ", treeden_ha_Conifer, "<br>",
+                                 "Conifer BA: ", BA_m2ha_Conifer))) +       
+        
+        geom_sf(data = park_data$xy %>% filter(park == input$park), 
+                aes(fill = BA_m2ha_Conifer, 
+                    color = Point_Name,
+                    text = paste0("Bird Site: ", Point_Name, "<br>",
+                                 "Conifer Den: ", treeden_ha_Conifer, "<br>",
+                                 "Conifer BA: ", BA_m2ha_Conifer)), 
+                shape = 21, size = 7, stroke = 0.5) +  # Use shape 21 for fill + color
+        guides(color = "none") +
+        scale_fill_viridis_c(name = "Conifer BA", 
+                            option = "plasma", 
+                            na.value = "grey50",
+                            limits = combined_range) +
+        
         theme_bw() +
-        theme(legend.position = "none",
+        theme(legend.position = "right",
               legend.text = element_text(size = 8),
               legend.title = element_text(size = 9),
-              plot.title = element_text(hjust = 0.5, size = 22))# +
-        ggtitle(input$park)
+              plot.title = element_text(hjust = 0.5, size = 22)) +
+        labs(title = paste("Bird Site NETN -", input$park))
       
-    ggplotly(p, tooltip = "text")
+    print(p)
   })
   
-  #
   output$vegmap3 <- renderPlot({
+    park_data <- park_list[[input$park]]
+    current_bird_sits <- unique(park_data$xy$Point_Name)
+    current_colors <- setNames(plot_palette[1:length(current_bird_sits)], current_bird_sits)
+
+    plot_points <- park_data$for_plots %>%
+      filter(park == input$park)
+
+    bird_values_sat <- park_data$aar_coni_cov %>%
+                  filter(park == input$park) %>% 
+                  pull(BA_SUM)
+    bird_values_netn <- park_data$xy$BA_m2ha_Conifer
+    combined_range <- range(c(bird_values_sat, bird_values_netn), na.rm = TRUE)
+
     r <- 
       ggplot(data = park_data$map) +
-        geom_sf(aes(fill = Cover_Type2, text = paste("MapUnit:", MapUnit_Name, "<br>Cover Type:", Cover_Type2))) +
+        geom_sf(aes(fill = Cover_Type2)) +  # Remove text aesthetic
         scale_fill_manual(values = for_nofor_colors, na.value = "grey80") +
+        
+        # Add new scale for continuous fill
+        ggnewscale::new_scale_fill() +
+        
         geom_segment(data = park_data$neighbor,
                       aes(x = lonutmb, y = latutmb, 
                           xend = lonutmf, yend = latutmf, 
                           colour = bird_sit)) +
-        scale_color_manual(values = current_colors) + 
-        geom_sf(
-          data = park_data$aar_coni_cov,
-          size = 3, 
-          color = "black",
-          aes(text = paste0(
-                "Plot: ", Point_Name, "<br>",
-                #"Type: ", type_plot, "<br>",
-                #"Conifer Den: ", treeden_ha_Conifer, "<br>",
-                "Conifer BA: ", BA_SUM 
-            ))) +       
-        geom_sf(data = park_data$xy %>%
-                  #filter(park == input$park), 
-                  filter(park == "MABI"), 
-                aes(color = Point_Name,
-                text = paste0(
-                "Bird Site: ", Point_Name, "<br>",
-                "Conifer Den: ", treeden_ha_Conifer, "<br>",
-                "Conifer BA: ", BA_m2ha_Conifer 
-            )),
-                shape = 18, size = 4) +
-        scale_color_manual(values = current_colors, na.value = "#615e5e") + 
+        scale_color_manual(values = current_colors, guide = "none") + 
+        
+        geom_sf(data = plot_points,
+                size = 3, 
+                color = "black") +        
+        
+        geom_sf(data = park_data$aar_coni_cov %>%
+                  filter(park == input$park), 
+                aes(fill = BA_SUM,  color = Point_Name),  # Only use fill, not color
+                shape = 21, size = 7, stroke = 1) +  # Use shape 21 for fill
+        guides(color = "none") +
+
+        scale_fill_viridis_c(name = "Conifer BA", 
+                            option = "plasma", 
+                            na.value = "grey50",
+                            limits = combined_range) +
         theme_bw() +
-        theme(legend.position = "none",
+        theme(legend.position = "right",
               legend.text = element_text(size = 8),
               legend.title = element_text(size = 9),
-              plot.title = element_text(hjust = 0.5, size = 22))# +
-        ggtitle(input$park)
-      
-    ggplotly(r, tooltip = "text")
+              plot.title = element_text(hjust = 0.5, size = 22)) +
+        labs(title = paste("Bird Site Satellite -", input$park))       
+    
+    print(r)
   })
 
   output$complot <- renderPlotly({
-    park_data <- park_list[[input$park]]
-        
-    comp <- left_join(park_data$aar_coni_cov %>% select(Point_Name, BA_sum_ha),
-                      as_tibble(park_data$xy) %>% filter(park == input$park) %>% select(Point_Name, tot_ba_m),
-                      by = "Point_Name") %>% 
-                arrange(Point_Name)  %>% 
-                as_tibble()
-
-    max_sca <- ceiling(max(comp %>% select(BA_sum_ha, tot_ba_m), na.rm = T) / 10) * 10
-    min_sca <- floor(min(comp %>% select(BA_sum_ha, tot_ba_m), na.rm = T) / 10) * 10
-
+     park_data <- park_list[[input$park]]
+    
+    # Join percent conifer BA to plot points for annotation
+    comp_net_sat2 <- comp_net_sat1 %>%
+      filter(park == input$park)
     # Create base plot without text aesthetic to avoid warnings
-    q <- ggplot(data = comp) +
-      geom_point(aes(x = tot_ba_m, y = BA_sum_ha, 
+
+    max_sca <- ceiling(max(comp_net_sat2 %>% select(BA_m2ha_Conifer, BA_SUM), na.rm = T) / 10) * 10
+    min_sca <- floor(min(comp_net_sat2 %>% select(BA_m2ha_Conifer, BA_SUM), na.rm = T) / 10) * 10
+
+    q <- ggplot(data = comp_net_sat2) +
+      geom_point(aes(x = BA_m2ha_Conifer, y = BA_SUM, 
                      text = paste0("Bird Point: ", Point_Name, "<br>",
-                                  "Your BA: ", round(tot_ba_m, 2), " m²/ha<br>",
-                                  "Aaron's BA: ", round(BA_sum_ha, 2), " m²/ha")), 
+                                  "NETN BA: ", round(BA_m2ha_Conifer, 2), " m²/ha<br>",
+                                  "Satelite BA: ", round(BA_SUM, 2), " m²/ha")), 
                  size = 2) +
-      geom_smooth(aes(x = tot_ba_m, y = BA_sum_ha), method = "lm", se = FALSE) +
-      geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed", size = 1) +
       xlim(min_sca, max_sca) +
       ylim(min_sca, max_sca) +
-      labs(x = "For Plot BA Estimates (m²/ha)", y = "Aaron's BA Estimates (m²/ha)", 
-           title = paste("Comparison of BA Estimates -", input$park)) +
+      geom_smooth(aes(x = BA_m2ha_Conifer, y = BA_SUM), method = "lm", se = FALSE) +
+      geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed", size = 1) +
+      labs(x = "NETN BA Estimates (m²/ha)", y = "Satelite BA Estimates (m²/ha)", 
+           title = paste("Bird site BA Estimates -", input$park)) +
       theme_bw() +
       theme(legend.position = "right",
             legend.text = element_text(size = 12),
@@ -387,24 +441,163 @@ server <- function(input, output, session) {
     ggplotly(q, tooltip = "text")
 
   })
+
+  output$vegmap2 <- renderPlot({
+    park_data <- park_list[[input$park]]
+    
+    plot_points <- park_data$for_plots %>%
+      filter(park == input$park)
+    
+    current_for_sits <- unique(plot_points$for_sit)
+    current_colors_for <- setNames(plot_palette[1:length(current_for_sits)], current_for_sits)
+    current_bird_sits <- unique(park_data$xy$Point_Name)
+    current_colors <- setNames(plot_palette[1:length(current_bird_sits)], current_bird_sits)
+
+    for_values_sat <- aaron2 %>%
+                  filter(park == input$park) %>% 
+                  pull(Merged_Conifer_BA_2009)
+    for_values_netn <- plot_points$BA_m2ha_Conifer
+    combined_range <- range(c(for_values_sat, for_values_netn), na.rm = TRUE)
+
+    p2 <- 
+      ggplot(data = park_data$map) +
+        geom_sf(aes(fill = Cover_Type2)) +  # Remove text aesthetic
+        scale_fill_manual(values = for_nofor_colors, na.value = "grey80") +
+        
+        # Add new scale for continuous fill
+        ggnewscale::new_scale_fill() +
+        
+        geom_segment(data = park_data$neighbor,
+                      aes(x = lonutmb, y = latutmb, 
+                          xend = lonutmf, yend = latutmf, 
+                          colour = bird_sit)) +
+        scale_color_manual(values = current_colors, guide = "none") + 
+        
+        geom_sf(data = park_data$xy,
+                size = 3, 
+                color = "black") +       
+        
+        geom_sf(data = plot_points %>%
+                  filter(park == input$park), 
+                aes(fill = BA_m2ha_Conifer),  # Only use fill
+                shape = 21, size = 7, stroke = 1, color = "black") +  # Use shape 21
+        
+        scale_fill_viridis_c(name = "Conifer BA", 
+                            option = "plasma", 
+                            na.value = "grey50",
+                            limits = combined_range) +
+        theme_bw() +
+        theme(legend.position = "right",
+              legend.text = element_text(size = 8),
+              legend.title = element_text(size = 9),
+              plot.title = element_text(hjust = 0.5, size = 22)) +
+        labs(title = paste("Forest Plot NETN -", input$park)) 
+      
+    print(p2)
+  })
+  
+  #
+  output$vegmap32 <- renderPlot({
+    park_data <- park_list[[input$park]]
+
+    plot_points <- park_data$for_plots %>%
+      filter(park == input$park)
+
+    current_bird_sits <- unique(park_data$xy$Point_Name)
+    current_colors <- setNames(plot_palette[1:length(current_bird_sits)], current_bird_sits)
+
+    for_values_sat <- aaron2 %>%
+                  filter(Unit_ID == "MABI") %>%  # Using fixed filter like your code
+                  pull(Merged_Conifer_BA_2009)
+    for_values_netn <- plot_points$BA_m2ha_Conifer
+    combined_range <- range(c(for_values_sat, for_values_netn), na.rm = TRUE)
+    
+    r2 <- 
+      ggplot(data = park_data$map) +
+        geom_sf(aes(fill = Cover_Type2)) +  # Remove text aesthetic
+        scale_fill_manual(values = for_nofor_colors, na.value = "grey80") +
+        
+        # Add new scale for continuous fill
+        ggnewscale::new_scale_fill() +
+        
+        geom_segment(data = park_data$neighbor,
+                      aes(x = lonutmb, y = latutmb, 
+                          xend = lonutmf, yend = latutmf, 
+                          colour = bird_sit)) +
+        scale_color_manual(values = current_colors, guide = "none") + 
+        
+        geom_sf(data = park_data$xy,
+                size = 3, 
+                color = "black") +              
+        
+        geom_sf(data = aaron2 %>%
+                  filter(Unit_ID == "MABI"), 
+                aes(fill = Merged_Conifer_BA_2009),  # Only use fill
+                shape = 21, size = 7, stroke = 1, color = "black") +  # Use shape 21
+        
+        scale_fill_viridis_c(name = "Conifer BA", 
+                            option = "plasma", 
+                            na.value = "grey50",
+                            limits = combined_range) +
+        theme_bw() +
+        theme(legend.position = "right",
+              legend.text = element_text(size = 8),
+              legend.title = element_text(size = 9),
+              plot.title = element_text(hjust = 0.5, size = 22)) +
+        labs(title = paste("Forest Plot Satellite -", input$park))
+      
+    print(r2)
+  })
+
+  output$complot2 <- renderPlotly({
+     park_data <- park_list[[input$park]]
+    
+    # Join percent conifer BA to plot points for annotation
+    comp_net_sat2 <- comp_for_plot %>%
+      filter(park == input$park)
+    # Create base plot without text aesthetic to avoid warnings
+
+    max_sca <- ceiling(max(comp_net_sat2 %>% as_tibble() %>% select(BA_m2ha_Conifer, Merged_Conifer_BA_2009), na.rm = T) / 10) * 10
+    min_sca <- floor(min(comp_net_sat2 %>% as_tibble() %>% select(BA_m2ha_Conifer, Merged_Conifer_BA_2009), na.rm = T) / 10) * 10
+
+    q2 <- ggplot(data = comp_net_sat2) +
+      geom_point(aes(x = BA_m2ha_Conifer, y = Merged_Conifer_BA_2009, 
+                     text = paste0("Bird Point: ", for_sit, "<br>",
+                                  "NETN BA: ", round(BA_m2ha_Conifer, 2), " m²/ha<br>",
+                                  "Satelite BA: ", round(Merged_Conifer_BA_2009, 2), " m²/ha")), 
+                 size = 2) +
+      xlim(min_sca, max_sca) +
+      ylim(min_sca, max_sca) +
+      geom_smooth(aes(x = BA_m2ha_Conifer, y = Merged_Conifer_BA_2009), method = "lm", se = FALSE) +
+      geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed", size = 1) +
+      labs(x = "NETN BA Estimates (m²/ha)", y = "SateliteBA Estimates (m²/ha)", 
+           title = paste("Forest Plot BA Estimates -", input$park)) +
+      theme_bw() +
+      theme(legend.position = "right",
+            legend.text = element_text(size = 12),
+            plot.title = element_text(hjust = 0.5, size = 16))
+    
+    # Convert to plotly with tooltip
+    ggplotly(q2, tooltip = "text")
+
+  })
 }
 
 shinyApp(ui, server)
-## send bird sites values to aaron
-
+## ( x ) send bird sites values to aaron
+## (   ) check park errors
+## (   ) make a single scale for bottom plots
+## (   ) add park limits/boundaries for plots
+## (   ) sensitivity analysis - how many neighbours I get and how estimates changes as the radius gets bigger
 ## ( x ) classify everything as forest and not forest
 ## ( x ) connect bird and forest sites
 ## ( x ) remove the red circles and triangles - same symbol
 ## ( x ) get percentage hardwood and conifer for bird sites
 ## ( x ) weight that percentage according to distance to point
 ## ( x ) create same map with surface heat map
-## (   ) sensitivity analysis - how many neighbours I get and how estimates changes as the radius gets bigger
 ## ( x ) compare with aarons estimates
-
-
-## (   ) get some measure of stand structure (how much vegetation in each strata)
-## (   ) get same covariates as birds (close_points_etc) for the forest sites
-## (   ) gradient of color for the covariates for each bird site and plot (e.g. ba 0.2 is blue and 0.8 is green)
-## (   ) HOFR and VAMA error 
+## ( x ) get some measure of stand structure (how much vegetation in each strata)
+## ( x ) get same covariates as birds (close_points_etc) for the forest sites
+## ( x ) gradient of color for the covariates for each bird site and plot (e.g. ba 0.2 is blue and 0.8 is green)
 
 
