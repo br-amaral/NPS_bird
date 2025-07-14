@@ -180,20 +180,28 @@ server <- function(input, output, session) {
       geom_sf(
         data = forest_points,
         color = "black", 
-        size = 6, 
+        size = 3, 
         shape = 21,
-        stroke = 1,
-        aes(fill = get(input$variable))
+        stroke = 0.5,
+        aes(fill = !!sym(input$variable),
+        text = paste0(
+                    "Plot: ", for_sit, "<br>",
+                    input$variable, ": ", round(!!sym(input$variable), 2)
+                  ))
       ) +
-      # Add bird sites with variable coloring (same variable as forest plots)
-        geom_sf(
-          data = bird_points,
-          color = "black", 
-          size = 5, 
-          shape = 23,
-          stroke = 1,
-          aes(fill = get(input$variable))
-        ) +
+      # Add bird sites with variable coloring
+      geom_sf(
+        data = bird_points,
+        color = "black", 
+        size = 2.5, 
+        shape = 23,
+        stroke = 0.5,
+        aes(fill = !!sym(input$variable),
+        text = paste0(
+                    "Plot: ", Point_Name, "<br>",
+                    input$variable, ": ", round(!!sym(input$variable), 2)
+                  ))
+      ) +
       # Single shared scale for both forest plots and bird sites with combined range
       scale_fill_viridis_c(
         name = paste(input$variable), 
@@ -210,7 +218,9 @@ server <- function(input, output, session) {
             axis.title = element_text(size = 8)) +
       ggtitle(paste(input$park, "- Forest Plots (circles) & Bird Sites (diamonds)"))
     
-    print(p)
+    #print(p)
+        ggplotly(p, tooltip = "text")
+
   })
 
   output$plot_title <- renderText({
@@ -276,6 +286,5 @@ server <- function(input, output, session) {
 
 shinyApp(ui, server)
 
-## add hover
 ## add neighbour conection
 ## two tabs, second comparing satelite vs netn
