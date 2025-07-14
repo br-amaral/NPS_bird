@@ -66,142 +66,115 @@ source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_veg_data/get_c
 ## file paths
 
 ## read files
-#? bird site covariates
 radi_dist <- 250
-close_points_f2 <- read_rds(file = glue("data/out/site_covs_fornofor_{radi_dist}m.rds"))
+
+## file paths
+COV_FOR_PLY <- "data/out/for_plot_covs.rds"
+COV_BRD_SIT <- glue("data/out/site_covs_fornofor_{radi_dist}m.rds")
+#AAR_BIR_COV <- 
+AAR_FOR_COV <- "data/conifer_final_aaron.rds"
+NEI_PATH <- glue("data/out/neighbor_fornofor_{radi_dist}m.rds")
+
+## read files
+# get neighbors
+neighbor <- read_rds(NEI_PATH) %>% 
+                mutate(park = substr(bird_sit,1,4))
+
+# get info on site and plot level for bird sites and forest plots
+bird_sit_covs  <- read_rds(file = COV_BRD_SIT) %>%
+  # Remove "_wei" suffix from all column names
+  rename_with(~str_remove(.x, "_wei$"))
+
+aa_covs_for <- read_rds(AAR_FOR_COV) 
+
+for_plots_covs <- read_rds(file = COV_FOR_PLY) %>% 
+                      rename(for_sit = Plot_Name) %>% 
+                      select(-UTMZone) %>% 
+                      mutate(type = as.character(NA))
+
+for(ii in 1:nrow(for_plots_covs)){
+
+    if(for_plots_covs$BA_m2ha_Conifer[ii] > for_plots_covs$BA_m2ha_Hardwood[ii]) {
+        for_plots_covs$type[ii] <- "Conifer"
+    } else { for_plots_covs$type[ii] <- "Hardwood" }
+}
+
+# Prepare forest plot data
+for_plots_sf <- for_plots_sf %>%
+      rename(for_sit = for_sit) %>% 
+      left_join(.,for_plots_covs, by = "for_sit")
 
 # shiny for parks, forest type_plot, and new covariates
-for_plots_sf <- for_plots_sf  %>% rename(PlotID = for_sit)
 for_plots_sfh <- for_plots_sf  %>% filter(park == "ROVA"); for_plots_sfh$park <- "HOFR"   # hofr
 for_plots_sfv <- for_plots_sf  %>% filter(park == "ROVA"); for_plots_sfv$park <- "VAMA"   # vama
-for_plots_sfm <- for_plots_sfm  %>% rename(PlotID = for_sit)                              # mima
+for_plots_sfm <- for_plots_sfm %>%
+      left_join(.,for_plots_covs, by = "for_sit")  # mima
 
-tre_cov3_key <- expand.grid(sort(unique(tre_cov3$PlotID)), c('Hardwood', 'Conifer'))  %>% 
-                    as_tibble() %>% 
-                    rename(PlotID = Var1,
-                           type = Var2) %>% 
-                    mutate(PlotID = as.character(PlotID),
-                           type = as.character(type)) %>% 
-                    arrange(PlotID)
-
-tre_cov4 <- left_join(tre_cov3_key, tre_cov3, by = c('PlotID', 'type')) %>% 
-                mutate(ParkUnit = substr(PlotID, 1, 4),
-                       BA_m2ha = ifelse(is.na(BA_m2ha), 0, BA_m2ha),
-                       density = ifelse(is.na(density), 0, density),
-                       type_plot = ifelse(is.na(type_plot), 
-                                          ifelse(type == 'Conifer', 'Hardwood', 'Conifer'), 
-                                          type_plot))
-
-tre_cov3percent_con <- tre_cov4  %>% 
-  group_by(PlotID) %>% 
-  mutate(
-    tot_ba = sum(BA_m2ha),
-    tot_den = sum(density)
-  ) %>% 
-  arrange(PlotID, type_plot)  %>% 
-  mutate(
-    per_ba = BA_m2ha / tot_ba,
-    per_den = density / tot_den
-  ) %>% 
-  filter(#type_plot == "Conifer",
-         type == "Conifer") %>% 
-  ungroup()
-
-# datatable(tre_cov3percent_con)
-
-## get neighbours to calculate % of conifer and hardwood for each bird point
-neighbor <- read_rds(file = "data/out/close_points_dist.rds") %>% 
-                      select(dist, for_sit, bird_sit)
-
-neighbor2 <- left_join(neighbor %>% 
-                          rename(PlotID = for_sit), 
-                       tre_cov3percent_con %>% 
-                          select(PlotID, ParkUnit, BA_m2ha, density, tot_ba, tot_den, per_ba, per_den),
-                       by = "PlotID")  %>% 
-                  arrange(bird_sit) %>%
-                  select(-ParkUnit) %>% 
-                  mutate(BA_m2ha = ifelse(BA_m2ha == 0, BA_m2ha + 0.001, BA_m2ha)) %>% 
-                  group_by(bird_sit) %>% 
-                  mutate(BA_m2ha_m   = mean(BA_m2ha, na.rm = T),
-                         density_m   = mean(density, na.rm = T), 
-                         tot_ba_m    = mean(tot_ba,  na.rm = T), 
-                         tot_den_m   = mean(tot_den, na.rm = T), 
-                         per_ba_m    = mean(per_ba,  na.rm = T), 
-                         per_den_m   = mean(per_den, na.rm = T),
-                         BA_m2ha_wei = (sum(BA_m2ha * 1/dist))/sum(1/dist),
-                         density_wei = (sum(density * 1/dist))/sum(1/dist), 
-                         tot_ba_wei  = (sum(tot_ba *  1/dist))/sum(1/dist), 
-                         tot_den_wei = (sum(tot_den * 1/dist))/sum(1/dist),
-                         per_ba_wei  = (sum(per_ba *  1/dist))/sum(1/dist),
-                         per_den_wei = (sum(per_den * 1/dist))/sum(1/dist)) %>% 
-                  ungroup() %>% 
-                  select(-PlotID, -dist, -BA_m2ha, -density, -tot_ba, -tot_den, -per_ba, -per_den) %>%
-                  distinct() %>% 
-                  mutate(type = "Conifer")
-
-xy_sf2 <- xy_sf %>% 
-            filter(park %!in% c("ACAD", "ELRO", "SAIR")) %>% 
-            left_join(., 
-                      neighbor2 %>% 
-                        rename(Point_Name = bird_sit), 
-                      by = c('Point_Name')) %>% 
-            mutate(BApercent_type = ifelse(per_ba_m > 0.5, 'Conifer', 'Hardwood')) %>%
-            distinct()
+bird_sit_covs2 <- bird_sit_covs %>% 
+                      mutate(park = substr(bird_sit, 1, 4)) %>% 
+                      filter(park %!in% c("ACAD", "ELRO", "SAIR")) %>%
+                      rename(Point_Name = bird_sit) 
 
 #? aaron data
 aar_con <- read_rds(file = "data/conifer_final_aaron.rds")  %>% 
               mutate(Point_Name = paste0(substr(PT_CODE, 1, 4), substr(PT_CODE, 6, 7), substr(PT_CODE, 9, 10))) %>% 
-              select(Point_Name, BA_SUM)  
+              select(Point_Name, BA_SUM) %>% 
+              mutate(BA_SUM = BA_SUM/19.63,
+                     park = substr(Point_Name, 1,4 )) 
 
-aar_con <- left_join(xy_sf, aar_con, by = "Point_Name") %>% 
-              mutate(BA_sum_ha = BA_SUM/19.63) %>%  ## The area of a circle with a 250-meter radius is approximately 19.63 hectares.
-              rename(ParkUnit = park)
+# Join with xy_sf to get spatial geometry - bird plots
+aar_con_sf <- left_join(xy_sf, aar_con, by = c("Point_Name", "park")) %>%
+              filter(!is.na(BA_SUM))  # Only keep records that have Aaron's data
 
-par(mfrow = c(1,3))
-hist(as_tibble(aar_con) %>% pull(BA_sum_ha)) 
-hist(as_tibble(xy_sf2) %>% pull(tot_ba_m)) 
-hist(as_tibble(xy_sf2) %>% pull(tot_ba_wei))
+hist(as_tibble(aar_con) %>% pull(BA_SUM)) 
 
-t.test(as_tibble(aar_con) %>% pull(BA_sum_ha), 
-           as_tibble(xy_sf2) %>% pull(tot_ba_wei))
+#
+aaron2 <- read_csv("data/NETNForestPlot_Conifer_BA.csv")
+
+aaron2 %>% filter(Unit_ID == "MABI")  %>% ggplot() + geom_point(aes(x = X_Coord, y = Y_Coord))
+
+xy_sf <- left_join(xy_sf, bird_sit_covs2, by = c("Point_Name", "park")) %>% 
+                      filter(park %!in% c("ACAD", "ELRO", "SAIR"))
+
+comp_net_sat <- full_join(xy_sf, aar_con_sf, by = "Point_Name")
+
+par(mfrow = c(1,2))
+hist(as_tibble(comp_net_sat) %>% pull(BA_SUM)) 
+hist(as_tibble(comp_net_sat) %>% pull(BA_m2ha_Conifer)) 
+
+t.test(as_tibble(comp_net_sat) %>% pull(BA_SUM), 
+           as_tibble(comp_net_sat) %>% pull(BA_m2ha_Conifer))
 
 par(mfrow = c(1,1))
-plot(as_tibble(xy_sf2) %>% pull(tot_ba_m), as_tibble(xy_sf2) %>% pull(tot_ba_wei))
+ggplot(comp_net_sat) +
+    geom_point(aes(x = BA_SUM, y = BA_m2ha_Conifer)) +
+    geom_smooth(aes(x = BA_SUM, y = BA_m2ha_Conifer), method = "lm") +
+    theme_bw()
 
-left_join(as_tibble(aar_con) %>% select(Point_Name, BA_sum_ha),
-          as_tibble(xy_sf2) %>% select(Point_Name, tot_ba_m),
-          by = "Point_Name") %>% 
+comp_net_sat %>% 
       arrange(Point_Name) %>% 
       as_tibble() %>% 
-      mutate(difference = tot_ba_m - BA_sum_ha)  %>% 
+      mutate(difference = BA_SUM - BA_m2ha_Conifer)  %>% 
       pull(difference) %>% 
       hist()
 
 park_list <- list(
-  "MABI" = list(map = mabi_vegmap2, for_plots = for_plots_sf,  xy = xy_sf2, 
-                close_points = close_points_f2 %>% filter(ParkUnit == "MABI"),
-                aar_coni_cov = aar_con %>% filter(ParkUnit == "MABI")),
-  "MORR" = list(map = morr_vegmap2, for_plots = for_plots_sf,  xy = xy_sf2, 
-                close_points = close_points_f2 %>% filter(ParkUnit == "MORR"),
-                aar_coni_cov = aar_con %>% filter(ParkUnit == "MORR")),
-  "SAGA" = list(map = saga_vegmap2, for_plots = for_plots_sf,  xy = xy_sf2, 
-                close_points = close_points_f2 %>% filter(ParkUnit == "SAGA"),
-                aar_coni_cov = aar_con %>% filter(ParkUnit == "SAGA")),
-  "SARA" = list(map = sara_vegmap2, for_plots = for_plots_sf,  xy = xy_sf2, 
-                close_points = close_points_f2 %>% filter(ParkUnit == "SARA"),
-                aar_coni_cov = aar_con %>% filter(ParkUnit == "SARA")),
-  "WEFA" = list(map = wefa_vegmap2, for_plots = for_plots_sf,  xy = xy_sf2, 
-                close_points = close_points_f2 %>% filter(ParkUnit == "WEFA"),
-                aar_coni_cov = aar_con %>% filter(ParkUnit == "WEFA")),
-  "HOFR" = list(map = rova_vegmap2, for_plots = for_plots_sfh, xy = xy_sf2, 
-                close_points = close_points_f2 %>% filter(ParkUnit == "HOFR"),
-                aar_coni_cov = aar_con %>% filter(ParkUnit == "HOFR")),
-  "VAMA" = list(map = rova_vegmap2, for_plots = for_plots_sfv, xy = xy_sf2, 
-                close_points = close_points_f2 %>% filter(ParkUnit == "VAMA"),
-                aar_coni_cov = aar_con %>% filter(ParkUnit == "VAMA")),
-  "MIMA" = list(map = mima_vegmap2, for_plots = for_plots_sfm, xy = xy_sf2, 
-                close_points = close_points_f2 %>% filter(ParkUnit == "MIMA"),
-                aar_coni_cov = aar_con %>% filter(ParkUnit == "MIMA"))
+  "MABI" = list(map = mabi_vegmap2, for_plots = for_plots_sf,  xy = xy_sf %>% filter(park == "MABI"), neighbor = neighbor%>% filter(park == "MABI"),
+                aar_coni_cov = aar_con_sf %>% filter(park == "MABI")),
+  "MORR" = list(map = morr_vegmap2, for_plots = for_plots_sf,  xy = xy_sf %>% filter(park == "MORR"), neighbor = neighbor %>% filter(park == "MORR"),
+                aar_coni_cov = aar_con_sf %>% filter(park == "MORR")),
+  "SAGA" = list(map = saga_vegmap2, for_plots = for_plots_sf,  xy = xy_sf %>% filter(park == "SAGA"), neighbor = neighbor %>% filter(park == "SAGA"),
+                aar_coni_cov = aar_con_sf %>% filter(park == "SAGA")),
+  "SARA" = list(map = sara_vegmap2, for_plots = for_plots_sf,  xy = xy_sf %>% filter(park == "SARA"), neighbor = neighbor %>% filter(park == "SARA"),
+                aar_coni_cov = aar_con_sf %>% filter(park == "SARA")),
+  "WEFA" = list(map = wefa_vegmap2, for_plots = for_plots_sf,  xy = xy_sf %>% filter(park == "WEFA"), neighbor = neighbor %>% filter(park == "WEFA"),
+                aar_coni_cov = aar_con_sf %>% filter(park == "WEFA")),
+  "HOFR" = list(map = rova_vegmap2, for_plots = for_plots_sfh, xy = xy_sf %>% filter(park == "HOFR"), neighbor = neighbor %>% filter(park == "HOFR"),
+                aar_coni_cov = aar_con_sf %>% filter(park == "HOFR")),
+  "VAMA" = list(map = rova_vegmap2, for_plots = for_plots_sfv, xy = xy_sf %>% filter(park == "VAMA"), neighbor = neighbor %>% filter(park == "VAMA"),
+                aar_coni_cov = aar_con_sf %>% filter(park == "VAMA")),
+  "MIMA" = list(map = mima_vegmap2, for_plots = for_plots_sfm, xy = xy_sf %>% filter(park == "MIMA"), neighbor = neighbor %>% filter(park == "MIMA"),
+                aar_coni_cov = aar_con_sf %>% filter(park == "MIMA"))
 )
 
 #? veggie types to only forest or not-forest (Cover_Type2)
@@ -283,8 +256,8 @@ ui <- fluidPage(
 # plot_points <- park_data$for_plots %>%
 #   left_join(tre_cov4, by = "PlotID") %>%
 #   left_join(tre_cov3percent_con %>% 
-#   filter(ParkUnit == "MABI"), by = "PlotID", suffix = c("", "_con")) %>% 
-#   filter(ParkUnit == "MABI")
+#   filter(park == "MABI"), by = "PlotID", suffix = c("", "_con")) %>% 
+#   filter(park == "MABI")
 
 server <- function(input, output, session) {
   output$vegmap <- renderPlotly({
@@ -292,20 +265,17 @@ server <- function(input, output, session) {
     
     # Join percent conifer BA to plot points for annotation
     plot_points <- park_data$for_plots %>%
-      left_join(tre_cov4, by = "PlotID") %>%
-      left_join(tre_cov3percent_con %>% 
-      filter(ParkUnit == input$park), by = "PlotID", suffix = c("", "_con")) %>% 
-      filter(ParkUnit == input$park)
+      filter(park == input$park)
     
     # Create park-specific color palette for current park's bird_sit values
-    current_bird_sits <- unique(park_data$close_points$bird_sit)
+    current_bird_sits <- unique(park_data$xy$Point_Name)
     current_colors <- setNames(plot_palette[1:length(current_bird_sits)], current_bird_sits)
     
     p <- 
       ggplot(data = park_data$map) +
         geom_sf(aes(fill = Cover_Type2, text = paste("MapUnit:", MapUnit_Name, "<br>Cover Type:", Cover_Type2))) +
         scale_fill_manual(values = for_nofor_colors, na.value = "grey80") +
-        geom_segment(data = park_data$close_points,
+        geom_segment(data = park_data$neighbor,
                       aes(x = lonutmb, y = latutmb, 
                           xend = lonutmf, yend = latutmf, 
                           colour = bird_sit)) +
@@ -315,20 +285,19 @@ server <- function(input, output, session) {
           size = 3, 
           color = "black",
           aes(text = paste0(
-                "Plot: ", PlotID, "<br>",
-                "Type: ", type_plot, "<br>",
-                "Percent Conifer Den: ", round(per_den, 2), "<br>",
-                "Percent Conifer BA: ", round(per_ba, 2)
+                "Plot: ", for_sit, "<br>",
+                #"Type: ", type_plot, "<br>",
+                "Conifer Den: ", treeden_ha_Conifer, "<br>",
+                "Conifer BA: ", BA_m2ha_Conifer 
             ))) +       
         geom_sf(data = park_data$xy %>%
-                  filter(park == input$park), 
-                  #filter(park == "MABI"), 
+                  #filter(park == input$park), 
+                  filter(park == "MABI"), 
                 aes(color = Point_Name,
                 text = paste0(
                 "Bird Site: ", Point_Name, "<br>",
-                "Type: ", BApercent_type, "<br>",
-                "Percent Conifer Den: ", round(per_den_wei, 2), "<br>",
-                "Percent Conifer BA: ", round(per_ba_wei, 2)
+                "Conifer Den: ", treeden_ha_Conifer, "<br>",
+                "Conifer BA: ", BA_m2ha_Conifer 
             )),
                 shape = 18, size = 4) +
         scale_color_manual(values = current_colors, na.value = "#615e5e") + 
@@ -336,74 +305,52 @@ server <- function(input, output, session) {
         theme(legend.position = "none",
               legend.text = element_text(size = 8),
               legend.title = element_text(size = 9),
-              plot.title = element_text(hjust = 0.5, size = 22)) +
+              plot.title = element_text(hjust = 0.5, size = 22))# +
         ggtitle(input$park)
       
     ggplotly(p, tooltip = "text")
   })
-
-  output$vegmap2 <- renderPlot({
-    park_data <- park_list[[input$park]]
-    
-    # Join percent conifer BA to plot points for annotation
-    plot_points <- park_data$for_plots %>%
-      left_join(tre_cov4, by = "PlotID") %>%
-      left_join(tre_cov3percent_con %>% 
-      filter(ParkUnit == input$park), by = "PlotID", suffix = c("", "_con")) %>% 
-      filter(ParkUnit == input$park)
-    
-    ggplot(data = park_data$map) +
-      geom_sf(aes(fill = Cover_Type2)) +
-      scale_fill_manual(values = for_nofor_colors, na.value = "grey80") +
-      geom_segment(data = park_data$close_points,
-                    aes(x = lonutmb, y = latutmb, 
-                        xend = lonutmf, yend = latutmf), 
-                        colour = "black", linewidth = 1) +
-      ggnewscale::new_scale_fill() +
-      geom_sf(
-        data = plot_points,
-        shape = 22,
-        size = 10, 
-        stroke = 1,
-        color = "red",
-        aes(fill = BA_m2ha)) +
-      geom_sf(data = park_data$xy %>%
-                filter(park == input$park), 
-          aes(fill = BA_m2ha_wei),
-          shape = 21, 
-          size = 10,
-          stroke = 1,
-          color = "black") +
-      scale_fill_viridis_c(name = "BA (m²/ha)", option = "plasma") +
-      theme_bw() +
-      theme(legend.position = "right",
-            legend.text = element_text(size = 10),
-            legend.title = element_text(size = 12),
-            plot.title = element_text(hjust = 0.5, size = 16)) +
-      ggtitle(paste("Basal Area Map -", input$park))
-  })
-
+  
+  #
   output$vegmap3 <- renderPlot({
-    park_data <- park_list[[input$park]]
-        
-    ggplot(data = park_data$map) +
-      geom_sf(aes(fill = Cover_Type2)) +
-      scale_fill_manual(values = for_nofor_colors, na.value = "grey80") +
-      ggnewscale::new_scale_fill() +
-      geom_sf(
-        data =  park_data$aar_coni_cov,
-        shape = 21,
-        size = 10, 
-        stroke = 1,
-        color = "black",
-        aes(fill = BA_sum_ha)) +
-      scale_fill_viridis_c(name = "BA (m²/ha)", option = "plasma") +
-      theme_bw() +
-      theme(legend.position = "right",
-            legend.text = element_text(size = 10),
-            legend.title = element_text(size = 12),
-            plot.title = element_text(hjust = 0.5, size = 16)) +
-      ggtitle(paste("Basal Area Map GIS-", input$park))
+    r <- 
+      ggplot(data = park_data$map) +
+        geom_sf(aes(fill = Cover_Type2, text = paste("MapUnit:", MapUnit_Name, "<br>Cover Type:", Cover_Type2))) +
+        scale_fill_manual(values = for_nofor_colors, na.value = "grey80") +
+        geom_segment(data = park_data$neighbor,
+                      aes(x = lonutmb, y = latutmb, 
+                          xend = lonutmf, yend = latutmf, 
+                          colour = bird_sit)) +
+        scale_color_manual(values = current_colors) + 
+        geom_sf(
+          data = park_data$aar_coni_cov,
+          size = 3, 
+          color = "black",
+          aes(text = paste0(
+                "Plot: ", Point_Name, "<br>",
+                #"Type: ", type_plot, "<br>",
+                #"Conifer Den: ", treeden_ha_Conifer, "<br>",
+                "Conifer BA: ", BA_SUM 
+            ))) +       
+        geom_sf(data = park_data$xy %>%
+                  #filter(park == input$park), 
+                  filter(park == "MABI"), 
+                aes(color = Point_Name,
+                text = paste0(
+                "Bird Site: ", Point_Name, "<br>",
+                "Conifer Den: ", treeden_ha_Conifer, "<br>",
+                "Conifer BA: ", BA_m2ha_Conifer 
+            )),
+                shape = 18, size = 4) +
+        scale_color_manual(values = current_colors, na.value = "#615e5e") + 
+        theme_bw() +
+        theme(legend.position = "none",
+              legend.text = element_text(size = 8),
+              legend.title = element_text(size = 9),
+              plot.title = element_text(hjust = 0.5, size = 22))# +
+        ggtitle(input$park)
+      
+    ggplotly(r, tooltip = "text")
   })
 
   output$complot <- renderPlotly({
