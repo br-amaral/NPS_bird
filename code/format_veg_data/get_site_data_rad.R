@@ -25,7 +25,7 @@
 #           - data/out/neighbor_fornofor_{radi_dist}m.rds  : who is whose neighbor
 #
 # detach packages and clear workspace
-freshr::freshr()
+#  freshr::freshr()
 #
 #! Load packages ---------------------------------------
 #library(conflicted)
@@ -59,8 +59,11 @@ Modes <- function(x) {
 }
 #! Define settings -------------------------------------
 # radius distance in meters
-radi_dist <- 250
+radi_dist2 <- 250
 
+if(exists("radi_dist") == FALSE) {radi_dist <- radi_dist2}
+
+print(glue("\n\n\n\n\n\n radius distance is {radi_dist} \n\n\n\n\n\n"))
 #! Import data -----------------------------------------
 ## file paths
 BIRD_SITE_PATH    <- "data/out/NETNtib.rds"
