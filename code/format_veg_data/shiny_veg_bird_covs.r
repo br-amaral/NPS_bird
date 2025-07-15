@@ -53,40 +53,66 @@ colanmes <- colnames
 lenght <- length
 `%!in%` <- Negate(`%in%`)
 
+radi_dist <- 250
+
 #! Source code -----------------------------------------
 #? veggie maps -----------------------------------------
 # get park shape files with vegetation types and classify each as conifer, hardwood, mixed, or not forest
 source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_veg_data/veg_maps_park.R")
 
+keep_objects <- c("for_plots_sf", "for_plots_sfm", "xy_sf", 
+                  "mabi_vegmap2", "morr_vegmap2", "saga_vegmap2", "sara_vegmap2",
+                  "wefa_vegmap2", "rova_vegmap2", "mima_vegmap2", "keep_objects")
+
+rm(list = setdiff(ls(), keep_objects))
+
+#! NETN Bird ----------------------------------------------
+radi_dist <- 250
+source('/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_veg_data/get_site_data_rad.R')
+
+print(glue("\n\n\n\n\n\n radius distance is {radi_dist} \n\n\n\n\n\n"))
+
+neighbor <- close_points_f2%>% 
+                mutate(park = substr(bird_sit,1,4))
+
+bird_sit_covs <- bird_sit_covs2%>%
+  # Remove "_wei" suffix from all column names
+  rename_with(~str_remove(.x, "_wei$"))
+
+keep_objects2 <- c(keep_objects, "radi_dist", "neighbor", "bird_sit_covs")
+rm(list = setdiff(ls(), keep_objects2))
+
 #? forest covariates -----------------------------------
 # gets all forest plots and calculates what percentage and value of density and BA is conifer and hardwood
-source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_veg_data/get_conhar_baden.R")
+#source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_veg_data/get_conhar_baden.R")
 
 #! Import data -----------------------------------------
 ## file paths
 
 ## read files
-radi_dist <- 250
 
 ## file paths
 COV_FOR_PLY <- "data/out/for_plot_covs.rds"
-COV_BRD_SIT <- glue("data/out/site_covs_fornofor_{radi_dist}m.rds")
+#COV_BRD_SIT <- glue("data/out/site_covs_fornofor_{radi_dist}m.rds")
 #AAR_BIR_COV <- 
 AAR_FOR_COV <- "data/conifer_final_aaron.rds"
-NEI_PATH <- glue("data/out/neighbor_fornofor_{radi_dist}m.rds")
+SATE_BIR_COV <- "data/conifer_final_aaron.rds"
+#NEI_PATH <- glue("data/out/neighbor_fornofor_{radi_dist}m.rds")
 
 ## read files
 # get neighbors
-neighbor <- read_rds(NEI_PATH) %>% 
-                mutate(park = substr(bird_sit,1,4))
+# neighbor <- read_rds(NEI_PATH) %>% 
+#                 mutate(park = substr(bird_sit,1,4))
 
 # get info on site and plot level for bird sites and forest plots
-bird_sit_covs  <- read_rds(file = COV_BRD_SIT) %>%
-  # Remove "_wei" suffix from all column names
-  rename_with(~str_remove(.x, "_wei$"))
+# bird_sit_covs  <- read_rds(file = COV_BRD_SIT) %>%
+#   # Remove "_wei" suffix from all column names
+#   rename_with(~str_remove(.x, "_wei$"))
 
+#! Satelite Forest ----------------------------------------------
 aa_covs_for <- read_rds(AAR_FOR_COV) 
 
+#! NETN Forest ----------------------------------------------
 for_plots_covs <- read_rds(file = COV_FOR_PLY) %>% 
                       rename(for_sit = Plot_Name) %>% 
                       select(-UTMZone) %>% 
@@ -117,8 +143,8 @@ bird_sit_covs2 <- bird_sit_covs %>%
                       filter(park %!in% c("ACAD", "ELRO", "SAIR")) %>%
                       rename(Point_Name = bird_sit) 
 
-#? aaron data
-aar_con <- read_rds(file = "data/conifer_final_aaron.rds")  %>% 
+#! Satelite Bird ----------------------------------------------
+aar_con <- read_rds(file = SATE_BIR_COV)  %>% 
               mutate(Point_Name = paste0(substr(PT_CODE, 1, 4), substr(PT_CODE, 6, 7), substr(PT_CODE, 9, 10))) %>% 
               select(Point_Name, BA_SUM) %>% 
               mutate(BA_SUM = BA_SUM/19.63,
@@ -151,9 +177,6 @@ ggplot(comp_for_plot) +
 aaron2 <- left_join(for_plots_sf1, aaron2, by = "for_sit")
 
 aaron2 %>% filter(Unit_ID == "MABI")  %>% ggplot() + geom_point(aes(x = X_Coord, y = Y_Coord))
-
-colnames(aaron2)
-
 
 xy_sf <- left_join(xy_sf, bird_sit_covs2, by = c("Point_Name", "park")) %>% 
                       filter(park %!in% c("ACAD", "ELRO", "SAIR"))
@@ -271,7 +294,7 @@ if(length(plot_palette) < total_bird_sites) {
 plot_id_colors <- setNames(plot_palette[1:total_bird_sites], plot_id[!is.na(plot_id)])
 
 ui <- fluidPage(
-  titlePanel("NPS Park Bird sites"),
+  titlePanel(glue("NPS Park Bird Sites ({radi_dist} radius) and Forest Plots")),
   sidebarLayout(
     sidebarPanel(
       selectInput("park", "Choose a Park:", choices = names(park_list), selected = "MABI")
