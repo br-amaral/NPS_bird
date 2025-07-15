@@ -59,13 +59,17 @@ keep_objects <- c("for_plots_sf", "for_plots_sfm", "xy_sf",
 
 rm(list = setdiff(ls(), keep_objects))
 
+radi_dist <- 250
+source('/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_veg_data/get_site_data_rad.R')
+
+keep_objects2 <- c(keep_objects, radi_dist)
+
 #! Make functions --------------------------------------
 colanmes <- colnames
 lenght <- length
 `%!in%` <- Negate(`%in%`)
 
 #! Import data -----------------------------------------
-radi_dist <- 250
 
 ## file paths
 COV_FOR_PLY <- "data/out/for_plot_covs.rds"
