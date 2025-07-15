@@ -105,10 +105,10 @@ bird_sit_coord2 <-
         select(-lat, -lon, -UTMZone) %>% 
         filter(park == "WEFA")
 
-(minx <- min(bird_sit_coord2$lonutm, na.rm = TRUE) - 100)
-(maxx <- max(bird_sit_coord2$lonutm, na.rm = TRUE) + 100)
-(miny <- min(bird_sit_coord2$latutm, na.rm = TRUE) - 100)
-(maxy <- max(bird_sit_coord2$latutm, na.rm = TRUE) + 100)
+(minx <- min(bird_sit_coord2$lonutm, na.rm = TRUE) - 200)
+(maxx <- max(bird_sit_coord2$lonutm, na.rm = TRUE) + 200)
+(miny <- min(bird_sit_coord2$latutm, na.rm = TRUE) - 200)
+(maxy <- max(bird_sit_coord2$latutm, na.rm = TRUE) + 200)
 
 print(glue("{round(minx,0)}, {round(maxx,0)}, {round(miny,0)}, {round(maxy,0)}"))
 
