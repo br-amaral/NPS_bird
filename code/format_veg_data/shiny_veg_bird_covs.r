@@ -53,7 +53,7 @@ colanmes <- colnames
 lenght <- length
 `%!in%` <- Negate(`%in%`)
 
-radi_dist <- 250
+radi_dist <- 500
 
 #! Source code -----------------------------------------
 #? veggie maps -----------------------------------------
@@ -62,12 +62,11 @@ source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_veg_data/veg_m
 
 keep_objects <- c("for_plots_sf", "for_plots_sfm", "xy_sf", 
                   "mabi_vegmap2", "morr_vegmap2", "saga_vegmap2", "sara_vegmap2",
-                  "wefa_vegmap2", "rova_vegmap2", "mima_vegmap2", "keep_objects")
+                  "wefa_vegmap2", "rova_vegmap2", "mima_vegmap2", "keep_objects", "radi_dist")
 
 rm(list = setdiff(ls(), keep_objects))
 
 #! NETN Bird ----------------------------------------------
-radi_dist <- 250
 source('/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_veg_data/get_site_data_rad.R')
 
 print(glue("\n\n\n\n\n\n radius distance is {radi_dist} \n\n\n\n\n\n"))
