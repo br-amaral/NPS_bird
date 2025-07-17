@@ -32,7 +32,7 @@
 #  renv::snapshot()
 
 # detach packages and clear workspace
-freshr::freshr()
+#freshr::freshr()
 
 #! Load packages ---------------------------------------
 library(tidyverse)
@@ -55,7 +55,7 @@ source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_veg_data/veg_m
 # keep only relevant files
 keep_objects <- c("for_plots_sf", "for_plots_sfm", "xy_sf", 
                   "mabi_vegmap2", "morr_vegmap2", "saga_vegmap2", "sara_vegmap2",
-                  "wefa_vegmap2", "rova_vegmap2", "mima_vegmap2")
+                  "wefa_vegmap2", "rova_vegmap2", "mima_vegmap2", "keep_objects")
 
 rm(list = setdiff(ls(), keep_objects))
 
@@ -125,8 +125,6 @@ park_list <- list(
   "MIMA" = list(map = mima_vegmap2, for_plots = for_plots_sfm, xy = xy_sf, neighbor = neighbor)
 )
 
-write_rds(park_list, file = "data/out/park_list.rds")
-
 all_cover_types <- unique(unlist(lapply(park_list, function(x) unique(x$map$Cover_Type))))
 palette <- c("#605d5d", "#1e7b1e", "#3a78dc", "#c98b19", "#dcdada")
 cover_type_colors <- setNames(palette[seq_along(all_cover_types)], all_cover_types)
@@ -195,7 +193,7 @@ server <- function(input, output, session) {
         data = forest_points,
         color = "black", 
         size = 7, 
-        shape = 21,
+        shape = 23,
         stroke = 1,
         aes(fill = !!sym(input$variable))
       ) +
@@ -204,7 +202,7 @@ server <- function(input, output, session) {
         data = bird_points,
         #color = "black", 
         size = 7, 
-        shape = 23,
+        shape = 21,
         stroke = 1,
         aes(fill = !!sym(input$variable), color = Point_Name)
       ) +

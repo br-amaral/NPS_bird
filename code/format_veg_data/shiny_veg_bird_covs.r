@@ -378,7 +378,7 @@ server <- function(input, output, session) {
               legend.text = element_text(size = 8),
               legend.title = element_text(size = 9),
               plot.title = element_text(hjust = 0.5, size = 22)) +
-        labs(title = glue("Bird Site NETN -{ input$park} {radi_dist} radius")) +
+        labs(title = glue("Bird Site NETN - {input$park} {radi_dist} radius")) +
         scale_x_continuous(limits = c(pull(park_data$park_lim[1,2]), pull(park_data$park_lim[1,3]))) +
         scale_y_continuous(limits = c(pull(park_data$park_lim[1,4]), pull(park_data$park_lim[1,5])))
       
@@ -455,8 +455,8 @@ server <- function(input, output, session) {
                                   "NETN BA: ", round(BA_m2ha_Conifer, 2), " m²/ha<br>",
                                   "Satelite BA: ", round(BA_SUM, 2), " m²/ha")), 
                  size = 2) +
-      xlim(min_sca, max_sca) +
-      ylim(min_sca, max_sca) +
+      # xlim(min_sca, max_sca) +
+      # ylim(min_sca, max_sca) +
       geom_smooth(aes(x = BA_m2ha_Conifer, y = BA_SUM), method = "lm", se = FALSE) +
       geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed", size = 1) +
       labs(x = "NETN BA Estimates (m²/ha)", y = "Satelite BA Estimates (m²/ha)") +
@@ -507,7 +507,7 @@ server <- function(input, output, session) {
         geom_sf(data = plot_points %>%
                   filter(park == input$park), 
                 aes(fill = BA_m2ha_Conifer),  # Only use fill
-                shape = 21, size = 7, stroke = 1, color = "black") +  # Use shape 21
+                shape = 23, size = 7, stroke = 1, color = "black") +  # Use shape 21
         
         scale_fill_viridis_c(name = "Conifer BA", 
                             option = "plasma", 
@@ -561,7 +561,7 @@ server <- function(input, output, session) {
         geom_sf(data = aaron2 %>%
                   filter(Unit_ID == "MABI"), 
                 aes(fill = Merged_Conifer_BA_2009),  # Only use fill
-                shape = 21, size = 7, stroke = 1, color = "black") +  # Use shape 21
+                shape = 23, size = 7, stroke = 1, color = "black") +  # Use shape 21
         
         scale_fill_viridis_c(name = "Conifer BA", 
                             option = "plasma", 
@@ -596,8 +596,8 @@ server <- function(input, output, session) {
                                   "NETN BA: ", round(BA_m2ha_Conifer, 2), " m²/ha<br>",
                                   "Satelite BA: ", round(Merged_Conifer_BA_2009, 2), " m²/ha")), 
                  size = 2) +
-      xlim(min_sca, max_sca) +
-      ylim(min_sca, max_sca) +
+      # xlim(min_sca, max_sca) +
+      # ylim(min_sca, max_sca) +
       geom_smooth(aes(x = BA_m2ha_Conifer, y = Merged_Conifer_BA_2009), method = "lm", se = FALSE) +
       geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed", size = 1) +
       labs(x = "NETN BA Estimates (m²/ha)", y = "SateliteBA Estimates (m²/ha)", 
@@ -617,8 +617,8 @@ shinyApp(ui, server)
 ## ( x ) send bird sites values to aaron
 ## (   ) check park errors
 ## (   ) make a single scale for bottom plots
-##! (   ) add park limits/boundaries for plots
-## (   ) sensitivity analysis - how many neighbours I get and how estimates changes as the radius gets bigger
+## ( x ) add park limits/boundaries for plots
+## ( x ) sensitivity analysis - how many neighbours I get and how estimates changes as the radius gets bigger
 ## ( x ) classify everything as forest and not forest
 ## ( x ) connect bird and forest sites
 ## ( x ) remove the red circles and triangles - same symbol
