@@ -2,11 +2,8 @@
 #? ------------------------------   shiny_veg_types   ------------------------------
 #? *********************************************************************************
 #
-#! Code to plot park vegetation types, bird sites, and forest plots, and classify them
-#!    according to conifer, mixed, hardwood and not forest, as well as average BA and
-#!    and density of trees of each of the three groups. This code will help us understand
-#!    whether our environmental covariates are all matching our expectations and representing
-#!    the forest properly 
+#! Code to vizualize all covariates in the model in the bird and forest in the same map, and how they vary
+#!  within the park, and between the parks
 #
 #! Source ---------------------------------------------
 #           - format_veg_data/veg_maps_park.R : get park shape files with vegetation types and classify each as conifer, hardwood, mixed, or not forest
@@ -32,7 +29,7 @@
 #  renv::snapshot()
 
 # detach packages and clear workspace
-#freshr::freshr()
+freshr::freshr()
 
 #! Load packages ---------------------------------------
 library(tidyverse)
@@ -192,7 +189,7 @@ server <- function(input, output, session) {
       geom_sf(
         data = forest_points,
         color = "black", 
-        size = 7, 
+        size = 6, 
         shape = 23,
         stroke = 1,
         aes(fill = !!sym(input$variable))
@@ -287,4 +284,4 @@ server <- function(input, output, session) {
 
 shinyApp(ui, server)
 
-## add variation between parks and counties
+## add variation between parks and counties - plots with all parks highlighting the current, for forest and bird.

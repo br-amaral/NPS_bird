@@ -506,8 +506,8 @@ server <- function(input, output, session) {
         
         geom_sf(data = plot_points %>%
                   filter(park == input$park), 
-                aes(fill = BA_m2ha_Conifer),  # Only use fill
-                shape = 23, size = 7, stroke = 1, color = "black") +  # Use shape 21
+                aes(fill = BA_m2ha_Conifer),  
+                shape = 23, size = 6, stroke = 1, color = "black") +  
         
         scale_fill_viridis_c(name = "Conifer BA", 
                             option = "plasma", 
@@ -561,7 +561,7 @@ server <- function(input, output, session) {
         geom_sf(data = aaron2 %>%
                   filter(Unit_ID == "MABI"), 
                 aes(fill = Merged_Conifer_BA_2009),  # Only use fill
-                shape = 23, size = 7, stroke = 1, color = "black") +  # Use shape 21
+                shape = 23, size = 6, stroke = 1, color = "black") +  # Use shape 21
         
         scale_fill_viridis_c(name = "Conifer BA", 
                             option = "plasma", 
