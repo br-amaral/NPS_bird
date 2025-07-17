@@ -719,7 +719,6 @@ server <- function(input, output, session) {
 shinyApp(ui, server)
 ## ( x ) send bird sites values to aaron
 ## (   ) check park errors
-## (   ) make a single scale for bottom plots
 ## ( x ) add park limits/boundaries for plots
 ## ( x ) sensitivity analysis - how many neighbours I get and how estimates changes as the radius gets bigger
 ## ( x ) classify everything as forest and not forest

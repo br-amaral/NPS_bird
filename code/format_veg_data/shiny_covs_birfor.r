@@ -285,3 +285,4 @@ server <- function(input, output, session) {
 shinyApp(ui, server)
 
 ## add variation between parks and counties - plots with all parks highlighting the current, for forest and bird.
+## (   ) make a single scale for bottom plots
