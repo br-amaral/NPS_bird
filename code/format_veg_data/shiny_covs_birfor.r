@@ -69,12 +69,13 @@ lenght <- length
 #! Import data -----------------------------------------
 
 ## file paths
-COV_FOR_PLY <- "data/out/for_plot_covs.rds"
-COV_BRD_SIT <- glue("data/out/site_covs_fornofor_{radi_dist}m.rds")
-#AAR_BIR_COV <- 
-AAR_FOR_COV <- "data/conifer_final_aaron.rds"
-NEI_PATH <- glue("data/out/neighbor_fornofor_{radi_dist}m.rds")
+COV_FOR_PLY    <- "data/out/for_plot_covs.rds"
+COV_BRD_SIT    <- glue("data/out/site_covs_fornofor_{radi_dist}m.rds")
+AAR_FOR_COV    <- "data/conifer_final_aaron.rds"
+NEI_PATH       <- glue("data/out/neighbor_fornofor_{radi_dist}m.rds")
 PARK_BOUN_PATH <- "data/out/park_plot_lims.rds"          ## geographic limits to plot parks
+PARK_COV_PATH  <- "data/out/park_covs.rds"
+COUN_COV_PATH  <- "data/out/coun_covs.rds"
 
 ## read files
 # get neighbors
@@ -83,6 +84,11 @@ neighbor <- read_rds(NEI_PATH) %>%
 
 # park boundaries
 park_bounds <- read_rds(PARK_BOUN_PATH)
+
+# park covs
+park_covs <- read_rds(PARK_COV_PATH)
+# county covs
+coun_covs <- read_rds(COUN_COV_PATH)
 
 # get info on site and plot level for bird sites and forest plots
 bird_sit_covs  <- read_rds(file = COV_BRD_SIT) %>%
@@ -116,14 +122,46 @@ bird_sit_covs2 <- bird_sit_covs %>%
 xy_sf <- left_join(xy_sf, bird_sit_covs2, by = c("Point_Name", "park")) %>% 
                       filter(park %!in% c("ACAD", "ELRO", "SAIR"))
 park_list <- list(
-  "MABI" = list(map = mabi_vegmap2, for_plots = for_plots_sf,  xy = xy_sf, neighbor = neighbor, park_lim = park_bounds %>% filter(park == "MABI")),
-  "MORR" = list(map = morr_vegmap2, for_plots = for_plots_sf,  xy = xy_sf, neighbor = neighbor, park_lim = park_bounds %>% filter(park == "MORR")),
-  "SAGA" = list(map = saga_vegmap2, for_plots = for_plots_sf,  xy = xy_sf, neighbor = neighbor, park_lim = park_bounds %>% filter(park == "SAGA")),
-  "SARA" = list(map = sara_vegmap2, for_plots = for_plots_sf,  xy = xy_sf, neighbor = neighbor, park_lim = park_bounds %>% filter(park == "SARA")),
-  "WEFA" = list(map = wefa_vegmap2, for_plots = for_plots_sf,  xy = xy_sf, neighbor = neighbor, park_lim = park_bounds %>% filter(park == "WEFA")),
-  "HOFR" = list(map = rova_vegmap2, for_plots = for_plots_sfh, xy = xy_sf, neighbor = neighbor, park_lim = park_bounds %>% filter(park == "HOFR")),
-  "VAMA" = list(map = rova_vegmap2, for_plots = for_plots_sfv, xy = xy_sf, neighbor = neighbor, park_lim = park_bounds %>% filter(park == "VAMA")),
-  "MIMA" = list(map = mima_vegmap2, for_plots = for_plots_sfm, xy = xy_sf, neighbor = neighbor, park_lim = park_bounds %>% filter(park == "MIMA"))
+  "MABI" = list(map = mabi_vegmap2, 
+                for_plots = for_plots_sf,  
+                xy = xy_sf, 
+                neighbor = neighbor, 
+                park_lim = park_bounds %>% filter(park == "MABI")),
+  "MORR" = list(map = morr_vegmap2, 
+                for_plots = for_plots_sf,  
+                xy = xy_sf, 
+                neighbor = neighbor, 
+                park_lim = park_bounds %>% filter(park == "MORR")),
+  "SAGA" = list(map = saga_vegmap2, 
+                for_plots = for_plots_sf,  
+                xy = xy_sf, 
+                neighbor = neighbor, 
+                park_lim = park_bounds %>% filter(park == "SAGA")),
+  "SARA" = list(map = sara_vegmap2, 
+                for_plots = for_plots_sf,  
+                xy = xy_sf, 
+                neighbor = neighbor, 
+                park_lim = park_bounds %>% filter(park == "SARA")),
+  "WEFA" = list(map = wefa_vegmap2, 
+                for_plots = for_plots_sf,  
+                xy = xy_sf, 
+                neighbor = neighbor, 
+                park_lim = park_bounds %>% filter(park == "WEFA")),
+  "HOFR" = list(map = rova_vegmap2, 
+                for_plots = for_plots_sfh, 
+                xy = xy_sf, 
+                neighbor = neighbor, 
+                park_lim = park_bounds %>% filter(park == "HOFR")),
+  "VAMA" = list(map = rova_vegmap2, 
+                for_plots = for_plots_sfv, 
+                xy = xy_sf, 
+                neighbor = neighbor, 
+                park_lim = park_bounds %>% filter(park == "VAMA")),
+  "MIMA" = list(map = mima_vegmap2, 
+                for_plots = for_plots_sfm, 
+                xy = xy_sf, 
+                neighbor = neighbor, 
+                park_lim = park_bounds %>% filter(park == "MIMA"))
 )
 
 all_cover_types <- unique(unlist(lapply(park_list, function(x) unique(x$map$Cover_Type))))
@@ -151,13 +189,25 @@ ui <- fluidPage(
       fluidRow(
         column(
           width = 6,
-          h4(textOutput("plot_title")),
-          plotlyOutput("variable_plot", height = "400px")
+          # h4(textOutput("for_plot_title")),
+          plotlyOutput("for_variable_plot", height = "400px")
         ),
         column(
           width = 6,
-          h4(textOutput("bird_plot_title")),
+          # h4(textOutput("bird_plot_title")),
           plotlyOutput("bird_variable_plot", height = "400px")
+        )
+      ),
+      fluidRow(
+        column(
+          width = 6,
+          # h4(textOutput("park_for_title")),
+          plotlyOutput("park_forest_plot", height = "400px")
+        ),
+        column(
+          width = 6,
+          # h4(textOutput("coun_for_title")),
+          plotlyOutput("coun_forest_plot", height = "400px")
         )
       )
     )
@@ -186,6 +236,54 @@ server <- function(input, output, session) {
     range(c(forest_values, bird_values), na.rm = TRUE)
   })
   
+  # Create reactive for park-level data
+  park_level_data <- reactive({
+    # Combine all park data for forest plots
+    all_forest_data <- map_dfr(names(park_list), function(park_name) {
+      park_data <- park_list[[park_name]]
+      forest_points <- park_data$for_plots %>%
+        left_join(for_plots_covs, by = "for_sit") %>%
+        filter(park == park_name)
+      
+      if(input$variable %in% colnames(forest_points) && nrow(forest_points) > 0) {
+        data.frame(
+          park = park_name,
+          variable_value = mean(forest_points[[input$variable]], na.rm = TRUE),
+          data_type = "Forest"
+        )
+      } else {
+        data.frame(
+          park = park_name,
+          variable_value = NA,
+          data_type = "Forest"
+        )
+      }
+    })
+    
+    # Combine all park data for bird sites
+    all_bird_data <- map_dfr(names(park_list), function(park_name) {
+      park_data <- park_list[[park_name]]
+      bird_points <- park_data$xy %>%
+        filter(park == park_name)
+      
+      if(input$variable %in% colnames(bird_points) && nrow(bird_points) > 0) {
+        data.frame(
+          park = park_name,
+          variable_value = mean(bird_points[[input$variable]], na.rm = TRUE),
+          data_type = "Bird"
+        )
+      } else {
+        data.frame(
+          park = park_name,
+          variable_value = NA,
+          data_type = "Bird"
+        )
+      }
+    })
+    
+    list(forest = all_forest_data, bird = all_bird_data)
+  })
+    
   output$vegmap <- renderPlot({
     park_data <- park_list[[input$park]]
     
@@ -248,11 +346,11 @@ server <- function(input, output, session) {
     print(p)
   })
 
-  output$plot_title <- renderText({
-    paste(input$variable, "by Forest Plot")
-  })
+  # output$plot_title <- renderText({
+  #   paste(input$variable, "by Forest Plot")
+  # })
 
-  output$variable_plot <- renderPlotly({
+  output$for_variable_plot <- renderPlotly({
     # Handle all variables as single variables (no conifer/hardwood splitting)
     park_data <- park_list[[input$park]]
 
@@ -274,7 +372,7 @@ server <- function(input, output, session) {
                     "Plot: ", for_sit, "<br>",
                     input$variable, ": ", round(!!sym(input$variable), 2)
                   )), size = 2, color = "#1e7b1e") +
-      labs(x = "Plot", y = input$variable, title = "Forest Plot Data") +
+      labs(x = "Forest Plot", y = input$variable, title = glue("{input$variable} - Forest Plot Data")) +
       theme_bw() +
       ylim(range_values) +  # Use reactive range
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
@@ -285,9 +383,9 @@ server <- function(input, output, session) {
     ggplotly(p, tooltip = "text")
   })
 
-  output$bird_plot_title <- renderText({
-    paste(input$variable, "by Bird Site")
-  })
+  # output$bird_plot_title <- renderText({
+  #   paste(input$variable, "by Bird Site")
+  # })
 
   output$bird_variable_plot <- renderPlotly({
     # Get bird site data
@@ -305,7 +403,7 @@ server <- function(input, output, session) {
                       "Site: ", Point_Name, "<br>",
                       input$variable, ": ", round(!!sym(input$variable), 2)
                     )), size = 2, color = "#3a78dc") +
-        labs(x = "Bird Site", y = input$variable, title = "Bird Site Data") +
+        labs(x = "Bird Site", y = input$variable, title = glue("{input$variable} - Bird Site Data")) +
         theme_bw() +
         ylim(range_values) +  # Use reactive range
         theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
@@ -320,10 +418,72 @@ server <- function(input, output, session) {
         annotate("text", x = 0.5, y = 0.5, label = paste("Variable", input$variable, "not found"), size = 5) +
         theme_void()
     }
+  })
+  
+  # NEW: Park-level forest plot comparison
+  # output$park_forest_title <- renderText({
+  #   paste(input$variable, "- Forest Plots by Park")
+  # })
+  
+  output$park_forest_plot <- renderPlotly({
+    park_data <- park_covs %>% 
+        select(ParkUnit, input$variable) %>% 
+        mutate(
+          is_current = ParkUnit == input$park,
+          point_size = ifelse(is_current, 4, 2),
+          point_color = ifelse(is_current, "#ff4444", "#1e7b1e")
+        ) 
+      
+      p <- ggplot(park_data, aes(x = ParkUnit, y = !!sym(input$variable))) +
+        geom_point(aes(text = paste0(
+                        "Park: ", ParkUnit, "<br>",
+                        input$variable, ": ", round(!!sym(input$variable), 2)
+                      ),
+                      size = point_size,
+                      color = point_color)) +
+        scale_size_identity() +
+        scale_color_identity() +
+        labs(x = "Park", y = input$variable, title = paste(input$variable, "by Park")) +
+        theme_bw() +
+        theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1),
+              plot.title = element_text(hjust = 0.5),
+              legend.position = "none")
+      
+      ggplotly(p, tooltip = "text")
+  
+  })
+  
+  # NEW: Park-level bird site comparison
+  # output$park_bird_title <- renderText({
+  #   paste(input$variable, "- Bird Sites by Park")
+  # })
+  
+  output$coun_forest_plot <- renderPlotly({
+   park_data <- coun_covs %>% 
+        select(park, input$variable) %>% 
+        mutate(
+          is_current = park == input$park,
+          point_size = ifelse(is_current, 4, 2),
+          point_color = ifelse(is_current, "#ff4444", "#1e7b1e")
+        ) 
+      
+      p <- ggplot(park_data, aes(x = park, y = !!sym(input$variable))) +
+        geom_point(aes(text = paste0(
+                        "Park: ", park, "<br>",
+                        input$variable, ": ", round(!!sym(input$variable), 2)
+                      ),
+                      size = point_size,
+                      color = point_color)) +
+        scale_size_identity() +
+        scale_color_identity() +
+        labs(x = "Park", y = input$variable, title = paste(input$variable, "by County")) +
+        theme_bw() +
+        theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1),
+              plot.title = element_text(hjust = 0.5),
+              legend.position = "none")
+      
+      ggplotly(p, tooltip = "text")
   })  
 }
 
 shinyApp(ui, server)
-
-## add variation between parks and counties - plots with all parks highlighting the current, for forest and bird.
-## (   ) make a single scale for bottom plots
