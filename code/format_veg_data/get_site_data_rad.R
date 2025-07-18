@@ -291,7 +291,7 @@ for_test <- for_plt_coord3 %>%
               select(park, lonutm, latutm, for_veg)
 bir_test <- bird_sit_coord2 %>% 
               mutate(park = substr(bird_sit,1,4)) %>% 
-              select(park, lonutm, latutm, bir_veg)
+              select(park, lonutm, latutm, bir_veg, bird_sit)
 parks_sub <- sort(unique(for_test$park))
 
 par(mfrow = c(1,1))
@@ -302,6 +302,13 @@ for(ii in 1:length(parks_sub)){
   plot(for_test2$lonutm, for_test2$latutm, col = "darkgreen", 
       main = for_test2$park[1], pch = 19, cex = 3)
   points(bir_test2$lonutm, bir_test2$latutm, col = "violet", pch = 15, cex = 3)
+ # Add text labels for bird sites
+  text(x = bir_test2$lonutm, 
+       y = bir_test2$latutm, 
+       labels = substr(bir_test2$bird_sit, 5, nchar(bir_test2$bird_sit)), 
+       #pos = 3, # position above points
+       cex = 0.8, 
+       col = "black")
 }
 # get ALL neighbors within the same park, and only keep the ones that have the forest type
 
@@ -363,8 +370,8 @@ for (ii in 1:nrow(bird_sit_coord2)) {
     
     table(dist_small$bird_sit)
 
-    rm(dist1)
-  #!! ERROR: NOT REALLY AN ERROR, just choosing how many neighbours
+  rm(dist1)
+  #! choosing how many neighbours
     close_points <- dist_small %>%
                       group_by(bird_sit) %>%
                       arrange(dist) %>% 
@@ -404,24 +411,27 @@ for(ii in 1:lenght(parks)){
   (plop <- parks[ii])
   close_points_f3 <- close_points_f2 %>% 
                       filter(substr(bird_sit, 1, 4) == plop)
-
+  bird_sit_coord2_p <- bird_sit_coord2 %>% 
+                      filter(substr(bird_sit, 1, 4) == plop)
   p2 <- 
     ggplot(close_points_f3) +
       geom_segment(aes(x = lonutmb, y = latutmb, 
                         xend = lonutmf, yend = latutmf, 
                         colour = bird_sit)) +
+      geom_point(data = bird_sit_coord2_p, 
+                 aes(x = lonutm, y = latutm), colour = "grey") +
+      geom_text(data = bird_sit_coord2_p, 
+                aes(x = lonutm, y = latutm, 
+                label = substr(bird_sit, 5, nchar(bird_sit))), vjust = -1.3, size = 4) +
       geom_point(aes(x = lonutmb, 
-                      y = latutmb,
-                      colour = bird_sit),
+                     y = latutmb,
+                     colour = bird_sit),
                 size = 3) +
       geom_point(aes(x = lonutmf, 
                       y = latutmf),
                 size = 3,
                 color = "#186A3B",
                 shape = 15) +
-      geom_text(aes(x = lonutmb, y = latutmb, 
-                    label = substr(bird_sit, 5, nchar(bird_sit))), 
-                    size = 5, vjust = -1.3) +
       theme_bw() +
       labs(title = parks[ii])
     #)
@@ -524,7 +534,9 @@ for(col in weight_cols) {
   bird_sit_covs2[[paste0(col, "_wei")]] <- weighted_vals
 }
 
-bird_sit_covs2 <- as_tibble(bird_sit_covs2)
+bird_sit_covs2 <- as_tibble(bird_sit_covs2) %>% 
+      mutate(BA_m2ha_perc_con = BA_m2ha_Conifer_wei/(BA_m2ha_Conifer_wei+BA_m2ha_Hardwood_wei)) %>% 
+      mutate(BA_m2ha_perc_har = BA_m2ha_Hardwood_wei/(BA_m2ha_Conifer_wei+BA_m2ha_Hardwood_wei))
 
 table(bird_sit_coord2 %>% select(bird_sit) %>% distinct() %>% mutate(park = substr(bird_sit, 1, 4)) %>% pull(park))      ## original
 table(close_points_f2 %>% select(bird_sit) %>% distinct() %>% mutate(park = substr(bird_sit, 1, 4)) %>% pull(park))      ## with neighbors
