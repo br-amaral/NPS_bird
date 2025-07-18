@@ -74,11 +74,15 @@ COV_BRD_SIT <- glue("data/out/site_covs_fornofor_{radi_dist}m.rds")
 #AAR_BIR_COV <- 
 AAR_FOR_COV <- "data/conifer_final_aaron.rds"
 NEI_PATH <- glue("data/out/neighbor_fornofor_{radi_dist}m.rds")
+PARK_BOUN_PATH <- "data/out/park_plot_lims.rds"          ## geographic limits to plot parks
 
 ## read files
 # get neighbors
 neighbor <- read_rds(NEI_PATH) %>% 
                 mutate(park = substr(bird_sit,1,4))
+
+# park boundaries
+park_bounds <- read_rds(PARK_BOUN_PATH)
 
 # get info on site and plot level for bird sites and forest plots
 bird_sit_covs  <- read_rds(file = COV_BRD_SIT) %>%
@@ -112,14 +116,14 @@ bird_sit_covs2 <- bird_sit_covs %>%
 xy_sf <- left_join(xy_sf, bird_sit_covs2, by = c("Point_Name", "park")) %>% 
                       filter(park %!in% c("ACAD", "ELRO", "SAIR"))
 park_list <- list(
-  "MABI" = list(map = mabi_vegmap2, for_plots = for_plots_sf, xy = xy_sf, neighbor = neighbor),
-  "MORR" = list(map = morr_vegmap2, for_plots = for_plots_sf, xy = xy_sf, neighbor = neighbor),
-  "SAGA" = list(map = saga_vegmap2, for_plots = for_plots_sf, xy = xy_sf, neighbor = neighbor),
-  "SARA" = list(map = sara_vegmap2, for_plots = for_plots_sf, xy = xy_sf, neighbor = neighbor),
-  "WEFA" = list(map = wefa_vegmap2, for_plots = for_plots_sf, xy = xy_sf, neighbor = neighbor),
-  "HOFR" = list(map = rova_vegmap2, for_plots = for_plots_sfh, xy = xy_sf, neighbor = neighbor),
-  "VAMA" = list(map = rova_vegmap2, for_plots = for_plots_sfv, xy = xy_sf, neighbor = neighbor),
-  "MIMA" = list(map = mima_vegmap2, for_plots = for_plots_sfm, xy = xy_sf, neighbor = neighbor)
+  "MABI" = list(map = mabi_vegmap2, for_plots = for_plots_sf,  xy = xy_sf, neighbor = neighbor, park_lim = park_bounds %>% filter(park == "MABI")),
+  "MORR" = list(map = morr_vegmap2, for_plots = for_plots_sf,  xy = xy_sf, neighbor = neighbor, park_lim = park_bounds %>% filter(park == "MORR")),
+  "SAGA" = list(map = saga_vegmap2, for_plots = for_plots_sf,  xy = xy_sf, neighbor = neighbor, park_lim = park_bounds %>% filter(park == "SAGA")),
+  "SARA" = list(map = sara_vegmap2, for_plots = for_plots_sf,  xy = xy_sf, neighbor = neighbor, park_lim = park_bounds %>% filter(park == "SARA")),
+  "WEFA" = list(map = wefa_vegmap2, for_plots = for_plots_sf,  xy = xy_sf, neighbor = neighbor, park_lim = park_bounds %>% filter(park == "WEFA")),
+  "HOFR" = list(map = rova_vegmap2, for_plots = for_plots_sfh, xy = xy_sf, neighbor = neighbor, park_lim = park_bounds %>% filter(park == "HOFR")),
+  "VAMA" = list(map = rova_vegmap2, for_plots = for_plots_sfv, xy = xy_sf, neighbor = neighbor, park_lim = park_bounds %>% filter(park == "VAMA")),
+  "MIMA" = list(map = mima_vegmap2, for_plots = for_plots_sfm, xy = xy_sf, neighbor = neighbor, park_lim = park_bounds %>% filter(park == "MIMA"))
 )
 
 all_cover_types <- unique(unlist(lapply(park_list, function(x) unique(x$map$Cover_Type))))
@@ -132,12 +136,14 @@ ui <- fluidPage(
     sidebarPanel(
       selectInput("park", "Choose a Park:", choices = names(park_list), selected = "MABI"),
       selectInput("variable", "Choose Variable:", 
-                  choices = c("treeden_ha", "BA_m2ha", "shrub_cov_nat", "shrub_cov_nonat", 
-                             "treeden_ha_Conifer", "treeden_ha_Hardwood", "BA_m2ha_Conifer", 
-                             "BA_m2ha_Hardwood", "seed_den_m2", "sap_den_m2", "regen_den_m2", 
-                             "Stage", "pctBA_pole", "pctBA_mature", "pctBA_large", 
-                             "treeden_ha_large", "treeden_ha_mature", "treeden_ha_pole", 
-                             "BA_m2ha_large", "BA_m2ha_mature", "BA_m2ha_pole", "cwd"), 
+                  choices = c("BA_m2ha", 
+                              "BA_m2ha_Conifer", "BA_m2ha_Hardwood","BA_m2ha_perc_con",
+                              "BA_m2ha_pole", "BA_m2ha_mature", "BA_m2ha_large",
+                              "treeden_ha", 
+                              "treeden_ha_Conifer", "treeden_ha_Hardwood",
+                              "treeden_ha_pole", "treeden_ha_mature", "treeden_ha_large", 
+                              "shrub_cov_nat", "shrub_cov_nonat", 
+                              "seed_den_m2", "sap_den_m2", "regen_den_m2", "cwd"), 
                   selected = "BA_m2ha")
     ),
     mainPanel(
@@ -160,12 +166,13 @@ ui <- fluidPage(
 
 server <- function(input, output, session) {
   
-  output$vegmap <- renderPlot({
+  # Create a reactive expression for combined_range so it's accessible everywhere
+  combined_range <- reactive({
     park_data <- park_list[[input$park]]
     
     # Prepare forest plot data
     forest_points <- park_data$for_plots %>%
-      left_join(.,for_plots_covs, by = "for_sit") %>%
+      left_join(for_plots_covs, by = "for_sit") %>%
       filter(park == input$park)
     
     # Prepare bird site data  
@@ -173,9 +180,26 @@ server <- function(input, output, session) {
       filter(park == input$park)
     
     # Get the combined range for shared scale
-    forest_values <- forest_points[[input$variable]]
+    forest_values <- if(input$variable %in% colnames(forest_points)) forest_points[[input$variable]] else numeric(0)
     bird_values <- if(input$variable %in% colnames(bird_points)) bird_points[[input$variable]] else numeric(0)
-    combined_range <- range(c(forest_values, bird_values), na.rm = TRUE)
+    
+    range(c(forest_values, bird_values), na.rm = TRUE)
+  })
+  
+  output$vegmap <- renderPlot({
+    park_data <- park_list[[input$park]]
+    
+    # Prepare forest plot data
+    forest_points <- park_data$for_plots %>%
+      left_join(for_plots_covs, by = "for_sit") %>%
+      filter(park == input$park)
+    
+    # Prepare bird site data  
+    bird_points <- park_data$xy %>%
+      filter(park == input$park)
+    
+    # Use the reactive combined_range
+    range_values <- combined_range()
     
     p <- ggplot(data = park_data$map) +
       geom_sf(aes(fill = Cover_Type), alpha = 0.4) +
@@ -197,7 +221,6 @@ server <- function(input, output, session) {
       # Add bird sites with variable coloring
       geom_sf(
         data = bird_points,
-        #color = "black", 
         size = 7, 
         shape = 21,
         stroke = 1,
@@ -208,7 +231,7 @@ server <- function(input, output, session) {
         name = paste(input$variable), 
         option = "plasma", 
         na.value = "grey50",
-        limits = combined_range
+        limits = range_values
       ) +
       guides(color = "none") +  # Remove color legend but keep fill legend
       theme_bw() +
@@ -218,7 +241,9 @@ server <- function(input, output, session) {
             plot.title = element_text(hjust = 0.5, size = 22),
             axis.text = element_text(size = 6),
             axis.title = element_text(size = 8)) +
-      ggtitle(paste(input$park, "- Forest Plots (circles) & Bird Sites (diamonds)"))
+      ggtitle(paste(input$park, "- Forest Plots (diamonds) & Bird Sites (circles)")) +
+      scale_x_continuous(limits = c(pull(park_data$park_lim[1,2])-150, pull(park_data$park_lim[1,3])+150)) +
+      scale_y_continuous(limits = c(pull(park_data$park_lim[1,4])-150, pull(park_data$park_lim[1,5])+150))
     
     print(p)
   })
@@ -229,9 +254,20 @@ server <- function(input, output, session) {
 
   output$variable_plot <- renderPlotly({
     # Handle all variables as single variables (no conifer/hardwood splitting)
+    park_data <- park_list[[input$park]]
+
     df <- for_plots_covs %>% 
-      filter(ParkUnit == input$park) %>% 
-      arrange(for_sit)
+      select(-ParkUnit) %>% 
+      left_join(., park_data$for_plots, by = "for_sit") %>%
+      filter(park == input$park) %>% 
+      filter(X >= (pull(park_data$park_lim[1, "xmin"])-200),
+             X <= (pull(park_data$park_lim[1, "xmax"])+200),
+             Y >= (pull(park_data$park_lim[1, "ymin"])-200),
+             Y <= (pull(park_data$park_lim[1, "ymax"])+200)) %>% 
+      arrange(for_sit)  
+
+    # Use the reactive combined_range
+    range_values <- combined_range()
 
     p <- ggplot(df, aes(x = for_sit, y = !!sym(input$variable))) +
       geom_point(aes(text = paste0(
@@ -240,6 +276,7 @@ server <- function(input, output, session) {
                   )), size = 2, color = "#1e7b1e") +
       labs(x = "Plot", y = input$variable, title = "Forest Plot Data") +
       theme_bw() +
+      ylim(range_values) +  # Use reactive range
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
             legend.text = element_text(size = 8),
             legend.title = element_text(size = 9),
@@ -260,6 +297,9 @@ server <- function(input, output, session) {
 
     # Check if the variable exists in the data
     if(input$variable %in% colnames(df)) {
+      # Use the reactive combined_range
+      range_values <- combined_range()
+      
       p <- ggplot(df, aes(x = Point_Name, y = !!sym(input$variable))) +
         geom_point(aes(text = paste0(
                       "Site: ", Point_Name, "<br>",
@@ -267,6 +307,7 @@ server <- function(input, output, session) {
                     )), size = 2, color = "#3a78dc") +
         labs(x = "Bird Site", y = input$variable, title = "Bird Site Data") +
         theme_bw() +
+        ylim(range_values) +  # Use reactive range
         theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
               legend.text = element_text(size = 8),
               legend.title = element_text(size = 9),

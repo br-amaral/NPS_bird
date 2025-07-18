@@ -155,11 +155,14 @@ har_con <- har_con %>%
               complete(Plot_Name = all_plots, 
                       type = all_types, 
                       fill = list(treeden_ha = 0, BA_m2ha = 0)) %>% 
-              #group_by(Plot_Name) %>% 
-              #mutate(per_con_den = treeden_ha[type == "Conifer"] / sum(treeden_ha),
-              #      per_con_BA = BA_m2ha[type == "Conifer"] / sum(BA_m2ha)) %>%
-              #ungroup()
-              pivot_wider(names_from = "type", values_from = c("treeden_ha", "BA_m2ha"))
+              group_by(Plot_Name) %>% 
+              mutate(per_den = treeden_ha[type == "Conifer"] / sum(treeden_ha),
+                    per_BA = BA_m2ha[type == "Conifer"] / sum(BA_m2ha)) %>%
+              ungroup() %>% 
+              pivot_wider(names_from = "type", values_from = c("treeden_ha", "BA_m2ha",
+                                                               "per_den", "per_BA")) %>% 
+              select(-per_den_Hardwood, -per_BA_Hardwood) %>% 
+              rename(BA_m2ha_perc_con = per_BA_Conifer)
 
 #? percentage of each state
 table(table(sumStrStage() %>% select(Plot_Name, SampleYear))>1)
