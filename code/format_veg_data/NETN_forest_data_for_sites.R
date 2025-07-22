@@ -204,21 +204,25 @@ table(joinMicroShrubData() %>% select(Vine))
 shrub <- joinMicroShrubData() %>%  
             as_tibble() %>% 
             filter(Shrub == 1) %>% # shrub and vine? to match FIA - forbes?
-            select(Plot_Name, SampleYear, Shrub, shrub_avg_cov, Exotic, InvasiveNETN) %>% 
-            filter(!is.na(shrub_avg_cov)) %>% 
-            #mutate(test = ifelse(Exotic == InvasiveNETN, T, F))  %>% 
-            mutate(non_nat = (Exotic == TRUE | InvasiveNETN == TRUE)) %>% 
+            select(Plot_Name, SampleYear, shrub_avg_cov) %>% 
+            group_by(Plot_Name) %>%
+            summarize(shrub_avg_cov = mean(shrub_avg_cov, na.rm = T)) %>% 
+            mutate(across(everything(), ~replace_na(.x, 0)))
+            #select(Plot_Name, SampleYear, Shrub, shrub_avg_cov, Exotic, InvasiveNETN) %>% 
+            # mutate(test = ifelse(Exotic == InvasiveNETN, T, F))  %>% 
+            # mutate(non_nat = (Exotic == TRUE | InvasiveNETN == TRUE)) %>% 
 # shrub[,c(29,24,25,26,28)] %>% distinct()
-            group_by(Plot_Name, SampleYear, non_nat) %>%
-            summarize(shrub_avg_cov = sum(shrub_avg_cov, na.rm = T)) %>%  
-            group_by(Plot_Name, non_nat) %>%
-            summarize(shrub_avg_cov = mean(shrub_avg_cov, na.rm = T))  %>% 
-            pivot_wider(names_from = non_nat, 
-                        values_from = shrub_avg_cov, 
-                        names_prefix = "shrub_cov_invasive_") %>% 
-            mutate(across(everything(), ~replace_na(.x, 0))) %>% 
-            rename(shrub_cov_nat = shrub_cov_invasive_FALSE,
-                   shrub_cov_nonat = shrub_cov_invasive_TRUE)
+            # summarize(shrub_avg_cov = sum(shrub_avg_cov, na.rm = T)) 
+            # group_by(Plot_Name, SampleYear, non_nat) %>%
+            # summarize(shrub_avg_cov = sum(shrub_avg_cov, na.rm = T)) %>%  
+            # group_by(Plot_Name, non_nat) %>%
+            # summarize(shrub_avg_cov = mean(shrub_avg_cov, na.rm = T))  %>% 
+            # pivot_wider(names_from = non_nat, 
+            #             values_from = shrub_avg_cov, 
+            #             names_prefix = "shrub_cov_invasive_") %>% 
+            # mutate(across(everything(), ~replace_na(.x, 0))) %>% 
+            # rename(shrub_cov_nat = shrub_cov_invasive_FALSE,
+            #        shrub_cov_nonat = shrub_cov_invasive_TRUE)
 
 #? Coarse wood debris?
 cwd <- joinCWDData(park = 'all') %>% # coarse wood debris
@@ -241,7 +245,7 @@ comb <- full_join(plots , tree_den, by = "Plot_Name") %>%
               full_join(., tree_sizeclass, by = "Plot_Name") %>% 
               full_join(., cwd, by = "Plot_Name") %>% 
               as_tibble() %>% 
-              filter(ParkUnit %in% c( "MABI", "MIMA", "MORR", "SAGA", "SARA", "ROVA", "WEFA"))
+              filter(ParkUnit %in% c("MABI", "MIMA", "MORR", "SAGA", "SARA", "ROVA", "WEFA"))
 
 comb %>% DT::datatable()
 
