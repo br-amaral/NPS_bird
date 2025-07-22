@@ -1,14 +1,14 @@
 #! *********************************************************************************
-#! -------------------------------   Amazing Title   -------------------------------
+#! ------------------------------   veg_maps_park.R   ------------------------------
 #! *********************************************************************************
-# Code to get gdb files from parks and classifi all bird and forest sites
-#   according to vegetation type
+# Code to get gdb files from parks and classify all bird and forest sites
+#   according to vegetation type. Also add which ones are in the same forest patch
 #
-# Source ---------------------------------------------
+#! Source ---------------------------------------------
 #           - :
 #           - :
 #
-# Input ----------------------------------------------
+#! Input ----------------------------------------------
 #           - data/veg_maps/ :
 #           - data/src/key_park.rds :
 #           - data/out/park_site.rds :
@@ -16,59 +16,69 @@
 #           - data/out/for_sit_coord.rds :
 #           - :
 #
-# Output ----------------------------------------------
+#! Output ----------------------------------------------
 #           - data/out/key_fsite.rds : 
 #           - data/out/key_bsite.rds :
 #
-# detach packages and clear workspace
-if(!require(freshr)){install.packages('freshr')}
-freshr::freshr()
+#? detach packages and clear workspace
+# freshr::freshr()
 #
-# Load packages ---------------------------------------
-library(conflicted)
-library(tidyverse)
+#! Load packages ---------------------------------------
+library(tidyverse)   # Load tidyverse first (includes ggplot2, dplyr, readr, etc.)
+library(conflicted)  # Load conflicted after tidyverse
 library(glue)
 library(sf)
+library(readxl)
+library(DT)
+library(bcmaps)      # Added bcmaps since it's used in the script
 #library(rgdal)
 #
+# Set conflict preferences after loading all packages
 conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::filter)
 # conflicts_prefer(scales::alpha)
-#
-# Make functions --------------------------------------
+
+#! Make functions --------------------------------------
 colanmes <- colnames
 lenght <- length
 `%!in%` <- Negate(`%in%`)
-#
-# Source code -----------------------------------------
-#
-# Import data -----------------------------------------
-## file paths
+
+#! Source code -----------------------------------------
+
+#! Import data -----------------------------------------
+##? file paths
 PATH_PARK_GDB   <- "data/veg_maps/"
 PARK_KEY_PATH   <- "data/src/key_park.rds"
 PARK_SITE_PATH  <- "data/out/park_site.rds"
 BIRD_SITE_COORD <- "data/out/bird_site_coords.rds"
 FOR_SITE_COORD  <- "data/out/for_sit_coord.rds"
+FOR_CATE_PATH   <- "data/out/updated_for_cats.csv"
 
-## read files
-parks <- read_rds(file = PARK_KEY_PATH) 
-park_site <- read_rds(file = PARK_SITE_PATH) 
-xy <- read_rds(file = BIRD_SITE_COORD)
-xy2 <- read_rds(file = FOR_SITE_COORD)
+##? read files
+parks <- read_rds(file = PARK_KEY_PATH)        # park, code, network and number id
+park_site <- read_rds(file = PARK_SITE_PATH)   # park and bird site names and lat long 
+xy <- read_rds(file = BIRD_SITE_COORD)         # bird points sp file
+xy2 <- read_rds(file = FOR_SITE_COORD)         # forest plots points and coordinates
+# for_cats <- read_xlsx(FOR_CATE_PATH)
+for_cats <- read_csv(FOR_CATE_PATH)            # vegetation codes, types, conifer vs hardwood
 
-## format files
+##? format files
 parks <- parks %>% 
   dplyr::select(parks) %>% 
   distinct() %>% 
   pull()
 
-parks_remove <- c("ACAD")
+parks_remove <- c("ACAD", "ELRO", "SAIR")
 
 parks <- parks[which(parks %!in% parks_remove)]
 
 xy_sf <- st_as_sf(xy)
 
-# loop to load all park files
+for_types <- c("Not forest", "Conifer", "Mixed", "Hardwood")
+palette_for <- c("#b6b4b4", "#177d17", "#3a78dc", "#483003")
+for_type_colors <- setNames(palette_for[seq_along(for_types)], for_types)
+
+#? loop to load all park files with the vegetation maps - forest types ---------------------------------
 park_folder <- list.files(path = "data/veg_maps/")
 folder_names <- substr(park_folder, 1, 4)
 
@@ -184,7 +194,7 @@ for(ii in 1:lenght(parks_ana)){
 
 dim(key_bsite)
 
-# OMG great! now do the same for forest plots!
+# OMG great! now do the same (SpatialPointsDataFrame to an sf object) for forest plots!
 xy3 <- data.frame(ID = xy2$for_sit, 
                   park = substr(xy2$for_sit, 1, 4),
                   X =  xy2$lonutm, 
@@ -221,13 +231,13 @@ for(ii in 1:lenght(parks_ana2)){
 
     for_point_veg <- st_intersection(xy_transformed2, get_parkloop_veg2)
 
-    # plot(xy_transformed2)
+    # plot(xy_transformed2)    ## points
     # st_crs(xy_transformed2)
 
     # plot(xy_sf_loop2)
     # st_crs(xy_sf_loop2)
 
-    # plot(get_parkloop_veg2)
+    # plot(get_parkloop_veg2)  ## polygons
     # st_crs(get_parkloop_veg2)
 
     # plot(for_point_veg)
@@ -270,4 +280,329 @@ key_fsite %>% tail()
 # write_rds(key_fsite, file = "data/out/key_fsite.rds")
 # write_rds(key_bsite, file = "data/out/key_bsite.rds")
 
+for_plots <- read_rds(FOR_SITE_COORD) %>% 
+    mutate(park = substr(for_sit, 1, 4)) %>% 
+    filter(park %!in% parks_remove) %>% 
+    arrange(park)
 
+
+# #    "rova"
+# hofr_vegmap2[which((is.na(hofr_vegmap2$Cover_Type))),] %>% 
+#         arrange(MapUnit_ID)  %>% 
+#         st_drop_geometry() %>% 
+#         as_tibble() %>% 
+#         select(MapUnit_ID, MapUnit_Name)  %>% 
+#         distinct() == %>% print(n = 59)
+
+# ai <- vama_vegmap2[which((is.na(vama_vegmap2$Cover_Type))),] %>% 
+#         arrange(MapUnit_ID)  %>% 
+#         st_drop_geometry() %>% 
+#         as_tibble() %>% 
+#         select(MapUnit_ID, MapUnit_Name)  %>% 
+#         distinct() 
+# ai[19:23,1]  %>% pull()
+
+# mima_vegmap2[which((is.na(mima_vegmap2$Cover_Type))),] %>% 
+#         arrange(MapUnit_ID)  %>% 
+#         st_drop_geometry() %>% 
+#         as_tibble() %>% 
+#         #select(MapUnit_ID, MapUnit_Name)  %>% 
+#         distinct()  %>% 
+#         filter(is.na(MapUnit_ID))  %>% 
+#         select(LOCAL_NAME) %>% 
+#         distinct()
+
+# exc_mima <- c("Residential", "Transportation and Roads - Road", "Mowed Field",  "Water", "Other Agricultural Land", "Transportation and Roads - Parking Lot")
+
+# for(kk in 1:nrow(mima_vegmap2)) {
+#     if(is.na(mima_vegmap2$Cover_Type[kk]) & mima_vegmap2$LOCAL_NAME[kk] %in% exc_mima) {
+#             mima_vegmap2$Cover_Type[kk] <- "Not forest"
+#     }
+# }
+
+#? get forest types and classify as conifer, mixed, hardwood, and not forest
+# MABI: 
+x <- mabi_vegmap
+for_plots_sf <- st_as_sf(for_plots, 
+                            coords = c("lonutm", "latutm"), 
+                            crs = st_crs(x))
+
+mabi_vegmap2 <- left_join(mabi_vegmap, for_cats %>% select(-MapUnit_Name), by = c("MapUnit_ID")) 
+
+table(is.na(mabi_vegmap2$Cover_Type))
+mabi_vegmap2[which((is.na(mabi_vegmap2$Cover_Type))),]
+
+ggplot(data = mabi_vegmap2) +
+    geom_sf(data = mabi_vegmap2) +
+    geom_sf(aes(fill = MapUnit_Name)) +
+    geom_sf(data = for_plots_sf %>% filter(park == "MABI"), color = "black", shape = 21, size = 3, fill = "red") +
+    geom_sf(data = xy_sf %>% filter(park == "MABI"), color = "black", shape = 24, size = 3, fill = "black") +
+    theme(legend.position = "bottom",
+          legend.text = element_text(size = 5),   # Change font size and style for legend labels
+          plot.title = element_text(hjust = 0.5, size = 22)) +
+    ggtitle("MABI") 
+
+ggplot(data = mabi_vegmap2) +
+    geom_sf(data = mabi_vegmap2) +
+    geom_sf(aes(fill = Cover_Type)) +
+    scale_fill_manual(values = for_type_colors, na.value = "white") +
+    #geom_sf(data = mabi_vegmap2 %>% filter(MapUnit_Name %in% mabi_miss_veg) %>% rename(Missing_Cat = MapUnit_Name),fill = "pink")+
+    geom_sf(data = for_plots_sf %>% filter(park == "MABI"), color = "black", shape = 21, size = 3, fill = "red") +
+    geom_sf(data = xy_sf %>% filter(park == "MABI"), color = "black", shape = 24, size = 3, fill = "black") +
+    theme_bw() +
+    theme(legend.position = "bottom",
+          plot.title = element_text(hjust = 0.5, size = 22)) +
+    ggtitle("MABI") 
+            
+# MORR: 
+x <- morr_vegmap
+
+for_plots_sf <- st_as_sf(for_plots, 
+                            coords = c("lonutm", "latutm"),
+                            crs = st_crs(x))
+
+morr_vegmap2 <- left_join(morr_vegmap, for_cats %>% select(-MapUnit_Name), by = c("MapUnit_ID")) 
+
+ggplot(data = morr_vegmap) +
+    geom_sf(data = morr_vegmap) +
+    geom_sf(aes(fill = MapUnit_Name)) +
+    geom_sf(data = for_plots_sf %>% filter(park == "MORR"), color = "black", shape = 21, size = 3, fill = "red") +
+    geom_sf(data = xy_sf %>% filter(park == "MORR"), color = "black", shape = 24, size = 3, fill = "black") + 
+    theme_bw() +
+    theme(legend.position = "bottom",
+          plot.title = element_text(hjust = 0.5, size = 22)) +
+    ggtitle("MORR") +
+    ylim(4510000, 4514856) +
+    xlim(536800, 541250) 
+
+ggplot(data = morr_vegmap2) +
+    #geom_sf(data = morr_vegmap2 %>% filter(MapUnit_Name %in% morr_miss_veg) %>% rename(Missing_Cat = MapUnit_Name),fill = "pink")+
+    geom_sf(data = morr_vegmap2) +
+    geom_sf(aes(fill = Cover_Type)) +
+    scale_fill_manual(values = for_type_colors, na.value = "white") +    geom_sf(data = for_plots_sf %>% filter(park == "MORR"), color = "black", shape = 21, size = 3, fill = "red") +
+    geom_sf(data = xy_sf %>% filter(park == "MORR"), color = "black", shape = 24, size = 3, fill = "black") +
+    theme_bw() +
+    theme(legend.position = "bottom",
+          plot.title = element_text(hjust = 0.5, size = 22)) +
+    ggtitle("MORR")+
+    ylim(4510000, 4514856) +
+    xlim(536800, 541250) 
+    #ylim(4511500, 4514850) +
+    #xlim(538000, 541250) 
+
+# SAGA: 
+x <- saga_vegmap
+for_plots_sf <- st_as_sf(for_plots, 
+                            coords = c("lonutm", "latutm"), 
+                            crs = st_crs(x))
+
+saga_vegmap2 <- left_join(saga_vegmap, for_cats %>% select(-MapUnit_Name), by = c("MapUnit_ID")) 
+
+# saga_vegmap2  %>% as_tibble() %>% select(MapUnit_ID, MapUnit_Name, Cover_Type) %>% distinct() %>% datatable()
+
+ggplot(data = saga_vegmap) +
+    geom_sf(data = saga_vegmap) +
+    geom_sf(aes(fill = MapUnit_Name)) +
+    geom_sf(data = for_plots_sf %>% filter(park == "SAGA"), color = "black", shape = 21, size = 3, fill = "red") +
+    geom_sf(data = xy_sf %>% filter(park == "SAGA"), color = "black", shape = 24, size = 3, fill = "black") + 
+    theme_bw() +
+    theme(legend.position = "bottom",
+          plot.title = element_text(hjust = 0.5, size = 22)) +
+    ggtitle("SAGA") 
+
+ggplot(data = saga_vegmap2) +
+   #geom_sf(data = saga_vegmap2 %>% filter(MapUnit_Name %in% saga_miss_veg) %>% rename(Missing_Cat = MapUnit_Name),fill = "pink")+
+    geom_sf(data = saga_vegmap2) +
+    geom_sf(aes(fill = Cover_Type)) +
+    scale_fill_manual(values = for_type_colors, na.value = "white") +    
+    geom_sf(data = for_plots_sf %>% filter(park == "SAGA"), color = "black", shape = 21, size = 3, fill = "red") +
+    geom_sf(data = xy_sf %>% filter(park == "SAGA"), color = "black", shape = 24, size = 3, fill = "black") +
+    theme_bw() +
+    theme(legend.position = "bottom",
+          plot.title = element_text(hjust = 0.5, size = 22)) +
+    ggtitle("SAGA") 
+
+# SARA: 
+x <- sara_vegmap
+for_plots_sf <- st_as_sf(for_plots, 
+                            coords = c("lonutm", "latutm"), 
+                            crs = st_crs(x))
+
+sara_vegmap2 <- left_join(sara_vegmap, for_cats %>% select(-MapUnit_Name), by = c("MapUnit_ID")) 
+
+ggplot(data = sara_vegmap) +
+    geom_sf(data = sara_vegmap) +
+    geom_sf(aes(fill = MapUnit_Name)) +
+    geom_sf(data = for_plots_sf %>% filter(park == "SARA"), color = "black", shape = 21, size = 3, fill = "red") +
+    geom_sf(data = xy_sf %>% filter(park == "SARA"), color = "black", shape = 24, size = 3, fill = "black") + 
+    theme_bw() +
+    theme(legend.position = "none",
+          plot.title = element_text(hjust = 0.5, size = 22)) +
+    ggtitle("SARA") +
+    ylim(c(4758000, 4764300)) +
+    xlim(c(608857, 613650)) 
+
+ggplot(data = sara_vegmap2) +
+    geom_sf(data = sara_vegmap2) +
+    geom_sf(aes(fill = Cover_Type)) +
+    scale_fill_manual(values = for_type_colors, na.value = "white") +    #geom_sf(data = sara_vegmap2 %>% filter(MapUnit_Name %in% sara_miss_veg) %>% rename(Missing_Cat = MapUnit_Name),fill = "pink")+
+    geom_sf(data = for_plots_sf %>% filter(park == "SARA"), color = "black", shape = 21, size = 3, fill = "red") +
+    geom_sf(data = xy_sf %>% filter(park == "SARA"), color = "black", shape = 24, size = 3, fill = "black") +
+    theme_bw() +
+    theme(legend.position = "bottom",
+          plot.title = element_text(hjust = 0.5, size = 22)) +
+    ggtitle("SARA") +
+    ylim(c(4758000, 4764300)) +
+    xlim(c(608857, 613650)) 
+
+# wefa:
+x <- wefa_vegmap
+for_plots_sf <- st_as_sf(for_plots, 
+                            coords = c("lonutm", "latutm"), 
+                            crs = st_crs(x))
+
+wefa_vegmap2 <- left_join(wefa_vegmap, for_cats %>% select(-MapUnit_Name), by = c("MapUnit_ID"))                             
+
+ggplot(data = wefa_vegmap # %>% filter(MapUnit_Name %in% wefa_miss_veg)
+        ) +
+    geom_sf(data = wefa_vegmap) +
+    geom_sf(aes(fill = MapUnit_Name)) +
+    geom_sf(data = for_plots_sf %>% filter(park == "WEFA"), color = "black", shape = 21, size = 3, fill = "red") +
+    geom_sf(data = xy_sf %>% filter(park == "WEFA"), color = "black", shape = 24, size = 3, fill = "black") + 
+    theme_bw() +
+    theme(legend.position = "bottom",
+          plot.title = element_text(hjust = 0.5, size = 22)) +
+    ggtitle("WEFA") 
+
+ggplot(data = wefa_vegmap2) +
+    geom_sf(data = wefa_vegmap2) +
+    geom_sf(aes(fill = Cover_Type)) +
+    scale_fill_manual(values = for_type_colors, na.value = "white") +    geom_sf(data = for_plots_sf %>% filter(park == "WEFA"), color = "black", shape = 21, size = 3, fill = "red") +
+    geom_sf(data = xy_sf %>% filter(park == "WEFA"), color = "black", shape = 24, size = 3, fill = "black") +
+    theme_bw() +
+    theme(legend.position = "bottom",
+          plot.title = element_text(hjust = 0.5, size = 22)) +
+    ggtitle("WEFA") 
+
+# rova:
+x <- rova_vegmap
+for_plots_sf <- st_as_sf(for_plots, 
+                            coords = c("lonutm", "latutm"), 
+                            crs = st_crs(x))
+
+rova_vegmap2 <- left_join(rova_vegmap, for_cats %>% select(-MapUnit_Name), by = c("MapUnit_ID")) 
+
+ggplot(data = rova_vegmap) +
+    geom_sf(data = rova_vegmap) +
+    geom_sf(aes(fill = MapUnit_Name)) +
+    geom_sf(data = for_plots_sf %>% filter(park == "ROVA"), color = "black", shape = 21, size = 3, fill = "red") +
+    geom_sf(data = xy_sf %>% filter(park %in% c("HOFR")), color = "black", shape = 24, size = 3, fill = "black") + 
+    theme_bw() +
+    theme(legend.position = "none",
+          plot.title = element_text(hjust = 0.5, size = 22)) +
+    ggtitle("HOFR") +
+    xlim(c(587400, 589000)) +
+    ylim(c(4622900, 4625200))
+
+ggplot(data = rova_vegmap2) +
+    geom_sf(data = rova_vegmap2) +
+    geom_sf(aes(fill = Cover_Type)) +
+    scale_fill_manual(values = for_type_colors, na.value = "white") +   
+    geom_sf(data = for_plots_sf %>% filter(park == "ROVA"), color = "black", shape = 21, size = 3, fill = "red") +
+    geom_sf(data = xy_sf %>% filter(park == "HOFR"), color = "black", shape = 24, size = 3, fill = "black") +
+    theme_bw() +
+    theme(legend.position = "bottom",
+          plot.title = element_text(hjust = 0.5, size = 22)) +
+    ggtitle("HOFR") +
+    xlim(c(587400, 589000)) +
+    ylim(c(4622900, 4625200))
+
+ggplot(data = rova_vegmap ) +
+    geom_sf(data = rova_vegmap) +
+    geom_sf(aes(fill = MapUnit_Name)) +
+    geom_sf(data = for_plots_sf %>% filter(park == "ROVA"), color = "black", shape = 21, size = 3, fill = "red") +
+    geom_sf(data = xy_sf %>% filter(park %in% c("VAMA")), color = "black", shape = 24, size = 3, fill = "black") + 
+    theme_bw() +
+    theme(legend.position = "none",
+          plot.title = element_text(hjust = 0.5, size = 22)) +
+    ggtitle("VAMA") +
+    xlim(c(587400, 588400)) +
+    ylim(c(4626700, 4628909))
+
+ggplot(data = rova_vegmap2) +
+    geom_sf(data = rova_vegmap2) +
+    geom_sf(aes(fill = Cover_Type)) +
+    scale_fill_manual(values = for_type_colors, na.value = "white") +   
+    geom_sf(data = for_plots_sf %>% filter(park == "ROVA"), color = "black", shape = 21, size = 3, fill = "red") +
+    geom_sf(data = xy_sf %>% filter(park == "VAMA"), color = "black", shape = 24, size = 3, fill = "black") +
+    theme_bw() +
+    theme(legend.position = "bottom",
+          plot.title = element_text(hjust = 0.5, size = 22)) +
+    ggtitle("VAMA") +
+    xlim(c(587400, 588400)) +
+    ylim(c(4626700, 4628909))
+
+# mima:
+xm <- mima_vegmap
+for_plots_sfm <- st_as_sf(for_plots, 
+                            coords = c("lonutm", "latutm"), 
+                            crs = st_crs(xm))
+
+mima_vegmap15 <- mima_vegmap %>% 
+    mutate(MapUnit_ID = GROUP_CODE,
+            MapUnit_Name = GROUP_NAME)   
+
+mima_vegmap2 <- left_join(mima_vegmap15, for_cats %>% select(-MapUnit_Name), by = c("MapUnit_ID"))   
+
+for(jj in 1:nrow(mima_vegmap2)){
+
+    if(is.na(mima_vegmap2$GROUP_CODE[jj]) & mima_vegmap2$MCLASSNAME[jj] %in% c('Mowed Field', 'Open Water', 'Other Agricultural Land', 'Residential', 'Transportation and Roads')){
+        mima_vegmap2$GROUP_NAME[jj] <- mima_vegmap2$MCLASSNAME[jj]
+        mima_vegmap2$Cover_Type[jj] <- "Not forest"
+
+    }
+
+}
+
+
+ggplot(data = mima_vegmap2 ) +
+    geom_sf(data = mima_vegmap2) +
+    geom_sf(aes(fill = GROUP_NAME)) +
+    geom_sf(data = for_plots_sfm %>% filter(park == "MIMA"), color = "black", shape = 21, size = 3, fill = "red") +
+    geom_sf(data = xy_sf %>% filter(park %in% c("MIMA")), color = "black", shape = 24, size = 3, fill = "black") + 
+    theme_bw() +
+    theme(legend.position = "bottom",
+          plot.title = element_text(hjust = 0.5, size = 22)) +
+    ggtitle("MIMA") +
+    xlim(c(308500, 314468))
+
+ggplot(data = mima_vegmap2) +
+    geom_sf(data = mima_vegmap2) +
+    geom_sf(aes(fill = Cover_Type)) +
+    scale_fill_manual(values = for_type_colors, na.value = "white") +   
+    geom_sf(data = for_plots_sfm %>% filter(park == "MIMA"), color = "black", shape = 21, size = 3, fill = "red") +
+    geom_sf(data = xy_sf %>% filter(park == "MIMA"), color = "black", shape = 24, size = 3, fill = "black") +
+    theme_bw() +
+    theme(legend.position = "bottom",
+          plot.title = element_text(hjust = 0.5, size = 22)) +
+    ggtitle("MIMA") +
+    xlim(c(308500, 314450)) +
+    ylim(c(4701532, 4704100))
+
+#! now: plots forest and non forest and missing on the figures - check: MABI, MORR, SARA, WEFA, VAMA, MIMA, HOFR
+# ah well check all :( after classifiyng forest plots
+#! next - remove forest plots that are NOT IN FOREST
+
+miss_veg <- rbind(mima_vegmap2 %>% as_tibble() %>% select(MapUnit_ID, MapUnit_Name, Cover_Type),
+                  rova_vegmap2 %>% as_tibble() %>% select(MapUnit_ID, MapUnit_Name, Cover_Type),
+                  wefa_vegmap2 %>% as_tibble() %>% select(MapUnit_ID, MapUnit_Name, Cover_Type),
+                  sara_vegmap2 %>% as_tibble() %>% select(MapUnit_ID, MapUnit_Name, Cover_Type),
+                  morr_vegmap2 %>% as_tibble() %>% select(MapUnit_ID, MapUnit_Name, Cover_Type),
+                  mabi_vegmap2 %>% as_tibble() %>% select(MapUnit_ID, MapUnit_Name, Cover_Type)) %>% 
+            distinct() %>% 
+            as_tibble() %>% 
+            arrange(MapUnit_Name)
+ 
+ # this part might seem circular, but that's how all categories of land use/forest type were extracted to 
+ #    be classified as conifer, mixed, not forest and hardwood
+ # write_csv(miss_veg, file = 'data/out/updated_for_cats.csv')

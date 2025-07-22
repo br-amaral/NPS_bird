@@ -2,17 +2,12 @@
 
 DOOOOO(ing):
 
-- saving per sps: data, z values, model, results, meta data
-"data/ana_file/{date_out}_data_{sps_loop}_Z.rds
-- 
+
 
 # --------------------------------------------------------------------
 TO DO:
 
-- plotar vizinhos com o cover map
 
-( ) Kate: if genus is kept in the diversity calculations for the FIA data
-( ) Kate: are these the same? siteBA_large_s, parkBA_large_s, counPER_late_s
 
 
 # --------------------------------------------------------------------
@@ -24,41 +19,42 @@ Assumptions/decisions:
                  sair is too different (open areas)
                  elro only has one forest plot
 
-- 500 m for the radius between the sites make sense for bird home range, but is that meaningful? now using 500m
+- 250 m for the radius between the bird sites and forest plots
 
-- year of environmental covariates: 2022 (site,park)
-county: stastr_tab(2020)
-        deb_tab(2020)
-        can_tab(2020)
-        div_tab(2020)
-        shr_tab(2010)  !!!!!!!!!!!!
-        tpa_tab(2020)
-
-- the _yr files refer to environmental covariates being extracted each year
+- forest covariates: average of all years with data because of the panel rotation design
 
 # --------------------------------------------------------------------
 Workflow:
+# format_veg_data/park_rova_find.r
+        change the forest plot park and sites names from rova to elro, hofr and vama
 
-# format_veg_data/get_site_data_forgroups.R
-        in  - data/out/NETNtib.rds
-        in  - data/src/key_park.rds
-        in  - data/veg_kateaaron/NETN_forest_data_2006-2023.rds
-        in  - data/veg_kateaaron/NETN_tree_dens_spp_2006-2023.rds
-        in  - data/veg_kateaaron/for_sites.rds
+# format_veg_data/get_conhar_baden.r
+        get the density of conifer and hardwood trees that are measured by the NETN team to get percentrage of conifer and hardwood per plot
 
-        out - data/out/for_sit2.rds
-        out - data/out/site_covs_[xx]m.rds
-        out - data/out/park_site.rds
-        out - data/out/for_sit_coord.rds
-        out - data/out/bird_site_coords.rds
-        out - data/out/close_points_f.rds
+# format_veg_data/NETN_forest_data_for_sites.R
+        get values of NETN forest covariates for each forest plots
+
+# format_veg_data/get_site_data_rad.R
+        find out which forest plots are connected to each bird site according to a 250m and the first closest neighbours
+             and weighted mean values for each bird site (weight is the inverse of the distance)
+#?        in  - data/out/NETNtib.rds
+#?        in  - data/src/key_park.rds
+#?        in  - data/veg_kateaaron/NETN_forest_data_2006-2023.rds
+#?        in  - data/veg_kateaaron/NETN_tree_dens_spp_2006-2023.rds
+#?        in  - data/veg_kateaaron/for_sites.rds
+
+#?        out - data/out/for_sit2.rds
+#?        out - data/out/site_covs_[xx]m.rds
+#?        out - data/out/park_site.rds
+#?        out - data/out/for_sit_coord.rds
+#?        out - data/out/bird_site_coords.rds
+#?        out - data/out/close_points_f.rds
 
 # format_veg_data/get_park_data.R
-        in  - data/veg_kateaaron/NETN_forest_data_2006-2023.rds
+#?        in  - data/veg_kateaaron/NETN_forest_data_2006-2023.rds
 
-        out - data/out/park_covs.rds
+#?        out - data/out/park_covs.rds
 
-# format_veg_data/local_diversity.R
 
 # format_veg_data/FIA_getdata.R
 
