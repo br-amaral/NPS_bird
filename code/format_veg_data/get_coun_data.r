@@ -182,7 +182,8 @@ tpa_covs <- tpa_tab_sps  %>%
                             BA_m2ha_Hardwood =    mean(BA_m2ha_Hardwood, na.rm = T),
                             BA_m2ha_Conifer =     mean(BA_m2ha_Conifer, na.rm = T),
                             treeden_ha =          mean(treeden_ha, na.rm = T),
-                            BA_m2ha =             mean(BA_m2ha, na.rm = T))  
+                            BA_m2ha =             mean(BA_m2ha, na.rm = T))  %>% 
+                  mutate(BA_m2ha_perc_con = BA_m2ha_Conifer/BA_m2ha)
 
 # by size class: classify each tree accoding to DBH in BA and density of pole, mature, and large
 # size classes are 10-25.9 cm DBH (pole), 26-45.9 cm DBH (mature) and ≥ 46 cm DBH (large).
