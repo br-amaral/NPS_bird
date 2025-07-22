@@ -250,7 +250,7 @@ comb <- full_join(plots , tree_den, by = "Plot_Name") %>%
 comb %>% DT::datatable()
 
 table(comb$ParkUnit)
-table(comb %>% filter(!is.na(shrub_cov_nat)) %>% select(ParkUnit))  # SAGA has a lot of NAs here
+#table(comb %>% filter(!is.na(shrub_cov_nat)) %>% select(ParkUnit))  # SAGA has a lot of NAs here
 
 comb_sites <- comb %>% 
     select(Plot_Name, X, Y, UTMZone) %>% 
