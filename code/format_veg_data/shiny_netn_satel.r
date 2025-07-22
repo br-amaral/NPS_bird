@@ -54,7 +54,8 @@ colanmes <- colnames
 lenght <- length
 `%!in%` <- Negate(`%in%`)
 
-radi_dist <- 250
+radi_dist <- 350
+hard_con_mix2 <- FALSE 
 
 #! Source code -----------------------------------------
 #? veggie maps -----------------------------------------
@@ -63,7 +64,7 @@ source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_veg_data/veg_m
 
 keep_objects <- c("for_plots_sf", "for_plots_sfm", "xy_sf", 
                   "mabi_vegmap2", "morr_vegmap2", "saga_vegmap2", "sara_vegmap2",
-                  "wefa_vegmap2", "rova_vegmap2", "mima_vegmap2", "keep_objects", "radi_dist")
+                  "wefa_vegmap2", "rova_vegmap2", "mima_vegmap2", "keep_objects", "radi_dist", "hard_con_mix2")
 
 rm(list = setdiff(ls(), keep_objects))
 
@@ -87,12 +88,15 @@ bird_sit_covs2 <- bird_sit_covs %>%
 xy_sf <- left_join(xy_sf, bird_sit_covs2, by = c("Point_Name", "park")) %>% 
                       filter(park %!in% c("ACAD", "ELRO", "SAIR"))
 
-keep_objects2 <- c(keep_objects, "radi_dist", "neighbor", "bird_sit_covs2")
+keep_objects2 <- c(keep_objects, "radi_dist", "neighbor", "bird_sit_covs2", "hard_con_mix")
 rm(list = setdiff(ls(), keep_objects2))
 
 colanmes <- colnames
 lenght <- length
 `%!in%` <- Negate(`%in%`)
+
+httpgd::hgd()
+httpgd::hgd_browse()
 
 #! Import data -----------------------------------------
 ## file paths
@@ -320,7 +324,7 @@ palette <- c("#a0a0a0", "#68c568", "#3a78dc", "#c98b19", "#dcdada")
 cover_type_colors <- setNames(palette[seq_along(all_cover_types)], all_cover_types)
 
 for_nofor <- unique(unlist(lapply(park_list, function(x) unique(x$map$Cover_Type2))))
-palette2 <- c("#a0a0a0", "#68c568")
+palette2 <- c("#d8cfcf", "#a3e8a3")
 for_nofor_colors <- setNames(palette2[seq_along(for_nofor)], for_nofor)
 
 plot_id <- unique(unlist(lapply(park_list, function(x) unique(x$close_points$bird_sit))))
@@ -331,17 +335,17 @@ plot_id_park <- substr(plot_id, 1,4)
 # Using a combination of different color palettes to get enough distinct colors
 plot_palette <- c(
   # Primary colors (12)
-  "#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#ffff33", 
-  "#a65628", "#f781bf", "#999999", "#66c2a5", "#fc8d62", "#8da0cb",
+  "#e41a1c", "#377eb8", "#d215b6", "#984ea3", "#ff7f00", "#ffff33", 
+  "#a65628", "#f781bf", "#999999", "#1e1ebc", "#fc8d62", "#8da0cb",
   # Additional vibrant colors (12)
-  "#1f78b4", "#33a02c", "#e31a1c", "#ff7f00", "#cab2d6", "#6a3d9a",
-  "#b15928", "#fb9a99", "#a6cee3", "#b2df8a", "#fdbf6f", "#ffff99",
+  "#1f78b4", "#975110", "#e31a1c", "#ff7f00", "#cab2d6", "#6a3d9a",
+  "#b15928", "#fb9a99", "#a6cee3", "#6e4e0f", "#fdbf6f", "#ffff99",
   # More distinct colors (12)  
   "#8dd3c7", "#ffffb3", "#bebada", "#fb8072", "#80b1d3", "#fdb462",
-  "#b3de69", "#fccde5", "#d9d9d9", "#bc80bd", "#ccebc5", "#ffed6f",
+  "#04758f", "#fccde5", "#d9d9d9", "#bc80bd", "#ccebc5", "#ffed6f",
   # Even more colors (12)
   "#a50026", "#d73027", "#f46d43", "#fdae61", "#fee08b", "#ffffbf",
-  "#e6f598", "#abd9e9", "#74add1", "#4575b4", "#313695", "#006837"
+  "#e6f598", "#abd9e9", "#74add1", "#4575b4", "#313695", "#054e2c"
 )
 
 # Ensure we have enough colors by repeating if needed
@@ -360,8 +364,11 @@ plot_id_colors <- setNames(plot_palette[1:total_bird_sites], plot_id[!is.na(plot
 # + bird_difference_map (Difference between NETN and satellite for bird sites)
 # + forest_difference_map (Difference between NETN and satellite for forest plots)
 
+if(hard_con_mix == TRUE)  {forest_status <- " conifer/hardwood neighbours"}
+if(hard_con_mix == FALSE) {forest_status <- "all forest are neighbours"}
+
 ui <- fluidPage(
-  titlePanel(glue("NPS Park Bird Sites ({radi_dist} radius) and Forest Plots")),
+  titlePanel(glue("NPS Park Bird Sites ({radi_dist} radius and {forest_status}) and Forest Plots")),
   sidebarLayout(
     sidebarPanel(
       selectInput("park", "Choose a Park:", choices = names(park_list), selected = "MABI")
@@ -371,8 +378,11 @@ ui <- fluidPage(
       plotOutput("bird_netn_map", height = "500px"),
       plotOutput("bird_satellite_map", height = "500px"),
       plotOutput("bird_difference_map", height = "500px"),
-      plotlyOutput("bird_comparison_plot", height = "500px"),
-      
+      fluidRow(
+        column(6, plotlyOutput("bird_comparison_plot", height = "500px")),
+        column(6, plotlyOutput("bird_neighbor_plot", height = "500px"))
+      ),
+
       h3("Forest Plots"),
       plotOutput("forest_netn_map", height = "500px"),
       plotOutput("forest_satellite_map", height = "500px"),
@@ -479,14 +489,28 @@ server <- function(input, output, session) {
     current_colors <- setNames(plot_palette[1:length(current_bird_sits)], current_bird_sits)
     plot_points <- park_data$for_plots
 
-    # Calculate differences
-    bird_netn <- park_data$xy %>% select(Point_Name, BA_m2ha_Conifer)
-    bird_sat <- park_data$bird_sat_covi_cov %>% 
-                filter(park == input$park) %>% 
-                select(Point_Name, basal_m2_per_ha1)
+    # Get neighbor counts for sizing
+    neighbor_info <- park_data$neighbor %>%
+      group_by(bird_sit) %>%
+      summarise(neighbor_count = n(), .groups = 'drop')
+
+    nei_range <- c(min(neighbor_info$neighbor_count), max(neighbor_info$neighbor_count))
+
+    # Calculate differences - 
+    bird_netn_data <- park_data$xy %>% 
+                      select(Point_Name, BA_m2ha_Conifer) %>% 
+                      mutate(BA_m2ha_Conifer = ifelse(is.na(BA_m2ha_Conifer), 0, BA_m2ha_Conifer))
+
+    bird_sat_data <- park_data$bird_sat_covi_cov %>% 
+                     filter(park == input$park) %>% 
+                     select(Point_Name, basal_m2_per_ha1) %>% 
+                     mutate(basal_m2_per_ha1 = ifelse(is.na(basal_m2_per_ha1), 0, basal_m2_per_ha1))
     
-    bird_diff <- st_join(bird_netn, bird_sat) %>%
-                 mutate(difference = BA_m2ha_Conifer - basal_m2_per_ha1)
+    bird_diff <- bird_netn_data %>%
+                 st_join(bird_sat_data %>% select(-Point_Name)) %>%
+                 mutate(difference = BA_m2ha_Conifer - basal_m2_per_ha1) %>%
+                 left_join(., neighbor_info, by = c("Point_Name" = "bird_sit")) %>% 
+                    mutate(neighbor_count = ifelse(is.na(neighbor_count), 0, neighbor_count))
     
     diff_range <- range(bird_diff$difference, na.rm = TRUE)
 
@@ -502,8 +526,9 @@ server <- function(input, output, session) {
         scale_color_manual(values = current_colors, guide = "none") + 
         geom_sf(data = plot_points, size = 3, color = "black") +        
         geom_sf(data = bird_diff, 
-                aes(fill = difference), 
-                shape = 21, size = 7, stroke = 1) +
+                aes(fill = difference, size = neighbor_count), 
+                shape = 21, stroke = 1) +
+        scale_size_continuous(name = "# Neighbors", range =  c(2, 12)) +
         scale_fill_gradient2(name = "Difference\n(NETN - Satellite)", 
                             low = "red", mid = "white", high = "blue",
                             midpoint = 0,
@@ -514,7 +539,7 @@ server <- function(input, output, session) {
               legend.text = element_text(size = 8),
               legend.title = element_text(size = 9),
               plot.title = element_text(hjust = 0.5, size = 22)) +
-        labs(title = glue("Bird Sites - Difference (NETN - Satellite) - {input$park}")) +
+       # labs(title = glue("Bird Sites - Difference (NETN - Satellite) - {input$park}")) +
         scale_x_continuous(limits = c(pull(park_data$park_lim[1,2]), pull(park_data$park_lim[1,3]))) +
         scale_y_continuous(limits = c(pull(park_data$park_lim[1,4]), pull(park_data$park_lim[1,5])))
 
@@ -525,30 +550,103 @@ server <- function(input, output, session) {
   output$bird_comparison_plot <- renderPlotly({
     park_data <- park_list[[input$park]]
     
+        # Get neighbor counts for sizing
+    neighbor_info <- park_data$neighbor %>%
+      group_by(bird_sit) %>%
+      summarise(neighbor_count = n(), .groups = 'drop')
+
     comp_net_sat2 <- comp_bir_plot %>%
-      filter(park == input$park)
+      filter(park == input$park) %>%
+      left_join(neighbor_info, by = c("Point_Name" = "bird_sit"))
     
     max_sca <- ceiling(max(comp_net_sat2 %>% as_tibble() %>% select(netn_con_ba, sate_con_ba), na.rm = T) / 10) * 10
     min_sca <- floor(min(comp_net_sat2 %>% as_tibble() %>% select(netn_con_ba, sate_con_ba), na.rm = T) / 10) * 10
 
+    comp_net_sat3 <- comp_net_sat2 %>% as_tibble() %>% select(netn_con_ba, sate_con_ba) %>% filter(complete.cases(.))
+
+    cor_res <- round(cor(comp_net_sat3$netn_con_ba, comp_net_sat3$sate_con_ba, use = "complete.obs"),2)
+
     q <- ggplot(data = comp_net_sat2) +
       geom_point(aes(x = netn_con_ba, y = sate_con_ba, 
+                     size = neighbor_count,
                      text = paste0("Bird Point: ", Point_Name, "<br>",
                                   "NETN BA: ", round(netn_con_ba, 2), " m²/ha<br>",
-                                  "Satelite BA: ", round(sate_con_ba, 2), " m²/ha")), 
-                 size = 2) +
+                                  "Satelite BA: ", round(sate_con_ba, 2), " m²/ha<br>",
+                                  "Forest Neighbors: ", neighbor_count))) +
+      scale_size_continuous(name = "# Neighbors", range = c(1, 6)) +
       xlim(min_sca, max_sca) +
       ylim(min_sca, max_sca) +
       geom_smooth(aes(x = netn_con_ba, y = sate_con_ba), method = "lm", se = FALSE) +
       geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed", linewidth = 1) +
       labs(x = "NETN BA Estimates (m²/ha)", y = "Satelite BA Estimates (m²/ha)",
-           title = glue("Bird Sites Comparison - {input$park}")) +
+           title = glue("Bird Sites Comparison - {input$park}: Correlation {cor_res}")) +
       theme_bw() +
       theme(legend.position = "right",
             legend.text = element_text(size = 12),
             plot.title = element_text(hjust = 0.5, size = 16))
     
     ggplotly(q, tooltip = "text")
+  })
+
+# Bird Neighbor Count Plot
+  output$bird_neighbor_plot <- renderPlotly({
+    park_data <- park_list[[input$park]]
+    
+    # Count neighbors for each bird site
+    neighbor_info <- park_data$neighbor %>%
+      group_by(bird_sit) %>%
+      summarise(
+        neighbor_count = n(),
+        forest_neighbors = paste(for_plt, collapse = ", "),  # Changed from for_plt to for_sit
+        .groups = 'drop'
+      ) %>%
+      arrange(bird_sit)
+    
+     # Calculate differences - 
+    bird_netn_data <- park_data$xy %>% 
+                      select(Point_Name, BA_m2ha_Conifer) %>% 
+                      mutate(BA_m2ha_Conifer = ifelse(is.na(BA_m2ha_Conifer), 0, BA_m2ha_Conifer))
+
+    bird_sat_data <- park_data$bird_sat_covi_cov %>% 
+                     filter(park == input$park) %>% 
+                     select(Point_Name, basal_m2_per_ha1) %>% 
+                     mutate(basal_m2_per_ha1 = ifelse(is.na(basal_m2_per_ha1), 0, basal_m2_per_ha1))
+    
+    bird_diff <- bird_netn_data %>%
+                 st_join(bird_sat_data %>% select(-Point_Name)) %>%
+                 mutate(difference = BA_m2ha_Conifer - basal_m2_per_ha1) %>%
+                 left_join(., neighbor_info, by = c("Point_Name" = "bird_sit")) %>%
+                 as_tibble()
+    bird_diff <- bird_diff[,-ncol(bird_diff)] %>% 
+                    select(Point_Name, difference) %>% 
+                    rename(bird_sit = Point_Name)
+
+    diff_range <- range(bird_diff$difference, na.rm = TRUE)
+
+    neighbor_info <- left_join(neighbor_info, bird_diff, by = c("bird_sit")) %>%  
+                    mutate(neighbor_count = ifelse(is.na(neighbor_count), 0, neighbor_count))
+
+    # Create the plot
+    p_neighbors <- ggplot(data = neighbor_info, 
+                          aes(x = bird_sit, y = neighbor_count)) +
+      geom_point(aes(text = paste0("Bird Site: ", bird_sit, "<br>",
+                                   "Forest Plot Neighbors: ", neighbor_count, "<br>",
+                                   "Forest Plot Names: ", forest_neighbors), 
+               fill = difference), alpha = 0.7, size = 6) +
+      #scale_fill_viridis_c(name = "Difference", option = "plasma") +     
+      scale_fill_gradient2(name = "Difference\n(NETN - Satellite)", 
+                    low = "red", mid = "white", high = "blue",
+                    midpoint = 0,
+                    na.value = "grey50",
+                    limits = diff_range) +    
+      labs(x = "Bird Site", y = "Number of Forest Plot Neighbors",
+           title = glue("Forest Plot Neighbors per Bird Site - {input$park}")) +
+      theme_bw() +
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+            legend.position = "none",
+            plot.title = element_text(hjust = 0.5, size = 14)) 
+    
+    ggplotly(p_neighbors, tooltip = "text")
   })
 
   # Forest Plots - NETN Data
@@ -718,7 +816,7 @@ server <- function(input, output, session) {
 
 shinyApp(ui, server)
 ## ( x ) send bird sites values to aaron
-## (   ) check park errors
+## ( x ) check park errors
 ## ( x ) add park limits/boundaries for plots
 ## ( x ) sensitivity analysis - how many neighbours I get and how estimates changes as the radius gets bigger
 ## ( x ) classify everything as forest and not forest

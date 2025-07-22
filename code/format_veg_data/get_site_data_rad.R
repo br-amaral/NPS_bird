@@ -1,5 +1,5 @@
 #? *********************************************************************************
-#? ------------------------------   get_site_data.R   ------------------------------
+#? ----------------------------   get_site_data_rad.R   ----------------------------
 #? *********************************************************************************
 #! Code to get site values for forest covariates. First, it gets the locations and forest types
 #!    of each bird site and forest plot, and connect them. Bird sites are characterized with forest
@@ -23,6 +23,8 @@
 #! Output ----------------------------------------------
 #           - data/out/site_covs_fornofor_{radi_dist}m.rds : forest covariates for each bird site according to the weighted mean by distance of the closest 5 forest plots
 #           - data/out/neighbor_fornofor_{radi_dist}m.rds  : who is whose neighbor
+#           - data/out/site_covs_hardcon_{radi_dist}m.rds : forest covariates for each bird site according forest type and to the weighted mean by distance of the closest 5 forest plots
+#           - data/out/neighbor_hardcon_{radi_dist}m.rds  : who is whose neighbor with forest type
 #
 # detach packages and clear workspace
 #  freshr::freshr()
@@ -59,11 +61,15 @@ Modes <- function(x) {
 }
 #! Define settings -------------------------------------
 # radius distance in meters
-radi_dist2 <- 250
+# radi_dist2 <- 250
+# hard_con_mix2 <- FALSE 
 
 if(exists("radi_dist") == FALSE) {radi_dist <- radi_dist2}
+if(exists("hard_con_mix") == FALSE) {hard_con_mix <- hard_con_mix2}
 
 print(glue("\n\n\n\n\n\n radius distance is {radi_dist} \n\n\n\n\n\n"))
+print(glue("\n\n\n\n\n\n are we using conifer and hardwood to decide neighbors? {hard_con_mix} \n\n\n\n\n\n"))
+
 #! Import data -----------------------------------------
 ## file paths
 BIRD_SITE_PATH    <- "data/out/NETNtib.rds"
@@ -250,10 +256,12 @@ for_plt_coord2 <- left_join(for_plt_coord,
 
 # get a table with all the forest types to compare to the key, 
 #    and possible combine them into two groups: forest not forest
-for (ii in 1:nrow(veg_type)){
+if(hard_con_mix == FALSE) {
+  for (ii in 1:nrow(veg_type)){
     if(!is.na(veg_type$Cover_Type[ii]) && veg_type$Cover_Type[ii] != "Not forest") {
         veg_type$Cover_Type[ii] <- "Forest"
         } 
+    }
 }
 
 veg_type_indata <- c(unique(for_plt_coord2$f_for),
@@ -267,18 +275,25 @@ dim(veg_type_indata)
 length(unique(veg_type_indata$MapUnit_ID))
 #writexl::write_xlsx(tab_veg3, path = "data/out/tab_veg3.xlsx")
 
-# merge forest categories and remove non forest
-bird_sit_coord2 <- bird_sit_coord2 %>% 
-      rename(MapUnit_ID = b_for) %>% 
-      left_join(., veg_type, by = "MapUnit_ID")  %>% 
-      rename(bir_veg = Cover_Type)  %>% 
-      filter(bir_veg == "Forest")
+  bird_sit_coord2 <- bird_sit_coord2 %>% 
+        rename(MapUnit_ID = b_for) %>% 
+        left_join(., veg_type, by = "MapUnit_ID")  %>% 
+        rename(bir_veg = Cover_Type)
 
-for_plt_coord3 <- for_plt_coord2 %>% 
-      rename(MapUnit_ID = f_for) %>% 
-      left_join(., veg_type, by = "MapUnit_ID") %>% 
-      rename(for_veg = Cover_Type)  %>% 
-      filter(for_veg == "Forest")
+  for_plt_coord3 <- for_plt_coord2 %>% 
+        rename(MapUnit_ID = f_for) %>% 
+        left_join(., veg_type, by = "MapUnit_ID") %>% 
+        rename(for_veg = Cover_Type) 
+
+if(hard_con_mix == FALSE) {
+
+  # merge forest categories and remove non forest
+  bird_sit_coord2 <- bird_sit_coord2 %>% 
+        filter(bir_veg == "Forest")
+
+  for_plt_coord3 <- for_plt_coord3 %>% 
+        filter(for_veg == "Forest")
+}
 
 rbind(
   bird_sit_coord2 %>% filter(!is.na(bir_veg)) %>% select(MapUnit_ID) %>% distinct(),
@@ -559,11 +574,22 @@ bird_sit_covs2 %>% select(bird_sit, shrub_cov_nat_wei) %>% filter(bird_sit %in% 
 
 #! Output files ----------------------------------------------
 print("save output files!")
-# information of covariates for each bird site
-write_rds(bird_sit_covs2, file = glue("data/out/site_covs_fornofor_{radi_dist}m.rds"))
 
-# who is whose neighbor
-write_rds(close_points_f2, file = glue("data/out/neighbor_fornofor_{radi_dist}m.rds"))
+if(hard_con_mix == FALSE) {
+  # information of covariates for each bird site
+  write_rds(bird_sit_covs2, file = glue("data/out/site_covs_fornofor_{radi_dist}m.rds"))
+
+  # who is whose neighbor
+  write_rds(close_points_f2, file = glue("data/out/neighbor_fornofor_{radi_dist}m.rds"))
+}
+
+if(hard_con_mix == TRUE) {
+  # information of covariates for each bird site
+  write_rds(bird_sit_covs2, file = glue("data/out/site_covs_hardcon_{radi_dist}m.rds"))
+
+  # who is whose neighbor
+  write_rds(close_points_f2, file = glue("data/out/neighbor_hardcon_{radi_dist}m.rds"))
+}
 
 cat(paste("\n\n Done \n\n\n"))
 

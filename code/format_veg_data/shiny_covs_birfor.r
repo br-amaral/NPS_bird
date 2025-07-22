@@ -56,10 +56,11 @@ keep_objects <- c("for_plots_sf", "for_plots_sfm", "xy_sf",
 
 rm(list = setdiff(ls(), keep_objects))
 
-radi_dist <- 250
+radi_dist <- 350
+hard_con_mix2 <- FALSE 
 source('/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_veg_data/get_site_data_rad.R')
 
-keep_objects2 <- c(keep_objects, radi_dist)
+keep_objects2 <- c(keep_objects, radi_dist, hard_con_mix)
 
 #! Make functions --------------------------------------
 colanmes <- colnames
@@ -108,6 +109,13 @@ for(ii in 1:nrow(for_plots_covs)){
         for_plots_covs$type[ii] <- "Conifer"
     } else { for_plots_covs$type[ii] <- "Hardwood" }
 }
+# add percent conifer to park
+park_conifs <- for_plots_covs  %>% 
+                  select(ParkUnit, BA_m2ha_perc_con) %>% 
+                  group_by(ParkUnit) %>% 
+                  summarise(BA_m2ha_perc_con = mean(BA_m2ha_perc_con, na.rm = T))
+
+park_covs <- left_join(park_covs, park_conifs, by = "ParkUnit")
 
 # shiny for parks, forest type_plot, and new covariates
 for_plots_sfh <- for_plots_sf  %>% filter(park == "ROVA"); for_plots_sfh$park <- "HOFR"   # hofr
@@ -121,6 +129,11 @@ bird_sit_covs2 <- bird_sit_covs %>%
 
 xy_sf <- left_join(xy_sf, bird_sit_covs2, by = c("Point_Name", "park")) %>% 
                       filter(park %!in% c("ACAD", "ELRO", "SAIR"))
+
+all_bir_points <- xy_sf %>% as_tibble() %>% select(Point_Name) 
+
+bird_sit_covs2 <- left_join(all_bir_points, bird_sit_covs2, by = "Point_Name") %>% 
+                        mutate(park = substr(Point_Name, 1, 4)) 
 park_list <- list(
   "MABI" = list(map = mabi_vegmap2, 
                 for_plots = for_plots_sf,  
@@ -168,10 +181,17 @@ all_cover_types <- unique(unlist(lapply(park_list, function(x) unique(x$map$Cove
 palette <- c("#605d5d", "#1e7b1e", "#3a78dc", "#c98b19", "#dcdada")
 cover_type_colors <- setNames(palette[seq_along(all_cover_types)], all_cover_types)
 
+if(hard_con_mix == TRUE)  {forest_status <- " conifer/hardwood neighbours"}
+if(hard_con_mix == FALSE) {forest_status <- "all forest are neighbours"}
+
 ui <- fluidPage(
-  titlePanel("NPS Park Vegetation Maps"),
+  titlePanel(glue("NPS Park Bird Sites ({radi_dist} radius and {forest_status}) and Forest Plots")),
   sidebarLayout(
+    position = "left",
+    fluid = FALSE,
     sidebarPanel(
+      width = 2,  # Make sidebar narrower (default is 4, range is 1-11)
+      style = "position:fixed; width:16%; height:100vh; overflow-y:auto;",  # Fixed position
       selectInput("park", "Choose a Park:", choices = names(park_list), selected = "MABI"),
       selectInput("variable", "Choose Variable:", 
                   choices = c("BA_m2ha", 
@@ -185,28 +205,26 @@ ui <- fluidPage(
                   selected = "BA_m2ha")
     ),
     mainPanel(
+      width = 10,  # Adjust main panel width to compensate (should sum to 12 with sidebar)
+      style = "margin-left:17%;",  # Add left margin to account for fixed sidebar
       plotOutput("vegmap", height = "500px"),
       fluidRow(
         column(
           width = 6,
-          # h4(textOutput("for_plot_title")),
           plotlyOutput("for_variable_plot", height = "400px")
         ),
         column(
           width = 6,
-          # h4(textOutput("bird_plot_title")),
           plotlyOutput("bird_variable_plot", height = "400px")
         )
       ),
       fluidRow(
         column(
           width = 6,
-          # h4(textOutput("park_for_title")),
           plotlyOutput("park_forest_plot", height = "400px")
         ),
         column(
           width = 6,
-          # h4(textOutput("coun_for_title")),
           plotlyOutput("coun_forest_plot", height = "400px")
         )
       )
@@ -339,7 +357,7 @@ server <- function(input, output, session) {
             plot.title = element_text(hjust = 0.5, size = 22),
             axis.text = element_text(size = 6),
             axis.title = element_text(size = 8)) +
-      ggtitle(paste(input$park, "- Forest Plots (diamonds) & Bird Sites (circles)")) +
+      ggtitle(paste(input$park, " - Radius of ", radi_dist, "m - Forest Plots (diamonds) & Bird Sites (circles)")) +
       scale_x_continuous(limits = c(pull(park_data$park_lim[1,2])-150, pull(park_data$park_lim[1,3])+150)) +
       scale_y_continuous(limits = c(pull(park_data$park_lim[1,4])-150, pull(park_data$park_lim[1,5])+150))
     
@@ -398,11 +416,14 @@ server <- function(input, output, session) {
       # Use the reactive combined_range
       range_values <- combined_range()
       
-      p <- ggplot(df, aes(x = Point_Name, y = !!sym(input$variable))) +
+      df_clean <- df %>%
+        mutate(!!input$variable := ifelse(is.na(!!sym(input$variable)), 0, !!sym(input$variable)))
+     
+      p <- ggplot(df_clean, aes(x = Point_Name, y = !!sym(input$variable))) +
         geom_point(aes(text = paste0(
                       "Site: ", Point_Name, "<br>",
                       input$variable, ": ", round(!!sym(input$variable), 2)
-                    )), size = 2, color = "#3a78dc") +
+                    )), size = 2, color = "#3a78dc", na.rm = FALSE) +
         labs(x = "Bird Site", y = input$variable, title = glue("{input$variable} - Bird Site Data")) +
         theme_bw() +
         ylim(range_values) +  # Use reactive range

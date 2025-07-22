@@ -1,5 +1,5 @@
 #? *********************************************************************************
-#? ------------------------------   get_site_data.R   ------------------------------
+#? -------------------------   get_site_data_forgroups.R   -------------------------
 #? *********************************************************************************
 #! Code to get site values for forest covariates. First, it gets the locations and forest types
 #!    of each bird site and forest plot, and connect them. Bird sites are characterized with forest
@@ -22,7 +22,7 @@
 #! Output ----------------------------------------------
 #           - data/out/close_points_f.rds : tibble with combinations of forest and bird sites, and the distances between them
 #!          - data/out/park_site.rds :
-#!          - data/out/for_sit_coord.rds :
+#!          - data/out/for_plt_coord.rds :
 #!          - data/out/bird_site_coords.rds :
 #           - data/out/site_covs.rds : output file with the covariate values
 #!          - data/out/for_sit2.rds :
@@ -62,23 +62,34 @@ Modes <- function(x) {
       ux[tab == max(tab)]}
 }
 #! Define settings -------------------------------------
-# radi_dist <- 100000   # distance removed. 
+radi_dist <- 500  
+hard_con_mix <- FALSE 
 
 #! Import data -----------------------------------------
 ## file paths
 BIRD_SITE_PATH    <- "data/out/NETNtib.rds"
-PARK_SITE_PATH    <- "data/src/key_park.rds"
-FORCOVS_SITE_PATH <- "data/veg_kateaaron/NETN_forest_data_2006-2023.rds"
-FORSPS_SITE_PATH  <- "data/veg_kateaaron/NETN_tree_dens_spp_2006-2023.rds"
-FOR_SITE_PATH     <- "data/veg_kateaaron/for_sites.rds"
 BIRD_FOR_PATH     <- "data/out/key_bsite.rds"
 FOR_FOR_PATH      <- "data/out/key_fsite.rds"
-VEG_TYP_PATH      <- "data/out/tab_veg3_AW.csv"    # vegetation types (3) of the parks
+
+PARK_SITE_PATH    <- "data/src/key_park.rds"
+FOR_PLOT_COVS     <- "data/out/for_plot_covs.rds"
+VEG_TYP_PATH      <- "data/out/updated_for_cats.csv"   
+
 VAMA_PARK_PATH    <- "data/VAMA_sites.rds"
 HOFR_PARK_PATH    <- "data/HOFR_sites.rds"
 ELRO_PARK_PATH    <- "data/ELRO_sites.rds"
 
 ## read files
+## get site names for ROVA parks 
+## read files
+parks         <- read_rds(file = PARK_SITE_PATH) 
+veg_type      <- read_csv(file = VEG_TYP_PATH)
+bird_sit      <- read_rds(file = BIRD_SITE_PATH)
+
+bird_cat      <- read_rds(file = BIRD_FOR_PATH)
+for_cats      <- read_rds(file = FOR_FOR_PATH)
+for_plt       <- read_rds(file = FOR_PLOT_COVS)
+
 ## get site names for ROVA parks 
 VAMA_sites <- read_rds(file = VAMA_PARK_PATH) %>% 
                 select(park, for_sit)
@@ -92,14 +103,6 @@ ELRO_sites <- read_rds(file = ELRO_PARK_PATH) %>%
 ROVA_sites <- rbind(VAMA_sites, HOFR_sites, ELRO_sites)  %>% 
                 rename(ParkUnit = park, Plot_Name = for_sit)
 
-bird_sit      <- read_rds(file = BIRD_SITE_PATH)
-parks         <- read_rds(file = PARK_SITE_PATH) 
-for_sit       <- read_rds(file = FORCOVS_SITE_PATH)
-fordiv_sit    <- read_rds(file = FORSPS_SITE_PATH)
-for_sit_coord <- read_rds(file = FOR_SITE_PATH)
-key_bsite     <- read_rds(file = BIRD_FOR_PATH)
-key_fsite     <- read_rds(file = FOR_FOR_PATH)
-veg_type      <- read_csv(file = VEG_TYP_PATH)
 
 #! get coordinates from the bird plots ------------------------------
 parks <- parks %>% 
@@ -143,19 +146,19 @@ bird_sit_coord <- park_site %>%
           UTMZone = UTM_ZONE) 
 
 #! get coordinates from the forest plots ------------------------------
-for_sit_coord <- for_sit_coord %>% 
-  rename(for_sit = Plot_Name,
+for_plt_coord <- for_plt %>% 
+  rename(for_plt = Plot_Name,
           latutm = Y,
           lonutm = X) %>% 
-  relocate(for_sit, latutm, lonutm, UTMZone) %>% 
+  relocate(for_plt, latutm, lonutm, UTMZone) %>% 
   mutate(UTMZone = substr(UTMZone, 1 , 2))
 
-colnmaes(for_sit_coord); colnmaes(bird_sit_coord)
-#? write_rds for_sit_coord
-# write_rds(for_sit_coord, file = "data/out/for_sit_coord.rds")
+colnmaes(for_plt_coord); colnmaes(bird_sit_coord)
+#? write_rds for_plt_coord
+# write_rds(for_plt_coord, file = "data/out/for_plt_coord.rds")
 
 par(mfrow = c(1,2))
-plot(for_sit_coord$lonutm, for_sit_coord$latutm, col = "darkgreen")
+plot(for_plt_coord$lonutm, for_plt_coord$latutm, col = "darkgreen")
 plot(bird_sit_coord$lon, bird_sit_coord$lat, col = "violet")
 
 #? convert all bird coordinates to UTM to get distances in meters --------------------
@@ -198,8 +201,8 @@ ggplot() +
                  y = bird_sit_coord$latutm),
              size = 2,
              color = "red") +
-  geom_point(aes(x = for_sit_coord$lonutm, 
-                 y = for_sit_coord$latutm), 
+  geom_point(aes(x = for_plt_coord$lonutm, 
+                 y = for_plt_coord$latutm), 
              color = "darkgreen") +
   #geom_text(aes(x= park_plot_nam$lonutm, y =park_plot_nam$latutm),
   #          label = park_plot_nam$park, size = 3, vjust = -1.3) +
@@ -211,7 +214,7 @@ ggplot() +
 
 #? Connect forest sites and bird sites -----------------------------------
 # there is no SAIR site level data
-bird_sit_coord2 <- bird_sit_coord %>% 
+bird_sit_coord15 <- bird_sit_coord %>% 
     as_tibble() %>% 
     mutate(park = substr(bird_sit, 1 , 4)) %>%
     filter(park != "ACAD",
@@ -220,8 +223,9 @@ bird_sit_coord2 <- bird_sit_coord %>%
     select(-park)
 
 # link forest types with sites
-bird_sit_coord2 <- left_join(bird_sit_coord2, 
-                              key_bsite %>% 
+## first clkassify all forest types, so we can classify them in forest and not forest
+bird_sit_coord2 <- left_join(bird_sit_coord15, 
+                              bird_cat %>% 
                                 rename(bird_sit = Point_Name,
                                         b_for = MapUnit_ID) %>% 
                                 select(bird_sit, b_for),
@@ -231,28 +235,29 @@ bird_sit_coord2 <- left_join(bird_sit_coord2,
 # change Rova names to actual parks
 ROVA_sites <- ROVA_sites  %>% rename(park = ParkUnit, ID = Plot_Name)
 
-for(ii in 1:nrow(key_fsite)){
+for(ii in 1:nrow(for_cats)){
     for(jj in 1:nrow(ROVA_sites)){
-      if(key_fsite$ID[ii] == ROVA_sites$ID[jj]) {
-         key_fsite$park[ii] <- ROVA_sites$park[jj]
+      if(for_cats$ID[ii] == ROVA_sites$ID[jj]) {
+         for_cats$park[ii] <- ROVA_sites$park[jj]
       }
     }
 }
 
-for_sit_coord2 <- left_join(for_sit_coord, 
-                            key_fsite %>% 
-                              rename(for_sit = ID,
-                                      f_for = MapUnit_ID) %>% 
-                              select(for_sit, f_for, geometry, park),
-                            by = "for_sit") %>% 
+for_plt_coord2 <- left_join(for_plt_coord, 
+                            for_cats %>% 
+                              rename(for_plt = ID,
+                                     f_for = MapUnit_ID) %>% 
+                              select(for_plt, f_for, geometry, park),
+                            by = "for_plt") %>% 
                     filter(!is.na(f_for)) %>% 
-                    filter(park != "ROVA")
+                    filter(park != "ROVA")%>% 
+                    filter(park != "ELRO")
 
 #bird_sit_coord2 <- bird_sit_coord2[1:11,]
 
 # get a table with all the forest types to compare to the key, 
 #    and possible combine them into smaller groups
-veg_type_indata <- c(unique(for_sit_coord2$f_for),
+veg_type_indata <- c(unique(for_plt_coord2$f_for),
                       unique(bird_sit_coord2$b_for)) %>% 
                       unique() %>% 
                       sort() %>% 
@@ -269,19 +274,19 @@ bird_sit_coord2 <- bird_sit_coord2 %>%
       left_join(., veg_type, by = "MapUnit_ID")  %>% 
       rename(bir_veg = Cover_Type)
 
-for_sit_coord3 <- for_sit_coord2 %>% 
+for_plt_coord3 <- for_plt_coord2 %>% 
       rename(MapUnit_ID = f_for) %>% 
       left_join(., veg_type, by = "MapUnit_ID") %>% 
       rename(for_veg = Cover_Type)
 
 rbind(
   bird_sit_coord2 %>% filter(!is.na(bir_veg)) %>% select(MapUnit_ID) %>% distinct(),
-  for_sit_coord3 %>% filter(!is.na(for_veg)) %>% select(MapUnit_ID) %>% distinct()) %>% 
+  for_plt_coord3 %>% filter(!is.na(for_veg)) %>% select(MapUnit_ID) %>% distinct()) %>% 
   distinct() %>% 
   arrange(MapUnit_ID)
 
 # test sites
-for_test <- for_sit_coord3 %>% 
+for_test <- for_plt_coord3 %>% 
               select(park, lonutm, latutm, for_veg)
 bir_test <- bird_sit_coord2 %>% 
               mutate(park = substr(bird_sit,1,4)) %>% 
@@ -309,34 +314,34 @@ for (ii in 1:nrow(bird_sit_coord2)) {
 
   plop <- substr(bird_sit_coord2$bird_sit[ii], 1, 4)
 
-  for_sit_coord4 <- for_sit_coord3 %>% 
+  for_plt_coord4 <- for_plt_coord3 %>% 
                       filter(park == plop)
   
   print(bird_sit_coord2$bird_sit[ii])
 
-  for(jj in 1:nrow(for_sit_coord4)) {
+  for(jj in 1:nrow(for_plt_coord4)) {
     # are the bird sites and forest plots in the same forest type?
     # if the answer is yes, we calculate the distance between them
-    if((bird_sit_coord2$bir_veg[ii] == for_sit_coord4$for_veg[jj]) == TRUE){
-      print(for_sit_coord4$for_sit[jj])
+    if((bird_sit_coord2$bir_veg[ii] == for_plt_coord4$for_veg[jj]) == TRUE){
+      print(for_plt_coord4$for_plt[jj])
       print(jj)
 
-      band2 <- as.numeric(for_sit_coord4$UTMZone[jj])
+      band2 <- as.numeric(for_plt_coord4$UTMZone[jj])
       x <- spTransform(xy[ii,], CRS(glue("+proj=utm +zone={band2} +datum=WGS84 +units=m")))
 
-      fore <- st_as_sf(for_sit_coord4[,2:3], 
+      fore <- st_as_sf(for_plt_coord4[,2:3], 
                     coords=c("lonutm", "latutm"), 
                     crs = CRS(proj4string(x)))
 
       distances <- st_distance(bird, fore[jj,], by_element = TRUE)
   
-      distances2 <- cbind(as.numeric(distances), for_sit_coord4$for_sit[jj]) %>% 
+      distances2 <- cbind(as.numeric(distances), for_plt_coord4$for_plt[jj]) %>% 
           as_tibble() %>% 
           rename(dist = V1, 
-                for_sit = V2) %>% 
+                for_plt = V2) %>% 
           mutate(dist = as.numeric(dist),
                 for_b = as.character(bird_sit_coord2$bir_veg[ii]),
-                for_f = as.character(for_sit_coord4$for_veg[jj]),
+                for_f = as.character(for_plt_coord4$for_veg[jj]),
                 bird_sit = bird_sit_coord2$bird_sit[ii])
     
       if("dist1" %!in% ls()) {
@@ -357,7 +362,7 @@ for (ii in 1:nrow(bird_sit_coord2)) {
     table(dist_small$bird_sit)
 
     rm(dist1)
-  #!! ERROR: NOT REALLY AN ERROR, just choosing how many neighbours
+  #! NOT REALLY AN ERROR, just choosing how many neighbours
     close_points <- dist_small %>%
                       group_by(bird_sit) %>%
                       arrange(dist) %>% 
@@ -381,16 +386,13 @@ close_points_f <- close_points_f %>%
                     arrange(bird_sit, dist) %>% 
                     distinct()
 
-# write_rds data/out/close_points_f.rds
-# write_rds(close_points_f, file = "data/out/close_points_f.rds")
-
 # plot close points by park
 ## join coordinates
 close_points_f2 <- close_points_f %>% 
-  left_join(for_sit_coord2 %>% 
+  left_join(for_plt_coord2 %>% 
               rename(latutmf = latutm, lonutmf = lonutm) %>%
-              select(for_sit, latutmf, lonutmf),
-            by = "for_sit") %>% 
+              select(for_plt, latutmf, lonutmf),
+            by = "for_plt") %>% 
   left_join(bird_sit_coord2 %>% 
               rename(latutmb = latutm, lonutmb = lonutm) %>%
               select(bird_sit, latutmb, lonutmb),
@@ -400,270 +402,158 @@ for(ii in 1:lenght(parks)){
   (plop <- parks[ii])
   close_points_f3 <- close_points_f2 %>% 
                       filter(substr(bird_sit, 1, 4) == plop)
-
+  bird_sit_coord2_p <- bird_sit_coord2 %>% 
+                      filter(substr(bird_sit, 1, 4) == plop)
   p2 <- 
-  ggplot(close_points_f3) +
-    geom_segment(aes(x = lonutmb, y = latutmb, 
-                      xend = lonutmf, yend = latutmf, 
-                      colour = bird_sit)) +
-    geom_point(aes(x = lonutmb, 
-                    y = latutmb,
-                    colour = bird_sit),
-              size = 3) +
-    geom_point(aes(x = lonutmf, 
-                    y = latutmf),
-              size = 3,
-              color = "#186A3B",
-              shape = 15) +
-geom_text(aes(x = lonutmb, y = latutmb, 
-              label = substr(bird_sit, 5, nchar(bird_sit))), 
-              size = 5, vjust = -1.3) +
-    theme_bw() +
-    labs(title = parks[ii])
+    ggplot(close_points_f3) +
+      geom_segment(aes(x = lonutmb, y = latutmb, 
+                        xend = lonutmf, yend = latutmf, 
+                        colour = bird_sit)) +
+      geom_point(data = bird_sit_coord2_p, 
+                 aes(x = lonutm, y = latutm), colour = "grey") +
+      geom_text(data = bird_sit_coord2_p, 
+                aes(x = lonutm, y = latutm, 
+                label = substr(bird_sit, 5, nchar(bird_sit))), vjust = -1.3, size = 4) +
+      geom_point(aes(x = lonutmb, 
+                     y = latutmb,
+                     colour = bird_sit),
+                size = 3) +
+      geom_point(aes(x = lonutmf, 
+                      y = latutmf),
+                size = 3,
+                color = "#186A3B",
+                shape = 15) +
+      theme_bw() +
+      labs(title = parks[ii])
     #)
   print(p2)
   #library(plotly)
   #ggplotly(p2)
 }
 
+table(close_points_f$bird_sit) %>% dim()
 table(close_points_f$bird_sit) %>% sort()
 
-table(close_points_f$bird_sit) %>% dim()
+table(round(close_points_f$dist, 0)) %>% sort()
 
-table(for_sit$SampleYear) %>% max()
+table(close_points_f$for_b) %>% sort()
 
-#? get extra covariates
-## canopy cover ---------------------------------------------------------
-path <- glue("{getwd()}/data/veg_kateaaron") 
-importCSV(path, zip_name = "NETN_Forest_20231106.zip")
-can <- forestNETN::joinStandData(park = "all") %>%
-          as_tibble() 
+table(close_points_f$for_f) %>% sort()
 
-ROVA_sites <- ROVA_sites  %>% rename(ParkUnit = park, Plot_Name = ID)
+#? get means for all bird sites ----------------------------------------------
+for_plt2 <- for_plt %>% 
+                rename(for_plt = Plot_Name)
 
-for(ii in 1:nrow(can)){
-    for(jj in 1:nrow(ROVA_sites)){
-      if(can$Plot_Name[ii] == ROVA_sites$Plot_Name[jj]) {
-         can$ParkUnit[ii] <-  ROVA_sites$ParkUnit[jj]
-      }
+# connect the covariates of bird site and forest plots  
+bird_sit_covs <- left_join(close_points_f2, for_plt2, by = "for_plt") 
+
+dim(bird_sit_covs)
+dim(bird_sit_covs %>% filter(complete.cases(.)) %>% filter(if_all(where(is.numeric), is.finite)))
+bird_sit_covs[,13:ncol(bird_sit_covs)] %>% 
+  summarise(across(everything(), ~sum(is.na(.)))) %>% 
+  t() %>% 
+  as.data.frame() %>%
+  tibble::rownames_to_column("column") %>%
+  arrange(-V1)
+
+# get an average so each forest site has only one covariate value - weighted mean according to the inverse of the distance
+bird_sit_covs1 <- bird_sit_covs  %>% 
+                      select(-for_plt, -for_b, -for_f, 
+                             -latutmf, -lonutmf, -latutmb, -lonutmb, -X, -Y, -UTMZone, 
+                             -Stage, -pctBA_pole, -pctBA_mature, -pctBA_large) %>% 
+                      mutate(BA_m2ha =             ifelse(BA_m2ha == 0, BA_m2ha + 0.001, BA_m2ha),
+                             BA_m2ha_Conifer =     ifelse(BA_m2ha_Conifer == 0, BA_m2ha_Conifer + 0.001, BA_m2ha_Conifer),
+                             BA_m2ha_Hardwood =    ifelse(BA_m2ha_Hardwood == 0, BA_m2ha_Hardwood + 0.001, BA_m2ha_Hardwood),
+                             BA_m2ha_large =       ifelse(BA_m2ha_large == 0, BA_m2ha_large + 0.001, BA_m2ha_large),
+                             BA_m2ha_mature =      ifelse(BA_m2ha_mature == 0, BA_m2ha_mature + 0.001, BA_m2ha_mature),
+                             BA_m2ha_pole =        ifelse(BA_m2ha_pole == 0, BA_m2ha_pole + 0.001, BA_m2ha_pole),
+                             treeden_ha =          ifelse(treeden_ha == 0, treeden_ha + 0.001, treeden_ha),
+                             treeden_ha_Conifer =  ifelse(treeden_ha_Conifer == 0, treeden_ha_Conifer + 0.001, treeden_ha_Conifer),
+                             treeden_ha_Hardwood = ifelse(treeden_ha_Hardwood == 0, treeden_ha_Hardwood + 0.001, treeden_ha_Hardwood),
+                             treeden_ha_large =    ifelse(treeden_ha_large == 0, treeden_ha_large + 0.001, treeden_ha_large),
+                             treeden_ha_mature =   ifelse(treeden_ha_mature == 0, treeden_ha_mature + 0.001, treeden_ha_mature),
+                             treeden_ha_pole =     ifelse(treeden_ha_pole == 0, treeden_ha_pole + 0.001, treeden_ha_pole),
+                             seed_den_m2 =         ifelse(seed_den_m2 == 0, seed_den_m2 + 0.001, seed_den_m2),
+                             sap_den_m2 =          ifelse(sap_den_m2 == 0, sap_den_m2 + 0.001, sap_den_m2),
+                             regen_den_m2 =        ifelse(regen_den_m2 == 0, regen_den_m2 + 0.001, regen_den_m2),
+                             shrub_cov_nat =       ifelse(shrub_cov_nat == 0, shrub_cov_nat + 0.001, shrub_cov_nat),
+                             shrub_cov_nonat =     ifelse(shrub_cov_nonat == 0, shrub_cov_nonat + 0.001, shrub_cov_nonat),
+                             cwd =                 ifelse(cwd == 0, cwd + 0.001, cwd)) 
+
+# Get list of columns to calculate weighted means for
+weight_cols <- c("BA_m2ha", "BA_m2ha_Conifer", "BA_m2ha_Hardwood", "BA_m2ha_large", "BA_m2ha_mature", "BA_m2ha_pole", 
+                 "treeden_ha", "treeden_ha_Conifer", "treeden_ha_Hardwood", "treeden_ha_large", "treeden_ha_mature", "treeden_ha_pole", 
+                 "seed_den_m2", "sap_den_m2", "regen_den_m2", "shrub_cov_nat", "shrub_cov_nonat", "cwd")
+
+# Get unique bird sites
+unique_sites <- unique(bird_sit_covs1$bird_sit)
+
+# Initialize results dataframe
+bird_sit_covs2 <- data.frame(bird_sit = unique_sites)
+
+# Loop through each column to calculate weighted means
+for(col in weight_cols) {
+  
+  # Initialize vector to store results for this column
+  weighted_vals <- numeric(length(unique_sites))
+  
+  # Loop through each bird site
+  for(i in seq_along(unique_sites)) {
+    site_data <- bird_sit_covs[bird_sit_covs$bird_sit == unique_sites[i], ]
+    
+    # Get values and distances for this site and column
+    values <- site_data[[col]]
+    distances <- site_data$dist
+    
+    # Remove rows where the column value is NA
+    non_na_idx <- !is.na(values)
+    
+    if(sum(non_na_idx) == 0) {
+      # All values are NA, set result to NA
+      weighted_vals[i] <- NA
+    } else {
+      # Calculate weighted mean using only non-NA values
+      clean_values <- values[non_na_idx]
+      clean_distances <- distances[non_na_idx]
+      weights <- 1/clean_distances
+      
+      weighted_vals[i] <- sum(clean_values * weights) / sum(weights)
     }
+  }
+  
+  # Add column to results with "_wei" suffix
+  bird_sit_covs2[[paste0(col, "_wei")]] <- weighted_vals
 }
 
-can <- can %>%        
-          filter(ParkUnit != "ROVA") %>% 
-          select(Plot_Name, SampleYear, ParkUnit, Pct_Crown_Closure) %>% 
-          group_by(Plot_Name) %>% 
-          mutate(can_m = mean(Pct_Crown_Closure, na.rm = T)) %>% 
-          ungroup() %>% 
-          select(-Pct_Crown_Closure) %>% 
-          distinct()
+bird_sit_covs2 <- as_tibble(bird_sit_covs2) %>% 
+      mutate(BA_m2ha_perc_con = BA_m2ha_Conifer_wei/(BA_m2ha_Conifer_wei+BA_m2ha_Hardwood_wei)) %>% 
+      mutate(BA_m2ha_perc_har = BA_m2ha_Hardwood_wei/(BA_m2ha_Conifer_wei+BA_m2ha_Hardwood_wei))
 
-## wood debris ----------------------------------------------------------
-cwd <- joinCWDData(park = 'all') %>% # coarse wood debris
-          as_tibble()          
+table(bird_sit_coord2 %>% select(bird_sit) %>% distinct() %>% mutate(park = substr(bird_sit, 1, 4)) %>% pull(park))      ## original
+table(close_points_f2 %>% select(bird_sit) %>% distinct() %>% mutate(park = substr(bird_sit, 1, 4)) %>% pull(park))      ## with neighbors
+table(bird_sit_covs   %>% select(bird_sit) %>% distinct() %>% mutate(park = substr(bird_sit, 1, 4)) %>% pull(park))      ## neighbors with data
+table(bird_sit_covs2  %>% select(bird_sit) %>% distinct() %>% mutate(park = substr(bird_sit, 1, 4)) %>% pull(park))      ## neighbors with data
 
-for(ii in 1:nrow(cwd)){
-    for(jj in 1:nrow(ROVA_sites)){
-      if(cwd$Plot_Name[ii] == ROVA_sites$Plot_Name[jj]) {
-         cwd$ParkUnit[ii] <-  ROVA_sites$ParkUnit[jj]
-      }
-    }
-}
+close_points_f2$for_b %>% table()
 
-cwd <- cwd %>%        
-          filter(ParkUnit != "ROVA") %>%    
-          select(Plot_Name, SampleYear, ParkUnit, CWD_Vol) %>% 
-          group_by(Plot_Name) %>% 
-          mutate(deb_m = mean(CWD_Vol, na.rm = T)) %>% 
-          ungroup() %>% 
-          select(-CWD_Vol) %>% 
-          distinct()
+bird_sit_covs2 %>% 
+  summarise(across(everything(), ~sum(is.na(.)))) %>%
+  pivot_longer(everything(), names_to = "column", values_to = "na_count") %>%
+  arrange(desc(na_count))
 
+bird_sit_covs %>% select(bird_sit, shrub_cov_nat) %>% filter(is.na(shrub_cov_nat))
+bird_sit_covs2 %>% select(bird_sit, shrub_cov_nat_wei) %>% filter(is.na(shrub_cov_nat_wei))
 
-## snags ----------------------------------------------------------------
-# stand_spp <- joinStandData()
-# colnames(stand_spp)
-# str(stand_spp)
-# tree_den_spp <- joinTreeData()
-# str(tree_den_spp)
-# TREECLCD_NERS: Tree class code
-# treeht <- subset(get("StandTreeHeights_NETN", envir = path),
-#                               select = c(Plot_Name, PlotID, EventID, CrownClassCode, CrownClassLabel,
-#                                          TagCode, Height))
-                                         
-#  treeht_sum <- treeht %>% mutate(crown = ifelse(CrownClassCode == 4, "Inter", "Codom")) %>%
-#                              group_by(Plot_Name, PlotID, EventID, crown)
-
-for_sit_extra <- for_sit %>% 
-                    left_join(., can, by = c('Plot_Name', 'SampleYear', 'ParkUnit')) %>% 
-                    left_join(., cwd, by = c('Plot_Name', 'SampleYear', 'ParkUnit'))
-
-#? get means for all years ----------------------------------------------
-## mean for all years
-for_sit2 <- for_sit_extra %>% 
-  group_by(Plot_Name) %>% 
-  mutate(treeden_haM = mean(treeden_ha, na.rm = T),
-          BA_m2haM = mean(BA_m2ha, na.rm = T),
-          tree_richM = mean(tree_rich, na.rm = T),
-          StageM = Modes(Stage),
-          pctBA_poleM = mean(pctBA_pole, na.rm = T),
-          pctBA_matureM = mean(pctBA_mature, na.rm = T),
-          pctBA_largeM = mean(pctBA_large, na.rm = T),
-          sap_den_m2M = mean(sap_den_m2, na.rm = T),
-          shrub_covM = mean(shrub_cov, na.rm = T),
-          canop_covM = mean(can_m, na.rm = T),
-          debri_covM = mean(deb_m, na.rm = T),
-          X_for = X,      
-          Y_for = Y,
-          UTMZone_for = UTMZone,
-          for_sit = Plot_Name)  %>% 
-  ungroup() %>% 
-  select(for_sit, ParkUnit, X_for, Y_for, UTMZone_for,
-          treeden_haM, BA_m2haM, tree_richM, StageM, pctBA_poleM, 
-          pctBA_matureM, pctBA_largeM, sap_den_m2M, shrub_covM, 
-          canop_covM, debri_covM) %>% 
-  distinct()
-  
-close_points_f2 <- left_join(close_points_f, for_sit2, by = "for_sit") %>% 
-    group_by(bird_sit) %>%
-  mutate(treeden_haM = mean(treeden_haM, na.rm = T),
-          BA_m2haM = mean(BA_m2haM, na.rm = T),
-          tree_richM = mean(tree_richM, na.rm = T),
-          StageM = Modes(StageM),
-          pctBA_poleM = mean(pctBA_poleM, na.rm = T),
-          pctBA_matureM = mean(pctBA_matureM, na.rm = T),
-          pctBA_largeM = mean(pctBA_largeM, na.rm = T),
-          sap_den_m2M = mean(sap_den_m2M, na.rm = T),
-          shrub_covM = mean(shrub_covM, na.rm = T),
-          canop_covM = mean(canop_covM, na.rm = T),
-          debri_covM = mean(debri_covM, na.rm = T))  %>% 
-  ungroup() %>% 
-  mutate(park = substr(bird_sit, 1, 4)) %>%
-  select(bird_sit, park,
-          treeden_haM, BA_m2haM, tree_richM, StageM, 
-          pctBA_poleM, pctBA_matureM, pctBA_largeM, 
-          sap_den_m2M, 
-          shrub_covM,
-          canop_covM, debri_covM) %>% 
-  distinct() %>% 
-  rename(ParkUnit = park,
-          siteDEN = treeden_haM, siteBA = BA_m2haM, 
-          siteRICH = tree_richM, siteSTA = StageM,
-          siteBA_pole = pctBA_poleM, siteBA_mature = pctBA_matureM, siteBA_large = pctBA_largeM,
-          siteSAPden = sap_den_m2M, 
-          siteSHRUden = shrub_covM,
-          siteCANOden = canop_covM, 
-          siteDEBRden = debri_covM)
-
-neighbor <- left_join(close_points_f, for_sit2, by = "for_sit") %>% 
-                      select(for_sit, bird_sit) %>% 
-                      distinct()
-
-#? get YEAR SPECIFIC means ----------------------------------------------
-for_sit2_year <- for_sit_extra %>% 
-  rename(X_for = X,      
-         Y_for = Y,
-         UTMZone_for = UTMZone,
-         for_sit = Plot_Name,
-         Year = SampleYear) %>% 
-  select(for_sit, ParkUnit, Year, X_for, Y_for, UTMZone_for,
-          treeden_ha, BA_m2ha, tree_rich, Stage, pctBA_pole, 
-          pctBA_mature, pctBA_large, sap_den_m2, shrub_cov, 
-          can_m, deb_m) %>% 
-  distinct()
-  
-close_points_f2_year <- suppressWarnings(
-  full_join(for_sit2_year, close_points_f, by = "for_sit") %>% 
-    group_by(bird_sit, Year) %>%
-    mutate(treeden_ha = mean(treeden_ha, na.rm = T),
-            BA_m2ha = mean(BA_m2ha, na.rm = T),
-            tree_rich = mean(tree_rich, na.rm = T),
-            Stage = Modes(Stage),
-            pctBA_pole = mean(pctBA_pole, na.rm = T),
-            pctBA_mature = mean(pctBA_mature, na.rm = T),
-            pctBA_large = mean(pctBA_large, na.rm = T),
-            sap_den_m2 = mean(sap_den_m2, na.rm = T),
-            shrub_cov = mean(shrub_cov, na.rm = T),
-            canop_cov = mean(can_m, na.rm = T),
-            debri_cov = mean(deb_m, na.rm = T))  %>% 
-    ungroup() %>% 
-    mutate(park = substr(bird_sit, 1, 4)) %>%
-    select(bird_sit, park, Year,
-            treeden_ha, BA_m2ha, tree_rich, Stage, 
-            pctBA_pole, pctBA_mature, pctBA_large, 
-            sap_den_m2, 
-            shrub_cov,
-            canop_cov, debri_cov) %>% 
-    distinct() %>% 
-    rename(ParkUnit = park,
-          siteDENYR = treeden_ha, siteBAYR = BA_m2ha, 
-          siteRICHYR = tree_rich, siteSTAYR = Stage,
-          siteBA_poleYR = pctBA_pole, siteBA_matureYR = pctBA_mature, siteBA_largeYR = pctBA_large,
-          siteSAPdenYR = sap_den_m2, 
-          siteSHRUdenYR = shrub_cov,
-          siteCANOdenYR = canop_cov, 
-          siteDEBRdenYR = debri_cov) %>% 
-    filter(!is.na(ParkUnit))
-)
+NA_shr <- bird_sit_covs %>% select(bird_sit, shrub_cov_nat) %>% filter(is.na(shrub_cov_nat)) %>% pull(bird_sit)
+bird_sit_covs %>% select(bird_sit, shrub_cov_nat) %>% filter(bird_sit %in% NA_shr)
+bird_sit_covs2 %>% select(bird_sit, shrub_cov_nat_wei) %>% filter(bird_sit %in% NA_shr)
 
 #! Output files ----------------------------------------------
 print("save output files!")
-# forest site information
-write_rds(for_sit2, file = glue("data/out/for_sit2_nei_grp_{radi_dist}m.rds"))
-
 # information of covariates for each bird site
-write_rds(close_points_f2, file = glue("data/out/site_covs_nei_grp_{radi_dist}m.rds"))
+write_rds(bird_sit_covs2, file = glue("data/out/site_covs_nei_{radi_dist}m.rds"))
 
-# information of covariates for each bird site BY YEAR
-write_rds(close_points_f2_year, file = glue("data/out/site_covs_nei_grp_{radi_dist}m_yr.rds"))
-
-# who is who's neighbor
-write_rds(neighbor, file = glue("data/out/neighbor_grp_{radi_dist}m.rds"))
+# who is whose neighbor
+write_rds(close_points_f2, file = glue("data/out/neighbor_nei_{radi_dist}m.rds"))
 
 cat(paste("\n\n Done \n\n\n"))
-
-# neighbours
-table(neighbor$for_sit)
-table(neighbor$for_sit) %>% mean()
-table(neighbor$for_sit) %>% sd()
-
-# number of neightbours per park
-uni_neigh <- full_join(for_sit2_year, close_points_f, by = "for_sit")  %>% 
-                select(bird_sit, for_sit) %>% 
-                filter(!is.na(bird_sit))  %>% 
-                mutate(uni_nei = glue("{substr(bird_sit, 1, 4)}_{substr(for_sit, 6, 8)}")) %>% 
-                mutate(park = glue("{substr(bird_sit, 1, 4)}"))
-
-uni_neigh2 <- uni_neigh %>% 
-                select(park, uni_nei) %>% 
-                distinct() %>% 
-                group_by(park) %>% 
-                summarise(neigh = n()) %>% 
-                ungroup() %>% 
-                arrange(park)
-
-# number of forest sites
-uni_for <- full_join(for_sit2_year, close_points_f, by = "for_sit")  %>% 
-                select(bird_sit, for_sit, ParkUnit) %>% 
-                filter(ParkUnit != "ACAD")  %>%
-                mutate(uni_nei = glue("{substr(bird_sit, 1, 4)}_{substr(for_sit, 6, 8)}")) %>% 
-                mutate(park = glue("{substr(bird_sit, 1, 4)}"))  %>% 
-                mutate(park2 = ifelse(is.na(bird_sit), 
-                                      glue("{substr(for_sit, 1, 4)}"), 
-                                      glue("{substr(uni_nei, 1, 4)}")))
-view(uni_for)
-
-uni_for %>% 
-    select(park2, for_sit) %>% 
-    distinct() %>% 
-    group_by(park2) %>% 
-    summarise(for_sit = n()) %>% 
-    ungroup() %>% 
-    arrange(park2)
-
-for_sit2_year  %>% 
-    group_by(ParkUnit) %>%
-    summarise(min_yr = min(Year),
-              max_yr = max(Year),
-              n_years = length(unique(Year)))
-
