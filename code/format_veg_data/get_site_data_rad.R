@@ -61,7 +61,7 @@ Modes <- function(x) {
 }
 #! Define settings -------------------------------------
 # radius distance in meters
-# radi_dist2 <- 250
+# radi_dist2 <- 350
 # hard_con_mix2 <- FALSE 
 
 if(exists("radi_dist") == FALSE) {radi_dist <- radi_dist2}
@@ -500,14 +500,16 @@ bird_sit_covs1 <- bird_sit_covs  %>%
                              seed_den_m2 =         ifelse(seed_den_m2 == 0, seed_den_m2 + 0.001, seed_den_m2),
                              sap_den_m2 =          ifelse(sap_den_m2 == 0, sap_den_m2 + 0.001, sap_den_m2),
                              regen_den_m2 =        ifelse(regen_den_m2 == 0, regen_den_m2 + 0.001, regen_den_m2),
-                             shrub_cov_nat =       ifelse(shrub_cov_nat == 0, shrub_cov_nat + 0.001, shrub_cov_nat),
-                             shrub_cov_nonat =     ifelse(shrub_cov_nonat == 0, shrub_cov_nonat + 0.001, shrub_cov_nonat),
+                             shrub_avg_cov =       ifelse(shrub_avg_cov == 0, shrub_avg_cov + 0.001, shrub_avg_cov),
+                             # shrub_cov_nat =       ifelse(shrub_cov_nat == 0, shrub_cov_nat + 0.001, shrub_cov_nat),
+                             # shrub_cov_nonat =     ifelse(shrub_cov_nonat == 0, shrub_cov_nonat + 0.001, shrub_cov_nonat),
                              cwd =                 ifelse(cwd == 0, cwd + 0.001, cwd)) 
 
 # Get list of columns to calculate weighted means for
 weight_cols <- c("BA_m2ha", "BA_m2ha_Conifer", "BA_m2ha_Hardwood", "BA_m2ha_large", "BA_m2ha_mature", "BA_m2ha_pole", 
                  "treeden_ha", "treeden_ha_Conifer", "treeden_ha_Hardwood", "treeden_ha_large", "treeden_ha_mature", "treeden_ha_pole", 
-                 "seed_den_m2", "sap_den_m2", "regen_den_m2", "shrub_cov_nat", "shrub_cov_nonat", "cwd")
+                 "seed_den_m2", "sap_den_m2", "regen_den_m2", #"shrub_cov_nat", "shrub_cov_nonat", 
+                 "shrub_avg_cov", "cwd")
 
 # Get unique bird sites
 unique_sites <- unique(bird_sit_covs1$bird_sit)
@@ -565,12 +567,12 @@ bird_sit_covs2 %>%
   pivot_longer(everything(), names_to = "column", values_to = "na_count") %>%
   arrange(desc(na_count))
 
-bird_sit_covs %>% select(bird_sit, shrub_cov_nat) %>% filter(is.na(shrub_cov_nat))
-bird_sit_covs2 %>% select(bird_sit, shrub_cov_nat_wei) %>% filter(is.na(shrub_cov_nat_wei))
+# bird_sit_covs %>% select(bird_sit, shrub_cov_nat) %>% filter(is.na(shrub_cov_nat))
+# bird_sit_covs2 %>% select(bird_sit, shrub_cov_nat_wei) %>% filter(is.na(shrub_cov_nat_wei))
 
-NA_shr <- bird_sit_covs %>% select(bird_sit, shrub_cov_nat) %>% filter(is.na(shrub_cov_nat)) %>% pull(bird_sit)
-bird_sit_covs %>% select(bird_sit, shrub_cov_nat) %>% filter(bird_sit %in% NA_shr)
-bird_sit_covs2 %>% select(bird_sit, shrub_cov_nat_wei) %>% filter(bird_sit %in% NA_shr)
+# NA_shr <- bird_sit_covs %>% select(bird_sit, shrub_cov_nat) %>% filter(is.na(shrub_cov_nat)) %>% pull(bird_sit)
+# bird_sit_covs %>% select(bird_sit, shrub_cov_nat) %>% filter(bird_sit %in% NA_shr)
+# bird_sit_covs2 %>% select(bird_sit, shrub_cov_nat_wei) %>% filter(bird_sit %in% NA_shr)
 
 #! Output files ----------------------------------------------
 print("save output files!")
