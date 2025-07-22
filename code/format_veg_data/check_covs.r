@@ -12,15 +12,22 @@ comb <- read_rds(file = "data/out/for_plot_covs.rds")
 
 
 # creating correlation matrix
-corr_mat <- round(cor(comb[,c(6:16, 18:27)], use="complete.obs"),2)
+corr_mat <- round(cor(comb[,c(6:18, 20:29)], use="complete.obs"),2)
 
 # reduce the size of correlation matrix
-melted_corr_mat <- melt(corr_mat) %>% 
-    mutate(cov = substr(Var1,5,6))
+melted_corr_mat <- melt(corr_mat) %>%
+  # Convert factor levels to numeric for comparison
+  mutate(
+    Var1_num = as.numeric(Var1),
+    Var2_num = as.numeric(Var2)
+  ) %>%
+  # Keep only upper triangle (excluding diagonal)
+  filter(Var1_num < Var2_num) %>%
+  select(-Var1_num, -Var2_num)
 
 # plotting the correlation heatmap
-ggplot(data = melted_corr_mat %>% as_tibble() %>% arrange(Var1,Var2) %>% filter(abs(value) <= 0.5)
-       , aes(x=Var1, y=Var2, fill=value)) + 
+ggplot(data = melted_corr_mat %>% as_tibble() %>% arrange(Var1,Var2) #%>% filter(abs(value) <= 0.5)
+      ,aes(x=Var1, y=Var2, fill=value)) + 
 geom_tile(color = "white")+
  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
    midpoint = 0, limit = c(-1,1), space = "Lab", 
