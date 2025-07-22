@@ -54,15 +54,13 @@ source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_bird_data/form
 
 yog <- y1 # reset safety ;)
 #! Define settings -------------------------------------
-radi_dist <- 500
+radi_dist <- 350
 
 #! Import data -----------------------------------------
 ## file paths
 PATH_COVS_COUN <- "data/out/coun_covs.rds"
 PATH_COVS_PARK <- "data/out/park_covs.rds"
-PATH_COVS_SITE <- glue("data/out/site_covs_nei_grp_{radi_dist}m.rds")
-PATH_DIV_SITE_COVS <- "data/out/site_div.rds"
-PATH_DIV_PARK_COVS <- "data/out/park_div.rds"
+PATH_COVS_SITE <- glue("data/out/site_covs_fornofor_{radi_dist}m.rds")
 
 ## parks -------------------------------------------------------------------------------------------
 pk_list <- visits %>% 
@@ -535,48 +533,40 @@ site_key <- y_dat6 %>%
 #! it is OK if ACAD, ELRO and SAIR do not have covs now,
 #!   they are gonna be removed from the data in the next step (back2d_covs_scales_3)
 site_covs <- read_rds(PATH_COVS_SITE) %>% 
-                rename(Point_Name = bird_sit,
-                        park = ParkUnit) %>%
-                left_join(., site_key, by =  c("park", "Point_Name")) %>% 
-                select(-c(siteSTA, siteSAPden, park))
+                rename(Point_Name = bird_sit) %>% 
+                left_join(., site_key, by = "Point_Name") %>% 
+                select(Point_Name, site_n, park, treeden_ha_wei, BA_m2ha_perc_con, BA_m2ha_large_wei,
+                        shrub_cov_nat_wei, regen_den_m2_wei, BA_m2ha_wei) %>%
+                # Remove "_wei" suffix from all column names
+                rename_with(~str_replace(.x, "_wei$", "_site")) %>% 
+                rename(BA_m2ha_perc_con_sit = BA_m2ha_perc_con)
 
 X1 <- left_join(X, site_covs, by = c("Point_Name","site_n"))
 dim(X1)
-X1 %>% select(Point_Name,siteDEN) %>% distinct() %>% arrange(siteDEN) %>% view()
+X1 %>% select(Point_Name,treeden_ha) %>% distinct() %>% arrange(treeden_ha) %>% view()
 
 ## park --------------------------------------------------------------------------------
 park_covs <- read_rds(PATH_COVS_PARK) %>% 
-                rename(park = ParkUnit) 
+                rename(park = ParkUnit) %>% 
+                select(park, treeden_ha, BA_m2ha_large,
+                        shrub_cov_nat, shrub_cov_nonat, BA_m2ha)  %>% 
+                rename_with(~paste0(.x, "_park"), -park)
 
 X2 <- left_join(X1, park_covs, by = c("park"))
 dim(X2)
 
 ## county ---------------------------------------------------------------------------------
 coun_covs <- read_rds(PATH_COVS_COUN) %>% 
-                rename(park = ParkUnit)
+                rename(park = ParkUnit) %>% 
+                select(park, treeden_ha, pctCANCOV_late, 
+                        shrub_cov, BA_m2ha)  %>% 
+                rename_with(~paste0(.x, "_coun"), -park)
 
 X3 <- left_join(X2, coun_covs, by = "park")
 dim(X3)
 
 nrow(X1) == nrow(X2)
 nrow(X2) == nrow(X3)
-
-## diversity
-div_covs_site <- read_rds(PATH_DIV_SITE_COVS) %>% 
-                    rename(siteH_g = S_mean,
-                            siteEh_g = J_mean)
-
-X4 <- left_join(X3, div_covs_site, by = "Point_Name")
-dim(X4)
-nrow(X4) == nrow(X3)
-
-div_covs_park <- read_rds(PATH_DIV_PARK_COVS) %>% 
-                    rename(parkH_g = S_mean,
-                            parkEh_g = J_mean)
-
-X5 <- left_join(X4, div_covs_park, by = "park")
-dim(X5)
-nrow(X5) == nrow(X4)
 
 ## park area ------------------------------------------------------------------
 park_size <- as_tibble(matrix(NA, nrow = length(unique(y_dat4$park)), ncol = 2))
@@ -591,9 +581,9 @@ for(i in 1:nrow(park_size)) {
 
 # write_rds(park_size, file = "data/park_size.rds")
 
-X6 <- left_join(X5, park_size, by = "park")
-dim(X6)
-nrow(X6) == nrow(X5)
+X4 <- left_join(X3, park_size, by = "park")
+dim(X4)
+nrow(X4) == nrow(X3)
 
 # get detection covariates! 
 inte_key <- y1 %>% 
@@ -615,9 +605,9 @@ table(X6$site_n == y_dat8$site_n)
 table(X6$Year == y_dat8$Year)
 table(X6$Point_Name == y_dat8$Point_Name) 
 
-X7 <- X6
+X5 <- X4
 
-X7$EventDate2 <- y_dat8$EventDate2 ; X7$StartTime2 <- y_dat8$StartTime2
+X5$EventDate2 <- y_dat8$EventDate2 ; X5$StartTime2 <- y_dat8$StartTime2
 
 # X6 <- X5 %>% 
 #   mutate(date_jul = as.numeric(scale(EventDate2)),
@@ -632,7 +622,11 @@ X7$EventDate2 <- y_dat8$EventDate2 ; X7$StartTime2 <- y_dat8$StartTime2
 
 ##### write files  ------
 write_rds(y_dat8, file = "data/y_dat8.rds")
-write_rds(X7, file = "data/X.rds")
+write_rds(X5, file = "data/X.rds")
 # write_rds(sps_pk_nth, file = "data/sps_pk_nth.rds")
 
 cat(paste("\n\n Done \n\n\n"))
+
+## (   ) calculate percentage of large basal area for site
+## (   ) calculate total shrub for site
+## (   ) calculate percent conifer and large tree for park
