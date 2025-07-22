@@ -1,37 +1,37 @@
 #! *********************************************************************************
 #! ----------------------------- 3_create_bird_data.R ------------------------------
 #! *********************************************************************************
-# Code to create the y data file to run in the JAGS model 
-#   can be run for 1, all or groups f species, in one or all parks
+#? Code to create the y data file to run in the JAGS model 
+#?   can be run for 1, all or groups f species, in one or all parks
 #
 #! Source ---------------------------------------------
 #           - code/format_bird_data/2_format_data.R:
 #
 #! Input ----------------------------------------------
-#           from here: 
-#           - data/out/coun_covs.rds - covariate data from county level
-#           - data/out/park_covs.rds - covariate data from park level
-#           - data/out/site_covs.rds - covariate data from site level
-#           - data/park_raster/{pk[i]}_pb.rds : raster of each park to get park size 
-#           - data/out/site_div.rds : diversity of forest for park and sites
+#?           from here: 
+#?           - data/out/coun_covs.rds - covariate data from county level
+#?           - data/out/park_covs.rds - covariate data from park level
+#?           - data/out/site_covs.rds - covariate data from site level
+#?           - data/park_raster/{pk[i]}_pb.rds : raster of each park to get park size 
+#?           - data/out/site_div.rds : diversity of forest for park and sites
 #
-#           from code/format_bird_data/format_data.R:
-#             -- y1: table of ones and zeros for sps detections
-#             -- visits (data/out/visits.rds): data from the visit files
-#             -- yr_pk: number of years sampled in each park
+#?           from code/format_bird_data/format_data.R:
+#?             -- y1: table of ones and zeros for sps detections
+#?             -- visits (data/out/visits.rds): data from the visit files
+#?             -- yr_pk: number of years sampled in each park
 #
 #! Output ---------------------------------------------
-#           - data/src/sites_park_tib.rds: tibble with park, number of sites and site numbers and codes
-#           - data/out/site_n_key.rds: park and site unique key
-#           - data/out/y_dat3.rds: first tibble with ALL occasions for sps, park, site, year and interval
-#           - data/y_dat8.rds: birds data for each occasion, with park, species and site indexes
-#           - data/X10.rds: environmental variables for all scales for each occasion, same dim() as y_dat6.rds
-#           - data/sps_pk_nth.rds: species code in each park
+#?           - data/src/sites_park_tib.rds: tibble with park, number of sites and site numbers and codes
+#?           - data/out/site_n_key.rds: park and site unique key
+#?           - data/out/y_dat3.rds: first tibble with ALL occasions for sps, park, site, year and interval
+#?           - data/y_dat8.rds: birds data for each occasion, with park, species and site indexes
+#?           - data/X10.rds: environmental variables for all scales for each occasion, same dim() as y_dat6.rds
+#?           - data/sps_pk_nth.rds: species code in each park
 
 ## detach packages and clear workspace
 freshr::freshr()
 
-#! Load packages --------------------------------------
+#? Load packages --------------------------------------
 library(conflicted)
 library(tidyverse)
 library(glue)
@@ -43,20 +43,20 @@ conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::filter)
 # conflicts_prefer(scales::alpha)
 
-#! Make functions --------------------------------------
+#? Make functions --------------------------------------
 colanmes <- colnames
 lenght <- length
 `%!in%` <- Negate(`%in%`)
 
-#! Source code -----------------------------------------
+#? Source code -----------------------------------------
 ## Create empty matrix with all parks, species, years, sites and intervals --------------------------
 source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_bird_data/format_data.R")
 
 yog <- y1 # reset safety ;)
-#! Define settings -------------------------------------
+#? Define settings -------------------------------------
 radi_dist <- 350
 
-#! Import data -----------------------------------------
+#? Import data -----------------------------------------
 ## file paths
 PATH_COVS_COUN <- "data/out/coun_covs.rds"
 PATH_COVS_PARK <- "data/out/park_covs.rds"
@@ -536,20 +536,22 @@ site_covs <- read_rds(PATH_COVS_SITE) %>%
                 rename(Point_Name = bird_sit) %>% 
                 left_join(., site_key, by = "Point_Name") %>% 
                 select(Point_Name, site_n, park, treeden_ha_wei, BA_m2ha_perc_con, BA_m2ha_large_wei,
-                        shrub_cov_nat_wei, regen_den_m2_wei, BA_m2ha_wei) %>%
+                        shrub_avg_cov_wei, BA_m2ha_wei) %>%
                 # Remove "_wei" suffix from all column names
                 rename_with(~str_replace(.x, "_wei$", "_site")) %>% 
-                rename(BA_m2ha_perc_con_sit = BA_m2ha_perc_con)
+                rename(BA_m2ha_perc_con_site = BA_m2ha_perc_con,
+                       BA_m2ha_perc_large_site = BA_m2ha_large_site)
 
-X1 <- left_join(X, site_covs, by = c("Point_Name","site_n"))
+X1 <- left_join(X, site_covs, by = c("Point_Name", "site_n", "park"))
 dim(X1)
-X1 %>% select(Point_Name,treeden_ha) %>% distinct() %>% arrange(treeden_ha) %>% view()
+X1 %>% select(Point_Name,treeden_ha_site) %>% distinct() %>% arrange(treeden_ha_site)
 
 ## park --------------------------------------------------------------------------------
 park_covs <- read_rds(PATH_COVS_PARK) %>% 
                 rename(park = ParkUnit) %>% 
-                select(park, treeden_ha, BA_m2ha_large,
-                        shrub_cov_nat, shrub_cov_nonat, BA_m2ha)  %>% 
+                select(park, treeden_ha, BA_m2ha_perc_con, BA_m2ha_large,
+                        shrub_avg_cov, BA_m2ha)  %>% 
+                rename(BA_m2ha_perc_large = BA_m2ha_large) %>% 
                 rename_with(~paste0(.x, "_park"), -park)
 
 X2 <- left_join(X1, park_covs, by = c("park"))
@@ -557,9 +559,9 @@ dim(X2)
 
 ## county ---------------------------------------------------------------------------------
 coun_covs <- read_rds(PATH_COVS_COUN) %>% 
-                rename(park = ParkUnit) %>% 
-                select(park, treeden_ha, pctCANCOV_late, 
+                select(park, treeden_ha, BA_m2ha_perc_con, pctCANCOV_late, 
                         shrub_cov, BA_m2ha)  %>% 
+                rename(BA_m2ha_perc_large = pctCANCOV_late) %>% 
                 rename_with(~paste0(.x, "_coun"), -park)
 
 X3 <- left_join(X2, coun_covs, by = "park")
@@ -600,15 +602,24 @@ y_dat8 <- y_dat7 %>%
                               as.numeric(),
           EventDate2 = yday(EventDate)) 
 
-table(X6$park == y_dat8$park)
-table(X6$site_n == y_dat8$site_n)
-table(X6$Year == y_dat8$Year)
-table(X6$Point_Name == y_dat8$Point_Name) 
+table(X4$park == y_dat8$park)
+table(X4$site_n == y_dat8$site_n)
+table(X4$Year == y_dat8$Year)
+table(X4$Point_Name == y_dat8$Point_Name) 
 
-X5 <- X4
+X5 <- X4 
 
 X5$EventDate2 <- y_dat8$EventDate2 ; X5$StartTime2 <- y_dat8$StartTime2
 
+X5 <- X5 %>% 
+        relocate(park, Point_Name, site_n,
+                 Year, interval_n, EventDate2, StartTime2,
+                 area,
+                 treeden_ha_site, treeden_ha_park, treeden_ha_coun,
+                 BA_m2ha_perc_con_site, BA_m2ha_perc_con_park, BA_m2ha_perc_con_coun,
+                 BA_m2ha_perc_large_site, BA_m2ha_perc_large_park, BA_m2ha_perc_large_coun,
+                 shrub_avg_cov_site, shrub_avg_cov_park, shrub_cov_coun, 
+                 BA_m2ha_site, BA_m2ha_park, BA_m2ha_coun)
 # X6 <- X5 %>% 
 #   mutate(date_jul = as.numeric(scale(EventDate2)),
 #          time_jul = as.numeric(scale(StartTime2)),
