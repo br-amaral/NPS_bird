@@ -64,27 +64,32 @@ SITE_PK_PATH <- "data/out/nsite_pk.rds"
 PARK_PATH <- "data/src/key_park.rds"
 
 ## read files
+# bird data
 y_dat4 <- read_rds(file = YDAT_PATH)
 
+# forest covariate data
 X10 <- read_rds(file = XDAT_PATH)
 
+# number of sites per park
 nsite_pk <- read_rds(SITE_PK_PATH)
+
+# parks
 pk <- read_rds(PARK_PATH) %>%
   dplyr::select(parks) %>%
   pull() %>%
   sort()
 
+# remove parks not in the analysis
 rem_pks <- as_tibble(cbind(nsite_pk,pk)) %>% 
               filter(pk %!in% c("ACAD","ELRO","SAIR"))
 
 nsite_pk <- as.numeric(rem_pks$nsite_pk)
 pk <- as.vector(rem_pks$pk)
 
-# Filter for species and park ---------------------------------------
+# Filter for species and park where it occurs, and match it with the covariate data (same dimentions)
 ## 1 sps several parks
 y_dat5 <- y_dat4
 # _n means that the 1 is the first occasion for that sps, year, loc, etc, not the first calendar one
-
 y_dat5 <- y_dat5 %>%
   mutate( parkey = as.numeric(parkey),
           sps_it = AOU_Code)
@@ -95,12 +100,11 @@ y_dat5$unique_index <- seq(1,nrow(y_dat5),1)
 
 X10$unique_index <- seq(1,nrow(y_dat5),1)
 
-if(setequal(y_dat5$unique_index, X10$unique_index) != "TRUE") stop("ah wrong indexing!!!! #82")
+if(setequal(y_dat5$unique_index, X10$unique_index) != "TRUE") stop("ah wrong indexing!!!! row 103")
 
 y_dat6 <- y_dat5 %>% 
   dplyr::filter(sps_it %in% sps_loop,
-                park %in% pk
-  )
+                park %in% pk)
 
 if(length(sps_loop) == 1){
   print(glue("analazing one species: {sps_loop}"))
@@ -112,12 +116,14 @@ X10 <- X10 %>%
     dplyr::filter(unique_index %in% y_dat6$unique_index)
 
 nrow(X10) == nrow(y_dat6)
+table(X10$unique_index == y_dat6$unique_index)
+
 glu1 <- paste(shQuote(sort(unique(y_dat6$sps_it))), collapse=", ")
 spsglue <- glue("the species are {glu1}, and parks are")
 parkglue <- paste(shQuote(sort(unique(y_dat6$park))), collapse=", ")
 print(paste(spsglue,parkglue))
 
-## add a step here to fix parkey
+## add a step here to fix parkey - only the parks where species was detected
 parkey_right <- y_dat6 %>% 
   dplyr::select(Admin_Unit_Code, parkey) %>% 
   arrange(parkey) %>% 
@@ -193,10 +199,7 @@ X <- X10 %>%
                date_jul_s =  standardize(date_jul),
                time_jul_s =  standardize(time_jul))
 
-X_y <- y_dat6 %>% 
-          select(Point_Name) %>% 
-          left_join(., X, by = "Point_Name")
-
+nrow(X) == nrow(y)
 # occupancy variables - separate them in covs in all scales per tibble
 ## tree density
 X1 <- X %>% 
@@ -248,6 +251,17 @@ y_all <- cbind(y, X1, X2, X3, X4, X5, Xa, Xb, Xp) %>%
                                     ifelse(interval_n %in% c(5,6), 3, 
                                         ifelse(interval_n %in% c(7,8), 4, 
                                             5)))))
+                                        
+## remove rows without forest site covariate values (generraly sites without neighbor closer than radi_dist)
+y_all %>% 
+  summarise_all(~sum(is.na(.))) %>% 
+  pivot_longer(everything(), names_to = "column", values_to = "na_count") %>% 
+  arrange(desc(na_count)) %>% 
+  print(n = ncol(y_all))
+
+X10 %>% filter(is.na(shrub_avg_cov_site)) %>% select(park, Point_Name) %>% distinct() %>% select(park) %>% table() 
+X10 %>% filter(!is.na(shrub_avg_cov_site)) %>% select(park, Point_Name) %>% distinct() %>% select(park) %>% table() 
+
 # group the 10 intervals on fives
 y_all2 <- y_all  %>% 
         group_by(parkey, site_n, year_n, interval_2) %>%
@@ -290,33 +304,51 @@ y <- y_all3 %>% select(bird_detec, parkey, site_n, year_n,
 
 ## trick for coding = only interval one for starting values
 y2 <- y %>% 
-  dplyr::filter(interval_n == 1)
+  dplyr::filter(interval_n == 1)  %>% 
+  mutate(unique_id = glue("{parkey}_{site_n}_{year_n}_{bird_detec}")) 
+
+ycovs <- y_all3 %>% 
+  dplyr::filter(interval_n == 1) %>% 
+  mutate(unique_id = glue("{parkey}_{site_n}_{year_n}_{bird_detec}")) %>% 
+  select(unique_id,
+         area_s,
+         siteDEN_s, parkDEN_s, counDEN_s,
+         siteBAcon_s, parkBAcon_s, counBAcon_s,
+         siteBAlar_s, parkBAlar_s, counBAlar_s,
+         siteSHR_s, parkSHR_s, counSHR_s,
+         siteBA_s, parkBA_s, counBA_s)
+
+nrow(y2)*5 == nrow(y) 
+nrow(y) == nrow(ycovs)*5
+table(ycovs$unique_id == y2$unique_id)
+
+y3 <- y2  %>% select(-unique_id)
 
 # occupancy variables - separate them in covs in all scales per tibble
-y3 <- y_all3 %>% 
-  dplyr::filter(interval_n == 1)
+# getting now covariates for jonly the first occassion
+
 ## tree density
-X1 <- y3 %>% 
-  dplyr::select(siteDEN_s, parkDEN_s, counDEN_s)
+X1 <- ycovs %>% 
+  dplyr::select(siteDEN_s, parkDEN_s, counDEN_s, unique_id)
 
 ## conifer basal area
-X2 <- y3 %>% 
+X2 <- ycovs %>% 
   dplyr::select(siteBAcon_s, parkBAcon_s, counBAcon_s)
 
 ## large tree basal area percentage  
-X3 <- y3 %>% 
+X3 <- ycovs %>% 
   dplyr::select(siteBAlar_s, parkBAlar_s, counBAlar_s)
 
 ## shrub cover
-X4 <- y3 %>% 
+X4 <- ycovs %>% 
   dplyr::select(siteSHR_s, parkSHR_s, counSHR_s)
 
 ## total basal area
-X5 <- y3 %>% 
+X5 <- ycovs %>% 
   dplyr::select(siteBA_s, parkBA_s, counBA_s)
 
 ## park size
-Xp <- y3 %>% 
+Xp <- ycovs %>% 
   dplyr::select(area_s) %>% 
   pull() %>% 
   as.numeric()
@@ -384,6 +416,7 @@ nrow(y2)
 length(Xp)
 dim(Xa)
 dim(Xb)
+dim(X1)
 
 # number of alphas and betas
 n_bs <- 7
