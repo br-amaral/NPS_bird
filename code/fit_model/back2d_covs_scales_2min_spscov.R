@@ -13,6 +13,8 @@
 #! Output ---------------------------------------------
 #           - data/model_res/jags_res_{sps}_{park}_run{run_number}.rds: file with result of jags model
 
+#   test<- TRUE ; step_numb <- 1; sps_loop <- "BHVI"
+
 # Load packages --------------------------------------
 library(conflicted)
 library(tidyverse)
@@ -191,6 +193,9 @@ X <- X10 %>%
                date_jul_s =  standardize(date_jul),
                time_jul_s =  standardize(time_jul))
 
+X_y <- y_dat6 %>% 
+          select(Point_Name) %>% 
+          left_join(., X, by = "Point_Name")
 
 # occupancy variables - separate them in covs in all scales per tibble
 ## tree density
@@ -273,33 +278,6 @@ y_all3 <- y_all2 %>%
 #! getting HALF of the rows because now I have 5 removal sampling intervals, not 10 
 nrow(y_all2) == 2*(nrow(y_all3))
 
-# occupancy variables - separate them in covs in all scales per tibble
-## tree density
-X1 <- y_all3 %>% 
-  dplyr::select(siteDEN_s, parkDEN_s, counDEN_s)
-
-## conifer basal area
-X2 <- y_all3 %>% 
-  dplyr::select(siteBAcon_s, parkBAcon_s, counBAcon_s)
-
-## large tree basal area percentage  
-X3 <- y_all3 %>% 
-  dplyr::select(siteBAlar_s, parkBAlar_s, counBAlar_s)
-
-## shrub cover
-X4 <- y_all3 %>% 
-  dplyr::select(siteSHR_s, parkSHR_s, counSHR_s)
-
-## total basal area
-X5 <- y_all3 %>% 
-  dplyr::select(siteBA_s, parkBA_s, counBA_s)
-
-## park size
-Xp <- y_all3 %>% 
-  dplyr::select(area_s) %>% 
-  pull() %>% 
-  as.numeric()
-
 # detection variables
 Xa <- y_all3 %>% 
   dplyr::select(time_jul_s)
@@ -313,6 +291,35 @@ y <- y_all3 %>% select(bird_detec, parkey, site_n, year_n,
 ## trick for coding = only interval one for starting values
 y2 <- y %>% 
   dplyr::filter(interval_n == 1)
+
+# occupancy variables - separate them in covs in all scales per tibble
+y3 <- y_all3 %>% 
+  dplyr::filter(interval_n == 1)
+## tree density
+X1 <- y3 %>% 
+  dplyr::select(siteDEN_s, parkDEN_s, counDEN_s)
+
+## conifer basal area
+X2 <- y3 %>% 
+  dplyr::select(siteBAcon_s, parkBAcon_s, counBAcon_s)
+
+## large tree basal area percentage  
+X3 <- y3 %>% 
+  dplyr::select(siteBAlar_s, parkBAlar_s, counBAlar_s)
+
+## shrub cover
+X4 <- y3 %>% 
+  dplyr::select(siteSHR_s, parkSHR_s, counSHR_s)
+
+## total basal area
+X5 <- y3 %>% 
+  dplyr::select(siteBA_s, parkBA_s, counBA_s)
+
+## park size
+Xp <- y3 %>% 
+  dplyr::select(area_s) %>% 
+  pull() %>% 
+  as.numeric()
 
 #colnames(y) <- c("bird_detec", "parkey", "sitekey", "yearkey", "intervalkey",# "year_site",
 #                  "Year")
@@ -373,6 +380,7 @@ y2 <- data.matrix(y2)
 y_ind <- sort(rep(seq(1, nrow(y2),1),ninterval))
 nrow(y)
 nrow(y2)*ninterval
+nrow(y2)
 length(Xp)
 dim(Xa)
 dim(Xb)
@@ -487,7 +495,7 @@ if(n_bs > 1) {
               as.character()}
 
 # Define the model file and the output file name
-model_file <- mod_name_loop
+model_file <- model_file <- "/Users/bamaral/Documents/GitHub/NPS_bird_copy/models/mod_all_covs.txt"  #mod_name_loop
 mod_name <- glue("data/ana_file/{sps_loop}_step{step_numb}_model_{date_step1}.txt") %>% as.character()
 
 # Read the content of the model file

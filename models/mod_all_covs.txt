@@ -58,7 +58,7 @@ model {
       # BA (tree basal area)
       beta[5] * X5[b, scales_beta5] +  
       # BA^2 (tree basal area squared)
-      beta[6] * pow(X5[b, scales_beta6], 2)  +   
+      beta[6] * pow(X5[b, scales_beta6], 2) +   
       # park size
       beta[7] * Xp[b]                   
   }
