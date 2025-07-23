@@ -21,7 +21,7 @@ library(glue)
 # Set working directory -------------------------------------------------------------------------------------
 # setwd("~/Documents/GitHub/NPS_birds/")
 # Data paths -------------------------------------------------------------------------------------
-NPS_DATA_PATH <- file.path("data/src/original/NETN_2020/NETNtib.rds")
+NPS_DATA_PATH <- file.path("data/out/NETNtib.rds")
 GUILD_DATA_PATH <- file.path("data/src/guilds.rds")
 FIBIRD_DATA_PATH <- file.path("data/for_int_list.csv")
 
@@ -44,7 +44,7 @@ for(i in 2:nrow(dat)){
   visits <- rbind(visits, dat$visits[i][[1]])
 }
 visits <- visits %>%   
-  dplyr::rename(observer_name = Observer)  
+  dplyr::rename(observer_name = ObserverID)  
 
 points <- dat$points[1][[1]] 
 for(i in 2:nrow(dat)){
@@ -63,7 +63,7 @@ dim(field_dat0.5)[1] == dim(field_dat)[1]
 
 ## filter only first visit and only distance 1
 field_dat0.75 <- field_dat0.5 %>% 
-  dplyr::filter(Distance_id == 1,
+  dplyr::filter(Distance_id == 1, # less than 50m
                 Visit == 1) %>% 
   as_tibble()
 
@@ -153,40 +153,44 @@ for(i in 1:npk){
 }
 
 #// write_rds(sites_park_tib, file = "data/src/sites_park_tib.rds")
-
+# HOFR_20_001
+#  site_n_vec  %>% filter(Point_Name == "HOFR_20_001")
 # add numbers for site for each park
-for(i in 1:npk) {
-  if(i == 1) {
-    site_n_vec <- sites_park_tib[i,3] %>% pull() 
-    site_n_vec <- site_n_vec[[1]]
+for(ii in 1:npk) {
+  if(ii == 1) {
+    site_n_vec1 <- sites_park_tib[ii,3] %>% pull() 
+    site_n_vec <- site_n_vec1[[1]]
     colnames(site_n_vec) <- c("Point_Name", "site_n")
-  } else {
-    join_site <-  sites_park_tib[i,3] %>% pull() 
-    join_site <- join_site[[1]]
+  } 
+  if(ii > 1){
+    join_site1 <-  sites_park_tib[ii,3] %>% pull() 
+    join_site <- join_site1[[1]]
     colnames(join_site) <- c("Point_Name", "site_n")
     site_n_vec <- rbind(site_n_vec, join_site)
   }
 }
 
 site_pk <- site_n_vec %>% 
-  mutate(park = substr(Point_Name, 1, 4),
-         Admin_Unit_Code = park)
+          mutate(park = substr(Point_Name, 1, 4),
+                Admin_Unit_Code = park) %>% 
+          distinct()
 
 field_dat1.5 <- left_join(field_dat1, site_pk, by = c("Admin_Unit_Code", "Point_Name"))
 
 ## intervals --------------------------------------------------------------------------------------
 field_dat1.75 <- field_dat1.5 %>% 
   mutate(Interval = ifelse(Interval == "NR", NA, Interval)) %>% 
+  filter(Interval != "Permanently missing") %>% 
   dplyr::filter(!is.na(Year),
                 !is.na(Point_Name),
                 !is.na(EventDate),
                 !is.na(Interval))
 
-ninterval <- field_dat1.75$Interval_Length %>% unique() %>% length()
-interval_tab <- cbind(Interval_Length = field_dat1.75$Interval_Length %>% unique() %>% sort(),
+ninterval <- field_dat1.75$Interval %>% unique() %>% length()
+interval_tab <- cbind(Interval_Length = field_dat1.75$Interval %>% unique() %>% as.numeric() %>% sort(),
                       Interval_n = seq(1,10,1)) %>% as_tibble()
 
-field_dat2 <- left_join(field_dat1.75, interval_tab, by = "Interval_Length")
+field_dat2 <- field_dat1.75  %>% rename(Interval_n = Interval)
 
 # change intervals for only 5 (group 1 ans 2, and so on)
 # field_dat2 <- field_dat1.75 %>% 
@@ -197,9 +201,9 @@ field_dat2 <- left_join(field_dat1.75, interval_tab, by = "Interval_Length")
 #                                                 ifelse(Interval == 8 | Interval == 9, 5, Interval))))))
 
 ## distances --------------------------------------------------------------------------------------
-ndist <- field_dat2$Distance_id %>% unique() %>% length()
+(ndist <- field_dat2$Distance_id %>% unique())
 
-dist <- field_dat2$Distance %>% factor(levels = c( "< 50 Meters", "> 50 Meters")) %>% as.numeric() %>% -1
+dist <- field_dat2$Distance %>% factor(levels = c( "0-50", "> 50")) %>% as.numeric() %>% -1
 
 ## species --------------------------------------------------------------------------------------
 (nsps <- field_dat2$AOU_Code %>% unique() %>% length())
@@ -234,9 +238,12 @@ y1 <- field_dat2 %>%
 #dplyr::select(-Interval) %>% 
 #mutate(int_s = as.numeric(int_s))
 
-#  select visit one
+# filter for audio
+y1 <- y1 %>% 
+        filter(y1$IdentificationMethod == "Audio")
+
 table(y1$Visit)
-table(y1$ID_Method)
+table(y1$IdentificationMethod)
 table(y1$Distance_id)
 
 write_rds(visits2, file = "data/out/visits.rds")
