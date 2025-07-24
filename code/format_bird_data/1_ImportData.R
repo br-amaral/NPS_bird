@@ -40,7 +40,7 @@ parks <- NA
 for(i in 1:length(NETN)){
   parks <- c(parks, NETN[[i]]@ParkCode)
 }
-parks <- parks[!is.na(parks)]
+parks <- parks[-1]
 
 network <- NA
 for(i in 1:length(NETN)){
@@ -64,79 +64,37 @@ colnames(NETNtib) <- c('park_code', 'p_short_name', 'p_long_name', 'network', 'v
 NETNtib$park_code <- key_tib$parks
 
 ## function to populate the tibble --------------------------------------------------------------
-for(i in 1:nrow(key_tib)){
+giant_tib <- function(NETNf){
   
-  NETNobj <- NETN[[i]]
+  NETNobj <- NETNf
   
-  (park_name <- NETNobj@ParkCode)
+  park_name <- NETNobj@ParkCode
   
   numb <- key_tib %>% 
     filter(parks == park_name) %>% 
     dplyr::select(id) %>% 
     pull()
   
-  # Split into 5 separate assignments with NA handling
-  NETNtib$park_code[numb] <- ifelse(is.null(NETNobj@ParkCode) || length(NETNobj@ParkCode) == 0, NA, NETNobj@ParkCode)
+  NETNtib[numb,1:5] <<- c(NETNobj@ParkCode, NETNobj@ShortName, gsub(" ", "_", NETNobj@LongName), 
+                          NETNobj@Network, NETNobj@VisitNumber) %>% 
+    as.data.frame() %>% t()
   
-  NETNtib$p_short_name[numb] <- ifelse(is.null(NETNobj@ShortName) || length(NETNobj@ShortName) == 0, NA, NETNobj@ShortName)
+  NETNtib$field_data[numb] <<- list(NETNobj@Birds)
+  NETNtib$visits[numb] <<- list(NETNobj@Visits)
+  NETNtib$points[numb] <<- list(NETNobj@Points)
+  NETNtib$bands[numb] <<- list(NETNobj@Bands)
+  NETNtib$intervals[numb] <<- list(NETNobj@Intervals)
+  NETNtib$bird_species[numb] <<- list(NETNobj@Species)
+  NETNtib$bird_guild[numb] <<- list(NETNobj@Guilds)
   
-  NETNtib$p_long_name[numb] <- ifelse(is.null(NETNobj@LongName) || length(NETNobj@LongName) == 0, NA, gsub(" ", "_", NETNobj@LongName))
-  
-  NETNtib$network[numb] <- ifelse(is.null(NETNobj@Network) || length(NETNobj@Network) == 0, NA, NETNobj@Network)
-  
-  NETNtib$visit_number[numb] <- ifelse(is.null(NETNobj@VisitNumber) || length(NETNobj@VisitNumber) == 0, NA, NETNobj@VisitNumber)
-  
-  # Handle list columns with NA for empty objects
-  NETNtib$field_data[numb] <- if(is.null(NETNobj@Birds) || nrow(NETNobj@Birds) == 0) {
-    list(NA)
-  } else {
-    forest_birds <- NETNobj@Birds %>% filter(Survey_Type == "Forest")
-    if(nrow(forest_birds) == 0) list(NA) else list(forest_birds)
-  }
-  
-  NETNtib$visits[numb] <- if(is.null(NETNobj@Visits) || length(NETNobj@Visits) == 0) {
-    list(NA)
-  } else {
-    list(NETNobj@Visits)
-  }
-  
-  NETNtib$points[numb] <- if(is.null(NETNobj@Points) || length(NETNobj@Points) == 0) {
-    list(NA)
-  } else {
-    list(NETNobj@Points)
-  }
-  
-  NETNtib$bands[numb] <- if(is.null(NETNobj@Bands) || length(NETNobj@Bands) == 0) {
-    list(NA)
-  } else {
-    list(NETNobj@Bands)
-  }
-  
-  NETNtib$intervals[numb] <- if(is.null(NETNobj@Intervals) || length(NETNobj@Intervals) == 0) {
-    list(NA)
-  } else {
-    list(NETNobj@Intervals)
-  }
-  
-  NETNtib$bird_species[numb] <- if(is.null(NETNobj@Species) || length(NETNobj@Species) == 0) {
-    list(NA)
-  } else {
-    list(NETNobj@Species)
-  }
-  
-  NETNtib$bird_guild[numb] <- if(is.null(NETNobj@Guilds) || length(NETNobj@Guilds) == 0) {
-    list(NA)
-  } else {
-    list(NETNobj@Guilds)
-  }
+}
+
+for(i in 1:nrow(key_tib)){
+  giant_tib(NETN[[i]])
 }
 
 ## Check tibble and export as an RDS file-------------------------------------------------
-NETNtib <- NETNtib %>% 
-            filter(park_code != "ROVA")
-key_tib <- key_tib %>% 
-            filter(parks != "ROVA") %>% 
-            mutate(id = row_number())
+NETNtib
 
 write_rds(NETNtib, file = "data/out/NETNtib.rds")
 write_rds(key_tib, file = "data/key_park.rds")

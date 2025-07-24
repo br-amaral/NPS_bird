@@ -61,8 +61,8 @@ Modes <- function(x) {
 }
 #! Define settings -------------------------------------
 # radius distance in meters
- radi_dist2 <- 500
- hard_con_mix2 <- FALSE 
+# radi_dist2 <- 350
+# hard_con_mix2 <- FALSE 
 
 if(exists("radi_dist") == FALSE) {radi_dist <- radi_dist2}
 if(exists("hard_con_mix") == FALSE) {hard_con_mix <- hard_con_mix2}
@@ -119,11 +119,11 @@ for(ii in 1:length(bird_sit$points)){
   coord_loop <- 
     bird_sit$points[ii][[1]] %>% 
       select(Admin_Unit_Code,
+            NETN_Point_Name,
             Point_Name,
             Latitude,
-            Longitude
-            #UTM_ZONE
-            )
+            Longitude,
+            UTM_ZONE)
   if(ii == 1) {
     park_site <- coord_loop
   } else {
