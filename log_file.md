@@ -25,24 +25,35 @@ Assumptions/decisions:
 
 # --------------------------------------------------------------------
 Workflow:
-# format_veg_data/park_rova_find.r
-        change the forest plot park and sites names from rova to elro, hofr and vama
+# code/format_bird_data/1_ImportData.R
+        get netn bird data and extract it
+        in:
+          *data/src/original/NETN_2020
+        out:
+          data/out/NETNtib.rds
+          data/key_park.rds
+# code/format_veg_data/NETN_forest_data_for_sites.R
+        get forest plot level covariates
+        in: 
+          *data/veg_kateaaron/ForestNETN2024.zip
+          *data/tree_sps_harcon.csv
+        out:
+          data/out/for_plot_covs.rds
 
-# format_veg_data/get_conhar_baden.r
+#? format_veg_data/get_conhar_baden.r
         get the density of conifer and hardwood trees that are measured by the NETN team to get percentrage of conifer and hardwood per plot
 
-# format_veg_data/NETN_forest_data_for_sites.R
-        get values of NETN forest covariates for each forest plots
-
 # format_veg_data/get_site_data_rad.R
-        find out which forest plots are connected to each bird site according to a 250m and the first closest neighbours
+        find out which forest plots are connected to each bird site according to a 400m and the first closest neighbours
              and weighted mean values for each bird site (weight is the inverse of the distance)
-#?        in  - data/out/NETNtib.rds
-#?        in  - data/src/key_park.rds
-#?        in  - data/veg_kateaaron/NETN_forest_data_2006-2023.rds
-#?        in  - data/veg_kateaaron/NETN_tree_dens_spp_2006-2023.rds
-#?        in  - data/veg_kateaaron/for_sites.rds
+        in:
+          data/out/NETNtib.rds
+          data/key_park.rds
+          *data/out/updated_for_cats.csv
+          data/out/for_plot_covs.rds
 
+
+          
 #?        out - data/out/for_sit2.rds
 #?        out - data/out/site_covs_[xx]m.rds
 #?        out - data/out/park_site.rds
