@@ -60,11 +60,12 @@ lenght <- length
 
 ## read files
 # import file, create model names, and save it!
-
+#! MCMC settings ---------------------------------------------------
 niterations <- 30000
 nburnin <- 15000
 nchains <- 8
 nthin <- 5
+if(test == TRUE){nadapt_min <- 1} else {nadapt_min <- 500}
 
 b_sps <- c("BHVI", "BRCR", "BTBW", "HETH", "OVEN", 
                                 "VEER", "REVI", "WBNU", "SCTA", "WOTH",
@@ -87,12 +88,12 @@ for (key_ite in 1:nrow(master_tab)){
         scales_loop <- as.numeric(unlist(strsplit(tib_loop$scales2, split = "")))
         date_step1 <- tib_loop$date_step1
 
-        source("/code/fit_model/step2_analysis.R")
+        source("code/fit_model/step2_analysis.R")
 
     } else {
         cat("Before sourcing - objects in environment:\n")
         print(ls())
-        source("/code/fit_model/back2d_covs_scales_2min_spscov.R")
+        source("code/fit_model/back2d_covs_scales_2min_spscov.R")
         # After sourcing
         cat("After sourcing - objects in environment:\n")
         print(ls())

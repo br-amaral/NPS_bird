@@ -13,8 +13,8 @@
 #
 #! Output ---------------------------------------------
 #           - data/model_res/jags_res_{sps}_{park}_run{run_number}.rds: file with result of jags model
-#   freshr::freshr()
-#   test <- TRUE ; step_numb <- 1; sps_loop <- "BHVI"
+#  freshr::freshr()
+ #   test <- FALSE ; step_numb <- 1; sps_loop <- "BHVI"
 
 # Load packages --------------------------------------
 library(conflicted)
@@ -546,7 +546,7 @@ if(n_bs > 1) {
               as.character()}
 
 # Define the model file and the output file name
-model_file <- model_file <- "/Users/bamaral/Documents/GitHub/NPS_bird_copy/models/mod_all_covs.txt"  #mod_name_loop
+model_file <- model_file <- "models/mod_all_covs.txt"  #mod_name_loop
 mod_name <- glue("data/ana_file/{sps_loop}_step{step_numb}_model_{date_step1}.txt") %>% as.character()
 
 # Read the content of the model file

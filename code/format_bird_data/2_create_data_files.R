@@ -43,7 +43,7 @@ lenght <- length
 
 #? Source code -----------------------------------------
 ## Create empty matrix with all parks, species, years, sites and intervals --------------------------
-source("/code/format_bird_data/format_data.R")
+source("code/format_bird_data/format_data.R")
 
 yog <- y1 # reset safety ;)
 #? Define settings -------------------------------------
