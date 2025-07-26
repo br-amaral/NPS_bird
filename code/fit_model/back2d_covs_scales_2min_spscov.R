@@ -636,11 +636,6 @@ if(as.numeric(system_time2 - system_time1) > 1440) {
   time_it_took <- round(difftime(system_time2, system_time1, units = c("days")),2)
   unit_time <- "days"}
 
-# Get covariate names
-covs_equal_to_1 <- cov_key2 == 1
-# Get column names
-covs_names <- colnames(cov_key2)[covs_equal_to_1]
-covs_names2 <- paste(covs_names, collapse = "_")
 
 # Print info in slurm.out file
 paste('\n ************************************** \n \n \n ---------------- DONE ----------------', '\n\n',
@@ -648,7 +643,6 @@ paste('\n ************************************** \n \n \n ---------------- DONE 
       'Script = ', script_name, '\n', 
       'Parks =', park_name, '\n',
       'Species =', sps_loop, '\n',
-      'Covariates =', covs_names2, '\n',
       'Iterations =', niterations, '\n',
       'Run number =', str_split(file_name2, 'run', simplify = TRUE)[2], '\n',
       'Started running on =', system_time1, '\n',
@@ -673,7 +667,6 @@ if(test == FALSE){
                   'Z File Name =', glue("data/ana_file/{date_step1}_data_{sps_loop}_Z.rds"), '\n', 
 
                   'Script =', script_name, '\n',
-                  'Covariates =', covs_names2, '\n',
                   'Iterations =', niterations, '\n',
                   'Chains =', nchains, '\n',
                   'Burn-in =', nburnin, '\n',
