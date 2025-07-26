@@ -55,13 +55,20 @@ source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_bird_data/form
 yog <- y1 # reset safety ;)
 #? Define settings -------------------------------------
 radi_dist <- 400
+hard_con_mix <- FALSE 
 
 #? Import data -----------------------------------------
 ## file paths
 PATH_COVS_COUN <- "data/out/coun_covs.rds"
 PATH_COVS_PARK <- "data/out/park_covs.rds"
-PATH_COVS_SITE <- glue("data/out/site_covs_fornofor_{radi_dist}m.rds")
 
+if(hard_con_mix == FALSE) {
+  PATH_COVS_SITE <-glue("data/out/site_covs_fornofor_{radi_dist}m.rds")
+}
+
+if(hard_con_mix == TRUE) {
+  PATH_COVS_SITE <-glue("data/out/site_covs_hardcon_{radi_dist}m.rds")
+}
 ## parks -------------------------------------------------------------------------------------------
 pk_list <- visits %>% 
     select(Admin_Unit_Code) %>% 
@@ -123,7 +130,7 @@ point_names <- point_names[!(substr(point_names,1,4) %in% c("ACAD", "SAIR", "ELR
 point_name_pk <- visits %>% 
                   dplyr::select(Admin_Unit_Code, Point_Name) %>% 
                   filter(Admin_Unit_Code %!in% c("ACAD", "SAIR", "ELRO")) %>% 
-                  distinct()
+                  distinct()   
 npoint_name_pk <- table(point_name_pk$Admin_Unit_Code) %>% as.vector()
 
 mxsite <- max(npoint_name_pk)
@@ -404,7 +411,7 @@ y3 %>% select(-Interval_n) %>% distinct() %>% duplicated() %>% table()
 # dupy3 %>% filter(Point_Name == "ACAD3107", Year == 2018, AOU_Code =="RBNU")
 
 ## add removal sampling intervals ------------------------------------------------------------
-# populate y_dat3 with info from y2 - add ot only detections, but zeros in both intervals and occasions
+# populate y_dat3 with info from y2 - add not only detections, but zeros in both intervals and occasions
 # y_dat3 is the dataset with all occasions and intervals that HAPPENED/EXIST - non-detections! true zeros
 y3 <- y3 %>% 
     mutate(interval_n = 10)
@@ -496,7 +503,7 @@ colnames(spy_grid_yesdetec_cov4)  == colnames(y_dat3)
 
 y_dat4 <- rbind(y_dat3,
                 spy_grid_yesdetec_cov4)
-## remember: I have only one one per row, all zeros before one, and all NA after one
+## remember: I have only one 1 (detection, 'presence') per row, all zeros before one, and all NA after one
 
 yr_pk <- yr_pk %>% 
   mutate(park = Admin_Unit_Code)
@@ -519,7 +526,7 @@ pk_key_sps <- y_dat5 %>%
 y_dat6 <- y_dat5 %>% 
   left_join(., pk_key_sps, by = c("AOU_Code", "park", "parkey"))
 
-# get covariate data ----------------------------------------------------------------------------------
+#? get forest covariate data ----------------------------------------------------------------------------------
 # index to have the same dimentions as the bird data
 X <- y_dat6 %>% 
   select(park, site_n, Year, Point_Name, interval_n)
@@ -531,7 +538,7 @@ site_key <- y_dat6 %>%
 
 ## site ----------------------------------------------------------------------------------------------
 #! it is OK if ACAD, ELRO and SAIR do not have covs now,
-#!   they are gonna be removed from the data in the next step (back2d_covs_scales_3)
+#!   they are gonna be removed from the data in the next step (back2d_covs_scales_2min_spscov)
 site_covs <- read_rds(PATH_COVS_SITE) %>% 
                 rename(Point_Name = bird_sit) %>% 
                 left_join(., site_key, by = "Point_Name") %>% 
