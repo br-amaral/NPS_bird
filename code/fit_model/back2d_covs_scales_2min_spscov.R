@@ -13,8 +13,8 @@
 #
 #! Output ---------------------------------------------
 #           - data/model_res/jags_res_{sps}_{park}_run{run_number}.rds: file with result of jags model
-#   freshr::freshr()
-#   test<- TRUE ; step_numb <- 1; sps_loop <- "BHVI"
+   freshr::freshr()
+   test<- TRUE ; step_numb <- 1; sps_loop <- "BHVI"
 
 # Load packages --------------------------------------
 library(conflicted)
@@ -233,10 +233,10 @@ X_y2 <- X_y %>%
 nrow(X_y)/10
 nrow(X_y2)/10
 
-y <- X_y %>% 
+y <- X_y2 %>% 
   select(all_of(cols_y))
 
-X <-  X_y %>% 
+X <-  X_y2 %>% 
   select(all_of(cols_x))
 
 nrow(X) ; nrow(y)
@@ -338,6 +338,7 @@ y2 <- y %>%
 # occupancy variables - separate them in covs in all scales per tibble
 y3 <- y_all3 %>% 
   dplyr::filter(interval_n == 1)
+
 ## tree density
 X1 <- y3 %>% 
   dplyr::select(siteDEN_s, parkDEN_s, counDEN_s)
@@ -368,17 +369,22 @@ Xp <- y3 %>%
 #                  "Year")
 
 # initial values
-Zst <- y %>% 
+Zst <- y_all3 %>% 
   dplyr::select(bird_detec, parkey, site_n, year_n, interval_n) %>% 
   group_by(parkey, site_n, year_n) %>% 
   mutate(z = ifelse(sum(bird_detec, na.rm = T) == 0, 0, 1)) %>% 
   ungroup() %>% 
   dplyr::filter(interval_n == 1) 
 
-site_vec <- seq(1,max(nsite_pk),1)
-(npk <- length(unique(y$parkey)))
-(pk <- sort(unique(y$parkey)))
-years <- y %>% 
+nsite_pk_filt <- rem_pks %>% 
+                    filter(pk %in% pull(parkey_right %>% select(Admin_Unit_Code))) %>% 
+                    pull(nsite_pk) %>% 
+                    as.numeric()
+
+site_vec <- seq(1,max(nsite_pk_filt),1)
+(npk <- length(unique(y3$parkey)))
+(pk <- sort(unique(y3$parkey)))
+years <- y3 %>% 
   dplyr::select(Year) %>% 
   distinct() %>% 
   arrange() %>% 
@@ -390,7 +396,7 @@ ninterval <- 5
 Zst2 <- 
   array(NA, 
         dim = c(npk,
-                max(nsite_pk),
+                max(nsite_pk_filt),
                 length(years)
         ),
         dimnames = list(pk,
