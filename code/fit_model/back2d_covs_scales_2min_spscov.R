@@ -3,7 +3,8 @@
 #? *********************************************************************************
 # Code to run model to estimate the effect of different environmental
 #   covariates on bird occupancy in several national parks and on three
-#   different spatial scales
+#   different spatial scales. Code here filters and format the data for  
+#   single-species models
 #! Input ----------------------------------------------
 #           - data/y_dat8.rds: tibble with bird data (2_create_data_files.R)
 #           - data/X.rds: tibble with covariate data (2_create_data_files.R)
@@ -12,7 +13,7 @@
 #
 #! Output ---------------------------------------------
 #           - data/model_res/jags_res_{sps}_{park}_run{run_number}.rds: file with result of jags model
-
+#   freshr::freshr()
 #   test<- TRUE ; step_numb <- 1; sps_loop <- "BHVI"
 
 # Load packages --------------------------------------
@@ -60,7 +61,7 @@ date_step1 <- as.character(date_step1)
 ## file paths
 YDAT_PATH <- "data/y_dat8.rds"
 XDAT_PATH <- "data/X.rds"
-SITE_PK_PATH <- "data/out/nsite_pk.rds"
+SITE_PK_PATH <- "data/out/nsite_pk.rds" #! TODO: where is nsite_pk.rds created?
 PARK_PATH <- "data/src/key_park.rds"
 
 ## read files
@@ -126,7 +127,9 @@ parkey_right <- y_dat6 %>%
 
 y_dat6 <- y_dat6 %>% 
   dplyr::select(-parkey) %>% 
-  left_join(., parkey_right, by = "Admin_Unit_Code")
+  left_join(., parkey_right, by = "Admin_Unit_Code")%>%
+          rename(time_jul = StartTime2,
+                 date_jul = EventDate2)
 
 y <- y_dat6 %>% 
   dplyr::select(bird_detec, parkey, site_n, year_n, interval_n, Year) 
@@ -173,7 +176,8 @@ setequal(y_dat6 %>% select(parkey, site_n, year_n, bird_detec) %>%
 X <- X10 %>% 
         dplyr::select(-unique_index) %>% 
         rename(date_jul = EventDate2,
-               time_jul = StartTime2) %>% 
+               time_jul = StartTime2,
+               Admin_Unit_Code = park) %>% 
         mutate(siteDEN_s =   standardize(treeden_ha_site),
                parkDEN_s =   standardize(treeden_ha_park),
                counDEN_s =   standardize(treeden_ha_coun),
@@ -193,10 +197,49 @@ X <- X10 %>%
                date_jul_s =  standardize(date_jul),
                time_jul_s =  standardize(time_jul))
 
-X_y <- y_dat6 %>% 
-          select(Point_Name) %>% 
-          left_join(., X, by = "Point_Name")
+# Summary table for unique Point_Names have NAs for site variables
+# the ones with no shrub are expected, since that data is sparse
+# the one with no data for the 5 covariates are the ones with no neighbors
+s_columns <- names(X)[grepl("^site", names(X))] %>% sort()
+unique_na_summary <- X %>% 
+  select(Point_Name, all_of(s_columns)) %>% 
+  group_by(Point_Name) %>% 
+  summarise(
+    across(all_of(s_columns), ~any(is.na(.x))),
+    .groups = 'drop'
+  ) %>% 
+  filter(if_any(all_of(s_columns), ~.x == TRUE)) %>% 
+  arrange(Point_Name) %>% 
+  pivot_longer(cols = all_of(s_columns), 
+               names_to = "column", 
+               values_to = "has_na") %>% 
+  filter(has_na == TRUE) %>% 
+  select(-has_na) %>% 
+  add_count(Point_Name, name = "frequency") %>%  # Add frequency column
+  arrange(desc(frequency), Point_Name) 
+unique_na_summary %>% print(n = nrow(unique_na_summary))
 
+rem_points <- unique_na_summary$Point_Name %>% unique()
+
+cols_y <- colnames(y_dat6)
+cols_x <- colnames(X)
+
+X_y <- y_dat6 %>% 
+          left_join(., X, by = c("Point_Name", "Admin_Unit_Code", "site_n", "Year", "interval_n", "date_jul", "time_jul"))
+
+## remove rows without forest data
+X_y2 <- X_y %>%
+          filter(Point_Name %!in% rem_points)
+nrow(X_y)/10
+nrow(X_y2)/10
+
+y <- X_y %>% 
+  select(all_of(cols_y))
+
+X <-  X_y %>% 
+  select(all_of(cols_x))
+
+nrow(X) ; nrow(y)
 # occupancy variables - separate them in covs in all scales per tibble
 ## tree density
 X1 <- X %>% 
