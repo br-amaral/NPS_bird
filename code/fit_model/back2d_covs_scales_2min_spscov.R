@@ -13,8 +13,8 @@
 #
 #! Output ---------------------------------------------
 #           - data/model_res/jags_res_{sps}_{park}_run{run_number}.rds: file with result of jags model
-   freshr::freshr()
-   test<- TRUE ; step_numb <- 1; sps_loop <- "BHVI"
+#   freshr::freshr()
+#   test <- TRUE ; step_numb <- 1; sps_loop <- "BHVI"
 
 # Load packages --------------------------------------
 library(conflicted)
@@ -62,7 +62,7 @@ date_step1 <- as.character(date_step1)
 YDAT_PATH <- "data/y_dat8.rds"
 XDAT_PATH <- "data/X.rds"
 SITE_PK_PATH <- "data/out/nsite_pk.rds" #! TODO: where is nsite_pk.rds created?
-PARK_PATH <- "data/src/key_park.rds"
+PARK_PATH <- "data/key_park.rds"
 
 ## read files
 y_dat4 <- read_rds(file = YDAT_PATH)
@@ -376,10 +376,10 @@ Zst <- y_all3 %>%
   ungroup() %>% 
   dplyr::filter(interval_n == 1) 
 
-nsite_pk_filt <- rem_pks %>% 
-                    filter(pk %in% pull(parkey_right %>% select(Admin_Unit_Code))) %>% 
-                    pull(nsite_pk) %>% 
-                    as.numeric()
+ nsite_pk_filt <- y_all3$site_n  # rem_pks %>% 
+#                     filter(pk %in% pull(parkey_right %>% select(Admin_Unit_Code))) %>% 
+#                     pull(nsite_pk) %>% 
+#                     as.numeric()
 
 site_vec <- seq(1,max(nsite_pk_filt),1)
 (npk <- length(unique(y3$parkey)))
@@ -427,13 +427,15 @@ if(test == FALSE){
 y <- data.matrix(y)
 y2 <- data.matrix(y2)
 y_ind <- sort(rep(seq(1, nrow(y2),1),ninterval))
+
 nrow(y)
 nrow(y2)*ninterval
-nrow(y2)
-length(Xp)
 dim(Xa)
 dim(Xb)
 
+nrow(y2)
+length(Xp)
+dim(X1)
 # number of alphas and betas
 n_bs <- 7
 n_as <- 3

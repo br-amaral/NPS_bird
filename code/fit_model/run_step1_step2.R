@@ -60,9 +60,18 @@ lenght <- length
 
 ## read files
 # import file, create model names, and save it!
-master_tab <- read_csv("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/fit_model/model_sps_key.csv")  %>% 
-                mutate(#mod_name = ascharacter(mod_name),
-                       mod_name = glue("mod_{AOU_Code}_{BA}{DEN}{SHR}{DIV}{EAR}{MID}{LAT}_step{step}_sca_{scales2}"))
+
+niterations <- 30000
+nburnin <- 15000
+nchains <- 8
+nthin <- 5
+
+b_sps <- c("BHVI", "BRCR", "BTBW", "HETH", "OVEN", 
+                                "VEER", "REVI", "WBNU", "SCTA", "WOTH",
+                                "DOWO", "HAWO", "BLBW", "YBSA", "BCCH", "BAWW", "BTNW")
+
+master_tab <- as_tibble(cbind(b_sps, rep(1, length(b_sps))))
+colnames(master_tab) <- c("AOU_Code","step")
 
 for (key_ite in 1:nrow(master_tab)){
     # key_ite <- 1
@@ -70,41 +79,7 @@ for (key_ite in 1:nrow(master_tab)){
 
     (sps_loop <- tib_loop$AOU_Code)
     (step_numb <- tib_loop$step)
-    mod_name_loop <- glue("models/{tib_loop$mod_name}.txt")
-
-    #! MCMC settings ---------------------------------------------------
-    niterations <- tib_loop$niterations
-    nburnin <- tib_loop$nburnin
-    nchains <- tib_loop$nchains
-    nthin <- tib_loop$nthin
-    if(test == TRUE){nadapt_min <- 1} else {nadapt_min <- 100}
-    # niterations <- 10 ; nburnin <- 5 ; nchains <- 1 ; nthin <- 1
-    
-    #! Get species and covariates --------------------------------------
-    BA  <- tib_loop$BA
-    DEN <- tib_loop$DEN
-    SHR <- tib_loop$SHR
-    DIV <- tib_loop$DIV
-    EAR <- tib_loop$EAR
-    MID <- tib_loop$MID
-    LAT <- tib_loop$LAT
-    CAN <- tib_loop$CAN
-    DEB <- tib_loop$DEB
-    
-    cov_key <- tib_loop[ ,2:10]
-    print(sps_loop)
-    print(cov_key)
-    # Print object name if the value is greater than zero
-    if (BA == 1)  print("BA")
-    if (DEN == 1) print("DEN")
-    if (SHR == 1) print("SHR")
-    if (DIV == 1) print("DIV")
-    if (EAR == 1) print("EAR")
-    if (MID == 1) print("MID")
-    if (LAT == 1) print("LAT")
-    if (CAN == 1) print("CAN")
-    if (DEB == 1) print("DEB")
-
+   
     cat(glue("\n \n Is it a test? {test} \n \n \n "))
 
     if(tib_loop$step == 2){
@@ -112,10 +87,16 @@ for (key_ite in 1:nrow(master_tab)){
         scales_loop <- as.numeric(unlist(strsplit(tib_loop$scales2, split = "")))
         date_step1 <- tib_loop$date_step1
 
-        source("code/fit_model/step2_analysis.R")
+        source("/code/fit_model/step2_analysis.R")
 
     } else {
-        source("code/fit_model/back2d_covs_scales_2min_spscov.R")
+        cat("Before sourcing - objects in environment:\n")
+        print(ls())
+        source("/code/fit_model/back2d_covs_scales_2min_spscov.R")
+        # After sourcing
+        cat("After sourcing - objects in environment:\n")
+        print(ls())
+    
     }
 
 }

@@ -76,7 +76,7 @@ BIRD_SITE_PATH <- "data/out/NETNtib.rds"
 BIRD_FOR_PATH  <- "data/out/key_bsite.rds"
 FOR_FOR_PATH   <- "data/out/key_fsite.rds"
 
-PARK_SITE_PATH <- "data/src/key_park.rds"
+PARK_SITE_PATH <- "data/key_park.rds"
 FOR_PLOT_COVS  <- "data/out/for_plot_covs.rds"
 VEG_TYP_PATH   <- "data/out/updated_for_cats.csv"   
 UTM_BIRD_SIT   <- "data/out/park_site_UTM.rds"

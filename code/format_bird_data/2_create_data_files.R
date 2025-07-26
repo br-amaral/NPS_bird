@@ -43,7 +43,7 @@ lenght <- length
 
 #? Source code -----------------------------------------
 ## Create empty matrix with all parks, species, years, sites and intervals --------------------------
-source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_bird_data/format_data.R")
+source("/code/format_bird_data/format_data.R")
 
 yog <- y1 # reset safety ;)
 #? Define settings -------------------------------------
@@ -54,6 +54,7 @@ hard_con_mix <- FALSE
 ## file paths
 PATH_COVS_COUN <- "data/out/coun_covs.rds"
 PATH_COVS_PARK <- "data/out/park_covs.rds"
+# kshape files with park area 
 
 if(hard_con_mix == FALSE) {
   PATH_COVS_SITE <-glue("data/out/site_covs_fornofor_{radi_dist}m.rds")

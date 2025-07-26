@@ -5,8 +5,12 @@ DOOOOO(ing):
 
 
 # --------------------------------------------------------------------
-TO DO:
-
+TODO: list
+(   ) make sure all files are created in a line and are in the proper folder from one script to the other:
+-       data/out/key_bsite.rds
+-       data/out/key_fsite.rds
+-       data/out/updated_for_cats.csv
+-       data/out/nsite_pk.rds (check 2_create_data_file: data/nsite_pk.csv)
 
 
 
@@ -23,16 +27,18 @@ Assumptions/decisions:
 
 - forest covariates: average of all years with data because of the panel rotation design
 
+
+
 # --------------------------------------------------------------------
 Workflow:
-# code/format_bird_data/1_ImportData.R
+# Rscript code/format_bird_data/1_ImportData.R
         get netn bird data and extract it
         in:
           *data/src/original/NETN_2020
         out:
           data/out/NETNtib.rds
           data/key_park.rds
-# code/format_veg_data/NETN_forest_data_for_sites.R
+# Rscript code/format_veg_data/NETN_forest_data_for_sites.R
         get forest plot level covariates
         in: 
           *data/veg_kateaaron/ForestNETN2024.zip
@@ -43,7 +49,7 @@ Workflow:
 #? format_veg_data/get_conhar_baden.r
         get the density of conifer and hardwood trees that are measured by the NETN team to get percentrage of conifer and hardwood per plot
 
-# format_veg_data/get_site_data_rad.R
+# Rscript code/format_veg_data/get_site_data_rad.R
         find out which forest plots are connected to each bird site according to a 400m and the first closest neighbours
              and weighted mean values for each bird site (weight is the inverse of the distance)
         in:
@@ -51,59 +57,57 @@ Workflow:
           data/key_park.rds
           *data/out/updated_for_cats.csv
           data/out/for_plot_covs.rds
+          data/out/key_bsite.rds
+          data/out/key_fsite.rds
+          data/out/park_site_UTM.rds
+        out:
+          data/out/site_covs_fornofor_{radi_dist}m.rds
+          data/out/neighbor_fornofor_{radi_dist}m.rds
+          data/out/site_covs_hardcon_{radi_dist}m.rds
+          data/out/neighbor_hardcon_{radi_dist}m.rds
 
+# Rscript code/format_veg_data/get_park_data.R
+        in:
+          data/out/for_plot_covs.rds
+          data/VAMA_sites.rds
+          data/HOFR_sites.rds
+          data/ELRO_sites.rds
+        out: 
+          data/out/park_covs.rds
 
-          
-#?        out - data/out/for_sit2.rds
-#?        out - data/out/site_covs_[xx]m.rds
-#?        out - data/out/park_site.rds
-#?        out - data/out/for_sit_coord.rds
-#?        out - data/out/bird_site_coords.rds
-#?        out - data/out/close_points_f.rds
+# Rscript code/format_veg_data/get_coun_data.R
+        in:
+          data/FIA/
 
-# format_veg_data/get_park_data.R
-#?        in  - data/veg_kateaaron/NETN_forest_data_2006-2023.rds
+        out:
+          data/out/coun_covs.rds
 
-#?        out - data/out/park_covs.rds
+# Rscript code/format_bird_data/2_create_data_files.R
+  # Rscript code/format_bird_data/format_data
+                filtering visit and field data for only auditory, 50m distance band, and without missing info ('permanetly missing') in any columns we use, e.g. interval number
 
+                in - data/out/NETNtib.rds
+        
+        create all 'correct' total number of sites, years and occassions, and merge covariate values with bird info
 
-# format_veg_data/FIA_getdata.R
+        in - data/out/coun_covs.rds
+        in - data/out/park_covs.rds
+        in - data/out/site_covs_fornofor_{radi_dist}m.rds or data/out/site_covs_hardcon_{radi_dist}m.rds
 
-# format_veg_data/get_coun_data.R
-        in  - 'data/FIA/'
+        out:
+          data/y_dat8.rds 
+          data/X.rds
+          data/nsite_pk.csv
 
-        out - data/out/coun_covs.rds
-
-# format_bird_data/2_create_data_files.R
-        in  - data/out/close_points_fcovs.rds
-        in  - data/NETN-forest/tree_ba_tab_park.rds
-        in  - data/NETN-forest/tree_den_tab_park.rds
-        in  - data/NETN-forest/stand_struc_tab_park.rds
-        in  - data/FIA/out/bas_area_tot_import.rds
-        in  - data/FIA/out/tree_acre_tot_import.rds
-        in  - data/FIA/out/stand_struc_import.rds
-        in  - data/park_raster/{pk[i]}_pb.rds
-        in  - y1
-        in  - visits (data/out/visits.rds)
-        in  - yr_pk
-
-        out - data/src/sites_park_tib.rds
-        out - data/out/site_n_key.rds
-        out - data/out/y_dat3.rds
-        out - data/y_dat8.rds
-        out - data/X.rds 
-        out - data/sps_pk_nth.rds
-
-# format_bird_data/back2d_covs_scales_2min_spscov.R
+# Rscript code/fit_model/back2d_covs_scales_2min_spscov.R
         in  - data/y_dat8.rds
         in  - data/X.rds
         in  - data/out/nsite_pk.rds
-        in  - data/src/key_park.rds
+        in  - data/key_park.rds
 
         out - data/model_res/jags_res_{sps}_{park}_run{run_number}.rds
-TODO: for now, im putting zeros in the occasions that have no environmental data (mean)
 
-# multiple_single_sps_spscovs.R
+# Rscript code/fit_model/run_step1_step2.R
 
 # sbatch: nps_source.sb
 
