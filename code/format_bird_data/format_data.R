@@ -1,16 +1,6 @@
-
-# input:    - data/src/original/NETN_2020/NETNtib.rds
-#           - data/src/guilds.rds
-
-# output:   - visits (data/out/visits.rds): 
-##          - y1: table of ones and zeros for sps detections
-#           - nsite_pk: number of sites sampled in each park
-#           - yr_pk: number of years sampled in each park
-#           - ninterval: number of intervals of removal sampling
-#           - site_vec:  
-#           - site_pk:
-#           - data/nsite_pk.csv
-#          
+# format_bird_data/format_data
+#                filtering visit and field data for only auditory, 50m distance band, and without missing info ('permanetly missing') in any columns we use, e.g. interval number
+#                in - data/out/NETNtib.rds
 
 # Load libraries -------------------------------------------------------------------------------------
 library(stringr)
