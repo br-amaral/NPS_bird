@@ -21,7 +21,7 @@ library(glue)
 # Set working directory -------------------------------------------------------------------------------------
 # setwd("~/Documents/GitHub/NPS_birds/")
 # Data paths -------------------------------------------------------------------------------------
-NPS_DATA_PATH <- file.path("data/src/original/NETN_2020/NETNtib.rds")
+NPS_DATA_PATH <- file.path("data/out/NETNtib.rds")
 GUILD_DATA_PATH <- file.path("data/src/guilds.rds")
 FIBIRD_DATA_PATH <- file.path("data/for_int_list.csv")
 
