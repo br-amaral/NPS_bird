@@ -27,7 +27,7 @@
 #           - data/out/neighbor_hardcon_{radi_dist}m.rds  : who is whose neighbor with forest type
 #
 # detach packages and clear workspace
-#  freshr::freshr()
+  freshr::freshr()
 #
 #! Load packages ---------------------------------------
 #library(conflicted)
@@ -61,8 +61,8 @@ Modes <- function(x) {
 }
 #! Define settings -------------------------------------
 # radius distance in meters
-# radi_dist2 <- 350
-# hard_con_mix2 <- FALSE 
+radi_dist2 <- 400
+hard_con_mix2 <- FALSE 
 
 if(exists("radi_dist") == FALSE) {radi_dist <- radi_dist2}
 if(exists("hard_con_mix") == FALSE) {hard_con_mix <- hard_con_mix2}
@@ -72,39 +72,24 @@ print(glue("\n\n\n\n\n\n are we using conifer and hardwood to decide neighbors? 
 
 #! Import data -----------------------------------------
 ## file paths
-BIRD_SITE_PATH    <- "data/out/NETNtib.rds"
-BIRD_FOR_PATH     <- "data/out/key_bsite.rds"
-FOR_FOR_PATH      <- "data/out/key_fsite.rds"
+BIRD_SITE_PATH <- "data/out/NETNtib.rds"
+BIRD_FOR_PATH  <- "data/out/key_bsite.rds"
+FOR_FOR_PATH   <- "data/out/key_fsite.rds"
 
-PARK_SITE_PATH    <- "data/src/key_park.rds"
-FOR_PLOT_COVS     <- "data/out/for_plot_covs.rds"
-VEG_TYP_PATH      <- "data/out/updated_for_cats.csv"   
-
-VAMA_PARK_PATH    <- "data/VAMA_sites.rds"
-HOFR_PARK_PATH    <- "data/HOFR_sites.rds"
-ELRO_PARK_PATH    <- "data/ELRO_sites.rds"
+PARK_SITE_PATH <- "data/src/key_park.rds"
+FOR_PLOT_COVS  <- "data/out/for_plot_covs.rds"
+VEG_TYP_PATH   <- "data/out/updated_for_cats.csv"   
+UTM_BIRD_SIT   <- "data/out/park_site_UTM.rds"
 
 ## read files
-parks         <- read_rds(file = PARK_SITE_PATH) 
-veg_type      <- read_csv(file = VEG_TYP_PATH)
-bird_sit      <- read_rds(file = BIRD_SITE_PATH)
+bird_sit       <- read_rds(file = BIRD_SITE_PATH)
+parks          <- read_rds(file = PARK_SITE_PATH) 
+veg_type       <- read_csv(file = VEG_TYP_PATH)
+for_plt        <- read_rds(file = FOR_PLOT_COVS)
 
-bird_cat      <- read_rds(file = BIRD_FOR_PATH)
-for_cats      <- read_rds(file = FOR_FOR_PATH)
-for_plt       <- read_rds(file = FOR_PLOT_COVS)
-
-## get site names for ROVA parks 
-VAMA_sites <- read_rds(file = VAMA_PARK_PATH) %>% 
-                select(park, for_sit)
-
-HOFR_sites <- read_rds(file = HOFR_PARK_PATH) %>% 
-                select(park, for_sit)
-
-ELRO_sites <- read_rds(file = ELRO_PARK_PATH) %>% 
-                select(park, for_sit)
-
-ROVA_sites <- rbind(VAMA_sites, HOFR_sites, ELRO_sites)  %>% 
-                rename(ParkUnit = park, Plot_Name = for_sit)
+bird_cat       <- read_rds(file = BIRD_FOR_PATH)
+for_cat        <- read_rds(file = FOR_FOR_PATH)
+bird_coord_utm <- read_rds(file = UTM_BIRD_SIT)
 
 #! get coordinates from the bird sites ------------------------------
 parks <- parks %>% 
@@ -115,15 +100,26 @@ parks <- parks %>%
 
 parks <- sort(parks) 
 
+# get UTM coordinates for all points
 for(ii in 1:length(bird_sit$points)){
   coord_loop <- 
     bird_sit$points[ii][[1]] %>% 
-      select(Admin_Unit_Code,
-            NETN_Point_Name,
-            Point_Name,
-            Latitude,
-            Longitude,
-            UTM_ZONE)
+      select(Point_Name, Longitude, Latitude, Survey_Type) %>% 
+      mutate(Point_Name2 = glue("{substr(Point_Name, 1, 4)}{substr(Point_Name, 6, 7)}{substr(Point_Name, 10, 11)}")) %>% 
+      left_join(., 
+                bird_coord_utm %>% 
+                    rename(Point_Name2 = Point_Name, Longitude2 =  Longitude, Latitude2 = Latitude), 
+                by = "Point_Name2") %>% 
+      select(-Latitude2, -Longitude2)  %>% 
+      filter(Survey_Type == "Forest")
+
+#! TODO: check with aaron the difference in lat for MIMA1403
+  # if(unique(coord_loop$Latitude2 == coord_loop$Latitude) == TRUE & unique(coord_loop$Longitude2 == coord_loop$Longitude) == TRUE) {
+  #   print(ii)
+  # } else {stop("problem at ii")}
+
+  # coord_loop %>% filter(Point_Name == "MIMA1403") %>% pull(Longitude)
+
   if(ii == 1) {
     park_site <- coord_loop
   } else {
@@ -159,9 +155,9 @@ colnmaes(for_plt_coord); colnmaes(bird_sit_coord)
 #? write_rds for_plt_coord
 # write_rds(for_plt_coord, file = "data/out/for_plt_coord.rds")
 
-par(mfrow = c(1,2))
-plot(for_plt_coord$lonutm, for_plt_coord$latutm, col = "darkgreen")
-plot(bird_sit_coord$lon, bird_sit_coord$lat, col = "violet")
+# par(mfrow = c(1,2))
+# plot(for_plt_coord$lonutm, for_plt_coord$latutm, col = "darkgreen")
+# plot(bird_sit_coord$lon, bird_sit_coord$lat, col = "violet")
 
 #? convert all bird coordinates to UTM to get distances in meters --------------------
 xy <- data.frame(ID = 1:nrow(bird_sit_coord), 
@@ -220,35 +216,62 @@ bird_sit_coord15 <- bird_sit_coord %>%
     mutate(park = substr(bird_sit, 1 , 4)) %>%
     filter(park != "ACAD",
            park != "ELRO",
-           park != "SAIR") %>% 
-    select(-park)
+           park != "SAIR")
 
 # link forest types with sites
 ## first clkassify all forest types, so we can classify them in forest and not forest
-bird_sit_coord2 <- left_join(bird_sit_coord15, 
+bird_sit_coord2 <- left_join(bird_sit_coord15 %>% select(-park), 
                               bird_cat %>% 
-                                rename(bird_sit = Point_Name,
-                                        b_for = MapUnit_ID) %>% 
+                                mutate(bird_sit = glue("{substr(Point_Name, 1, 4)}_{substr(Point_Name, 5, 6)}_0{substr(Point_Name, 7, 8)}")) %>% 
+                                rename(b_for = MapUnit_ID) %>% 
                                 select(bird_sit, b_for),
                               by = "bird_sit") %>% 
                     filter(!is.na(b_for))
 
 # change Rova names to actual parks
-ROVA_sites <- ROVA_sites  %>% rename(park = ParkUnit, ID = Plot_Name)
+ROVA_sites <- for_plt_coord %>% 
+                  mutate(park = substr(for_plt, 1, 4)) %>% 
+                  filter(park == "ROVA")
 
-for(ii in 1:nrow(for_cats)){
-    for(jj in 1:nrow(ROVA_sites)){
-      if(for_cats$ID[ii] == ROVA_sites$ID[jj]) {
-         for_cats$park[ii] <- ROVA_sites$park[jj]
-      }
-    }
-}
+plot(ROVA_sites$lonutm, ROVA_sites$latutm)
 
-for_plt_coord2 <- left_join(for_plt_coord, 
-                            for_cats %>% 
+VAMA_sites <- ROVA_sites %>% 
+                  filter(latutm > 4626000,
+                         lonutm < 589000) %>% 
+                  mutate(park = "VAMA")
+
+points(VAMA_sites$lonutm, VAMA_sites$latutm,  col = "lightgreen")
+points(bird_sit_coord15$lonutm, bird_sit_coord15$latutm, col = "purple")
+
+HOFR_sites <- ROVA_sites %>% 
+                  filter(latutm < 4626000,
+                         lonutm < 589000) %>% 
+                  mutate(park = "HOFR")
+
+points(HOFR_sites$lonutm, HOFR_sites$latutm,  col = "black", pch = "*")
+points(bird_sit_coord15$lonutm, bird_sit_coord15$latutm, col = "violet")
+
+ELRO_sites <- ROVA_sites %>% 
+                  filter(latutm < 4626000,
+                         lonutm > 591000) %>% 
+                  mutate(park = "ELRO")
+
+points(ELRO_sites$lonutm, ELRO_sites$latutm, col = "blue", pch = 23)
+
+for_plt_coord15 <- for_plt_coord %>% 
+                  mutate(park = substr(for_plt, 1, 4)) %>% 
+                  filter(park != "ROVA") %>% 
+                  rbind(., VAMA_sites, HOFR_sites)
+
+nrow(for_plt_coord15) == nrow(for_plt_coord)  ## the missing sites are all the forest plots that have no bird plots between 'parks'
+
+points(for_plt_coord15$lonutm, for_plt_coord15$latutm, col = "red", pch = "*")
+
+for_plt_coord2 <- left_join(for_plt_coord15, 
+                            for_cat %>% 
                               rename(for_plt = ID,
                                      f_for = MapUnit_ID) %>% 
-                              select(for_plt, f_for, geometry, park),
+                              select(for_plt, f_for, geometry),
                             by = "for_plt") %>% 
                     filter(!is.na(f_for)) %>% 
                     filter(park != "ROVA")%>% 
@@ -320,7 +343,7 @@ for(ii in 1:length(parks_sub)){
  # Add text labels for bird sites
   text(x = bir_test2$lonutm, 
        y = bir_test2$latutm, 
-       labels = substr(bir_test2$bird_sit, 5, nchar(bir_test2$bird_sit)), 
+       labels = substr(bir_test2$bird_sit, 6, nchar(bir_test2$bird_sit)), 
        #pos = 3, # position above points
        cex = 0.8, 
        col = "black")
@@ -390,7 +413,7 @@ for (ii in 1:nrow(bird_sit_coord2)) {
     close_points <- dist_small %>%
                       group_by(bird_sit) %>%
                       arrange(dist) %>% 
-                      slice(1:5) %>% # TODO: 
+                      slice(1:5) %>% 
                       ungroup()
 
     table(close_points$bird_sit)

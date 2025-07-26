@@ -54,7 +54,7 @@ Modes <- function(x) {
 path <- glue("{getwd()}/data/veg_kateaaron") #"C:/NETN/collaborators/Bruna/"
 
 ## read files
-importCSV(path, zip_name = "NETN_Forest_20231106.zip")
+importCSV(path, zip_name = "ForestNETN2024.zip")
 
 tree_cat <- read_csv("data/tree_sps_harcon.csv")
 

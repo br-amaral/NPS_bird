@@ -54,7 +54,7 @@ source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_bird_data/form
 
 yog <- y1 # reset safety ;)
 #? Define settings -------------------------------------
-radi_dist <- 350
+radi_dist <- 400
 
 #? Import data -----------------------------------------
 ## file paths
