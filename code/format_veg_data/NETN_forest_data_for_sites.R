@@ -105,8 +105,10 @@ tree_den_sizeclass <- joinTreeData(status = "live") %>%
 
 tree_den_sizeclass  %>%  filter(size_class == "other")
 
-tree_sizeclass <- pivot_wider(tree_den_sizeclass, names_from = size_class, values_from = c(treeden_ha, BA_m2ha))
-
+tree_sizeclass <- tree_den_sizeclass %>%
+  complete(Plot_Name, size_class = c("pole", "mature", "large"), 
+           fill = list(treeden_ha = 0, BA_m2ha = 0)) %>%
+  pivot_wider(names_from = size_class, values_from = c(treeden_ha, BA_m2ha))
 # Only olds: BA > 60? Kate's suggestion
 
 #? Percent conifer and hardwood
