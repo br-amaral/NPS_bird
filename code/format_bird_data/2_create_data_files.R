@@ -5,28 +5,21 @@
 #?   can be run for 1, all or groups f species, in one or all parks
 #
 #! Source ---------------------------------------------
-#           - code/format_bird_data/2_format_data.R:
+#?          - code/format_bird_data/2_format_data.R:
 #
 #! Input ----------------------------------------------
-#?           from here: 
-#?           - data/out/coun_covs.rds - covariate data from county level
-#?           - data/out/park_covs.rds - covariate data from park level
-#?           - data/out/site_covs.rds - covariate data from site level
-#?           - data/park_raster/{pk[i]}_pb.rds : raster of each park to get park size 
-#?           - data/out/site_div.rds : diversity of forest for park and sites
+#            from here: 
+#?           - data/out/coun_covs.rds
+#?           - data/out/park_covs.rds
+#?           - data/out/site_covs_fornofor_{radi_dist}m.rds or data/out/site_covs_hardcon_{radi_dist}m.rds
+#?           - data/park_raster/{park_size[i,1]}_pb.rds: shape files of park area to calculate area
 #
-#?           from code/format_bird_data/format_data.R:
-#?             -- y1: table of ones and zeros for sps detections
-#?             -- visits (data/out/visits.rds): data from the visit files
-#?             -- yr_pk: number of years sampled in each park
+#            from code/format_bird_data/format_data.R:
+#?             -- data/out/NETNtib.rds
 #
 #! Output ---------------------------------------------
-#?           - data/src/sites_park_tib.rds: tibble with park, number of sites and site numbers and codes
-#?           - data/out/site_n_key.rds: park and site unique key
-#?           - data/out/y_dat3.rds: first tibble with ALL occasions for sps, park, site, year and interval
 #?           - data/y_dat8.rds: birds data for each occasion, with park, species and site indexes
-#?           - data/X10.rds: environmental variables for all scales for each occasion, same dim() as y_dat6.rds
-#?           - data/sps_pk_nth.rds: species code in each park
+#?           - data/X.rds: forest variables for all scales for each occasion, same dim() as y_dat6.rds
 
 ## detach packages and clear workspace
 freshr::freshr()
