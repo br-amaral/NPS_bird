@@ -460,7 +460,7 @@ for(ii in 1:lenght(parks)){
                  aes(x = lonutm, y = latutm), colour = "grey") +
       geom_text(data = bird_sit_coord2_p, 
                 aes(x = lonutm, y = latutm, 
-                label = substr(bird_sit, 5, nchar(bird_sit))), vjust = -1.3, size = 4) +
+                label = substr(bird_sit, 6, nchar(bird_sit))), vjust = -1.3, size = 4) +
       geom_point(aes(x = lonutmb, 
                      y = latutmb,
                      colour = bird_sit),
