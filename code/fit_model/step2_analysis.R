@@ -154,7 +154,9 @@ mod_string <- paste(
   sep = "\n"
 )
 
-if(test == FALSE){writeLines(mod_string, mod_name)}
+#if(test == FALSE){
+  writeLines(mod_string, mod_name)
+  #}
 
 #! Run the step 2 model ------------------------------------------------------------------------
 (covs_names <- paste(pars_mod$X, collapse = "_"))
