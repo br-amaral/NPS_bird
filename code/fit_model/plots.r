@@ -3,9 +3,10 @@
 # *********************************************************************************
 # Code to make plots
 #
-hg <- httpgd::hgd()
 # detach packages and clear workspace
 freshr::freshr()
+hg <- httpgd::hgd()
+httpgd::hgd_browse()
 #
 # Load packages -------------------------------------------------------------------
 library(conflicted)
@@ -26,7 +27,7 @@ lenght <- length
 #! Import data --------------------------------------------------------------------
 ## file paths and read files
 # when loading the model results, get the most updated file?
-file_name <- "2025_02_28_WOTH_parks_30000its_2min_spscov_run1"
+file_name <- "BTBW_step1_output_2025_07_27run1"
 
 samples_jags <- read_rds(glue("data/model_res/{file_name}.rds"))
 
@@ -63,13 +64,18 @@ n_betas1 <- sub("\\[.*", "", betas)
 n_betas <- length(n_betas1[n_betas1 == "beta"]) - 1
 betas_name <- paste0(n_betas1[n_betas1 == "beta"][-1], seq(1:n_betas))
 
+ quant_group <- c(0.3, 0.7)
+# quant_group <- c(0.25, 0.75)
+
 beta_key <- tibble(
   betas = betas_name, 
   overlap0 = as.character(NA), 
   sca_sel = as.character(NA),
   sca1 = as.numeric(NA),
   sca2 = as.numeric(NA),
-  sca3 = as.numeric(NA)
+  sca3 = as.numeric(NA),
+  qt_lo = quant_group[1],
+  qt_up = quant_group[2]
 )
 
 for(ii in 1:n_betas) {
@@ -77,7 +83,9 @@ for(ii in 1:n_betas) {
   beta_loop1 <- MCMCchains(samples_jags, params = glue("beta"))
   beta_loop2 <- beta_loop1[,ii]
     
-  quantiles <- quantile(beta_loop2, c(0.25, 0.75))
+  #quantiles <- quantile(beta_loop2, )
+  quantiles <- quantile(beta_loop2, quant_group)
+
   lower_quantile <- quantiles[1]
   upper_quantile <- quantiles[2]
   
@@ -104,5 +112,6 @@ for(ii in 1:n_betas) {
 
 beta_key
 
+quant_name <- glue("{substr(quant_group[1], 3, 4)}_{substr(quant_group[2], 3, 4)}")
 # save beta and scale selection values
-write_rds(beta_key, file = glue("data/model_res/{file_name}_SCA_SEL_PARS.rds"))
+write_rds(beta_key, file = glue("data/model_res/{file_name}_{quant_name}_SCA_SEL_PARS.rds"))

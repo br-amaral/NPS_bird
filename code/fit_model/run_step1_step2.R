@@ -67,12 +67,13 @@ nchains <- 8
 nthin <- 5
 if(test == TRUE){nadapt_min <- 1} else {nadapt_min <- 500}
 
-b_sps <- c("BHVI", "BRCR", "BTBW", "HETH", "OVEN", 
-                                "VEER", "REVI", "WBNU", "SCTA", "WOTH",
-                                "DOWO", "HAWO", "BLBW", "YBSA", "BCCH", "BAWW", "BTNW")
+# b_sps <- c("BHVI", "BRCR", "BTBW", "HETH", "OVEN", 
+#                                 "VEER", "REVI", "WBNU", "SCTA", "WOTH",
+#                                 "DOWO", "HAWO", "BLBW", "YBSA", "BCCH", "BAWW", "BTNW")
 
-master_tab <- as_tibble(cbind(b_sps, rep(1, length(b_sps))))
-colnames(master_tab) <- c("AOU_Code","step")
+# master_tab <- as_tibble(cbind(b_sps, rep(1, length(b_sps))))
+# colnames(master_tab) <- c("AOU_Code","step")
+master_tab <- read_csv("data/mod_key.csv")
 
 for (key_ite in 1:nrow(master_tab)){
     # key_ite <- 1
@@ -85,9 +86,10 @@ for (key_ite in 1:nrow(master_tab)){
 
     if(tib_loop$step == 2){
         # get scales for step 2
-        scales_loop <- as.numeric(unlist(strsplit(tib_loop$scales2, split = "")))
-        date_step1 <- tib_loop$date_step1
-
+        sca_file <- read_rds(glue("data/model_res/{tib_loop$select}.rds"))
+        scales_loop <- as.numeric(sca_file %>% filter(overlap0 == "no") %>% pull(sca_sel))
+        date_step1 <- substr(tib_loop$result, 19, 28)
+        cov_key2 <- sca_file %>% filter(overlap0 == "no") %>% pull(betas)
         source("code/fit_model/step2_analysis.R")
 
     } else {

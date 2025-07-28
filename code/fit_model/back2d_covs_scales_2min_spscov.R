@@ -546,7 +546,7 @@ if(n_bs > 1) {
               as.character()}
 
 # Define the model file and the output file name
-model_file <- model_file <- "models/mod_all_covs.txt"  #mod_name_loop
+model_file <- "models/mod_all_covs.txt"  #mod_name_loop
 mod_name <- glue("data/ana_file/{sps_loop}_step{step_numb}_model_{date_step1}.txt") %>% as.character()
 
 # Read the content of the model file

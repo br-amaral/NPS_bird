@@ -30,7 +30,7 @@
                 "icon": "location",
                 "color": "terminal.ansiBrightGreen",
                 "commands": [
-                    "cd /Volumes/zipkinlab/bamaral/dataNPS_bird_copy"
+                    "cd /Volumes/zipkinlab/bamaral/NPS_bird_copy"
                 ]
             },
             {
@@ -49,7 +49,7 @@
                 "icon": "run",
                 "color": "terminal.ansiBrightCyan",
                 "commands": [
-                    "cd /Volumes/zipkinlab/bamaral/dataNPS_bird_copy",
+                    "cd /Volumes/zipkinlab/bamaral/NPS_bird_copy",
                     "R"
                 ]
             }
