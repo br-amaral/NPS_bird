@@ -73,7 +73,7 @@ if(test == TRUE){nadapt_min <- 1} else {nadapt_min <- 500}
 
 # master_tab <- as_tibble(cbind(b_sps, rep(1, length(b_sps))))
 # colnames(master_tab) <- c("AOU_Code","step")
-master_tab <- read_csv("data/mod_key.csv")
+master_tab <- read_csv("data/mod_key2.csv")
 
 for (key_ite in 1:nrow(master_tab)){
     # key_ite <- 1
