@@ -67,13 +67,9 @@ nchains <- 8
 nthin <- 5
 if(test == TRUE){nadapt_min <- 1} else {nadapt_min <- 500}
 
-# b_sps <- c("BHVI", "BRCR", "BTBW", "HETH", "OVEN", 
-#                                 "VEER", "REVI", "WBNU", "SCTA", "WOTH",
-#                                 "DOWO", "HAWO", "BLBW", "YBSA", "BCCH", "BAWW", "BTNW")
-
-# master_tab <- as_tibble(cbind(b_sps, rep(1, length(b_sps))))
-# colnames(master_tab) <- c("AOU_Code","step")
-master_tab <- read_csv("data/mod_key2.csv")
+master_tab <- read_csv("data/mod_key.csv") %>%
+        filter(run == "yes") %>% 
+        filter(step %in% c(1,2))
 
 for (key_ite in 1:nrow(master_tab)){
     # key_ite <- 1
