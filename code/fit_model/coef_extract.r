@@ -30,10 +30,10 @@
 #  renv::snapshot()
 
 # detach packages and clear workspace
-if(!require(freshr)){install.packages('freshr')}
 freshr::freshr()
 
 hg <- httpgd::hgd()
+httpgd::hgd_browse()
 
 #! Load packages ---------------------------------------
 library(tidyverse)
@@ -208,7 +208,7 @@ ggplot() +
         scale_color_identity() + 
         theme_bw() +
         theme(panel.grid = element_blank(),
-              axis.text.x = element_text(size = 10, angle = 90), 
+              axis.text.x = element_text(size = 10, angle = 90, hjust = 1, vjust = 0.5), 
               axis.text.y = element_text(size = 10),
               axis.title.x = element_text(size = 14), 
               axis.title.y = element_text(size = 14),
@@ -224,12 +224,11 @@ ggplot() +
         scale_x_discrete(labels = toupper(str_extract(levels(dat1$cov_sps), "[A-Z]{4}$"))) +        #facet_wrap(~sca, nrow = 3)
         facet_nested(sca ~ Covariate, scales = "free_x", space = "free_x",
                      labeller = labeller(Covariate = c("Tree Basal Area" = "Tree Basal \nArea", 
-                                                       "Early Successional Tree Density" = "Early Success. \nTree Density",
+                                                       "Tree Basal Area Squared" = "Tree Basal \nArea Squared",
                                                        "Late Successional Tree Density" = "Late Success. \nTree Density"
                      )))
 
-ggsave("manus_figs/fig1new.svg", plot = last_plot(), device = "svg", width = 12, height = 8)
-
+#ggsave("manus_figs/fig1new.svg", plot = last_plot(), device = "svg", width = 12, height = 8)
 
 #### with zeros ----------------------------------------------------------
 cov_name2 <- cov_name 
@@ -289,7 +288,7 @@ ggplot() +
         scale_color_identity() + 
         theme_bw() +
         theme(panel.grid = element_blank(),
-              axis.text.x = element_text(size = 10, angle = 90), 
+              axis.text.x = element_text(size = 10, angle = 90, hjust = 1, vjust = 0.5), 
               axis.text.y = element_text(size = 10),
               axis.title.x = element_text(size = 14), 
               axis.title.y = element_text(size = 14),
@@ -299,23 +298,16 @@ ggplot() +
               panel.border = element_rect(color = "black", linewidth = 0.6), #  borders thickness
               strip.background=element_rect(color="black", fill="white", linewidth = 0.8)) +
         geom_hline(yintercept = 0,  color = "gray", linetype = "dashed") +
- #       scale_color_viridis_d(name = "Species", option = "C") +
- #       scale_x_discrete(labels = c("Tree Basal \nArea",
- #                                   "Early Success. \nTree Density",
- #                                   "Late Success. \nTree Density",
- #                                   "Tree Density",
- #                                   "Tree Diversity",
- #                                   "Shrub Density")) + # Wraps text by replacing spaces with line breaks
         scale_y_continuous(breaks = seq(-2, 3, by = 1), limits = c(-2.15, 3.17)) + # Sets y-axis breaks from -5 to 5 with step of 1
         labs(x = NULL,  # Removes the x-axis title
              y = "Covariate effect size \n") + # Adds a title to the y-axis
         scale_x_discrete(labels = toupper(str_extract(levels(dat_sps$cov_sps), "[A-Z]{4}$"))) +        #facet_wrap(~sca, nrow = 3)
         facet_nested(sca ~ Covariate, scales = "free_x", space = "free_x",
                      labeller = labeller(Covariate = c("Tree Basal Area" = "Tree Basal \nArea", 
-                                                       "Early Successional Tree Density" = "Early Success. \nTree Density",
+                                                       "Tree Basal Area Squared" = "Tree Basal \nArea Squared",
                                                        "Late Successional Tree Density" = "Late Success. \nTree Density"
                      )))
 
-ggsave("manus_figs/fig3new.svg", plot = last_plot(), device = "svg", width = 12, height = 8)
+#ggsave("manus_figs/fig3new.svg", plot = last_plot(), device = "svg", width = 12, height = 8)
 
 
