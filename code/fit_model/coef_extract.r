@@ -230,7 +230,7 @@ ggplot() +
 
 #ggsave("manus_figs/fig1new.svg", plot = last_plot(), device = "svg", width = 12, height = 8)
 
-#### with zeros ----------------------------------------------------------
+#### Figure 3 with zeros ----------------------------------------------------------
 cov_name2 <- cov_name 
 colnames(cov_name2) <- c("coef", "Covariate")
 
@@ -308,6 +308,15 @@ ggplot() +
                                                        "Late Successional Tree Density" = "Late Success. \nTree Density"
                      )))
 
-#ggsave("manus_figs/fig3new.svg", plot = last_plot(), device = "svg", width = 12, height = 8)
+ggsave("manus_figs/fig3.svg", plot = last_plot(), device = "svg", width = 12, height = 8)
 
+## Figure 3 scal selection -----------------------------------------
+dat_sca <- dat  %>% 
+                  select(Covariate, sps, sca1, sca2, sca3, overlap0) %>% 
+                  pivot_longer(cols = starts_with("sca"),
+                               names_to = "scale", 
+                               values_to = "selec_freq",
+                               names_prefix = "sca") 
 
+ggplot(dat_sca, aes(X, Y, fill= Z)) + 
+  geom_tile()
