@@ -43,6 +43,7 @@ library(MCMCvis)
 library(viridis)
 library(svglite)
 library(ggh4x)
+library(ggforce)
 
 conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::filter)
@@ -67,7 +68,7 @@ coef_path_file <- read_csv(COEF_TABLE_PATH) %>%
 
 for(ii in 1:nrow(coef_path_file)) {
 
-    loop_sps <- substr(coef_path_file$result[ii], 1, 4)
+    (loop_sps <- substr(coef_path_file$result[ii], 1, 4))
 
     loop_run <- substr(coef_path_file$result[ii], nchar(coef_path_file$result[ii]) - 7, nchar(coef_path_file$result[ii]) - 4)
 
@@ -122,11 +123,6 @@ for(ii in 1:nrow(coef_path_file)) {
 table(coef_summary3$mod_res)
 
 coef_summary3 <- as_tibble(coef_summary3)
-
-# Extract specific columns
-# median_estimates <- coef_summary$`50%`
-# lower_ci <- coef_summary$`2.5%`
-# upper_ci <- coef_summary$`97.5%`
 
 dat <- coef_summary3 %>% 
             filter(overlap0 == "no") %>% 
@@ -316,7 +312,44 @@ dat_sca <- dat  %>%
                   pivot_longer(cols = starts_with("sca"),
                                names_to = "scale", 
                                values_to = "selec_freq",
-                               names_prefix = "sca") 
+                               names_prefix = "sca")  %>% 
+                  group_by(Covariate, sps) %>% 
+                  mutate(scale_selected = ifelse(row_number() == which.max(selec_freq), 1, 0)) %>% 
+                  ungroup()
 
-ggplot(dat_sca, aes(X, Y, fill= Z)) + 
-  geom_tile()
+ggplot() +
+  geom_point(data = dat_sca %>% filter(scale == 3), 
+             aes(x = Covariate, y = sps, fill = selec_freq, alpha = 0.1,
+                 color = ifelse(scale_selected == 1, "black","#8d8888")), 
+             size = 23, shape = 21, stroke = 0.9) +
+  geom_point(data = dat_sca %>% filter(scale == 2), 
+             aes(x = Covariate, y = sps, fill = selec_freq, alpha = 0.1,
+                 color = ifelse(scale_selected == 1, "black","#8d8888")), 
+             size = 16, shape = 21, stroke = 0.9) +
+  geom_point(data = dat_sca %>% filter(scale == 1), 
+             aes(x = Covariate, y = sps, fill = selec_freq, alpha = 0.1,
+                 color = ifelse(scale_selected == 1, "black","#8d8888")), 
+             size = 8, shape = 21, stroke = 0.9) +
+  scale_color_identity() +  # This tells ggplot to use the color names as actual colors for stroke color
+  scale_fill_viridis_c(option = "plasma", direction = -1, na.value = "#fff8c5",
+                       limits = c(-0.001,1),
+                       breaks = c(0, 0.25, 0.5, 0.75, 1), 
+                       labels = scales::percent(c(0, 0.25, 0.5, 0.75, 1))) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(hjust = 0.5),
+        axis.text.y = element_text(hjust = 0),    
+        legend.title = element_text(size = 12, face = "bold", hjust = 0.5),  
+        legend.text = element_text(size = 10)) +
+  scale_y_discrete(limits = rev(levels(factor(dat_sca$sps)))) +  # Reverse y-axis order
+  scale_x_discrete(labels = function(x) {
+  cov_codes <- unique(dat_sca$Covariate)
+    # Manually add line breaks
+    case_when(
+      cov_codes == "Tree Basal Area" ~ "Tree Basal \nArea",
+      cov_codes == "Tree Basal Area Squared" ~ "Tree Basal \nArea Squared", 
+      cov_codes == "Late Successional Tree Density" ~ "Late Success. \nTree Density",
+      TRUE ~ cov_codes  # Keep others as is
+    )}) +
+  labs(x = "\nForest Covariate", y = "Species\n", fill = "Scale Selection\nFrequency\n") +
+  guides(fill = guide_colorbar(override.aes = list(alpha = 0.2, size = 5)))   # Control legend appearance
+
