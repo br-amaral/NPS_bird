@@ -14,6 +14,7 @@ library(tidyverse)
 library(glue)
 library(MCMCvis)
 library(rjags)
+library(BayesPostEst)
 #
 conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::filter)
@@ -27,7 +28,7 @@ lenght <- length
 #! Import data --------------------------------------------------------------------
 ## file paths and read files
 # when loading the model results, get the most updated file?
-file_name <- "BCCH_step1_output_2025_08_03run1"
+file_name <- "BTNW_step1_output_2025_08_03run1"
 
 samples_jags <- read_rds(glue("data/model_res/{file_name}.rds"))
 
@@ -116,54 +117,3 @@ quant_name <- glue("{substr(quant_group[1], 3, 4)}_{substr(quant_group[2], 3, 4)
 # save beta and scale selection values
 write_rds(beta_key, file = glue("data/model_res/{file_name}_{quant_name}_SCA_SEL_PARS.rds"))
 
-# quant_group <- c(0.3, 0.7)
-quant_group <- c(0.25, 0.75)
-
-beta_key <- tibble(
-  betas = betas_name, 
-  overlap0 = as.character(NA), 
-  sca_sel = as.character(NA),
-  sca1 = as.numeric(NA),
-  sca2 = as.numeric(NA),
-  sca3 = as.numeric(NA),
-  qt_lo = quant_group[1],
-  qt_up = quant_group[2]
-)
-
-for(ii in 1:n_betas) {
-# betas
-  beta_loop1 <- MCMCchains(samples_jags, params = glue("beta"))
-  beta_loop2 <- beta_loop1[,ii]
-    
-  #quantiles <- quantile(beta_loop2, )
-  quantiles <- quantile(beta_loop2, quant_group)
-
-  lower_quantile <- quantiles[1]
-  upper_quantile <- quantiles[2]
-  
-  # Check if quantiles overlap zero
-  if (lower_quantile <= 0 && upper_quantile >= 0) {
-    beta_key$overlap0[ii] <- "yes"
-  } else {
-    beta_key$overlap0[ii] <- "no"
-  }
-
-# scales
-  loop_sca <- glue("scales_beta{ii}")
-  sca_beta <- MCMCchains(samples_jags, params = loop_sca)
-
-  tb_mcmc_scales_i <- table(sca_beta)/sum(table(sca_beta))
-  selected_scales <- as.integer(names(which.max(tb_mcmc_scales_i)))
-
-  beta_key$sca_sel[ii] <- selected_scales
-  beta_key$sca1[ii] <- tb_mcmc_scales_i[1]
-  beta_key$sca2[ii] <- tb_mcmc_scales_i[2]
-  beta_key$sca3[ii] <- tb_mcmc_scales_i[3]
-
-}
-
-beta_key
-
-quant_name <- glue("{substr(quant_group[1], 3, 4)}_{substr(quant_group[2], 3, 4)}")
-# save beta and scale selection values
-write_rds(beta_key, file = glue("data/model_res/{file_name}_{quant_name}_SCA_SEL_PARS.rds"))
