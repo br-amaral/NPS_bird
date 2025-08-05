@@ -163,7 +163,8 @@ mod_string <- paste(
 (sca_names <- paste(pars_mod$scal, collapse = "_"))
 
 params <- c("beta0", "beta", "alpha0", "alpha", 
-            "mu.beta0", "tau.beta0", "mu.alpha0", "tau.alpha0") %>% # Z, psi
+            "mu.beta0", "tau.beta0", "mu.alpha0", "tau.alpha0",
+            "psi", "p", "mu.beta0", "mu.alpha0") %>% # Z, psi
           as.character()
 
 n_as <- 3

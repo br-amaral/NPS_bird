@@ -197,6 +197,10 @@ X <- X10 %>%
                date_jul_s =  standardize(date_jul),
                time_jul_s =  standardize(time_jul))
 
+#! TODO: save the parameters to unstandardize covarites for the prediction plots.
+
+
+
 # Summary table for unique Point_Names have NAs for site variables
 # the ones with no shrub are expected, since that data is sparse
 # the one with no data for the 5 covariates are the ones with no neighbors
