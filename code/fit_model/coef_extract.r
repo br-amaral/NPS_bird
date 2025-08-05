@@ -10,7 +10,7 @@
 #           - :
 #
 #! Output ----------------------------------------------
-#           - :
+#           - data/out/coefs_sps_sca.rds : table with all the beta coefficient estimates with their scales
 #           - :
 #
 # detach packages and clear workspace
@@ -517,6 +517,8 @@ ggsave("figures/sca_plot_select_sca_noleg.svg", plot = sca_plot_selec_sca, devic
 dat_sca3 <- dat_sca2 %>% 
                   filter(includes_zero == "black")  ## this remove the coeficient that overlaps with zero
 
+write_rds(dat_sca, "data/out/coefs_sps_sca.rds")
+
 (circles_coefs <- ggplot() +
 # plot empty points to keep all species and covariates present in the data
   geom_point(data = dat_sca, 
@@ -658,7 +660,7 @@ ggsave("figures/circles_coefs_noleg.svg", plot = circles_coefs_noleg, device = "
 ggsave("figures/empty_noleg.svg", plot = empty_noleg, device = "svg", width = 9, height = 14)
 
 ## plot with the empty circles
-(empty_cir_noleg <- ggplot() +
+(empty_cir_noleg <- ggplot() +  
   geom_point(data = dat_sca, 
              aes(x = Covariate, y = sps), fill = "white", color = "white", alpha = 0) + # plot empty points to keep all specis and covariates present in the data
   geom_point(data = dat_sca %>% filter(scale == 3), 
