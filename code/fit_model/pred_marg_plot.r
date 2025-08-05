@@ -1,5 +1,5 @@
 #? *********************************************************************************
-#? -------------------------------   Amazing Title   -------------------------------
+#? ------------------------------   pred_marg_plot.r   -----------------------------
 #? *********************************************************************************
 #
 #! Code to ...
@@ -9,30 +9,15 @@
 #           - :
 #
 #! Input ----------------------------------------------
-#           - :
-#           - :
+#           - data/out/coefs_sps_sca.rds : table with all the beta coefficient estimates with their scales
+#           - data/model_res/{sps}_step2_output_20{xx}_{xx}_{xx}run{x}.rds :
 #
 #! Output ----------------------------------------------
 #           - :
 #           - :
-
-# Print script file name
-context <- rstudioapi::getSourceEditorContext()
-cat("\n", "\n", "\n", 'Current script: ', basename(context[[2]]), "\n", "\n", "\n", "\n")
-
-#! Package library and versions -------------------------
-#  Created a library repo?
-#  (  )yes  (  )no
-#  renv::init()
-
-# Load an existing library?
-#  renv::restore()
-
-# Installed new packages?
-#  renv::snapshot()
-
+#
 # detach packages and clear workspace
-if(!require(freshr)){install.packages('freshr')}
+#  setwd("/Volumes/zipkinlab/bamaral/NPS_bird_copy/")
 freshr::freshr()
 
 #! Load packages ---------------------------------------
@@ -53,16 +38,31 @@ lenght <- length
 
 #! Import data -----------------------------------------
 ## file paths
-res_mod_file <- "BTNW_step2_output_2025_08_03run1"
+RES_MOD_FILE <- "BTNW_step2_output_2025_08_03run1"
+COEF_SPS_PATH <- "coefs_sps_sca"
 
 ## read files
-res_mod <- read_rds(glue("data/model_res/{res_mod_file}.rds"))
+res_mod <- read_rds(glue("data/model_res/{RES_MOD_FILE}.rds"))  # model file
+dat_sca <- read_rds(glue("data/out/{COEF_SPS_PATH}.rds"))       # which betas are important
 
-MCMCplot(res_mod,
-         main = res_mod_file,
-         params = "beta",
-         ref_ovl = TRUE)
+# get the data for the predictions
+sps_loop <- substr(RES_MOD_FILE, 1, 4)
+sps_dat_name <- glue("{sps_loop}_step1_jagsdata")
+                                                               
+DATA_SPS_PATH <- 
+      list.files(path = file.path(getwd(),"data/ana_file/"),
+                                          pattern = sps_dat_name,
+                                          full.names = FALSE)  %>% 
+                as_tibble() %>% 
+                slice(1) %>% 
+                pull()
+                
+sps_data <- read_rds(glue("data/ana_file/{DATA_SPS_PATH}"))
 
-names(res_mod)
+# beginig of the loop ;)
 
-res_mod$samples  %>% str()
+dat_sca_loop <- dat_sca %>% 
+                    filter(sps == sps_loop,
+                    scale_selected == 1) 
+
+unique(dat_sca_loop$mod_res)
