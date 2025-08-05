@@ -512,13 +512,15 @@ dat_sca2 <- dat_sca %>%
 
 ggsave("figures/sca_plot_select_sca_noleg.svg", plot = sca_plot_selec_sca, device = "svg", width = 9, height = 14)
 
+#? ploting not the coefficient effect sizes, not the scale values, and only the ones that did not overlap zero (?)
 
 dat_sca3 <- dat_sca2 %>% 
                   filter(includes_zero == "black")  ## this remove the coeficient that overlaps with zero
 
 (circles_coefs <- ggplot() +
+# plot empty points to keep all species and covariates present in the data
   geom_point(data = dat_sca, 
-             aes(x = Covariate, y = sps), fill = "white", color = "white", alpha = 0) + # plot empty points to keep all specis and covariates present in the data
+             aes(x = Covariate, y = sps), fill = "white", color = "white", alpha = 0) + 
   geom_point(data = dat_sca3 %>% filter(scale == 3), 
              aes(x = Covariate, y = sps, fill = median), 
              size = 26, shape = 21, stroke = 0.9, color = "#8d8888") +
@@ -562,26 +564,34 @@ dat_sca3 <- dat_sca2 %>%
       TRUE ~ cov_codes  # Keep others as is
     )}) +
   labs(x = "\nForest Covariate", y = "Species\n", fill = "Covariate\nEffect size\n")# +
-#   guides(fill = guide_colorbar(override.aes = list(alpha = 0.2, size = 5))) 
-
 )
 
 ggsave("figures/circles_coefs.svg", plot = circles_coefs, device = "svg", width = 11, height = 14)
 
-
-(circles_coefs2 <- ggplot() +
-  geom_point(data = dat_sca %>% filter(scale == 3), 
-             aes(x = Covariate, y = sps, fill = median, alpha = 0.1,
-                 color = ifelse(scale_selected == 1, "black","#8d8888")), 
-             size = 26, shape = 21, stroke = 0.9) +
-  geom_point(data = dat_sca %>% filter(scale == 2), 
-             aes(x = Covariate, y = sps, fill = median, alpha = 0.1,
-                 color = ifelse(scale_selected == 1, "black","#8d8888")), 
-             size = 19, shape = 21, stroke = 0.9) +
-  geom_point(data = dat_sca %>% filter(scale == 1), 
-             aes(x = Covariate, y = sps, fill = median, alpha = 0.1,
-                 color = ifelse(scale_selected == 1, "black","#8d8888")), 
-             size = 10, shape = 21, stroke = 0.9) +
+# remove legend
+(circles_coefs_noleg <- ggplot() +
+# plot empty points to keep all species and covariates present in the data
+  geom_point(data = dat_sca, 
+             aes(x = Covariate, y = sps), fill = "white", color = "white", alpha = 0) + 
+  geom_point(data = dat_sca3 %>% filter(scale == 3), 
+             aes(x = Covariate, y = sps, fill = median), 
+             size = 26, shape = 21, stroke = 0.9, color = "#8d8888") +
+  geom_point(data = dat_sca3 %>% filter(scale == 2), 
+             aes(x = Covariate, y = sps, fill = median), 
+             size = 19, shape = 21, stroke = 0.9, color = "#8d8888") +
+  geom_point(data = dat_sca3 %>% filter(scale == 1), 
+             aes(x = Covariate, y = sps, fill = median),
+             size = 10, shape = 21, stroke = 0.9, color = "#8d8888") +
+# Add text labels for median values
+#   geom_text(data = dat_sca3 %>% filter(scale == 3), 
+#            aes(x = Covariate, y = sps, label = glue("{round(median, 2)}")), #\nCI:{round(low, 1)} : {round(up, 1)}")), #
+#             size = 4, color = "black") +
+#   geom_text(data = dat_sca3 %>% filter(scale == 2), 
+#             aes(x = Covariate, y = sps, label = glue("{round(median, 2)}")), #\nCI:{round(low, 1)} : {round(up, 1)}")), 
+#             size = 4, color = "black") +
+#   geom_text(data = dat_sca3 %>% filter(scale == 1), 
+#             aes(x = Covariate, y = sps, label = glue("{round(median, 2)}")), #\nCI:{round(low, 1)} : {round(up, 1)}")), 
+#            size = 3.5, color = "black") +
   scale_color_identity() +  # This tells ggplot to use the color names as actual colors for stroke color
   scale_fill_gradient2(low = "#078a42",           # Negative values = blue
                        mid = "white",           # Zero = white  
@@ -589,7 +599,8 @@ ggsave("figures/circles_coefs.svg", plot = circles_coefs, device = "svg", width 
                        midpoint = 0,              # Center point at zero
                        name = "Covariate\nEffect size\n") +
   theme_minimal() +
-  theme(axis.text.x = element_text(hjust = 0.5, size = 12),
+  theme(legend.position = "none",
+        axis.text.x = element_text(hjust = 0.5, size = 12),
         axis.text.y = element_text(hjust = 0, size = 12),    
         axis.title.x = element_text(size = 14),
         axis.title.y = element_text(size = 14),
@@ -605,10 +616,79 @@ ggsave("figures/circles_coefs.svg", plot = circles_coefs, device = "svg", width 
       cov_codes == "Late Successional Tree Density" ~ "Late Success. \nTree Density",
       TRUE ~ cov_codes  # Keep others as is
     )}) +
-  labs(x = "\nForest Covariate", y = "Species\n", fill = "Scale Selection\nFrequency\n") +
-  guides(fill = guide_colorbar(override.aes = list(alpha = 0.2, size = 5)))   # Control legend appearance
+  labs(x = "\nForest Covariate", y = "Species\n", fill = "Covariate\nEffect size\n")# +
+#   guides(fill = guide_colorbar(override.aes = list(alpha = 0.2, size = 5))) 
+
 )
 
-ggsave("figures/circles_coefs3.svg", plot = circles_coefs2, device = "svg", width = 11, height = 14)
+ggsave("figures/circles_coefs_noleg.svg", plot = circles_coefs_noleg, device = "svg", width = 9, height = 14)
 
+## plot with nothing, just axis
+(empty_noleg <- ggplot() +
+# plot empty points to keep all species and covariates present in the data
+  geom_point(data = dat_sca, 
+             aes(x = Covariate, y = sps), fill = "white", color = "white", alpha = 0) + 
+  scale_color_identity() +  # This tells ggplot to use the color names as actual colors for stroke color
+  scale_fill_gradient2(low = "#078a42",           # Negative values = blue
+                       mid = "white",           # Zero = white  
+                       high = "#cc00df",        # Positive values = pink
+                       midpoint = 0,              # Center point at zero
+                       name = "Covariate\nEffect size\n") +
+  theme_minimal() +
+  theme(legend.position = "none",
+        axis.text.x = element_text(hjust = 0.5, size = 12),
+        axis.text.y = element_text(hjust = 0, size = 12),    
+        axis.title.x = element_text(size = 14),
+        axis.title.y = element_text(size = 14),
+        legend.title = element_text(size = 15, face = "bold", hjust = 0.5),  
+        legend.text = element_text(size = 13)) +
+  scale_y_discrete(limits = rev(levels(factor(dat_sca$sps)))) +  # Reverse y-axis order
+  scale_x_discrete(labels = function(x) {
+  cov_codes <- unique(dat_sca$Covariate)
+    # Manually add line breaks
+    case_when(
+      cov_codes == "Tree Basal Area" ~ "Tree Basal \nArea",
+      cov_codes == "Tree Basal Area Squared" ~ "Tree Basal \nArea Squared", 
+      cov_codes == "Late Successional Tree Density" ~ "Late Success. \nTree Density",
+      TRUE ~ cov_codes  # Keep others as is
+    )}) +
+  labs(x = "\nForest Covariate", y = "Species\n", fill = "Covariate\nEffect size\n")# +
+)
 
+ggsave("figures/empty_noleg.svg", plot = empty_noleg, device = "svg", width = 9, height = 14)
+
+## plot with the empty circles
+(empty_cir_noleg <- ggplot() +
+  geom_point(data = dat_sca, 
+             aes(x = Covariate, y = sps), fill = "white", color = "white", alpha = 0) + # plot empty points to keep all specis and covariates present in the data
+  geom_point(data = dat_sca %>% filter(scale == 3), 
+             aes(x = Covariate, y = sps), fill = "white", alpha = 0.6, color = "#8d8888", 
+             size = 26, shape = 21, stroke = 0.9) +
+  geom_point(data = dat_sca %>% filter(scale == 2), 
+             aes(x = Covariate, y = sps), fill = "white", alpha = 0.6, color = "#8d8888",  
+             size = 19, shape = 21, stroke = 0.9) +
+  geom_point(data = dat_sca %>% filter(scale == 1), 
+             aes(x = Covariate, y = sps), fill = "white", alpha = 0.6, color = "#8d8888", 
+             size = 10, shape = 21, stroke = 0.9) +
+  theme_minimal() +
+  theme(legend.position = "none",
+        axis.text.x = element_text(hjust = 0.5, size = 12),
+        axis.text.y = element_text(hjust = 0, size = 12),    
+        axis.title.x = element_text(size = 14),
+        axis.title.y = element_text(size = 14),
+        legend.title = element_text(size = 15, face = "bold", hjust = 0.5),  
+        legend.text = element_text(size = 13)) +
+  scale_y_discrete(limits = rev(levels(factor(dat_sca$sps)))) +  # Reverse y-axis order
+  scale_x_discrete(labels = function(x) {
+  cov_codes <- unique(dat_sca$Covariate)
+    # Manually add line breaks
+    case_when(
+      cov_codes == "Tree Basal Area" ~ "Tree Basal \nArea",
+      cov_codes == "Tree Basal Area Squared" ~ "Tree Basal \nArea Squared", 
+      cov_codes == "Late Successional Tree Density" ~ "Late Success. \nTree Density",
+      TRUE ~ cov_codes  # Keep others as is
+    )}) +
+  labs(x = "\nForest Covariate", y = "Species\n", fill = "Scale Selection\nFrequency\n") 
+)
+
+ggsave("figures/empty_cir_noleg.svg", plot = empty_cir_noleg, device = "svg", width = 9, height = 14)
