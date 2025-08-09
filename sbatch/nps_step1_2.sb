@@ -14,7 +14,7 @@
 #SBATCH --cpus-per-task=1
 
 # specify which development nodes you want the job run on. Doesn't seem to work?
-#SBATCH --constraint="[intel16|intel18]"
+# SBATCH --constraint="[intel16|intel18]"
 
 # email me
 # SBATCH --mail-type=FAIL,END

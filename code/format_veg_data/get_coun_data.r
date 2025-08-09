@@ -15,6 +15,7 @@
 # detach packages and clear workspace
 freshr::freshr()
 #
+options(tigris_use_cache = TRUE)
 #! Load packages ---------------------------------------
 library(conflicted)
 library(tidyverse)
@@ -123,6 +124,7 @@ for(ii in 1:nrow(park_county)){
                byPlot = TRUE, 
                treeType = 'live',
                bySpecies = TRUE,
+               # TODO: 10cm not 5 for park protocol - 3.93701 not 5
                treeDomain =  DIA <5.0) %>%    # exclude saplings
                group_by(pltID, YEAR, SCIENTIFIC_NAME) %>%
                # sum all trees of the same sps to get sps ba and den

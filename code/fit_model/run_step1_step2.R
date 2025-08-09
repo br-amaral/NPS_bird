@@ -22,14 +22,11 @@
 #           - :
 #           - :
 
-# detach packages and clear workspace
+#  setwd("/Volumes/zipkinlab/bamaral/NPS_bird_copy/")
 freshr::freshr()
 
-# Print script file name
-context <- "run_step1_step2.R" #rstudioapi::getSourceEditorContext()
-cat("\n", "\n", "\n", 
-    'Current script:', context, #basename(context[[2]]), 
-    "\n", "\n", "\n", "\n")
+hg <- httpgd::hgd()
+httpgd::hgd_browse()
 
 #! Package library and versions -------------------------
 #  Created a library repo?
@@ -85,12 +82,32 @@ for (key_ite in 1:nrow(master_tab)){
     cat(glue("\n \n Is it a test? {test} \n \n \n "))
 
     if(tib_loop$step == 2){
-        # get scales for step 2
-        sca_file <- read_rds(glue("data/model_res/{tib_loop$select}.rds"))
-        scales_loop <- as.numeric(sca_file %>% filter(overlap0 == "no") %>% pull(sca_sel))
-        date_step1 <- substr(tib_loop$result, 19, 28)
-        cov_key2 <- sca_file %>% filter(overlap0 == "no") %>% pull(betas)
-        source("code/fit_model/step2_analysis.R")
+
+        # run model to all vars at the same scale to compare them
+        if(tib_loop$all_sca == T) {
+           # get scales for step 2
+            sca_file <- read_rds(glue("data/model_res/{tib_loop$select}.rds"))
+            date_step1 <- substr(tib_loop$result, 19, 28)
+            cov_key2 <- sca_file %>% filter(overlap0 == "no") %>% pull(betas)
+
+            sca_all <- list(`1` = rep(1, lenght(cov_key2)),
+                            `2` = rep(2, lenght(cov_key2)),
+                            `3` = rep(3, lenght(cov_key2)))
+            for (jj in 1:3){
+            (scales_loop <- sca_all[[jj]])
+            source("code/fit_model/step2_analysis.R")
+            }
+
+        } else {
+
+            # get scales for step 2
+            sca_file <- read_rds(glue("data/model_res/{tib_loop$select}.rds"))
+            scales_loop <- as.numeric(sca_file %>% filter(overlap0 == "no") %>% pull(sca_sel))
+            date_step1 <- substr(tib_loop$result, 19, 28)
+            cov_key2 <- sca_file %>% filter(overlap0 == "no") %>% pull(betas)
+            source("code/fit_model/step2_analysis.R")
+
+        }
 
     } else {
         cat("Before sourcing - objects in environment:\n")

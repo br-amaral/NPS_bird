@@ -12,6 +12,7 @@
 #           - data/out/coefs_sps_sca.rds : table with all the beta coefficient estimates with their scales
 #           - data/model_res/{sps}_step2_output_20{xx}_{xx}_{xx}run{x}.rds :
 #
+# TODO: overlay species curves
 #! Output ----------------------------------------------
 #           - :
 #           - :
@@ -41,7 +42,7 @@ lenght <- length
 
 #! Import data -----------------------------------------
 ## file paths
-RES_MOD_FILE <- "BTNW_step2_output_2025_08_03run1"
+RES_MOD_FILE <- "REVI_step2_output_2025_07_30run2"
 COEF_SPS_PATH <- "data/out/coefs_sps_sca.rds"
 STEP2_INFO_PATH <- "data/mod_key2.csv"
 
@@ -121,7 +122,7 @@ for(ii in 1:nrow(dat_sca2)){  # Fixed: dat_sca2 not dat_sca_loop
   }
   
   if(beta_index == 6){ for(s in 1:n_samples) {
-      predictions[s, ] <- plogis(all_beta0_samples[s] + all_beta_samples[s] * X_range  +  res_mod$sims.list$beta[s, 5] * X_range)
+      predictions[s, ] <- plogis(all_beta0_samples[s] + all_beta_samples[s] * X_range  +  res_mod$sims.list$beta[s, 5] * (X_range)^2)
       }
   }
   

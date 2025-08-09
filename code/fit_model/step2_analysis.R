@@ -221,6 +221,11 @@ file_name2 <- paste0(file_name, 'run',
                                         pattern = file_name,
                                         full.names = FALSE)) + 1)
 
+if(tib_loop$all_sca == T) {
+
+  file_name2 <- glue("{file_name2}_allsca{scales_loop[1]}")
+}
+
 folder_path <- "data/model_res"
 
 if (!file.exists(folder_path)) {
