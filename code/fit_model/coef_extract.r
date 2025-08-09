@@ -43,7 +43,7 @@ lenght <- length
 
 #! Import data -----------------------------------------
 ## file paths
-COEF_TABLE_PATH <- "data/mod_key2.csv"
+COEF_TABLE_PATH <- "data/mod_key.csv"
 
 ## read files
 coef_path_file <- read_csv(COEF_TABLE_PATH) %>%
@@ -163,6 +163,8 @@ dat <- left_join(dat, cov_name, by = "Covariate") %>%
               low = `2.5%`,  
               median = `50%`, 
               up = `97.5%`)
+
+write_rds(dat, "data/out/coef_dat_ext.rds")
 
 dat1 <- dat %>% 
             mutate(sca_col = "darkolivegreen2") %>% 
@@ -381,14 +383,25 @@ dat_sca <- dat1  %>%
                   ungroup()
 # yes legend
 (sca_plot_wleg <- ggplot() +
+  # landscape
   geom_point(data = dat_sca %>% filter(scale == 3), 
              aes(x = Covariate, y = sps, fill = selec_freq, alpha = 0.1,
                  color = ifelse(scale_selected == 1, "black","#8d8888")), 
              size = 26, shape = 21, stroke = 0.9) +
+  # park
+  geom_point(data = dat_sca %>% filter(scale == 2), 
+             aes(x = Covariate, y = sps), fill = "white",
+                 color = "white", 
+             size = 19, shape = 21, stroke = 0.9) +
   geom_point(data = dat_sca %>% filter(scale == 2), 
              aes(x = Covariate, y = sps, fill = selec_freq, alpha = 0.1,
                  color = ifelse(scale_selected == 1, "black","#8d8888")), 
              size = 19, shape = 21, stroke = 0.9) +
+  # site
+  geom_point(data = dat_sca %>% filter(scale == 1), 
+             aes(x = Covariate, y = sps), fill = "white",
+                 color = "white", 
+             size = 10, shape = 21, stroke = 0.9) +
   geom_point(data = dat_sca %>% filter(scale == 1), 
              aes(x = Covariate, y = sps, fill = selec_freq, alpha = 0.1,
                  color = ifelse(scale_selected == 1, "black","#8d8888")), 
@@ -423,14 +436,25 @@ ggsave("figures/sca_plot.svg", plot = sca_plot_wleg, device = "svg", width = 11,
 
 # no legend 
 (sca_plot_noleg <- ggplot() +
+# landscape
   geom_point(data = dat_sca %>% filter(scale == 3), 
              aes(x = Covariate, y = sps, fill = selec_freq, alpha = 0.1,
                  color = ifelse(scale_selected == 1, "black","#8d8888")), 
              size = 26, shape = 21, stroke = 0.9) +
+  # park
+  geom_point(data = dat_sca %>% filter(scale == 2), 
+             aes(x = Covariate, y = sps), fill = "white",
+                 color = "white", 
+             size = 19, shape = 21, stroke = 0.9) +
   geom_point(data = dat_sca %>% filter(scale == 2), 
              aes(x = Covariate, y = sps, fill = selec_freq, alpha = 0.1,
                  color = ifelse(scale_selected == 1, "black","#8d8888")), 
              size = 19, shape = 21, stroke = 0.9) +
+  # site
+  geom_point(data = dat_sca %>% filter(scale == 1), 
+             aes(x = Covariate, y = sps), fill = "white",
+                 color = "white", 
+             size = 10, shape = 21, stroke = 0.9) +
   geom_point(data = dat_sca %>% filter(scale == 1), 
              aes(x = Covariate, y = sps, fill = selec_freq, alpha = 0.1,
                  color = ifelse(scale_selected == 1, "black","#8d8888")), 
