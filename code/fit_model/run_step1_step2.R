@@ -25,8 +25,8 @@
 #  setwd("/Volumes/zipkinlab/bamaral/NPS_bird_copy/")
 freshr::freshr()
 
-hg <- httpgd::hgd()
-httpgd::hgd_browse()
+# hg <- httpgd::hgd()
+# httpgd::hgd_browse()
 
 #! Package library and versions -------------------------
 #  Created a library repo?
