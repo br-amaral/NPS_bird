@@ -39,3 +39,5 @@ model {
     # Covariate effects on the ecological process
     logit(psi[y2[b,2],y2[b,3],y2[b,4]]) <-       # parkey, site_n, year_n
       beta0[y2[b,2],y2[b,4]] +                   # parkey, year_n
+      
+      

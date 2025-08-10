@@ -1,3 +1,4 @@
+
 # longer interval loop, all intervals of the removal sampling (not the first)
   for(a in 1:nrowy){
     logit(p[y[a,2],y[a,3],y[a,4],y[a,5]]) <-      # parkey, site_n, year_n, interval_n
@@ -11,6 +12,7 @@
     y[a,1] ~ dbern(p[y[a,2],y[a,3],y[a,4],y[a,5]] * Z[y[a,2],y[a,3],y[a,4]])
   }
 }
+
 
 
 
