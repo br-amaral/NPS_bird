@@ -247,9 +247,9 @@ X_vals <- X_unstd  %>%
         select(ends_with("_mean"), ends_with("_sd"))  %>% 
         distinct()
 
-write_rds(X_sites, file = glue("data/out/X_sites_{AOU_Code}.rds"))
+write_rds(X_sites, file = glue("data/out/X_sites_{sps_loop}.rds"))
 
-write_rds(X_vals, file = glue("data/out/X_vals_{AOU_Code}.rds"))
+write_rds(X_vals, file = glue("data/out/X_vals_{sps_loop}.rds"))
 
 # Summary table for unique Point_Names have NAs for site variables
 # the ones with no shrub are expected, since that data is sparse

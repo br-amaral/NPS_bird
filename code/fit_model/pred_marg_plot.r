@@ -176,9 +176,10 @@ for(sps_res in 1:nrow(beta_key)){
       pred_median = pred_median,
       pred_lower = pred_lower,
       pred_upper = pred_upper
-    )
+    ) %>% 
+    mutate(sps = sps_loop, scale = scale_loop)
     
-    assign(glue("pred_{sps_loop}_beta{beta_index}"), pred_data) 
+    assign(glue("pred_{sps_loop}_beta{beta_index}_scale{scale_loop}"), pred_data) 
     # Create plot
     p <- ggplot(pred_data, aes(x = x_value)) +
       geom_ribbon(aes(ymin = pred_lower, ymax = pred_upper), 
@@ -196,4 +197,44 @@ for(sps_res in 1:nrow(beta_key)){
 }
 
 # get park ranges
-X_ranges
+XDAT_PATH <- "data/X.rds"
+X10 <- read_rds(file = XDAT_PATH)
+
+tree_den_axis_s <- X10 %>% 
+                    select(park, treeden_ha_site, treeden_ha_park, treeden_ha_coun) %>% 
+                    group_by(park) %>% 
+                    summarise(mean_treeden_ha_site = mean(treeden_ha_site, na.rm = T),
+                              mean_treeden_ha_park = mean(treeden_ha_park, na.rm = T),
+                              mean_treeden_ha_coun = mean(treeden_ha_coun, na.rm = T))
+
+beta1_preds <- rbind(
+                      pred_BLBW_beta1_scale1,
+                      pred_BTNW_beta1_scale1,
+                      pred_DOWO_beta1_scale1,
+                      pred_BRCR_beta1_scale2,
+                      pred_REVI_beta1_scale2,
+                      pred_VEER_beta1_scale2,
+                      pred_BAWW_beta1_scale3,
+                      pred_BTBW_beta1_scale3,
+                      pred_OVEN_beta1_scale3
+)
+    
+ggplot(beta1_preds, aes(x = x_value, y = pred_mean)) +
+  geom_line(aes(color = factor(sps)), linewidth = 1.2) +
+  facet_wrap(~ scale, scales = "free_x",
+             labeller = labeller(scale = c("3" = "Landscape Scale", 
+                                           "2" = "Park Scale", 
+                                           "1" = "Local Scale"))) +  
+  labs(x = glue("\n\n{unique(beta1_preds$covariate)[1]}"), 
+       y = "Predicted Occupancy Probability\n",
+       title = glue("Tree Density (stems/ha)\n"),
+       color = "Species") +
+  theme_minimal() +
+theme(
+  strip.text = element_text(face = "bold", size = 16),      # Facet titles
+  plot.title = element_text(size = 18, face = "bold", hjust = 0.5),      # Main title
+  axis.title = element_text(size = 14),                     # Axis titles
+  axis.text = element_text(size = 12),                      # Axis text
+  legend.title = element_text(size = 14, face = "bold", hjust = 0.5),    # Legend title
+  legend.text = element_text(size = 12)                     # Legend text
+)

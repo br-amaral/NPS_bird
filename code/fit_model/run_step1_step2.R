@@ -40,7 +40,7 @@ freshr::freshr()
 # Installed new packages?
 #  renv::snapshot()
 
-test <- FALSE
+test <- TRUE
 
 #! Load packages ---------------------------------------
 #library(conflicted)
@@ -69,9 +69,8 @@ if(test == TRUE){nadapt_min <- 1} else {nadapt_min <- 500}
 #                                 "DOWO", "HAWO", "BLBW", "YBSA", "BCCH", "BAWW", "BTNW")
 
 master_tab <- read_csv("data/mod_key.csv") %>%
-        filter(run == "yes") %>% 
-        filter(step %in% c(1,2))
-
+        filter(run == "no") %>% 
+        filter(step %in% c(1))
 for (key_ite in 1:nrow(master_tab)){
     # key_ite <- 1
     tib_loop <- master_tab[key_ite, ]
@@ -109,7 +108,7 @@ for (key_ite in 1:nrow(master_tab)){
 
         }
 
-    } else {
+    } else { # step 1
         cat("Before sourcing - objects in environment:\n")
         print(ls())
         source("code/fit_model/back2d_covs_scales_2min_spscov.R")
