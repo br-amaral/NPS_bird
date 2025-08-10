@@ -197,8 +197,59 @@ X <- X10 %>%
                date_jul_s =  standardize(date_jul),
                time_jul_s =  standardize(time_jul))
 
-#TODO: save the parameters to unstandardize covarites for the prediction plots.
+# save mean and sd for covariates to unstransform predictions
+X_unstd <- X %>% 
+               # mean
+        mutate(siteDEN_mean =   mean(treeden_ha_site, na.rm = T),
+               parkDEN_mean =   mean(treeden_ha_park, na.rm = T),
+               counDEN_mean =   mean(treeden_ha_coun, na.rm = T),
+               siteBAcon_mean = mean(BA_m2ha_perc_con_site, na.rm = T), 
+               parkBAcon_mean = mean(BA_m2ha_perc_con_park, na.rm = T),
+               counBAcon_mean = mean(BA_m2ha_perc_con_coun, na.rm = T),
+               siteBAlar_mean = mean(BA_m2ha_perc_large_site, na.rm = T), 
+               parkBAlar_mean = mean(BA_m2ha_perc_large_park, na.rm = T),
+               counBAlar_mean = mean(BA_m2ha_perc_large_coun, na.rm = T),
+               siteSHR_mean =   mean(shrub_avg_cov_site, na.rm = T),
+               parkSHR_mean =   mean(shrub_avg_cov_park, na.rm = T),
+               counSHR_mean =   mean(shrub_cov_coun, na.rm = T),
+               siteBA_mean =    mean(BA_m2ha_site, na.rm = T),
+               parkBA_mean =    mean(BA_m2ha_park, na.rm = T), 
+               counBA_mean =    mean(BA_m2ha_coun, na.rm = T),
+               area_mean =      mean(area, na.rm = T),
+               date_jul_mean =  mean(date_jul, na.rm = T),
+               time_jul_mean =  mean(time_jul, na.rm = T),
+               # sd
+               siteDEN_sd =   sd(treeden_ha_site, na.rm = T),
+               parkDEN_sd =   sd(treeden_ha_park, na.rm = T),
+               counDEN_sd =   sd(treeden_ha_coun, na.rm = T),
+               siteBAcon_sd = sd(BA_m2ha_perc_con_site, na.rm = T), 
+               parkBAcon_sd = sd(BA_m2ha_perc_con_park, na.rm = T),
+               counBAcon_sd = sd(BA_m2ha_perc_con_coun, na.rm = T),
+               siteBAlar_sd = sd(BA_m2ha_perc_large_site, na.rm = T), 
+               parkBAlar_sd = sd(BA_m2ha_perc_large_park, na.rm = T),
+               counBAlar_sd = sd(BA_m2ha_perc_large_coun, na.rm = T),
+               siteSHR_sd =   sd(shrub_avg_cov_site, na.rm = T),
+               parkSHR_sd =   sd(shrub_avg_cov_park, na.rm = T),
+               counSHR_sd =   sd(shrub_cov_coun, na.rm = T),
+               siteBA_sd =    sd(BA_m2ha_site, na.rm = T),
+               parkBA_sd =    sd(BA_m2ha_park, na.rm = T), 
+               counBA_sd =    sd(BA_m2ha_coun, na.rm = T),
+               area_sd =      sd(area, na.rm = T),
+               date_jul_sd =  sd(date_jul, na.rm = T),
+               time_jul_sd =  sd(time_jul)) 
+               
+X_sites <- X_unstd %>% 
+              select(Admin_Unit_Code, Point_Name, 
+                      ends_with("_s"))  %>% 
+              distinct()
 
+X_vals <- X_unstd  %>% 
+        select(ends_with("_mean"), ends_with("_sd"))  %>% 
+        distinct()
+
+write_rds(X_sites, file = glue("data/out/X_sites_{AOU_Code}.rds"))
+
+write_rds(X_vals, file = glue("data/out/X_vals_{AOU_Code}.rds"))
 
 # Summary table for unique Point_Names have NAs for site variables
 # the ones with no shrub are expected, since that data is sparse
