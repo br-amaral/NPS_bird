@@ -143,9 +143,11 @@ covs_mod_code <- glue("{covs_mod_code} \n
      
 if(beta_numb - 1 != nrow(pars_mod)) {stop("model file is incorrect")}
 
-mod_content1 <- readLines(model_file1)
-mod_content3 <- readLines(model_file3)
-
+suppressWarnings({
+  mod_content1 <- readLines(model_file1)
+  mod_content3 <- readLines(model_file3)
+  })
+  
 # Combine the content into a single string
 mod_string <- paste(
   paste(mod_content1, collapse = "\n"),
