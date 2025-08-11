@@ -288,7 +288,6 @@ beta2_preds <- rbind(
 )
 
 ggplot(beta2_preds, aes(x = x_ori, y = pred_mean)) +
-  geom_vline(xintercept = 0, linetype = "dashed", color = "#141212", linewidth = 0.8) +  # Add this line
   geom_line(aes(color = factor(sps)), linewidth = 1.2) +
   facet_wrap(~ scale, scales = "free_x",
              labeller = labeller(scale = c("3" = "Landscape Scale", 
@@ -338,7 +337,6 @@ beta3_preds <- rbind(
 )
 
 ggplot(beta3_preds, aes(x = x_ori, y = pred_mean)) +
-  geom_vline(xintercept = 0, linetype = "dashed", color = "gray50", linewidth = 0.8) +  # Add this line
   geom_line(aes(color = factor(sps)), linewidth = 1.2) +
   facet_wrap(~ scale, scales = "free_x",
              labeller = labeller(scale = c("3" = "Landscape Scale", 
@@ -384,7 +382,6 @@ beta4_preds <- rbind(
 )
 
 ggplot(beta4_preds, aes(x = x_ori, y = pred_mean)) +
-  geom_vline(xintercept = 0, linetype = "dashed", color = "gray50", linewidth = 0.8) +  # Add this line
   geom_line(aes(color = factor(sps)), linewidth = 1.2) +
   facet_wrap(~ scale, scales = "free_x",
              labeller = labeller(scale = c("3" = "Landscape Scale", 
@@ -437,7 +434,6 @@ beta56_preds <- rbind(
 )
 
 ggplot(beta56_preds, aes(x = x_ori, y = pred_mean)) +
-  geom_vline(xintercept = 0, linetype = "dashed", color = "gray50", linewidth = 0.8) +  # Add this line
   geom_line(aes(color = factor(sps)), linewidth = 1.2) +
   facet_wrap(~ scale, scales = "free_x",
              labeller = labeller(scale = c("3" = "Landscape Scale", 
