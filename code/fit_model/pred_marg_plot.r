@@ -246,7 +246,7 @@ beta1_preds <- rbind(
 
 ggplot(beta1_preds, aes(x = x_ori, y = pred_mean)) +
   geom_line(aes(color = factor(sps)), linewidth = 1.2) +
-  facet_wrap(~ scale, scales = "free_x",
+  facet_wrap(~ scale, 
              labeller = labeller(scale = c("3" = "Landscape Scale", 
                                            "2" = "Park Scale", 
                                            "1" = "Local Scale"))) +  
@@ -294,7 +294,7 @@ beta2_preds <- rbind(
 
 ggplot(beta2_preds, aes(x = x_ori, y = pred_mean)) +
   geom_line(aes(color = factor(sps)), linewidth = 1.2) +
-  facet_wrap(~ scale, scales = "free_x",
+  facet_wrap(~ scale, 
              labeller = labeller(scale = c("3" = "Landscape Scale", 
                                            "2" = "Park Scale", 
                                            "1" = "Local Scale"))) +  
@@ -347,7 +347,7 @@ beta3_preds <- rbind(
 
 ggplot(beta3_preds, aes(x = x_ori, y = pred_mean)) +
   geom_line(aes(color = factor(sps)), linewidth = 1.2) +
-  facet_wrap(~ scale, scales = "free_x",
+  facet_wrap(~ scale, 
              labeller = labeller(scale = c("3" = "Landscape Scale", 
                                            "2" = "Park Scale", 
                                            "1" = "Local Scale"))) +  
@@ -391,12 +391,12 @@ beta4_preds <- rbind(
   pred_BTNW_beta4_scale1 %>% mutate(x_ori = (x_value * btnw_lims$siteSHR_sd) + btnw_lims$siteSHR_mean),
   pred_DOWO_beta4_scale1 %>% mutate(x_ori = (x_value * dowo_lims$siteSHR_sd) + dowo_lims$siteSHR_mean),
   pred_VEER_beta4_scale2 %>% mutate(x_ori = (x_value * veer_lims$parkSHR_sd) + veer_lims$parkSHR_mean),
-  pred_REVI_beta4_scale3 %>% mutate(x_ori = ((x_value * revi_lims$counSHR_sd) + revi_lims$counSHR_mean)/4)
+  pred_REVI_beta4_scale3 %>% mutate(x_ori = ((x_value * revi_lims$counSHR_sd) + revi_lims$counSHR_mean)*25)
 )
 
 ggplot(beta4_preds, aes(x = x_ori, y = pred_mean)) +
   geom_line(aes(color = factor(sps)), linewidth = 1.2) +
-  facet_wrap(~ scale, scales = "free_x",
+  facet_wrap(~ scale, 
              labeller = labeller(scale = c("3" = "Landscape Scale", 
                                            "2" = "Park Scale", 
                                            "1" = "Local Scale"))) +  
@@ -447,12 +447,12 @@ beta56_preds <- rbind(
   pred_SCTA_beta6_scale1 %>% mutate(x_ori = (x_value * scta_lims$siteBA_sd) + scta_lims$siteBA_mean),
   pred_WBNU_beta6_scale1 %>% mutate(x_ori = (x_value * wbnu_lims$siteBA_sd) + wbnu_lims$siteBA_mean),
   pred_WOTH_beta6_scale1 %>% mutate(x_ori = (x_value * woth_lims$siteBA_sd) + woth_lims$siteBA_mean),
-  pred_DOWO_beta6_scale3 %>% mutate(x_ori = ((x_value * dowo_lims$counBA_sd) + dowo_lims$counBA_mean)/4)
-)
+  pred_DOWO_beta6_scale3 %>% mutate(x_ori = (x_value * dowo_lims$counBA_sd * 5) + dowo_lims$counBA_mean* 5))
+
 
 ggplot(beta56_preds, aes(x = x_ori, y = pred_mean)) +
   geom_line(aes(color = factor(sps)), linewidth = 1.2) +
-  facet_wrap(~ scale, scales = "free_x",
+  facet_wrap(~ scale, 
              labeller = labeller(scale = c("3" = "Landscape Scale", 
                                            "2" = "Park Scale", 
                                            "1" = "Local Scale"))) +  
