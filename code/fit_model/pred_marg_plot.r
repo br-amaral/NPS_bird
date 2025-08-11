@@ -230,6 +230,7 @@ revi_lims <- read_rds("data/out/X_vals_REVI.rds")
 scta_lims <- read_rds("data/out/X_vals_SCTA.rds")
 veer_lims <- read_rds("data/out/X_vals_VEER.rds")
 wbnu_lims <- read_rds("data/out/X_vals_WBNU.rds")
+woth_lims <- read_rds("data/out/X_vals_WOTH.rds")
 
 beta1_preds <- rbind(
                       pred_BLBW_beta1_scale1 %>% mutate(x_ori = (x_value * blbw_lims$siteDEN_sd) + blbw_lims$siteDEN_mean),
@@ -249,9 +250,9 @@ ggplot(beta1_preds, aes(x = x_ori, y = pred_mean)) +
              labeller = labeller(scale = c("3" = "Landscape Scale", 
                                            "2" = "Park Scale", 
                                            "1" = "Local Scale"))) +  
-  labs(x = glue("\n\n{unique(beta1_preds$covariate)[1]}"), 
+  labs(x = glue("\nTree Density (stems/ha)"), 
        y = "Predicted Occupancy Probability\n",
-       title = glue("Tree Density (stems/ha)\n"),
+       title = glue("Tree Density\n"),
        color = "Species") +
   theme_minimal() +
   theme(panel.grid = element_blank(),
@@ -264,7 +265,11 @@ ggplot(beta1_preds, aes(x = x_ori, y = pred_mean)) +
         legend.title = element_text(size = 14, face = "bold", hjust = 0.5),    # Legend title
         legend.text = element_text(size = 12)                     # Legend text
   ) +
-  scale_color_manual(values = safe_pal)
+  scale_color_manual(values = safe_pal) +
+  ylim(0, 1)
+
+ggsave("figures/pred_den.svg", plot = last_plot(), device = "svg", width = 14, height = 6)
+ggsave("figures/pred_den.png", plot = last_plot(), device = "png", width = 14, height = 6)
 
 #? CONIFER BA -----------------------------------------------------------------
 BA_con_axis_s <- X10 %>% 
@@ -293,9 +298,9 @@ ggplot(beta2_preds, aes(x = x_ori, y = pred_mean)) +
              labeller = labeller(scale = c("3" = "Landscape Scale", 
                                            "2" = "Park Scale", 
                                            "1" = "Local Scale"))) +  
-  labs(x = glue("\n\n{unique(beta2_preds$covariate)[1]}"), 
+  labs(x = glue("\nConifer Basal area %"), 
        y = "Predicted Occupancy Probability\n",
-       title = glue("Conifer % Basal area\n"),
+       title = glue("Conifers\n"),
        color = "Species") +
   theme_minimal() +
   theme(panel.grid = element_blank(),
@@ -308,21 +313,25 @@ ggplot(beta2_preds, aes(x = x_ori, y = pred_mean)) +
         legend.title = element_text(size = 14, face = "bold", hjust = 0.5),    # Legend title
         legend.text = element_text(size = 12)                     # Legend text
   ) +
-  scale_color_manual(values = safe_pal)
+  scale_color_manual(values = safe_pal) +
+  ylim(0, 1)
+
+ggsave("figures/pred_con.svg", plot = last_plot(), device = "svg", width = 6, height = 6)
+ggsave("figures/pred_con.png", plot = last_plot(), device = "png", width = 6, height = 6)
 
 #? LATE SUCCESSIONAL BASAL AREA -----------------------------------------------------------------
 BA_latesuc_axis_s <- X10 %>% 
-                    select(park, BA_m2ha_perc_latesuc_site, BA_m2ha_perc_latesuc_park, BA_m2ha_perc_latesuc_coun) %>% 
+                    select(park, BA_m2ha_perc_con_site, BA_m2ha_perc_con_park, BA_m2ha_perc_con_coun) %>% 
                     group_by(park) %>% 
-                    summarise(mean_BA_m2ha_perc_latesuc_site = mean(BA_m2ha_perc_latesuc_site, na.rm = T),
-                              mean_BA_m2ha_perc_latesuc_park = mean(BA_m2ha_perc_latesuc_park, na.rm = T),
-                              mean_BA_m2ha_perc_latesuc_coun = mean(BA_m2ha_perc_latesuc_coun, na.rm = T),
-                              lo_BA_m2ha_perc_latesuc_site = quantile(BA_m2ha_perc_latesuc_site, probs = 0.05, na.rm = T),
-                              lo_BA_m2ha_perc_latesuc_park = quantile(BA_m2ha_perc_latesuc_park, probs = 0.05, na.rm = T),
-                              lo_BA_m2ha_perc_latesuc_coun = quantile(BA_m2ha_perc_latesuc_coun, probs = 0.05, na.rm = T),
-                              up_BA_m2ha_perc_latesuc_site = quantile(BA_m2ha_perc_latesuc_site, probs = 0.95, na.rm = T),
-                              up_BA_m2ha_perc_latesuc_park = quantile(BA_m2ha_perc_latesuc_park, probs = 0.95, na.rm = T),
-                              up_BA_m2ha_perc_latesuc_coun = quantile(BA_m2ha_perc_latesuc_coun, probs = 0.95, na.rm = T))
+                    summarise(mean_BA_m2ha_perc_con_site = mean(BA_m2ha_perc_con_site, na.rm = T),
+                              mean_BA_m2ha_perc_con_park = mean(BA_m2ha_perc_con_park, na.rm = T),
+                              mean_BA_m2ha_perc_con_coun = mean(BA_m2ha_perc_con_coun, na.rm = T),
+                              lo_BA_m2ha_perc_con_site = quantile(BA_m2ha_perc_con_site, probs = 0.05, na.rm = T),
+                              lo_BA_m2ha_perc_con_park = quantile(BA_m2ha_perc_con_park, probs = 0.05, na.rm = T),
+                              lo_BA_m2ha_perc_con_coun = quantile(BA_m2ha_perc_con_coun, probs = 0.05, na.rm = T),
+                              up_BA_m2ha_perc_con_site = quantile(BA_m2ha_perc_con_site, probs = 0.95, na.rm = T),
+                              up_BA_m2ha_perc_con_park = quantile(BA_m2ha_perc_con_park, probs = 0.95, na.rm = T),
+                              up_BA_m2ha_perc_con_coun = quantile(BA_m2ha_perc_con_coun, probs = 0.95, na.rm = T))
 
 beta3_preds <- rbind(
   pred_BLBW_beta3_scale1 %>% mutate(x_ori = (x_value * blbw_lims$siteBAlar_sd) + blbw_lims$siteBAlar_mean),
@@ -342,9 +351,9 @@ ggplot(beta3_preds, aes(x = x_ori, y = pred_mean)) +
              labeller = labeller(scale = c("3" = "Landscape Scale", 
                                            "2" = "Park Scale", 
                                            "1" = "Local Scale"))) +  
-  labs(x = glue("\n\n{unique(beta3_preds$covariate)[1]}"), 
+  labs(x = glue("Late Success. Forest Basal area %\n"), 
        y = "Predicted Occupancy Probability\n",
-       title = glue("Late Success. Forest % Basal area\n"),
+       title = glue("Late Success.\n"),
        color = "Species") +
   theme_minimal() +
   theme(panel.grid = element_blank(),
@@ -357,21 +366,25 @@ ggplot(beta3_preds, aes(x = x_ori, y = pred_mean)) +
         legend.title = element_text(size = 14, face = "bold", hjust = 0.5),    # Legend title
         legend.text = element_text(size = 12)                     # Legend text
   ) +
-  scale_color_manual(values = safe_pal)
+  scale_color_manual(values = safe_pal) +
+  ylim(0, 1)
+
+ggsave("figures/pred_lat.svg", plot = last_plot(), device = "svg", width = 10, height = 6)
+ggsave("figures/pred_lat.png", plot = last_plot(), device = "png", width = 10, height = 6)
 
 #? SHRUB BASAL AREA -----------------------------------------------------------------
 shrub_BA_axis_s <- X10 %>% 
-                    select(park, shrub_BA_perc_site, shrub_BA_perc_park, shrub_BA_perc_coun) %>% 
+                    select(park, shrub_avg_cov_site, shrub_avg_cov_park, shrub_cov_coun) %>% 
                     group_by(park) %>% 
-                    summarise(mean_shrub_BA_perc_site = mean(shrub_BA_perc_site, na.rm = T),
-                              mean_shrub_BA_perc_park = mean(shrub_BA_perc_park, na.rm = T),
-                              mean_shrub_BA_perc_coun = mean(shrub_BA_perc_coun, na.rm = T),
-                              lo_shrub_BA_perc_site = quantile(shrub_BA_perc_site, probs = 0.05, na.rm = T),
-                              lo_shrub_BA_perc_park = quantile(shrub_BA_perc_park, probs = 0.05, na.rm = T),
-                              lo_shrub_BA_perc_coun = quantile(shrub_BA_perc_coun, probs = 0.05, na.rm = T),
-                              up_shrub_BA_perc_site = quantile(shrub_BA_perc_site, probs = 0.95, na.rm = T),
-                              up_shrub_BA_perc_park = quantile(shrub_BA_perc_park, probs = 0.95, na.rm = T),
-                              up_shrub_BA_perc_coun = quantile(shrub_BA_perc_coun, probs = 0.95, na.rm = T))
+                    summarise(mean_shrub_avg_cov_site = mean(shrub_avg_cov_site, na.rm = T),
+                              mean_shrub_avg_cov_park = mean(shrub_avg_cov_park, na.rm = T),
+                              mean_shrub_cov_coun = mean(shrub_cov_coun, na.rm = T),
+                              lo_shrub_avg_cov_site = quantile(shrub_avg_cov_site, probs = 0.05, na.rm = T),
+                              lo_shrub_avg_cov_park = quantile(shrub_avg_cov_park, probs = 0.05, na.rm = T),
+                              lo_shrub_cov_coun = quantile(shrub_cov_coun, probs = 0.05, na.rm = T),
+                              up_shrub_avg_cov_site = quantile(shrub_avg_cov_site, probs = 0.95, na.rm = T),
+                              up_shrub_avg_cov_park = quantile(shrub_avg_cov_park, probs = 0.95, na.rm = T),
+                              up_shrub_cov_coun = quantile(shrub_cov_coun, probs = 0.95, na.rm = T))
 
 beta4_preds <- rbind(
   pred_BTBW_beta4_scale1 %>% mutate(x_ori = (x_value * btbw_lims$siteSHR_sd) + btbw_lims$siteSHR_mean),
@@ -387,9 +400,9 @@ ggplot(beta4_preds, aes(x = x_ori, y = pred_mean)) +
              labeller = labeller(scale = c("3" = "Landscape Scale", 
                                            "2" = "Park Scale", 
                                            "1" = "Local Scale"))) +  
-  labs(x = glue("\n\n{unique(beta4_preds$covariate)[1]}"), 
+  labs(x = glue("\nShrub Cover %"), 
        y = "Predicted Occupancy Probability\n",
-       title = glue("Shrub % Cover\n"),
+       title = glue("Shrub Cover\n"),
        color = "Species") +
   theme_minimal() +
   theme(panel.grid = element_blank(),
@@ -402,21 +415,25 @@ ggplot(beta4_preds, aes(x = x_ori, y = pred_mean)) +
         legend.title = element_text(size = 14, face = "bold", hjust = 0.5),    # Legend title
         legend.text = element_text(size = 12)                     # Legend text
   ) +
-  scale_color_manual(values = safe_pal)
+  scale_color_manual(values = safe_pal) +
+  ylim(0, 1)
+
+ggsave("figures/pred_shr.svg", plot = last_plot(), device = "svg", width = 14, height = 6)
+ggsave("figures/pred_shr.png", plot = last_plot(), device = "png", width = 14, height = 6)
 
 #? TREE BASAL AREA -----------------------------------------------------------------
 tree_BA_axis_s <- X10 %>% 
-                    select(park, tree_BA_m2ha_site, tree_BA_m2ha_park, tree_BA_m2ha_coun) %>% 
+                    select(park, BA_m2ha_site, BA_m2ha_park, BA_m2ha_coun) %>% 
                     group_by(park) %>% 
-                    summarise(mean_tree_BA_m2ha_site = mean(tree_BA_m2ha_site, na.rm = T),
-                              mean_tree_BA_m2ha_park = mean(tree_BA_m2ha_park, na.rm = T),
-                              mean_tree_BA_m2ha_coun = mean(tree_BA_m2ha_coun, na.rm = T),
-                              lo_tree_BA_m2ha_site = quantile(tree_BA_m2ha_site, probs = 0.05, na.rm = T),
-                              lo_tree_BA_m2ha_park = quantile(tree_BA_m2ha_park, probs = 0.05, na.rm = T),
-                              lo_tree_BA_m2ha_coun = quantile(tree_BA_m2ha_coun, probs = 0.05, na.rm = T),
-                              up_tree_BA_m2ha_site = quantile(tree_BA_m2ha_site, probs = 0.95, na.rm = T),
-                              up_tree_BA_m2ha_park = quantile(tree_BA_m2ha_park, probs = 0.95, na.rm = T),
-                              up_tree_BA_m2ha_coun = quantile(tree_BA_m2ha_coun, probs = 0.95, na.rm = T))
+                    summarise(mean_BA_m2ha_site = mean(BA_m2ha_site, na.rm = T),
+                              mean_BA_m2ha_park = mean(BA_m2ha_park, na.rm = T),
+                              mean_BA_m2ha_coun = mean(BA_m2ha_coun, na.rm = T),
+                              lo_BA_m2ha_site = quantile(BA_m2ha_site, probs = 0.05, na.rm = T),
+                              lo_BA_m2ha_park = quantile(BA_m2ha_park, probs = 0.05, na.rm = T),
+                              lo_BA_m2ha_coun = quantile(BA_m2ha_coun, probs = 0.05, na.rm = T),
+                              up_BA_m2ha_site = quantile(BA_m2ha_site, probs = 0.95, na.rm = T),
+                              up_BA_m2ha_park = quantile(BA_m2ha_park, probs = 0.95, na.rm = T),
+                              up_BA_m2ha_coun = quantile(BA_m2ha_coun, probs = 0.95, na.rm = T))
                               
 beta56_preds <- rbind(
   # Linear effects (beta5)
@@ -439,9 +456,9 @@ ggplot(beta56_preds, aes(x = x_ori, y = pred_mean)) +
              labeller = labeller(scale = c("3" = "Landscape Scale", 
                                            "2" = "Park Scale", 
                                            "1" = "Local Scale"))) +  
-  labs(x = glue("\n\n{unique(beta56_preds$covariate)[1]}"), 
+  labs(x = glue("Tree Basal Area (m²/ha)\n"), 
        y = "Predicted Occupancy Probability\n",
-       title = glue("Tree Basal area (m²/ha)\n"),
+       title = glue("Tree Basal Area\n"),
        color = "Species") +
   theme_minimal() +
   theme(panel.grid = element_blank(),
@@ -454,5 +471,8 @@ ggplot(beta56_preds, aes(x = x_ori, y = pred_mean)) +
         legend.title = element_text(size = 14, face = "bold", hjust = 0.5),    # Legend title
         legend.text = element_text(size = 12)                     # Legend text
   ) +
-  scale_color_manual(values = safe_pal)
+  scale_color_manual(values = safe_pal) +
+  ylim(0, 1)
 
+ggsave("figures/pred_BA.svg", plot = last_plot(), device = "svg", width = 10, height = 6)
+ggsave("figures/pred_BA.png", plot = last_plot(), device = "png", width = 10, height = 6)
