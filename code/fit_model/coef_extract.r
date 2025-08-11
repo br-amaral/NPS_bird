@@ -49,7 +49,8 @@ COEF_TABLE_PATH <- "data/mod_key.csv"
 coef_path_file <- read_csv(COEF_TABLE_PATH) %>%
         filter(run == "yes") %>% 
         filter(step == 3) %>% 
-        mutate(AOU_Code = substr(result, 1, 4))
+        mutate(AOU_Code = substr(result, 1, 4)) %>% 
+        filter(AOU_Code != "YBSA")
 
 for(ii in 1:nrow(coef_path_file)) {
 

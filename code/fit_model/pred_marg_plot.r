@@ -52,9 +52,11 @@ STEP2_INFO_PATH <- "data/mod_key.csv"
 ## read files
 dat_sca <- read_rds(COEF_SPS_PATH)       # which betas are important
 beta_key <- read_csv(STEP2_INFO_PATH) %>% 
-              filter(step == 2,
+              filter(step == 3,
                      run == "yes") %>% 
-              filter(AOU_Code != "BHVI")
+              filter(AOU_Code != "BHVI",
+                     AOU_Code != "YBSA"
+                     )
 
 cov_key <- cbind(rbind("X1", "X2", "X3", "X4", "X5", "X5"),
                 rbind("beta1", "beta2", "beta3", "beta4", "beta5", "beta6"),
@@ -72,7 +74,7 @@ cov_key <- cbind(rbind("X1", "X2", "X3", "X4", "X5", "X5"),
 # get the data for the predictions
 for(sps_res in 1:nrow(beta_key)){
   RES_MOD_FILE <- beta_key$result[sps_res]
-  res_mod <- read_rds(glue("data/model_res/{RES_MOD_FILE}.rds"))  # model file
+  res_mod <- read_rds(glue("data/model_res/{RES_MOD_FILE}"))  # model file
   sps_loop <- substr(RES_MOD_FILE, 1, 4)
   sps_dat_name <- glue("{sps_loop}_step1_jagsdata")
 
@@ -116,32 +118,33 @@ for(sps_res in 1:nrow(beta_key)){
     
     # Get beta index
     beta_index <- as.numeric(str_extract(beta_loop$coef_ori, "\\d+"))
-    
+    beta_index_order <- as.numeric(str_extract(beta_loop$coef, "\\d+"))
+
     beta_param <- glue("beta[{beta_index}]")
   
-    # Extract all posterior samples from all chains
-    all_chains <- do.call(rbind, res_mod)  # Combine all chains
+    # # Extract all posterior samples from all chains
+    # all_chains <- do.call(rbind, res_mod)  # Combine all chains
   
-    # Get posterior samples for the specific beta coefficient
-    if(beta_param %in% colnames(all_chains)) {
-      all_beta_samples <- all_chains[, beta_param]
-    } else {
-      print(glue("Parameter {beta_param} not found"))
-      next
-    }
+    # # Get posterior samples for the specific beta coefficient
+    # if(beta_param %in% colnames(all_chains)) {
+    #   all_beta_samples <- all_chains[, beta_param]
+    # } else {
+    #   print(glue("Parameter {beta_param} not found"))
+    #   next
+    # }
 
-    # Get intercept - use the mean intercept across sites
-    if("mu.beta0" %in% colnames(all_chains)) {
-      all_beta0_samples <- all_chains[, "mu.beta0"]
-    } else {
-      # Alternative: use mean of all beta0 parameters
-      beta0_cols <- grep("beta0\\[", colnames(all_chains), value = TRUE)
-      all_beta0_samples <- apply(all_chains[, beta0_cols], 1, mean)
-    }
+    # # Get intercept - use the mean intercept across sites
+    # if("mu.beta0" %in% colnames(all_chains)) {
+    #   all_beta0_samples <- all_chains[, "mu.beta0"]
+    # } else {
+    #   # Alternative: use mean of all beta0 parameters
+    #   beta0_cols <- grep("beta0\\[", colnames(all_chains), value = TRUE)
+    #   all_beta0_samples <- apply(all_chains[, beta0_cols], 1, mean)
+    # }
 
     # Get posterior samples (efficient way)
-    # all_beta0_samples <- res_mod$sims.list$beta0  # Assuming this is a vector
-    # all_beta_samples <- res_mod$sims.list$beta[, beta_index]
+    all_beta0_samples <- res_mod$sims.list$mu.beta0  # Assuming this is a vector
+    all_beta_samples <- res_mod$sims.list$beta[, beta_index_order]
     
     # Vectorized prediction
     n_samples <- length(all_beta_samples)
@@ -155,7 +158,7 @@ for(sps_res in 1:nrow(beta_key)){
     
     if(beta_index == 6){ 
       # Get beta[5] for quadratic term
-      all_beta5_samples <- all_chains[, "beta[5]"]
+      all_beta5_samples <- res_mod$sims.list$beta[, beta_index_order - 1]
       for(s in 1:n_samples) {
         predictions[s, ] <- plogis(all_beta0_samples[s] + all_beta_samples[s] * X_range + all_beta5_samples[s] * (X_range)^2)
       }
@@ -179,6 +182,7 @@ for(sps_res in 1:nrow(beta_key)){
     ) %>% 
     mutate(sps = sps_loop, scale = scale_loop)
     
+    print(glue("pred_{sps_loop}_beta{beta_index}_scale{scale_loop}"))
     assign(glue("pred_{sps_loop}_beta{beta_index}_scale{scale_loop}"), pred_data) 
     # Create plot
     p <- ggplot(pred_data, aes(x = x_value)) +
@@ -202,6 +206,8 @@ X10 <- read_rds(file = XDAT_PATH)
 
 pacman::p_load(rcartocolor, patchwork)
 safe_pal <- carto_pal(12, "Safe")
+set.seed(123)
+safe_pal <- sample(safe_pal)
 
 #? TREE DENSITY -----------------------------------------------------------------
 tree_den_axis_s <- X10 %>% 
@@ -232,21 +238,121 @@ veer_lims <- read_rds("data/out/X_vals_VEER.rds")
 wbnu_lims <- read_rds("data/out/X_vals_WBNU.rds")
 woth_lims <- read_rds("data/out/X_vals_WOTH.rds")
 
-beta1_preds <- rbind(
-                      pred_BLBW_beta1_scale1 %>% mutate(x_ori = (x_value * blbw_lims$siteDEN_sd) + blbw_lims$siteDEN_mean),
-                      pred_BTNW_beta1_scale1 %>% mutate(x_ori = (x_value * btnw_lims$siteDEN_sd) + btnw_lims$siteDEN_mean),
-                      pred_DOWO_beta1_scale1 %>% mutate(x_ori = (x_value * dowo_lims$siteDEN_sd) + dowo_lims$siteDEN_mean),
-                      pred_BRCR_beta1_scale2 %>% mutate(x_ori = (x_value * brcr_lims$parkDEN_sd) + brcr_lims$parkDEN_mean),
-                      pred_REVI_beta1_scale2 %>% mutate(x_ori = (x_value * revi_lims$parkDEN_sd) + revi_lims$parkDEN_mean),
-                      pred_VEER_beta1_scale2 %>% mutate(x_ori = (x_value * veer_lims$parkDEN_sd) + veer_lims$parkDEN_mean),
-                      pred_BAWW_beta1_scale3 %>% mutate(x_ori = ((x_value * baww_lims$counDEN_sd) + baww_lims$counDEN_mean)/4),
-                      pred_BTBW_beta1_scale3 %>% mutate(x_ori = ((x_value * btbw_lims$counDEN_sd) + btbw_lims$counDEN_mean)/4),
-                      pred_OVEN_beta1_scale3 %>% mutate(x_ori = ((x_value * oven_lims$counDEN_sd) + oven_lims$counDEN_mean)/4)
+#? AUTOMATED PREDICTION PROCESSING FUNCTION ---------------------------------------
+process_beta_predictions <- function(beta_num, covariate_suffix) {
+  
+  # Get all prediction objects for this beta
+  pred_pattern <- glue("pred_.*_beta{beta_num}_scale[1-3]")
+  pred_objects <- ls(pattern = pred_pattern, envir = .GlobalEnv)
+  
+  if(length(pred_objects) == 0) {
+    warning(glue("No prediction objects found for beta{beta_num}"))
+    return(NULL)
+  }
+  
+  # Process each prediction object
+  pred_list <- list()
+  
+  for(obj_name in pred_objects) {
+    # Extract species and scale from object name
+    sps <- str_extract(obj_name, "(?<=pred_)[A-Z]{4}")
+    scale_num <- str_extract(obj_name, "(?<=scale)[1-3]") %>% as.numeric()
+    
+    # Get the prediction data
+    pred_data <- get(obj_name, envir = .GlobalEnv)
+    
+    # Get the corresponding limits object
+    lims_obj_name <- glue("{tolower(sps)}_lims")
+    
+    if(exists(lims_obj_name)) {
+      lims_data <- get(lims_obj_name, envir = .GlobalEnv)
+      
+      # Determine scale-specific column names
+      scale_suffix <- case_when(
+        scale_num == 1 ~ "site",
+        scale_num == 2 ~ "park", 
+        scale_num == 3 ~ "coun"
+      )
+      
+      sd_col <- glue("{scale_suffix}{covariate_suffix}_sd")
+      mean_col <- glue("{scale_suffix}{covariate_suffix}_mean")
+      
+      # Check if columns exist in limits data
+      if(sd_col %in% names(lims_data) & mean_col %in% names(lims_data)) {
+        
+        # Apply unstandardization based on scale
+        pred_data_processed <- pred_data %>%
+          mutate(
+            x_ori = case_when(
+              # Special handling for county-level tree density (divided by 4)
+              scale_num == 3 & covariate_suffix == "DEN" ~ 
+                ((x_value * lims_data[[sd_col]]) + lims_data[[mean_col]]),
+              
+              # Special handling for county-level shrub cover 
+              scale_num == 3 & covariate_suffix == "SHR" ~ 
+                ((x_value * lims_data[[sd_col]]) + lims_data[[mean_col]]),
+              
+              # Special handling for county-level basal area (multiplied by 5)
+              scale_num == 3 & covariate_suffix == "BA" ~ 
+                (x_value * lims_data[[sd_col]] * 5) + (lims_data[[mean_col]]),
+              
+              # Standard unstandardization for all other cases
+              TRUE ~ (x_value * lims_data[[sd_col]]) + lims_data[[mean_col]]
+            )
+          )
+        
+        pred_list[[obj_name]] <- pred_data_processed
+        
+      } else {
+        warning(glue("Columns {sd_col} or {mean_col} not found in {lims_obj_name}"))
+      }
+    } else {
+      warning(glue("Limits object {lims_obj_name} not found"))
+    }
+  }
+  
+  # Combine all processed predictions
+  if(length(pred_list) > 0) {
+    combined_preds <- do.call(rbind, pred_list)
+    return(combined_preds)
+  } else {
+    warning(glue("No valid predictions processed for beta{beta_num}"))
+    return(NULL)
+  }
+}
+
+#? APPLY FUNCTION TO ALL BETAS ------------------------------------------------
+# Define covariate mappings
+beta_covariates <- list(
+  "1" = "DEN",     # Tree Density
+  "2" = "BAcon",   # Conifer Basal Area  
+  "3" = "BAlar",   # Late Successional Basal Area
+  "4" = "SHR",     # Shrub Cover
+  "5" = "BA",      # Tree Basal Area (linear)
+  "6" = "BA"       # Tree Basal Area (quadratic)
 )
+
+# Process all betas automatically
+beta1_preds <- process_beta_predictions(1, beta_covariates[["1"]])
+beta2_preds <- process_beta_predictions(2, beta_covariates[["2"]])
+beta3_preds <- process_beta_predictions(3, beta_covariates[["3"]])
+beta4_preds <- process_beta_predictions(4, beta_covariates[["4"]])
+
+beta5_preds_ori <- process_beta_predictions(5, beta_covariates[["5"]]) 
+beta5_preds <- beta5_preds_ori %>% 
+                filter(sps %in% c("SCTA", "WBNU", "WOTH"))
+
+beta6_preds_ori <- process_beta_predictions(6, beta_covariates[["6"]]) 
+
+beta6_preds <- beta6_preds_ori %>% 
+                filter(sps %in% c("BAWW", "BLBW", "BRCR", "BTBW", "BTNW", "DOWO", "OVEN", "REVI", "VEER"))
+
+# Combine beta5 and beta6 (both are basal area effects)
+beta56_preds <- rbind(beta5_preds, beta6_preds)
 
 ggplot(beta1_preds, aes(x = x_ori, y = pred_mean)) +
   geom_line(aes(color = factor(sps)), linewidth = 1.2) +
-  facet_wrap(~ scale, 
+  facet_wrap(~ scale, scales = "free_x",
              labeller = labeller(scale = c("3" = "Landscape Scale", 
                                            "2" = "Park Scale", 
                                            "1" = "Local Scale"))) +  
@@ -268,8 +374,8 @@ ggplot(beta1_preds, aes(x = x_ori, y = pred_mean)) +
   scale_color_manual(values = safe_pal) +
   ylim(0, 1)
 
-ggsave("figures/pred_den.svg", plot = last_plot(), device = "svg", width = 14, height = 6)
-ggsave("figures/pred_den.png", plot = last_plot(), device = "png", width = 14, height = 6)
+ggsave("figures/pred_den.svg", plot = last_plot(), device = "svg", width = 6, height = 6)
+ggsave("figures/pred_den.png", plot = last_plot(), device = "png", width = 6, height = 6)
 
 #? CONIFER BA -----------------------------------------------------------------
 BA_con_axis_s <- X10 %>% 
@@ -285,16 +391,9 @@ BA_con_axis_s <- X10 %>%
                               up_BA_m2ha_perc_con_park = quantile(BA_m2ha_perc_con_park, probs = 0.95, na.rm = T),
                               up_BA_m2ha_perc_con_coun = quantile(BA_m2ha_perc_con_coun, probs = 0.95, na.rm = T))
 
-beta2_preds <- rbind(
-  pred_BAWW_beta2_scale1 %>% mutate(x_ori = (x_value * baww_lims$siteBAcon_sd) + baww_lims$siteBAcon_mean),
-  pred_BRCR_beta2_scale1 %>% mutate(x_ori = (x_value * brcr_lims$siteBAcon_sd) + brcr_lims$siteBAcon_mean),
-  pred_BTNW_beta2_scale1 %>% mutate(x_ori = (x_value * btnw_lims$siteBAcon_sd) + btnw_lims$siteBAcon_mean),
-  pred_HAWO_beta2_scale1 %>% mutate(x_ori = (x_value * hawo_lims$siteBAcon_sd) + hawo_lims$siteBAcon_mean)
-)
-
 ggplot(beta2_preds, aes(x = x_ori, y = pred_mean)) +
   geom_line(aes(color = factor(sps)), linewidth = 1.2) +
-  facet_wrap(~ scale, 
+  facet_wrap(~ scale, scales = "free_x",
              labeller = labeller(scale = c("3" = "Landscape Scale", 
                                            "2" = "Park Scale", 
                                            "1" = "Local Scale"))) +  
@@ -316,8 +415,8 @@ ggplot(beta2_preds, aes(x = x_ori, y = pred_mean)) +
   scale_color_manual(values = safe_pal) +
   ylim(0, 1)
 
-ggsave("figures/pred_con.svg", plot = last_plot(), device = "svg", width = 6, height = 6)
-ggsave("figures/pred_con.png", plot = last_plot(), device = "png", width = 6, height = 6)
+ggsave("figures/pred_con.svg", plot = last_plot(), device = "svg", width = 10, height = 6)
+ggsave("figures/pred_con.png", plot = last_plot(), device = "png", width = 10, height = 6)
 
 #? LATE SUCCESSIONAL BASAL AREA -----------------------------------------------------------------
 BA_latesuc_axis_s <- X10 %>% 
@@ -333,21 +432,9 @@ BA_latesuc_axis_s <- X10 %>%
                               up_BA_m2ha_perc_con_park = quantile(BA_m2ha_perc_con_park, probs = 0.95, na.rm = T),
                               up_BA_m2ha_perc_con_coun = quantile(BA_m2ha_perc_con_coun, probs = 0.95, na.rm = T))
 
-beta3_preds <- rbind(
-  pred_BLBW_beta3_scale1 %>% mutate(x_ori = (x_value * blbw_lims$siteBAlar_sd) + blbw_lims$siteBAlar_mean),
-  pred_BTBW_beta3_scale1 %>% mutate(x_ori = (x_value * btbw_lims$siteBAlar_sd) + btbw_lims$siteBAlar_mean),
-  pred_BTNW_beta3_scale1 %>% mutate(x_ori = (x_value * btnw_lims$siteBAlar_sd) + btnw_lims$siteBAlar_mean),
-  pred_DOWO_beta3_scale1 %>% mutate(x_ori = (x_value * dowo_lims$siteBAlar_sd) + dowo_lims$siteBAlar_mean),
-  pred_REVI_beta3_scale1 %>% mutate(x_ori = (x_value * revi_lims$siteBAlar_sd) + revi_lims$siteBAlar_mean),
-  pred_WBNU_beta3_scale1 %>% mutate(x_ori = (x_value * wbnu_lims$siteBAlar_sd) + wbnu_lims$siteBAlar_mean),
-  pred_OVEN_beta3_scale2 %>% mutate(x_ori = (x_value * oven_lims$parkBAlar_sd) + oven_lims$parkBAlar_mean),
-  pred_VEER_beta3_scale2 %>% mutate(x_ori = (x_value * veer_lims$parkBAlar_sd) + veer_lims$parkBAlar_mean),
-  pred_WOTH_beta3_scale2 %>% mutate(x_ori = (x_value * woth_lims$parkBAlar_sd) + woth_lims$parkBAlar_mean)
-)
-
 ggplot(beta3_preds, aes(x = x_ori, y = pred_mean)) +
   geom_line(aes(color = factor(sps)), linewidth = 1.2) +
-  facet_wrap(~ scale, 
+  facet_wrap(~ scale, scales = "free_x",
              labeller = labeller(scale = c("3" = "Landscape Scale", 
                                            "2" = "Park Scale", 
                                            "1" = "Local Scale"))) +  
@@ -386,17 +473,9 @@ shrub_BA_axis_s <- X10 %>%
                               up_shrub_avg_cov_park = quantile(shrub_avg_cov_park, probs = 0.95, na.rm = T),
                               up_shrub_cov_coun = quantile(shrub_cov_coun, probs = 0.95, na.rm = T))
 
-beta4_preds <- rbind(
-  pred_BTBW_beta4_scale1 %>% mutate(x_ori = (x_value * btbw_lims$siteSHR_sd) + btbw_lims$siteSHR_mean),
-  pred_BTNW_beta4_scale1 %>% mutate(x_ori = (x_value * btnw_lims$siteSHR_sd) + btnw_lims$siteSHR_mean),
-  pred_DOWO_beta4_scale1 %>% mutate(x_ori = (x_value * dowo_lims$siteSHR_sd) + dowo_lims$siteSHR_mean),
-  pred_VEER_beta4_scale2 %>% mutate(x_ori = (x_value * veer_lims$parkSHR_sd) + veer_lims$parkSHR_mean),
-  pred_REVI_beta4_scale3 %>% mutate(x_ori = ((x_value * revi_lims$counSHR_sd) + revi_lims$counSHR_mean)*25)
-)
-
 ggplot(beta4_preds, aes(x = x_ori, y = pred_mean)) +
   geom_line(aes(color = factor(sps)), linewidth = 1.2) +
-  facet_wrap(~ scale, 
+  facet_wrap(~ scale, scales = "free_x",
              labeller = labeller(scale = c("3" = "Landscape Scale", 
                                            "2" = "Park Scale", 
                                            "1" = "Local Scale"))) +  
@@ -434,25 +513,10 @@ tree_BA_axis_s <- X10 %>%
                               up_BA_m2ha_site = quantile(BA_m2ha_site, probs = 0.95, na.rm = T),
                               up_BA_m2ha_park = quantile(BA_m2ha_park, probs = 0.95, na.rm = T),
                               up_BA_m2ha_coun = quantile(BA_m2ha_coun, probs = 0.95, na.rm = T))
-                              
-beta56_preds <- rbind(
-  # Linear effects (beta5)
-  pred_HETH_beta5_scale1 %>% mutate(x_ori = (x_value * heth_lims$siteBA_sd) + heth_lims$siteBA_mean),
-  pred_VEER_beta5_scale1 %>% mutate(x_ori = (x_value * veer_lims$siteBA_sd) + veer_lims$siteBA_mean),
-  # Quadratic effects (beta6)
-  pred_BRCR_beta6_scale1 %>% mutate(x_ori = (x_value * brcr_lims$siteBA_sd) + brcr_lims$siteBA_mean),
-  pred_BTNW_beta6_scale1 %>% mutate(x_ori = (x_value * btnw_lims$siteBA_sd) + btnw_lims$siteBA_mean),
-  pred_OVEN_beta6_scale1 %>% mutate(x_ori = (x_value * oven_lims$siteBA_sd) + oven_lims$siteBA_mean),
-  pred_REVI_beta6_scale1 %>% mutate(x_ori = (x_value * revi_lims$siteBA_sd) + revi_lims$siteBA_mean),
-  pred_SCTA_beta6_scale1 %>% mutate(x_ori = (x_value * scta_lims$siteBA_sd) + scta_lims$siteBA_mean),
-  pred_WBNU_beta6_scale1 %>% mutate(x_ori = (x_value * wbnu_lims$siteBA_sd) + wbnu_lims$siteBA_mean),
-  pred_WOTH_beta6_scale1 %>% mutate(x_ori = (x_value * woth_lims$siteBA_sd) + woth_lims$siteBA_mean),
-  pred_DOWO_beta6_scale3 %>% mutate(x_ori = (x_value * dowo_lims$counBA_sd * 5) + dowo_lims$counBA_mean* 5))
-
 
 ggplot(beta56_preds, aes(x = x_ori, y = pred_mean)) +
   geom_line(aes(color = factor(sps)), linewidth = 1.2) +
-  facet_wrap(~ scale, 
+  facet_wrap(~ scale, scales = "free_x",
              labeller = labeller(scale = c("3" = "Landscape Scale", 
                                            "2" = "Park Scale", 
                                            "1" = "Local Scale"))) +  
