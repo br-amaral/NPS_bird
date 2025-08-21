@@ -491,7 +491,8 @@ nrow(y2)
 length(Xp)
 dim(X1)
 # number of alphas and betas
-n_bs <- 7
+n_bs <- 6
+n_beta_int <- n_bs - 1
 n_as <- 3
 if(length(sps_loop) > 1) { sps_loop <- "commu"} else {sps_loop <- sps_loop}
 if(length((unique(y[,2]))) == 1) { park_name <- unique(y[,2])} else {park_name <- "parks"}
@@ -513,6 +514,7 @@ jags_data <- list(
     y = y,
     y2 = y2,
     n_bs = n_bs,
+    n_beta_int = n_beta_int,
     n_as = n_as,
     nrowy = nrow(y),
     nrowy2 = nrow(y2),
@@ -540,7 +542,6 @@ print(non_numeric_elements)
 # y2: first detection matrix
 # n_bs: number of betas
 # n_as: number of alphas
-# n_sca_b: number of scales of beta
 # nrowy: number of total rows (all detections)
 # nrowy2: number of rows of first detections 
 # X1-5: all environmental covs in the three scales
@@ -555,17 +556,32 @@ if(test == FALSE){
   write_rds(jags_data, file = glue("data/ana_file/{sps_loop}_step{step_numb}_jagsdata_{date_step1}.rds"))
 }
 
-# source("code/check_data.R") 
+# Define the model file and the output file name
+model_file <- "models/mod_all_covs2.txt"  #mod_name_loop
+if(model_file == "models/mod_all_covs2.txt") {
+  mod_name <- glue("data/ana_file/{sps_loop}_step{step_numb}_model_int_{date_step1}.txt") %>% as.character()} else {
+  mod_name <- glue("data/ana_file/{sps_loop}_step{step_numb}_model_{date_step1}.txt") %>% as.character()}
 
-inits <- function() {
-    list(
-        Z = Zst2,
-        # mu_beta0 = rnorm(1, 0.5), # check this!!!!!
-        beta = rnorm(n_bs, 0.5),
-        mu.alpha0 = rnorm(1, 0.5),
-        alpha = rnorm(n_as, 0.5)
-    )
-}
+# source("code/check_data.R") 
+if(model_file == "models/mod_all_covs2.txt") {
+  inits <- function() {
+      list(
+          Z = Zst2,
+          beta_int = rnorm(n_beta_int, 0.5),
+          beta = rnorm(n_bs, 0.5),
+          mu.alpha0 = rnorm(1, 0.5),
+          alpha = rnorm(n_as, 0.5)
+      )
+  } } else {
+      inits <- function() {
+      list(
+          Z = Zst2,
+          # mu_beta0 = rnorm(1, 0.5), # check this!!!!!
+          beta = rnorm(n_bs, 0.5),
+          mu.alpha0 = rnorm(1, 0.5),
+          alpha = rnorm(n_as, 0.5)
+      )
+  } }
 
 if(test == TRUE){
   nchains <- 1
@@ -586,22 +602,19 @@ paste('\n ************************************* \n \n \n   Running JAGS for:', '
       '**************************************
       ') %>% cat()
 
-if(n_bs > 1) {
+if(model_file == "models/mod_all_covs2.txt") {
     scales_beta <- glue("scales_beta{seq(1,n_bs-1,1)}")
 
-    params <- c("beta0", "beta", "alpha0", "alpha", 
+    params <- c("beta0", "beta", "beta_int", "alpha0", "alpha", 
                 scales_beta,
                 "mu.beta0", "tau.beta0", "mu.alpha0", "tau.alpha0") %>% # Z, psi
               as.character()
   } else {
-    scales_beta <- glue("scales_beta_noscale")
+    scales_beta <- glue("scales_beta{seq(1,n_bs-1,1)}")
     params <- c("beta0", "beta", "alpha0", "alpha", 
+                scales_beta,
                 "mu.beta0", "tau.beta0", "mu.alpha0", "tau.alpha0") %>% # Z, psi
               as.character()}
-
-# Define the model file and the output file name
-model_file <- "models/mod_all_covs.txt"  #mod_name_loop
-mod_name <- glue("data/ana_file/{sps_loop}_step{step_numb}_model_{date_step1}.txt") %>% as.character()
 
 # Read the content of the model file
 mod_content <- readLines(model_file)
@@ -661,6 +674,13 @@ file_name2 <- paste0(file_name, 'run',
                       length(list.files(path = file.path(getwd(),"data/model_res/"),
                                         pattern = file_name,
                                         full.names = FALSE)) + 1)
+
+if(model_file == "models/mod_all_covs2.txt") {
+  file_name2 <- paste0(file_name, 'run',
+                      length(list.files(path = file.path(getwd(),"data/model_res/"),
+                                        pattern = glue("{file_name}_int"),
+                                        full.names = FALSE)) + 1)
+                                        }
 
 folder_path <- "data/model_res"
 

@@ -40,7 +40,7 @@ freshr::freshr()
 # Installed new packages?
 #  renv::snapshot()
 
-test <- FALSE
+test <- TRUE
 
 #! Load packages ---------------------------------------
 #library(conflicted)
@@ -70,7 +70,8 @@ if(test == TRUE){nadapt_min <- 1} else {nadapt_min <- 500}
 
 master_tab <- read_csv("data/mod_key.csv") %>%
         filter(run == "no") %>% 
-        filter(step %in% c(1,2))
+        filter(step %in% c(1)) %>% 
+        distinct()
 for (key_ite in 1:nrow(master_tab)){
     # key_ite <- 1
     tib_loop <- master_tab[key_ite, ]
