@@ -225,7 +225,7 @@ shrub <- joinMicroShrubData() %>%
             # mutate(across(everything(), ~replace_na(.x, 0))) %>% 
             # rename(shrub_cov_nat = shrub_cov_invasive_FALSE,
             #        shrub_cov_nonat = shrub_cov_invasive_TRUE)
-
+## todo look at stand level for shrub - 
 #? Coarse wood debris?
 cwd <- joinCWDData(park = 'all') %>% # coarse wood debris
           as_tibble() %>%        
