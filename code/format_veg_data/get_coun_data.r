@@ -116,7 +116,7 @@ for(ii in 1:nrow(park_county)){
 ###? Tree basal area and density -----------------------------------------
 # conversion to stems/ha = 10000/400
 # cm2 to m2 cancels out, so just /400m2 plot.
-
+#todo: check hardwood
 # by species
 for(ii in 1:nrow(park_county)){
   tpaRI <- tpa(get(glue("fia_{park_county$park[ii]}")), 
@@ -124,8 +124,7 @@ for(ii in 1:nrow(park_county)){
                byPlot = TRUE, 
                treeType = 'live',
                bySpecies = TRUE,
-               # TODO: 10cm not 5 for park protocol - 3.93701 not 5
-               treeDomain =  DIA <5.0) %>%    # exclude saplings
+               treeDomain =  DIA > 5.0) %>%    # exclude saplings
                group_by(pltID, YEAR, SCIENTIFIC_NAME) %>%
                # sum all trees of the same sps to get sps ba and den
                summarize(treeden_ha = sum(TPA, na.rm = T) * 2.47105,    # convert trees per acre to trees per hectare 
@@ -267,7 +266,6 @@ for(ii in 1:nrow(park_county)){
                             pctCANCOV_late =   mean(pctCANCOV_late, na.rm = T)) %>% 
                   mutate(park = park_county$park[ii])
 
-
     if(ii == 1){
       stastr_tab2 <- stastr
     }
@@ -331,7 +329,7 @@ for(ii in 1:nrow(park_county)){
                             #totals = TRUE, 
                             byPlot = TRUE)  %>% 
                   filter(GROWTH_HABIT == 'Shrubs/vines', # maybe also 'Forbs'
-                        LAYER %in% c("0 to 2.0 feet", "2.1 to 6.0 feet")) %>% 
+                         LAYER %in% c("0 to 2.0 feet", "2.1 to 6.0 feet")) %>% 
                   group_by(pltID) %>% 
                   summarise(shrub_cov = mean(PROP_COVER, na.rm = T)) %>% 
                   ungroup() %>% 
@@ -347,6 +345,7 @@ for(ii in 1:nrow(park_county)){
       shrub <- rbind(shrub, shrub_loop)
     }
 }
+## check number of NAs - check the number of plots with replies
 
 ###? Down wood debris ----------------------------------------- 
 # BIO_ACRE: estimate of mean biomass per acre of dwm (short tons/acre)
