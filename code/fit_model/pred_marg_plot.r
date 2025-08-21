@@ -294,7 +294,7 @@ process_beta_predictions <- function(beta_num, covariate_suffix) {
               
               # Special handling for county-level basal area (multiplied by 5)
               scale_num == 3 & covariate_suffix == "BA" ~ 
-                (x_value * lims_data[[sd_col]] * 5) + (lims_data[[mean_col]]),
+                (x_value * lims_data[[sd_col]]) + (lims_data[[mean_col]]),
               
               # Standard unstandardization for all other cases
               TRUE ~ (x_value * lims_data[[sd_col]]) + lims_data[[mean_col]]
@@ -456,8 +456,8 @@ ggplot(beta3_preds, aes(x = x_ori, y = pred_mean)) +
   scale_color_manual(values = safe_pal) +
   ylim(0, 1)
 
-ggsave("figures/pred_lat.svg", plot = last_plot(), device = "svg", width = 10, height = 6)
-ggsave("figures/pred_lat.png", plot = last_plot(), device = "png", width = 10, height = 6)
+ggsave("figures/pred_lat.svg", plot = last_plot(), device = "svg", width = 14, height = 6)
+ggsave("figures/pred_lat.png", plot = last_plot(), device = "png", width = 14, height = 6)
 
 #? SHRUB BASAL AREA -----------------------------------------------------------------
 shrub_BA_axis_s <- X10 %>% 
@@ -514,7 +514,10 @@ tree_BA_axis_s <- X10 %>%
                               up_BA_m2ha_park = quantile(BA_m2ha_park, probs = 0.95, na.rm = T),
                               up_BA_m2ha_coun = quantile(BA_m2ha_coun, probs = 0.95, na.rm = T))
 
-ggplot(beta56_preds, aes(x = x_ori, y = pred_mean)) +
+beta56_preds2 <- beta56_preds %>% 
+                    filter(sps %in% c("BRCR", "BTNW", "DOWO", "OVEN", "REVI", "SCTA", "WBNU", "WOTH"))
+
+ggplot(beta5_preds, aes(x = x_ori, y = pred_mean)) +
   geom_line(aes(color = factor(sps)), linewidth = 1.2) +
   facet_wrap(~ scale, scales = "free_x",
              labeller = labeller(scale = c("3" = "Landscape Scale", 
@@ -538,5 +541,6 @@ ggplot(beta56_preds, aes(x = x_ori, y = pred_mean)) +
   scale_color_manual(values = safe_pal) +
   ylim(0, 1)
 
-ggsave("figures/pred_BA.svg", plot = last_plot(), device = "svg", width = 10, height = 6)
-ggsave("figures/pred_BA.png", plot = last_plot(), device = "png", width = 10, height = 6)
+ggsave("figures/pred_BA.svg", plot = last_plot(), device = "svg", width = 14, height = 6)
+ggsave("figures/pred_BA.png", plot = last_plot(), device = "png", width = 14, height = 6)
+

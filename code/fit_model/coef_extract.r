@@ -112,6 +112,28 @@ table(coef_summary3$mod_res)
 
 coef_summary3 <- as_tibble(coef_summary3)
 
+coef_summary3 %>% 
+        filter(betas == "park_size") %>% 
+        arrange(sps) %>% 
+        ggplot() +
+          geom_vline(xintercept = 0, linetype = "dashed", color = "grey50", linewidth = 0.8) +
+          geom_segment(aes(x = `2.5%`, xend = `97.5%`, y = sps, yend = sps), 
+                      linewidth = 1.2) +
+          geom_point(aes(x = `50%`, y = sps), 
+                    size = 3) +
+          scale_color_identity() +
+          #facet_wrap(~ Covariate, scales = "free_x") +
+          theme_minimal() +
+          theme(
+            panel.grid.major.x = element_blank(),
+            panel.grid.minor.x = element_blank(),
+            strip.text = element_text(face = "bold", size = 12)
+          ) +
+          labs(
+            x = "Park size",
+            y = "Species"
+          )
+
 dat <- coef_summary3 %>% 
             filter(overlap0 == "no") %>% 
             rename(sca = sca_sel,
@@ -381,7 +403,8 @@ dat_sca <- dat1  %>%
                                names_prefix = "sca")  %>% 
                   group_by(Covariate, sps) %>% 
                   mutate(scale_selected = ifelse(row_number() == which.max(selec_freq), 1, 0)) %>% 
-                  ungroup()
+                  ungroup() %>% 
+                  filter(Covariate != "Tree Basal Area Squared")
 # yes legend
 (sca_plot_wleg <- ggplot() +
   # landscape
@@ -413,10 +436,10 @@ dat_sca <- dat1  %>%
                        breaks = c(0, 0.25, 0.5, 0.75, 1), 
                        labels = scales::percent(c(0, 0.25, 0.5, 0.75, 1))) +
   theme_minimal() +
-  theme(axis.text.x = element_text(hjust = 0.5, size = 12),
-        axis.text.y = element_text(hjust = 0, size = 12),    
-        axis.title.x = element_text(size = 14),
-        axis.title.y = element_text(size = 14),
+  theme(axis.text.x = element_text(hjust = 0.5, size = 16),
+        axis.text.y = element_text(hjust = 0, size = 16),    
+        axis.title.x = element_text(size = 18),
+        axis.title.y = element_text(size = 18),
         legend.title = element_text(size = 15, face = "bold", hjust = 0.5),  
         legend.text = element_text(size = 13)) +
   scale_y_discrete(limits = rev(levels(factor(dat_sca$sps)))) +  # Reverse y-axis order
@@ -424,16 +447,17 @@ dat_sca <- dat1  %>%
   cov_codes <- unique(dat_sca$Covariate)
     # Manually add line breaks
     case_when(
-      cov_codes == "Tree Basal Area" ~ "Tree Basal \nArea",
-      cov_codes == "Tree Basal Area Squared" ~ "Tree Basal \nArea Squared", 
-      cov_codes == "Late Successional Tree Density" ~ "Late Success. \nTree Density",
+      cov_codes == "Tree Basal Area" ~ "Tree Basal\nArea",
+      cov_codes == "Tree Basal Area Squared" ~ "Tree Basal\nArea Squared", 
+      cov_codes == "Late Successional Tree Density" ~ "Late Success.\nTree Density",
+      cov_codes == "Shrub Basal Area" ~ "Shrub\nBasal Area",
       TRUE ~ cov_codes  # Keep others as is
     )}) +
   labs(x = "\nForest Covariate", y = "Species\n", fill = "Scale Selection\nFrequency\n") +
   guides(fill = guide_colorbar(override.aes = list(alpha = 0.2, size = 5)))   # Control legend appearance
 )
 
-ggsave("figures/sca_plot.svg", plot = sca_plot_wleg, device = "svg", width = 11, height = 14)
+ggsave("figures/sca_plot.svg", plot = sca_plot_wleg, device = "svg", width = 14, height = 14)
 
 # no legend 
 (sca_plot_noleg <- ggplot() +
@@ -467,22 +491,25 @@ ggsave("figures/sca_plot.svg", plot = sca_plot_wleg, device = "svg", width = 11,
                        labels = scales::percent(c(0, 0.25, 0.5, 0.75, 1))) +
   theme_minimal() +
   theme(legend.position = "none",
-        axis.text.x = element_text(hjust = 0.5, size = 12),
-        axis.text.y = element_text(hjust = 0, size = 12),    
-        axis.title.x = element_text(size = 14),
-        axis.title.y = element_text(size = 14),
+        axis.text.x = element_text(hjust = 0.5, size = 18),
+        axis.text.y = element_text(hjust = 0, size = 19),    
+        axis.title.x = element_text(size = 20),
+        axis.title.y = element_text(size = 20),
         legend.title = element_text(size = 15, face = "bold", hjust = 0.5),  
         legend.text = element_text(size = 13)) +
   scale_y_discrete(limits = rev(levels(factor(dat_sca$sps)))) +  # Reverse y-axis order
   scale_x_discrete(labels = function(x) {
-  cov_codes <- unique(dat_sca$Covariate)
-    # Manually add line breaks
-    case_when(
-      cov_codes == "Tree Basal Area" ~ "Tree Basal \nArea",
-      cov_codes == "Tree Basal Area Squared" ~ "Tree Basal \nArea Squared", 
-      cov_codes == "Late Successional Tree Density" ~ "Late Success. \nTree Density",
-      TRUE ~ cov_codes  # Keep others as is
-    )}) +
+    cov_codes <- unique(dat_sca$Covariate)
+      # Manually add line breaks
+      case_when(
+        cov_codes == "Tree Basal Area" ~ "Tree Basal\nArea",
+        cov_codes == "Tree Basal Area Squared" ~ "Tree Basal\nArea Squared", 
+        cov_codes == "Late Successional Tree Density" ~ "Late Success.\nTree %",
+        cov_codes == "Conifer Density" ~ "Conifer\n%",
+        cov_codes == "Tree Density" ~ "Tree\nDensity",
+        cov_codes == "Shrub Basal Area" ~ "Shrub\n%",
+        TRUE ~ cov_codes  # Keep others as is
+      )}) +
   labs(x = "\nForest Covariate", y = "Species\n", fill = "Scale Selection\nFrequency\n") +
   guides(fill = guide_colorbar(override.aes = list(alpha = 0.2, size = 5)))   # Control legend appearance
 )
@@ -515,22 +542,25 @@ dat_sca2 <- dat_sca %>%
                        labels = scales::percent(c(0, 0.25, 0.5, 0.75, 1))) +
   theme_minimal() +
   theme(legend.position = "none",
-        axis.text.x = element_text(hjust = 0.5, size = 12),
-        axis.text.y = element_text(hjust = 0, size = 12),    
-        axis.title.x = element_text(size = 14),
-        axis.title.y = element_text(size = 14),
+        axis.text.x = element_text(hjust = 0.5, size = 18),
+        axis.text.y = element_text(hjust = 0, size = 19),    
+        axis.title.x = element_text(size = 20),
+        axis.title.y = element_text(size = 20),
         legend.title = element_text(size = 15, face = "bold", hjust = 0.5),  
         legend.text = element_text(size = 13)) +
-  scale_y_discrete(limits = rev(levels(factor(dat_sca2$sps)))) +  # Reverse y-axis order
+  scale_y_discrete(limits = rev(levels(factor(dat_sca$sps)))) +  # Reverse y-axis order
   scale_x_discrete(labels = function(x) {
-  cov_codes <- unique(dat_sca2$Covariate)
-    # Manually add line breaks
-    case_when(
-      cov_codes == "Tree Basal Area" ~ "Tree Basal \nArea",
-      cov_codes == "Tree Basal Area Squared" ~ "Tree Basal \nArea Squared", 
-      cov_codes == "Late Successional Tree Density" ~ "Late Success. \nTree Density",
-      TRUE ~ cov_codes  # Keep others as is
-    )}) +
+    cov_codes <- unique(dat_sca$Covariate)
+      # Manually add line breaks
+      case_when(
+        cov_codes == "Tree Basal Area" ~ "Tree Basal\nArea",
+        cov_codes == "Tree Basal Area Squared" ~ "Tree Basal\nArea Squared", 
+        cov_codes == "Late Successional Tree Density" ~ "Late Success.\nTree %",
+        cov_codes == "Conifer Density" ~ "Conifer\n%",
+        cov_codes == "Tree Density" ~ "Tree\nDensity",
+        cov_codes == "Shrub Basal Area" ~ "Shrub\n%",
+        TRUE ~ cov_codes  # Keep others as is
+      )}) +
   labs(x = "\nForest Covariate", y = "Species\n", fill = "Scale Selection\nFrequency\n") +
   guides(fill = guide_colorbar(override.aes = list(alpha = 0.2, size = 5)))   # Control legend appearance
 )
@@ -574,26 +604,30 @@ write_rds(dat_sca, "data/out/coefs_sps_sca.rds")
                        midpoint = 0,              # Center point at zero
                        name = "Covariate\nEffect size\n") +
   theme_minimal() +
-  theme(axis.text.x = element_text(hjust = 0.5, size = 12),
-        axis.text.y = element_text(hjust = 0, size = 12),    
-        axis.title.x = element_text(size = 14),
-        axis.title.y = element_text(size = 14),
+    theme(legend.position = "none",
+        axis.text.x = element_text(hjust = 0.5, size = 18),
+        axis.text.y = element_text(hjust = 0, size = 19),    
+        axis.title.x = element_text(size = 20),
+        axis.title.y = element_text(size = 20),
         legend.title = element_text(size = 15, face = "bold", hjust = 0.5),  
         legend.text = element_text(size = 13)) +
   scale_y_discrete(limits = rev(levels(factor(dat_sca$sps)))) +  # Reverse y-axis order
   scale_x_discrete(labels = function(x) {
-  cov_codes <- unique(dat_sca$Covariate)
-    # Manually add line breaks
-    case_when(
-      cov_codes == "Tree Basal Area" ~ "Tree Basal \nArea",
-      cov_codes == "Tree Basal Area Squared" ~ "Tree Basal \nArea Squared", 
-      cov_codes == "Late Successional Tree Density" ~ "Late Success. \nTree Density",
-      TRUE ~ cov_codes  # Keep others as is
-    )}) +
+    cov_codes <- unique(dat_sca$Covariate)
+      # Manually add line breaks
+      case_when(
+        cov_codes == "Tree Basal Area" ~ "Tree Basal\nArea",
+        cov_codes == "Tree Basal Area Squared" ~ "Tree Basal\nArea Squared", 
+        cov_codes == "Late Successional Tree Density" ~ "Late Success.\nTree %",
+        cov_codes == "Conifer Density" ~ "Conifer\n%",
+        cov_codes == "Tree Density" ~ "Tree\nDensity",
+        cov_codes == "Shrub Basal Area" ~ "Shrub\n%",
+        TRUE ~ cov_codes  # Keep others as is
+      )}) +
   labs(x = "\nForest Covariate", y = "Species\n", fill = "Covariate\nEffect size\n")# +
 )
 
-ggsave("figures/circles_coefs.svg", plot = circles_coefs, device = "svg", width = 11, height = 14)
+ggsave("figures/circles_coefs.svg", plot = circles_coefs, device = "svg", width = 9, height = 14)
 
 # remove legend
 (circles_coefs_noleg <- ggplot() +
@@ -626,23 +660,26 @@ ggsave("figures/circles_coefs.svg", plot = circles_coefs, device = "svg", width 
                        midpoint = 0,              # Center point at zero
                        name = "Covariate\nEffect size\n") +
   theme_minimal() +
-  theme(legend.position = "none",
-        axis.text.x = element_text(hjust = 0.5, size = 12),
-        axis.text.y = element_text(hjust = 0, size = 12),    
-        axis.title.x = element_text(size = 14),
-        axis.title.y = element_text(size = 14),
+    theme(legend.position = "none",
+        axis.text.x = element_text(hjust = 0.5, size = 18),
+        axis.text.y = element_text(hjust = 0, size = 19),    
+        axis.title.x = element_text(size = 20),
+        axis.title.y = element_text(size = 20),
         legend.title = element_text(size = 15, face = "bold", hjust = 0.5),  
         legend.text = element_text(size = 13)) +
   scale_y_discrete(limits = rev(levels(factor(dat_sca$sps)))) +  # Reverse y-axis order
   scale_x_discrete(labels = function(x) {
-  cov_codes <- unique(dat_sca$Covariate)
-    # Manually add line breaks
-    case_when(
-      cov_codes == "Tree Basal Area" ~ "Tree Basal \nArea",
-      cov_codes == "Tree Basal Area Squared" ~ "Tree Basal \nArea Squared", 
-      cov_codes == "Late Successional Tree Density" ~ "Late Success. \nTree Density",
-      TRUE ~ cov_codes  # Keep others as is
-    )}) +
+    cov_codes <- unique(dat_sca$Covariate)
+      # Manually add line breaks
+      case_when(
+        cov_codes == "Tree Basal Area" ~ "Tree Basal\nArea",
+        cov_codes == "Tree Basal Area Squared" ~ "Tree Basal\nArea Squared", 
+        cov_codes == "Late Successional Tree Density" ~ "Late Success.\nTree %",
+        cov_codes == "Conifer Density" ~ "Conifer\n%",
+        cov_codes == "Tree Density" ~ "Tree\nDensity",
+        cov_codes == "Shrub Basal Area" ~ "Shrub\n%",
+        TRUE ~ cov_codes  # Keep others as is
+      )}) +
   labs(x = "\nForest Covariate", y = "Species\n", fill = "Covariate\nEffect size\n")# +
 #   guides(fill = guide_colorbar(override.aes = list(alpha = 0.2, size = 5))) 
 
@@ -662,23 +699,26 @@ ggsave("figures/circles_coefs_noleg.svg", plot = circles_coefs_noleg, device = "
                        midpoint = 0,              # Center point at zero
                        name = "Covariate\nEffect size\n") +
   theme_minimal() +
-  theme(legend.position = "none",
-        axis.text.x = element_text(hjust = 0.5, size = 12),
-        axis.text.y = element_text(hjust = 0, size = 12),    
-        axis.title.x = element_text(size = 14),
-        axis.title.y = element_text(size = 14),
+    theme(legend.position = "none",
+        axis.text.x = element_text(hjust = 0.5, size = 18),
+        axis.text.y = element_text(hjust = 0, size = 19),    
+        axis.title.x = element_text(size = 20),
+        axis.title.y = element_text(size = 20),
         legend.title = element_text(size = 15, face = "bold", hjust = 0.5),  
         legend.text = element_text(size = 13)) +
   scale_y_discrete(limits = rev(levels(factor(dat_sca$sps)))) +  # Reverse y-axis order
   scale_x_discrete(labels = function(x) {
-  cov_codes <- unique(dat_sca$Covariate)
-    # Manually add line breaks
-    case_when(
-      cov_codes == "Tree Basal Area" ~ "Tree Basal \nArea",
-      cov_codes == "Tree Basal Area Squared" ~ "Tree Basal \nArea Squared", 
-      cov_codes == "Late Successional Tree Density" ~ "Late Success. \nTree Density",
-      TRUE ~ cov_codes  # Keep others as is
-    )}) +
+    cov_codes <- unique(dat_sca$Covariate)
+      # Manually add line breaks
+      case_when(
+        cov_codes == "Tree Basal Area" ~ "Tree Basal\nArea",
+        cov_codes == "Tree Basal Area Squared" ~ "Tree Basal\nArea Squared", 
+        cov_codes == "Late Successional Tree Density" ~ "Late Success.\nTree %",
+        cov_codes == "Conifer Density" ~ "Conifer\n%",
+        cov_codes == "Tree Density" ~ "Tree\nDensity",
+        cov_codes == "Shrub Basal Area" ~ "Shrub\n%",
+        TRUE ~ cov_codes  # Keep others as is
+      )}) +
   labs(x = "\nForest Covariate", y = "Species\n", fill = "Covariate\nEffect size\n")# +
 )
 
@@ -698,23 +738,26 @@ ggsave("figures/empty_noleg.svg", plot = empty_noleg, device = "svg", width = 9,
              aes(x = Covariate, y = sps), fill = "white", alpha = 0.6, color = "#8d8888", 
              size = 10, shape = 21, stroke = 0.9) +
   theme_minimal() +
-  theme(legend.position = "none",
-        axis.text.x = element_text(hjust = 0.5, size = 12),
-        axis.text.y = element_text(hjust = 0, size = 12),    
-        axis.title.x = element_text(size = 14),
-        axis.title.y = element_text(size = 14),
+    theme(legend.position = "none",
+        axis.text.x = element_text(hjust = 0.5, size = 18),
+        axis.text.y = element_text(hjust = 0, size = 19),    
+        axis.title.x = element_text(size = 20),
+        axis.title.y = element_text(size = 20),
         legend.title = element_text(size = 15, face = "bold", hjust = 0.5),  
         legend.text = element_text(size = 13)) +
   scale_y_discrete(limits = rev(levels(factor(dat_sca$sps)))) +  # Reverse y-axis order
   scale_x_discrete(labels = function(x) {
-  cov_codes <- unique(dat_sca$Covariate)
-    # Manually add line breaks
-    case_when(
-      cov_codes == "Tree Basal Area" ~ "Tree Basal \nArea",
-      cov_codes == "Tree Basal Area Squared" ~ "Tree Basal \nArea Squared", 
-      cov_codes == "Late Successional Tree Density" ~ "Late Success. \nTree Density",
-      TRUE ~ cov_codes  # Keep others as is
-    )}) +
+    cov_codes <- unique(dat_sca$Covariate)
+      # Manually add line breaks
+      case_when(
+        cov_codes == "Tree Basal Area" ~ "Tree Basal\nArea",
+        cov_codes == "Tree Basal Area Squared" ~ "Tree Basal\nArea Squared", 
+        cov_codes == "Late Successional Tree Density" ~ "Late Success.\nTree %",
+        cov_codes == "Conifer Density" ~ "Conifer\n%",
+        cov_codes == "Tree Density" ~ "Tree\nDensity",
+        cov_codes == "Shrub Basal Area" ~ "Shrub\n%",
+        TRUE ~ cov_codes  # Keep others as is
+      )}) +
   labs(x = "\nForest Covariate", y = "Species\n", fill = "Scale Selection\nFrequency\n") 
 )
 
