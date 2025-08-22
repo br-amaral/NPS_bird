@@ -16,10 +16,6 @@
 #           - :
 #           - :
 
-# Print script file name
-context <- rstudioapi::getSourceEditorContext()
-cat("\n", "\n", "\n", 'Current script: ', basename(context[[2]]), "\n", "\n", "\n", "\n")
-
 #! Package library and versions -------------------------
 #  Created a library repo?
 #  (  )yes  (  )no
@@ -38,6 +34,7 @@ freshr::freshr()
 library(tidyverse)
 library(conflicted)
 library(glue)
+library(purrr)
 
 conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::filter)
@@ -115,13 +112,44 @@ create_individual_plot <- function(data, title, y_label) {
   
   ggplot(plot_data, aes(x = Point_Name, y = value, group = park)) +
     geom_point(alpha = 0.6, size = 1.5) +
-    theme_minimal() +
-    facet_wrap(park~scale, scales = "free")
-}
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 3),
+          plot.title = element_text(hjust = 0.5)) +
+    facet_wrap(park~scale, scales = "free_x", ncol = 3) +
+    #facet_grid(rows = vars(park), cols = vars(scale), scales = "free_x", switch = "y") +
+    labs(title = title, y = y_label)
+
+} 
 
 # Create individual plots
 p1_individual <- create_individual_plot(tree_density_long, 
                                        "Tree Density", 
                                        "Density (stems/ha)")
 
-ggsave("figures/plot_density_scalesX.svg", plot = last_plot(), device = "png", width = 6, height = 9)
+ggsave("figures/plot_density_scalesX.png", plot = last_plot(), device = "png", width = 6, height = 18)
+
+# List of reshaped data and plot titles
+covariate_plots <- list(
+  tree_density = list(data = tree_density_long, title = "Tree Density", ylab = "Density (stems/ha)"),
+  basal_area = list(data = basal_area_long, title = "Basal Area", ylab = "Basal Area (m2/ha)"),
+  conifer_BA = list(data = conifer_BA_long, title = "Conifer Basal Area %", ylab = "Conifer BA (%)"),
+  late_successional = list(data = late_successional_long, title = "Late Successional BA %", ylab = "Late Successional BA (%)"),
+  shrub_BA = list(data = shrub_BA_long, title = "Shrub Basal Area", ylab = "Shrub BA")
+)
+
+# Loop to create and save each plot
+for (cov_name in names(covariate_plots)) {
+  plot_obj <- create_individual_plot(
+    covariate_plots[[cov_name]]$data,
+    covariate_plots[[cov_name]]$title,
+    covariate_plots[[cov_name]]$ylab
+  )
+  
+  ggsave(
+    filename = glue("figures/plot_{cov_name}_scalesX.png"),
+    plot = plot_obj,
+    device = "png",
+    width = 6,
+    height = 18
+  )
+}

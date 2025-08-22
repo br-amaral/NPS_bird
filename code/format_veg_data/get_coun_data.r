@@ -508,3 +508,4 @@ write_rds(coun_covs, file = "data/out/coun_covs.rds")
 #   geom_point(aes(x = YEAR, y = COVER_PCT, col = park)) +
 #   geom_line(aes(x = YEAR, y = COVER_PCT, col = park)) +
 #   theme_bw()
+

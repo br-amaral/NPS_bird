@@ -590,6 +590,8 @@ nrow(X4) == nrow(X3)
 
 write_rds(X4, file = {"data/out/raw_x_covs.rds"})
 
+cat("\n\n\n environmental covs saved!!! \n\n\n\n\n")
+
 # get detection covariates! 
 inte_key <- y1 %>% 
   filter(Admin_Unit_Code %!in% c("ACAD", "ELRO", "SAIR")) %>% 
