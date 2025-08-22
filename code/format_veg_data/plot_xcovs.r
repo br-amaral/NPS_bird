@@ -144,7 +144,7 @@ for (cov_name in names(covariate_plots)) {
     covariate_plots[[cov_name]]$title,
     covariate_plots[[cov_name]]$ylab
   )
-  
+  cat(cov_name)
   ggsave(
     filename = glue("figures/plot_{cov_name}_scalesX.png"),
     plot = plot_obj,

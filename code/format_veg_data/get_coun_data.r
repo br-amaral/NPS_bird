@@ -43,6 +43,9 @@ Modes <- function(x) {
       ux[tab == max(tab)]}
 }
 
+hg <- httpgd::hgd()
+httpgd::hgd_browse()
+
 #! Source code -----------------------------------------
 ## Download the state subset or Connecticut (requires an internet connection)
 ## Save as an object to automatically load the data into your current R session!
@@ -116,7 +119,7 @@ for(ii in 1:nrow(park_county)){
 ###? Tree basal area and density -----------------------------------------
 # conversion to stems/ha = 10000/400
 # cm2 to m2 cancels out, so just /400m2 plot.
-#todo: check hardwood
+# TODO! check hardwood
 # by species
 for(ii in 1:nrow(park_county)){
   tpaRI <- tpa(get(glue("fia_{park_county$park[ii]}")), 
@@ -148,6 +151,8 @@ for(ii in 1:nrow(park_county)){
 
 tree_cat <- read_csv("data/tree_sps_harcon.csv")
 
+table(tree_cat$type)
+
 tree_sps <- as_tibble(sort(unique((tpa_tab_sps$SCIENTIFIC_NAME))))  %>% 
                 rename(sps = value) %>% 
                 mutate(genus = word(sps, 1)) %>% 
@@ -155,6 +160,8 @@ tree_sps <- as_tibble(sort(unique((tpa_tab_sps$SCIENTIFIC_NAME))))  %>%
                        genus != "None")
 
 tree_sps$genus %>% unique()
+
+if(table(tree_sps$genus %>% unique() %in% tree_cat$genus) %>% names() != TRUE) {stop("missing genus in row 164")}
 
 tree_sps <- left_join(tree_sps, tree_cat, by = "genus")  %>% 
                 select(-genus) %>% 
@@ -186,9 +193,48 @@ tpa_covs <- tpa_tab_sps  %>%
                             BA_m2ha =             mean(BA_m2ha, na.rm = T))  %>% 
                   mutate(BA_m2ha_perc_con = BA_m2ha_Conifer/BA_m2ha)
 
+# check:
+tpa_covs %>% 
+  ggplot(aes(x = park)) +
+  # Primary y-axis (left) - Basal Area values
+  geom_point(aes(y = BA_m2ha_Hardwood), color = "blue", size = 3) +
+  geom_point(aes(y = BA_m2ha_Conifer), color = "pink", size = 3) +
+  
+  # Secondary y-axis (right) - Percentage values (scaled down to fit)
+  geom_line(aes(y = (1 - BA_m2ha_perc_con) * 100, group = 1), 
+            color = "blue", linewidth = 1.2) +
+  geom_line(aes(y = BA_m2ha_perc_con * 100, group = 1), 
+            color = "pink", linewidth = 1.2) +
+  
+  # Set up dual y-axes
+  scale_y_continuous(
+    name = "Basal Area (m²/ha ; points) ",
+    sec.axis = sec_axis(~ . / max(tpa_covs$BA_m2ha_Hardwood + tpa_covs$BA_m2ha_Conifer), 
+                        name = "Proportion (line)",
+                        labels = scales::percent)
+  ) +
+  
+  labs(
+    title = "Basal Area by Forest Type",
+    x = "Park"
+  ) +
+  theme_bw() +
+  theme(
+    axis.title.y = element_text(color = "black"),
+    axis.title.y.right = element_text(color = "black"),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5)  # Add this line to center subtitle
+  )+
+  labs(
+    title = "Hardwood vs Conifer Forest Metrics by Park",
+    subtitle = "pink is conifer, blue is hardwood",
+    x = "Park"
+  )
+
+
 # by size class: classify each tree accoding to DBH in BA and density of pole, mature, and large
 # size classes are 10-25.9 cm DBH (pole), 26-45.9 cm DBH (mature) and ≥ 46 cm DBH (large).
-
 for(ii in 1:nrow(park_county)){
     tpa_pole <- tpa(get(glue("fia_{park_county$park[ii]}")), 
                   #totals = TRUE, 
@@ -246,6 +292,13 @@ for(ii in 1:nrow(park_county)){
       tpa_stage <- rbind(tpa_stage, tpa_stage_loop)
     }
   }
+
+tpa_stage <- tpa_stage %>% relocate(park)
+## check in plot
+tpa_stage %>% 
+      mutate(totalBA = sum(BA_m2ha_pole, BA_m2ha_mature, BA_m2ha_large),
+             totalDEN = treeden_ha_pole, treeden_ha_mature, treeden_ha_large)
+
 
 
 ###? Stand structure ----------------------------------------------------
