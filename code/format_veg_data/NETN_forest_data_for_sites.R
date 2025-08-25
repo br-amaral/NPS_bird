@@ -226,7 +226,6 @@ shrub2 <- joinMicroShrubData() %>%
             # mutate(across(everything(), ~replace_na(.x, 0))) %>% 
             # rename(shrub_cov_nat = shrub_cov_invasive_FALSE,
             #        shrub_cov_nonat = shrub_cov_invasive_TRUE)
-## todo look at stand level for shrub - 
 shrub <- VIEWS_NETN$StandPlantCoverStrata_NETN  %>% 
             filter(StrataLabel %in% c("Ground", "Mid-understory"),
                    ParkUnit %!in% c("ACAD", "ELRO", "SAIR"),
@@ -236,10 +235,6 @@ shrub <- VIEWS_NETN$StandPlantCoverStrata_NETN  %>%
             group_by(Plot_Name) %>%
             summarize(CoverClassCode = mean(CoverClassCode, na.rm = T)) %>% 
             mutate(across(everything(), ~replace_na(.x, 0)))
-str(shrub)
-
-unique(shrub$StrataLabel)
-
 
 #? Coarse wood debris?
 cwd <- joinCWDData(park = 'all') %>% # coarse wood debris
