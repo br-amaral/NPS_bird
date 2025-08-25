@@ -35,6 +35,7 @@ library(conflicted)
 library(glue)
 library(purrr)
 library(tidyverse)
+library(GGally)
 
 conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::filter)
@@ -153,8 +154,6 @@ for (cov_name in names(covariate_plots)) {
 }
 
 ## add correlation between scales
-library(GGally)
-
 tree_density_wide <- tree_density_long %>%
   select(Point_Name, scale, value) %>%
   distinct() %>% 
