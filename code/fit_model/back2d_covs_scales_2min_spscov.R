@@ -491,8 +491,8 @@ nrow(y2)
 length(Xp)
 dim(X1)
 # number of alphas and betas
-n_bs <- 6
-n_beta_int <- n_bs - 1
+n_bs <- 7
+n_beta_int <- n_bs - 2
 n_as <- 3
 if(length(sps_loop) > 1) { sps_loop <- "commu"} else {sps_loop <- sps_loop}
 if(length((unique(y[,2]))) == 1) { park_name <- unique(y[,2])} else {park_name <- "parks"}
@@ -514,7 +514,6 @@ jags_data <- list(
     y = y,
     y2 = y2,
     n_bs = n_bs,
-    n_beta_int = n_beta_int,
     n_as = n_as,
     nrowy = nrow(y),
     nrowy2 = nrow(y2),
@@ -529,6 +528,8 @@ jags_data <- list(
     n_yrM = length(unique(y[, 4])),
     n_pkM = length(unique(y[, 2]))
 )
+
+if(model_file == "models/mod_all_covs2.txt") {jags_data$n_beta_int <- n_beta_int}
 
 # Print the structure of jags_data to verify
 str(jags_data)
@@ -602,7 +603,7 @@ paste('\n ************************************* \n \n \n   Running JAGS for:', '
       ') %>% cat()
 
 if(model_file == "models/mod_all_covs2.txt") {
-    scales_beta <- glue("scales_beta{seq(1,n_bs-1,1)}")
+    scales_beta <- glue("scales_beta{seq(1,n_bs-2,1)}")
 
     params <- c("beta0", "beta", "beta_int", "alpha0", "alpha", 
                 scales_beta,
