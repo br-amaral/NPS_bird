@@ -119,7 +119,6 @@ for(ii in 1:nrow(park_county)){
 ###? Tree basal area and density -----------------------------------------
 # conversion to stems/ha = 10000/400
 # cm2 to m2 cancels out, so just /400m2 plot.
-# TODO! check hardwood
 # by species
 for(ii in 1:nrow(park_county)){
   tpaRI <- tpa(get(glue("fia_{park_county$park[ii]}")), 
@@ -299,8 +298,6 @@ tpa_stage %>%
       mutate(totalBA = sum(BA_m2ha_pole, BA_m2ha_mature, BA_m2ha_large),
              totalDEN = treeden_ha_pole, treeden_ha_mature, treeden_ha_large)
 
-
-
 ###? Stand structure ----------------------------------------------------
 for(ii in 1:nrow(park_county)){
     stastr <- standStruct(get(glue("fia_{park_county$park[ii]}")), 
@@ -381,7 +378,7 @@ for(ii in 1:nrow(park_county)){
     shrub_loop <- vegStruct(get(glue("fia_{park_county$park[ii]}")), 
                             #totals = TRUE, 
                             byPlot = TRUE)  %>% 
-                  filter(GROWTH_HABIT %in%% c('Shrubs/vines','Forbs'),
+                  filter(GROWTH_HABIT %in% c('Shrubs/vines','Forbs'),
                          LAYER %in% c("0 to 2.0 feet", "2.1 to 6.0 feet")) %>% 
                   group_by(pltID) %>% 
                   summarise(shrub_cov = mean(PROP_COVER, na.rm = T)) %>% 
