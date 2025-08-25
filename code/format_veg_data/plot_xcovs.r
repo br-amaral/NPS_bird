@@ -151,3 +151,66 @@ for (cov_name in names(covariate_plots)) {
     height = 18
   )
 }
+
+## add correlation between scales
+library(GGally)
+
+tree_density_wide <- tree_density_long %>%
+  select(Point_Name, scale, value) %>%
+  distinct() %>% 
+  pivot_wider(names_from = scale, values_from = value)  %>% 
+  drop_na()
+
+ggpairs(
+  tree_density_wide %>% select(Site, Park, County),
+  title = "Correlation of Tree Density Across Scales (All Parks)",
+  upper = list(continuous = wrap("cor", digits = 2, stars = FALSE))
+) + theme_bw()
+
+basal_area_wide <- basal_area_long %>%
+  select(Point_Name, scale, value) %>%
+  distinct() %>% 
+  pivot_wider(names_from = scale, values_from = value)  %>% 
+  drop_na()
+
+ggpairs(
+  basal_area_wide %>% select(Site, Park, County),
+  title = "Correlation of Tree Basal Area Across Scales (All Parks)",
+  upper = list(continuous = wrap("cor", digits = 2, stars = FALSE))
+)
+
+late_successional_wide <- late_successional_long %>%
+  select(Point_Name, scale, value) %>%
+  distinct() %>% 
+  pivot_wider(names_from = scale, values_from = value)  %>% 
+  drop_na()
+
+ggpairs(
+  late_successional_wide %>% select(Site, Park, County),
+  title = "Correlation of Late Success. Tree Basal Area Accross Scales (All Parks)",
+  upper = list(continuous = wrap("cor", digits = 2, stars = FALSE))
+) + theme_bw()
+
+conifer_BA_wide <- conifer_BA_long %>%
+  select(Point_Name, scale, value) %>%
+  distinct() %>% 
+  pivot_wider(names_from = scale, values_from = value)  %>% 
+  drop_na()
+
+ggpairs(
+  conifer_BA_wide %>% select(Site, Park, County),
+  title = "Correlation of Conifer Tree Basal Area Accross Scales (All Parks)",
+  upper = list(continuous = wrap("cor", digits = 2, stars = FALSE))
+) + theme_bw()
+
+shrub_BA_wide <- shrub_BA_long %>%
+  select(Point_Name, scale, value) %>%
+  distinct() %>% 
+  pivot_wider(names_from = scale, values_from = value)  %>% 
+  drop_na()
+
+ggpairs(
+  shrub_BA_wide %>% select(Site, Park, County),
+  title = "Correlation of Shrub Accross Scales (All Parks)",
+  upper = list(continuous = wrap("cor", digits = 2, stars = FALSE))
+) + theme_bw()
