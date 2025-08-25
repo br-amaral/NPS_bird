@@ -5,13 +5,7 @@ DOOOOO(ing):
 
 
 # --------------------------------------------------------------------
-TODO: list
-(   ) make sure all files are created in a line and are in the proper folder from one script to the other:
--       data/out/key_bsite.rds
--       data/out/key_fsite.rds
--       data/out/updated_for_cats.csv
--       data/out/nsite_pk.rds (check 2_create_data_file: data/nsite_pk.csv)
-
+TO DOOOOOO:
 
 
 # --------------------------------------------------------------------
@@ -23,7 +17,7 @@ Assumptions/decisions:
                  sair is too different (open areas)
                  elro only has one forest plot
 
-- 250 m for the radius between the bird sites and forest plots
+- 400 m for the radius between the bird sites and forest plots
 
 - forest covariates: average of all years with data because of the panel rotation design
 
