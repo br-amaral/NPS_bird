@@ -381,7 +381,7 @@ for(ii in 1:nrow(park_county)){
     shrub_loop <- vegStruct(get(glue("fia_{park_county$park[ii]}")), 
                             #totals = TRUE, 
                             byPlot = TRUE)  %>% 
-                  filter(GROWTH_HABIT == 'Shrubs/vines', # maybe also 'Forbs'
+                  filter(GROWTH_HABIT %in%% c('Shrubs/vines','Forbs'),
                          LAYER %in% c("0 to 2.0 feet", "2.1 to 6.0 feet")) %>% 
                   group_by(pltID) %>% 
                   summarise(shrub_cov = mean(PROP_COVER, na.rm = T)) %>% 
