@@ -27,7 +27,7 @@
 #           - data/out/neighbor_hardcon_{radi_dist}m.rds  : who is whose neighbor with forest type
 #
 # detach packages and clear workspace
-  freshr::freshr()
+freshr::freshr()
 #
 #! Load packages ---------------------------------------
 #library(conflicted)
