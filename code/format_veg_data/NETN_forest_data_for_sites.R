@@ -203,14 +203,15 @@ table(joinMicroShrubData() %>% select(Shrub))
 table(joinMicroShrubData() %>% select(Vine))
 
 #? shrub
-shrub2 <- joinMicroShrubData() %>%  
-            as_tibble() %>% 
-            filter(Shrub == 1,
-                   ParkUnit %!in% c("ACAD", "ELRO", "SAIR")) %>% # shrub and vine? to match FIA - forbes?
-            select(Plot_Name, SampleYear, shrub_avg_cov) %>% 
-            group_by(Plot_Name) %>%
-            summarize(shrub_avg_cov = mean(shrub_avg_cov, na.rm = T)) %>% 
-            mutate(across(everything(), ~replace_na(.x, 0)))
+# shrub2 <- joinMicroShrubData() %>%  
+#             as_tibble() %>% 
+#             filter(Shrub == 1,
+#                    ParkUnit %!in% c("ACAD", "ELRO", "SAIR")) %>% # shrub and vine? to match FIA - forbes?
+#             select(Plot_Name, SampleYear, shrub_avg_cov) %>% 
+#             group_by(Plot_Name) %>%
+#             summarize(shrub_avg_cov = mean(shrub_avg_cov, na.rm = T)) %>% 
+#             mutate(across(everything(), ~replace_na(.x, 0)))
+
             #select(Plot_Name, SampleYear, Shrub, shrub_avg_cov, Exotic, InvasiveNETN) %>% 
             # mutate(test = ifelse(Exotic == InvasiveNETN, T, F))  %>% 
             # mutate(non_nat = (Exotic == TRUE | InvasiveNETN == TRUE)) %>% 
@@ -226,14 +227,28 @@ shrub2 <- joinMicroShrubData() %>%
             # mutate(across(everything(), ~replace_na(.x, 0))) %>% 
             # rename(shrub_cov_nat = shrub_cov_invasive_FALSE,
             #        shrub_cov_nonat = shrub_cov_invasive_TRUE)
+
+shrub_cats <- as_tibble(cbind(CoverClassLabel = rbind( "0%", "1-5%", "5-25%", "25-50%", "50-75%", "75-95%", "95-100%"),
+                        shrub_avg_cov = rbind(0, 
+                                              mean(c(1, 5))/100, 
+                                              mean(c(5, 25))/100, 
+                                              mean(c(25, 50))/100, 
+                                              mean(c(50, 75))/100, 
+                                              mean(c(75, 95))/100, 
+                                              mean(c(95, 100))/100))) %>% 
+                        rename(CoverClassLabel = V1, shrub_avg_cov = V2) %>% 
+                        mutate(shrub_avg_cov = as.numeric(shrub_avg_cov))
+
 shrub <- VIEWS_NETN$StandPlantCoverStrata_NETN  %>% 
+            as_tibble() %>% 
             filter(StrataLabel %in% c("Ground", "Mid-understory"),
                    ParkUnit %!in% c("ACAD", "ELRO", "SAIR"),
                    CoverClassLabel != "Permanently Missing") %>% 
             select(Plot_Name, SampleYear, CoverClassCode, CoverClassLabel) %>% 
-            mutate(CoverClassCode = as.numeric(CoverClassCode)) %>% 
+            # get the mode for the intervals of forest percentage
+            left_join(., shrub_cats, by = "CoverClassLabel") %>% 
             group_by(Plot_Name) %>%
-            summarize(CoverClassCode = mean(CoverClassCode, na.rm = T)) %>% 
+            summarize(shrub_avg_cov = mean(shrub_avg_cov, na.rm = T)) %>% 
             mutate(across(everything(), ~replace_na(.x, 0)))
 
 #? Coarse wood debris?
