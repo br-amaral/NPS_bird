@@ -31,10 +31,10 @@
 freshr::freshr()
 
 #! Load packages ---------------------------------------
-library(tidyverse)
 library(conflicted)
 library(glue)
 library(purrr)
+library(tidyverse)
 
 conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::filter)
@@ -108,7 +108,7 @@ shrub_BA_long <- reshape_and_plot(X, "shrub_BA")
 create_individual_plot <- function(data, title, y_label) {
   
   plot_data <- data  %>% 
-                filter( !is.na(value))
+                filter(!is.na(value))
   
   ggplot(plot_data, aes(x = Point_Name, y = value, group = park)) +
     geom_point(alpha = 0.6, size = 1.5) +
@@ -116,17 +116,15 @@ create_individual_plot <- function(data, title, y_label) {
     theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 3),
           plot.title = element_text(hjust = 0.5)) +
     facet_wrap(park~scale, scales = "free_x", ncol = 3) +
-    #facet_grid(rows = vars(park), cols = vars(scale), scales = "free_x", switch = "y") +
     labs(title = title, y = y_label)
-
 } 
 
 # Create individual plots
-p1_individual <- create_individual_plot(tree_density_long, 
-                                       "Tree Density", 
-                                       "Density (stems/ha)")
+create_individual_plot(tree_density_long, 
+                        "Tree Density", 
+                        "Density (stems/ha)")
 
-ggsave("figures/plot_density_scalesX.png", plot = last_plot(), device = "png", width = 6, height = 18)
+ggsave("figures/test_scalesX.png", plot = last_plot(), device = "png", width = 6, height = 18)
 
 # List of reshaped data and plot titles
 covariate_plots <- list(
