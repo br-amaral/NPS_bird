@@ -29,14 +29,16 @@ Assumptions/decisions:
 
 # --------------------------------------------------------------------
 Workflow:
-# Rscript code/format_bird_data/1_ImportData.R
+## format_bird_data/1_ImportData.R
+Rscript /Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_bird_data/1_ImportData.R
         get netn bird data and extract it
         in:
           *data/src/original/NETN_2020
         out:
           data/out/NETNtib.rds
           data/key_park.rds
-# Rscript code/format_veg_data/NETN_forest_data_for_sites.R
+## code/format_veg_data/NETN_forest_data_for_sites.R
+Rscript /Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_veg_data/NETN_forest_data_for_sites.R
         get forest plot level covariates
         in: 
           *data/veg_kateaaron/ForestNETN2024.zip
@@ -44,10 +46,12 @@ Workflow:
         out:
           data/out/for_plot_covs.rds
 
-#? format_veg_data/get_conhar_baden.r
+#? code/format_veg_data/get_conhar_baden.r
         get the density of conifer and hardwood trees that are measured by the NETN team to get percentrage of conifer and hardwood per plot
 
-# Rscript code/format_veg_data/get_site_data_rad.R
+## code/format_veg_data/get_site_data_rad.R
+Rscript /Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_veg_data/get_site_data_rad.R
+
         find out which forest plots are connected to each bird site according to a 400m and the first closest neighbours
              and weighted mean values for each bird site (weight is the inverse of the distance)
         in:
@@ -64,7 +68,9 @@ Workflow:
           data/out/site_covs_hardcon_{radi_dist}m.rds
           data/out/neighbor_hardcon_{radi_dist}m.rds
 
-# Rscript code/format_veg_data/get_park_data.R
+## code/format_veg_data/get_park_data.R
+Rscript /Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_veg_data/get_park_data.R
+
         in:
           data/out/for_plot_covs.rds
           data/VAMA_sites.rds
@@ -73,15 +79,20 @@ Workflow:
         out: 
           data/out/park_covs.rds
 
-# Rscript code/format_veg_data/get_coun_data.R
+## code/format_veg_data/get_coun_data.R
+Rscript /Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_veg_data/get_coun_data.R
+
         in:
           data/FIA/
 
         out:
           data/out/coun_covs.rds
 
-# Rscript code/format_bird_data/2_create_data_files.R
-  # Rscript code/format_bird_data/format_data
+## code/format_bird_data/2_create_data_files.R
+Rscript /Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_bird_data/2_create_data_files.R
+
+  ## code/format_bird_data/format_data.R
+  Rscript /Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_bird_data/format_data.R
                 filtering visit and field data for only auditory, 50m distance band, and without missing info ('permanetly missing') in any columns we use, e.g. interval number
 
                 in - data/out/NETNtib.rds
@@ -97,7 +108,8 @@ Workflow:
           data/X.rds
           data/nsite_pk.csv
 
-# Rscript code/fit_model/back2d_covs_scales_2min_spscov.R
+## code/fit_model/back2d_covs_scales_2min_spscov.R
+Rscript /Users/bamaral/Documents/GitHub/NPS_bird_copy/code/fit_model/back2d_covs_scales_2min_spscov.R
         in  - data/y_dat8.rds
         in  - data/X.rds
         in  - data/out/nsite_pk.rds
@@ -105,11 +117,12 @@ Workflow:
 
         out - data/model_res/jags_res_{sps}_{park}_run{run_number}.rds
 
-# Rscript code/fit_model/run_step1_step2.R
+## code/fit_model/run_step1_step2.R
+Rscript /Users/bamaral/Documents/GitHub/NPS_bird_copy/code/fit_model/run_step1_step2.R
 
 # sbatch: nps_source.sb
 
-# plots.R
+#  code/fit_model/plots.R
 
 # post_hoc
 
