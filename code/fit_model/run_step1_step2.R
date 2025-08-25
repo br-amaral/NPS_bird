@@ -40,7 +40,7 @@ freshr::freshr()
 # Installed new packages?
 #  renv::snapshot()
 
-test <- TRUE
+test <- FALSE
 interaction <- FALSE
 #! Load packages ---------------------------------------
 #library(conflicted)
@@ -113,12 +113,12 @@ for (key_ite in 1:nrow(master_tab)){
         }
 
     } else { # step 1
-        cat("Before sourcing - objects in environment:\n")
-        print(ls())
+        # cat("Before sourcing - objects in environment:\n")
+        # print(ls())
         source("code/fit_model/back2d_covs_scales_2min_spscov.R")
         # After sourcing
-        cat("After sourcing - objects in environment:\n")
-        print(ls())
+        # cat("After sourcing - objects in environment:\n")
+        # print(ls())
     
     }
 
