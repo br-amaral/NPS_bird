@@ -203,9 +203,10 @@ table(joinMicroShrubData() %>% select(Shrub))
 table(joinMicroShrubData() %>% select(Vine))
 
 #? shrub
-shrub <- joinMicroShrubData() %>%  
+shrub2 <- joinMicroShrubData() %>%  
             as_tibble() %>% 
-            filter(Shrub == 1) %>% # shrub and vine? to match FIA - forbes?
+            filter(Shrub == 1,
+                   ParkUnit %!in% c("ACAD", "ELRO", "SAIR")) %>% # shrub and vine? to match FIA - forbes?
             select(Plot_Name, SampleYear, shrub_avg_cov) %>% 
             group_by(Plot_Name) %>%
             summarize(shrub_avg_cov = mean(shrub_avg_cov, na.rm = T)) %>% 
@@ -226,6 +227,20 @@ shrub <- joinMicroShrubData() %>%
             # rename(shrub_cov_nat = shrub_cov_invasive_FALSE,
             #        shrub_cov_nonat = shrub_cov_invasive_TRUE)
 ## todo look at stand level for shrub - 
+shrub <- VIEWS_NETN$StandPlantCoverStrata_NETN  %>% 
+            filter(StrataLabel %in% c("Ground", "Mid-understory"),
+                   ParkUnit %!in% c("ACAD", "ELRO", "SAIR"),
+                   CoverClassLabel != "Permanently Missing") %>% 
+            select(Plot_Name, SampleYear, CoverClassCode, CoverClassLabel) %>% 
+            mutate(CoverClassCode = as.numeric(CoverClassCode)) %>% 
+            group_by(Plot_Name) %>%
+            summarize(CoverClassCode = mean(CoverClassCode, na.rm = T)) %>% 
+            mutate(across(everything(), ~replace_na(.x, 0)))
+str(shrub)
+
+unique(shrub$StrataLabel)
+
+
 #? Coarse wood debris?
 cwd <- joinCWDData(park = 'all') %>% # coarse wood debris
           as_tibble() %>%        
