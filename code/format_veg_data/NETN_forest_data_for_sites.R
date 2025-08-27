@@ -98,8 +98,9 @@ tree_den %>%
 tree_den_sizeclass <- joinTreeData(status = "live") %>% 
                           as_tibble() %>% 
                           filter(ParkUnit %!in% c("ACAD", "ELRO", "SAIR"),
-                                  ScientificName != "None present",
-                                  DBHcm > 5 * 2.54) %>% 
+                                  ScientificName != "None present"#,
+                                  #DBHcm > 5 * 2.54
+                                  ) %>% 
                           mutate(size_class = case_when(
                                   DBHcm >= 10 & DBHcm < 26 ~ "pole",
                                   DBHcm >= 26 & DBHcm < 46 ~ "mature", 
@@ -177,10 +178,10 @@ har_con <- har_con %>%
 har_con %>% 
        mutate(park = substr(Plot_Name, 1, 4)) %>% 
        group_by(park) %>% 
-       summarise(mean_ba = mean(BA_m2ha),
-                 mean_de = mean(treeden_ha),
-                 sum_ba  = sum(BA_m2ha),
-                 sum_de  = sum(treeden_ha))
+       summarise(mean_ba = mean(BA_m2ha_harcon),
+                 mean_de = mean(treeden_ha_harcon),
+                 sum_ba  = sum(BA_m2ha_harcon),
+                 sum_de  = sum(treeden_ha_harcon))
 
 ###? percentage of each stage -------------------------------------------------------
 # table(table(sumStrStage() %>% select(Plot_Name, SampleYear))>1)
@@ -285,7 +286,7 @@ cwd <- joinCWDData(park = 'all') %>% # coarse wood debris
 #? Combine data 
 comb <- full_join(plots , tree_den, by = "Plot_Name") %>% 
               full_join(., shrub, by = "Plot_Name") %>% 
-              full_join(., har_con %>% select(-treeden_ha, -BA_m2ha), by = "Plot_Name") %>% 
+              full_join(., har_con, by = "Plot_Name") %>% 
               # full_join(., reg, by = "Plot_Name") %>% 
               # full_join(., stand, by = "Plot_Name") %>% 
               full_join(., tree_sizeclass, by = "Plot_Name") %>% 

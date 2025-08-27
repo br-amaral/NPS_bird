@@ -156,15 +156,15 @@ for(ii in 1:nrow(park_county)){
                mutate(park = park_county$park[ii])  
 
   if(ii == 1){
-    tpa_tab_sps <- tpaRI
+    tpa_con <- tpaRI
   }
   
   if(ii > 1){
-    tpa_tab_sps <- rbind(tpa_tab_sps, tpaRI)
+    tpa_con <- rbind(tpa_con, tpaRI)
   }
 }
 
-tpa_tab_sps <- tpa_tab_sps %>%                             
+tpa_con <- tpa_con %>%                             
                   pivot_wider(names_from = "type", values_from = c("treeden_ha", "BA_m2ha"), values_fill = 0) %>% 
                   mutate(treeden_ha = (treeden_ha_Hardwood + treeden_ha_Conifer),
                           BA_m2ha = (BA_m2ha_Hardwood + BA_m2ha_Conifer)) %>% 
@@ -176,10 +176,10 @@ tpa_tab_sps <- tpa_tab_sps %>%
                             treeden_ha =          mean(treeden_ha, na.rm = T),
                             BA_m2ha =             mean(BA_m2ha, na.rm = T))  %>% 
                   mutate(BA_m2ha_perc_con = BA_m2ha_Conifer/BA_m2ha) %>% 
-                  select(-treeden_ha, -BA_m2ha)
+                  rename(totalBA_con = BA_m2ha, totalDEN_con = treeden_ha)
 
 # check:
-max_ba <- max(tpa_con$BA_m2ha, na.rm = TRUE)  # or whatever your primary y variable is
+max_ba <- max(tpa_con$BA_m2ha_Hardwood + tpa_con$BA_m2ha_Conifer, na.rm = TRUE)  # or whatever your primary y variable is
 
 ggplot(tpa_con, aes(x = park)) +
   # Primary y-axis (left) - Basal Area values
@@ -206,7 +206,7 @@ ggplot(tpa_con, aes(x = park)) +
     axis.text.x = element_text(angle = 45, hjust = 1),
     plot.title = element_text(hjust = 0.5)
   ) +
-  geom_point(aes(y = BA_m2ha), color = "black", size = 5, shape = 4)
+  geom_point(aes(y = BA_m2ha_Hardwood + BA_m2ha_Conifer), color = "black", size = 5, shape = 4)
 
 # by size class: classify each tree accoding to DBH in BA and density of pole, mature, and large
 # size classes are 10-25.9 cm DBH (pole), 26-45.9 cm DBH (mature) and ≥ 46 cm DBH (large).
@@ -278,82 +278,82 @@ tpa_stage <- tpa_stage %>%
                        BA_m2ha_mature = BA_m2ha_mature/totalBA,
                        treeden_ha_large = treeden_ha_large/totalDEN,
                        BA_m2ha_large = BA_m2ha_large/totalBA) %>% 
-                select(-totalBA, -totalDEN)
+                rename(totalBA_sta = totalBA, totalDEN_sta = totalDEN)
 
 ###? Stand structure ----------------------------------------------------
-for(ii in 1:nrow(park_county)){
-    stastr <- standStruct(get(glue("fia_{park_county$park[ii]}")), 
-                  byPlot = TRUE) %>% 
-                  arrange(pltID) %>% 
-                  group_by(pltID, STAGE) %>% 
-                  summarise(percen_cov = mean(PROP_STAGE)) %>% 
-                  pivot_wider(names_from = STAGE, values_from = percen_cov, values_fill = 0) %>% 
-                  select(-MOSAIC) %>% 
-                  rename(pctCANCOV_pole = POLE,
-                         pctCANCOV_mature = MATURE,
-                         pctCANCOV_late = LATE) %>% 
-                  ungroup() %>% 
-                  select(pctCANCOV_pole, pctCANCOV_mature, pctCANCOV_late) %>% 
-                  summarise(pctCANCOV_pole =   mean(pctCANCOV_pole, na.rm = T),
-                            pctCANCOV_mature = mean(pctCANCOV_mature, na.rm = T),
-                            pctCANCOV_late =   mean(pctCANCOV_late, na.rm = T)) %>% 
-                  mutate(park = park_county$park[ii])
+# for(ii in 1:nrow(park_county)){
+#     stastr <- standStruct(get(glue("fia_{park_county$park[ii]}")), 
+#                   byPlot = TRUE) %>% 
+#                   arrange(pltID) %>% 
+#                   group_by(pltID, STAGE) %>% 
+#                   summarise(percen_cov = mean(PROP_STAGE)) %>% 
+#                   pivot_wider(names_from = STAGE, values_from = percen_cov, values_fill = 0) %>% 
+#                   select(-MOSAIC) %>% 
+#                   rename(pctCANCOV_pole = POLE,
+#                          pctCANCOV_mature = MATURE,
+#                          pctCANCOV_late = LATE) %>% 
+#                   ungroup() %>% 
+#                   select(pctCANCOV_pole, pctCANCOV_mature, pctCANCOV_late) %>% 
+#                   summarise(pctCANCOV_pole =   mean(pctCANCOV_pole, na.rm = T),
+#                             pctCANCOV_mature = mean(pctCANCOV_mature, na.rm = T),
+#                             pctCANCOV_late =   mean(pctCANCOV_late, na.rm = T)) %>% 
+#                   mutate(park = park_county$park[ii])
 
-    if(ii == 1){
-      stastr_tab2 <- stastr
-    }
+#     if(ii == 1){
+#       stastr_tab2 <- stastr
+#     }
     
-    if(ii > 1){
-      stastr_tab2 <- rbind(stastr_tab2, stastr)
-    }
-  }
+#     if(ii > 1){
+#       stastr_tab2 <- rbind(stastr_tab2, stastr)
+#     }
+#   }
 
-# seedling
-for(ii in 1:nrow(park_county)){
+# # seedling
+# for(ii in 1:nrow(park_county)){
 
-    seed_cov_loop <- seedling(get(glue("fia_{park_county$park[ii]}")), 
-                        byPlot = TRUE) %>% 
-                        group_by(pltID) %>% 
-                        summarise(seed_tpa = mean(TPA, na.rm = T) * 2.47105) %>%   ## acre to ha
-                        ungroup() %>% 
-                        select(seed_tpa) %>% 
-                        summarise(seed_tpa = mean(seed_tpa, na.rm = T)) %>% 
-                        mutate(park = park_county$park[ii]) 
+#     seed_cov_loop <- seedling(get(glue("fia_{park_county$park[ii]}")), 
+#                         byPlot = TRUE) %>% 
+#                         group_by(pltID) %>% 
+#                         summarise(seed_tpa = mean(TPA, na.rm = T) * 2.47105) %>%   ## acre to ha
+#                         ungroup() %>% 
+#                         select(seed_tpa) %>% 
+#                         summarise(seed_tpa = mean(seed_tpa, na.rm = T)) %>% 
+#                         mutate(park = park_county$park[ii]) 
 
-    if(ii == 1){
-      seed_cov <- seed_cov_loop
-    }
+#     if(ii == 1){
+#       seed_cov <- seed_cov_loop
+#     }
     
-    if(ii > 1){
-      seed_cov <- rbind(seed_cov, seed_cov_loop)
-    }
-  }
+#     if(ii > 1){
+#       seed_cov <- rbind(seed_cov, seed_cov_loop)
+#     }
+#   }
 
-# saplings: saplings per acre unadjusted (TREE.TPA_UNADJ where TREE.DIA <5.0)
-for(ii in 1:nrow(park_county)){
-    tpa_sap_loop <- tpa(get(glue("fia_{park_county$park[ii]}")), 
-                        #totals = TRUE, 
-                        byPlot = TRUE,
-                        treeDomain =  DIA < 5.0,   ## cm to inches
-                        treeType = 'live') %>% 
-                        mutate(siz_cla = "sap") %>% 
-                        group_by(pltID) %>% 
-                        summarise(treeden_ha_sap = mean(TPA, na.rm = T) * 2.47105,    # convert trees per acre to trees per hectare 
-                                  BA_m2ha_sap = mean(BAA, na.rm = T) * 0.229568) %>% 
-                        ungroup() %>% 
-                        select(treeden_ha_sap, BA_m2ha_sap) %>% 
-                        summarise(treeden_ha_sap = mean(treeden_ha_sap, na.rm = T),
-                                  BA_m2ha_sap = mean(BA_m2ha_sap, na.rm = T)) %>% 
-                        mutate(park = park_county$park[ii])
+# # saplings: saplings per acre unadjusted (TREE.TPA_UNADJ where TREE.DIA <5.0)
+# for(ii in 1:nrow(park_county)){
+#     tpa_sap_loop <- tpa(get(glue("fia_{park_county$park[ii]}")), 
+#                         #totals = TRUE, 
+#                         byPlot = TRUE,
+#                         treeDomain =  DIA < 5.0,   ## cm to inches
+#                         treeType = 'live') %>% 
+#                         mutate(siz_cla = "sap") %>% 
+#                         group_by(pltID) %>% 
+#                         summarise(treeden_ha_sap = mean(TPA, na.rm = T) * 2.47105,    # convert trees per acre to trees per hectare 
+#                                   BA_m2ha_sap = mean(BAA, na.rm = T) * 0.229568) %>% 
+#                         ungroup() %>% 
+#                         select(treeden_ha_sap, BA_m2ha_sap) %>% 
+#                         summarise(treeden_ha_sap = mean(treeden_ha_sap, na.rm = T),
+#                                   BA_m2ha_sap = mean(BA_m2ha_sap, na.rm = T)) %>% 
+#                         mutate(park = park_county$park[ii])
 
-    if(ii == 1){
-      tpa_sap <- tpa_sap_loop
-    }
+#     if(ii == 1){
+#       tpa_sap <- tpa_sap_loop
+#     }
     
-    if(ii > 1){
-      tpa_sap <- rbind(tpa_sap, tpa_sap_loop)
-    }
-  }
+#     if(ii > 1){
+#       tpa_sap <- rbind(tpa_sap, tpa_sap_loop)
+#     }
+#   }
 
 
 ###? TPA TOT
@@ -362,20 +362,24 @@ for(ii in 1:nrow(park_county)){
                byPlot = TRUE, 
                #landType = 'forest'
                treeType = 'live',
-               bySpecies = FALSE,
+               bySpecies = TRUE,
                treeDomain = DIA > 5.0) %>%      # exclude saplings
-               select(pltID, YEAR, TPA, BAA) %>% 
                arrange(pltID) %>% 
-               group_by(pltID, YEAR) %>%
+               group_by(pltID, YEAR, SCIENTIFIC_NAME) %>%
                # sum all trees of the same sps to get sps ba and den
                summarise(treeden_ha = sum(TPA, na.rm = T) * 2.47105,     # convert trees per acre to trees per hectare 
                          BA_m2ha = sum(BAA, na.rm = T) * 0.229568) %>%   # convert ft²/acre to m²/ha
-               # same
+               ungroup() %>% 
+               group_by(pltID, SCIENTIFIC_NAME) %>%
+               # sum all trees of the same sps to get sps ba and den
+               summarise(treeden_ha = mean(treeden_ha, na.rm = T) ,     # convert trees per acre to trees per hectare 
+                         BA_m2ha = mean(BA_m2ha, na.rm = T)) %>%   # convert ft²/acre to m²/ha
+               ungroup() %>% 
                group_by(pltID) %>%
                # take the mean over the years to for each plot capture diferences between plots
-               summarize(treeden_ha = mean(treeden_ha, na.rm = T),  
-                         BA_m2ha = mean(BA_m2ha, na.rm = T)) %>% 
-              #  group_by(SCIENTIFIC_NAME) %>%
+               summarize(treeden_ha = sum(treeden_ha, na.rm = T),  
+                         BA_m2ha = sum(BA_m2ha, na.rm = T)) %>% 
+               ungroup() %>% 
                mutate(park = park_county$park[ii]) %>% 
                group_by(park) %>%
                summarize(treeden_ha = mean(treeden_ha, na.rm = T),  
@@ -439,13 +443,14 @@ for(ii in 1:nrow(park_county)){
 }
 
 #? put everyhing in the same dataframe by county (park) -----------------------------------------
-coun_covs <- full_join(tpa_con %>% select(-treeden_ha, -BA_m2ha), tpa_tot_sps, by = "park") %>% 
+coun_covs <- full_join(tpa_con, 
+                       tpa_tot_sps, by = "park") %>% 
   full_join(tpa_stage, by = "park") %>% 
-  full_join(stastr_tab2, by = "park") %>% 
-  full_join(shrub, by = "park") %>% 
-  full_join(deb_cov, by = "park") %>% 
-  full_join(seed_cov, by = "park") %>% 
-  full_join(tpa_sap, by = "park")
+  #full_join(stastr_tab2, by = "park") %>% 
+  full_join(shrub, by = "park") #%>% 
+  #full_join(deb_cov, by = "park") %>% 
+  #full_join(seed_cov, by = "park") %>% 
+  #full_join(tpa_sap, by = "park")
 
 #! Output files -----------------------------------------
 write_rds(coun_covs, file = "data/out/coun_covs.rds")
