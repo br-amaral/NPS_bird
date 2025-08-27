@@ -79,10 +79,15 @@ for (key_ite in 1:nrow(master_tab)){
     # key_ite <- 1
     tib_loop <- master_tab[key_ite, ]
 
-    (sps_loop <- tib_loop$AOU_Code)
-    (step_numb <- tib_loop$step)
-   
-    cat(glue("\n \n Is it a test? {test} \n \n \n "))
+    sps_loop <- tib_loop$AOU_Code
+    step_numb <- tib_loop$step
+
+    cat(glue("\n \n 
+             The species is {sps_loop}  \n
+             Analysis on step {step_numb}  \n
+             Interaction term? {interaction} \n
+             Is it a test? {test} \n 
+             Good luck Houston! \n \n \n "))
 
     if(tib_loop$step == 2){
 
