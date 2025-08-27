@@ -117,27 +117,27 @@ for(ii in 1:nrow(park_county)){
 ## TPA bySizeClass
 
 ###? Tree basal area and density -----------------------------------------
-# conversion to stems/ha = 10000/400
-# cm2 to m2 cancels out, so just /400m2 plot.
 # by species
 for(ii in 1:nrow(park_county)){
   tpaRI <- tpa(get(glue("fia_{park_county$park[ii]}")), 
-               #totals = TRUE, 
                byPlot = TRUE, 
+               #landType = 'forest'
                treeType = 'live',
                bySpecies = TRUE,
-               treeDomain =  DIA > 5.0) %>%    # exclude saplings
+               treeDomain =  DIA > 5.0) %>%      # exclude saplings
+               select(SCIENTIFIC_NAME, pltID, YEAR, TPA, BAA)  %>% 
+               arrange(pltID) %>% 
                group_by(pltID, YEAR, SCIENTIFIC_NAME) %>%
                # sum all trees of the same sps to get sps ba and den
-               summarize(treeden_ha = sum(TPA, na.rm = T) * 2.47105,    # convert trees per acre to trees per hectare 
-                         BA_m2ha = sum(BAA, na.rm = T) * 0.229568) %>%  # convert ft²/acre to m²/ha
+               summarise(treeden_ha = sum(TPA, na.rm = T) * 2.47105,     # convert trees per acre to trees per hectare 
+                         BA_m2ha = sum(BAA, na.rm = T) * 0.229568) %>%   # convert ft²/acre to m²/ha
+               # same
                group_by(pltID, SCIENTIFIC_NAME) %>%
-               # take the mean over the years to capture diferences between plots
+               # take the mean over the years to for each plot capture diferences between plots
                summarize(treeden_ha = mean(treeden_ha, na.rm = T),  
                          BA_m2ha = mean(BA_m2ha, na.rm = T)) %>% 
-               mutate(park = park_county$park[ii])  %>% 
-               ungroup() %>% 
-               distinct()
+              #  group_by(SCIENTIFIC_NAME) %>%
+               mutate(park = park_county$park[ii])  
 
   if(ii == 1){
     tpa_tab_sps <- tpaRI
@@ -147,6 +147,12 @@ for(ii in 1:nrow(park_county)){
     tpa_tab_sps <- rbind(tpa_tab_sps, tpaRI)
   }
 }
+
+tpa_tab_sps <- tpa_tab_sps %>% 
+                  select(SCIENTIFIC_NAME, treeden_ha, BA_m2ha, park) %>% 
+                  distinct()
+
+# DT::datatable(tpa_tab_sps)
 
 tree_cat <- read_csv("data/tree_sps_harcon.csv")
 
@@ -170,10 +176,10 @@ table(is.na(tree_sps$type))
 
 tree_sps %>% filter(is.na(type))
 
-tpa_covs <- tpa_tab_sps  %>% 
+tpa_con <- tpa_con <- tpaRI  %>% 
                   left_join(., tree_sps, by = "SCIENTIFIC_NAME")  %>% 
                   group_by(pltID, type) %>% 
-                  mutate(treeden_ha = sum(treeden_ha, na.rm = T), 
+                   mutate(treeden_ha = sum(treeden_ha, na.rm = T), 
                          BA_m2ha = sum(BA_m2ha, na.rm = T)) %>% 
                   ungroup() %>% 
                   select(-SCIENTIFIC_NAME) %>% 
@@ -184,37 +190,34 @@ tpa_covs <- tpa_tab_sps  %>%
                   mutate(treeden_ha = (treeden_ha_Hardwood + treeden_ha_Conifer),
                          BA_m2ha = (BA_m2ha_Hardwood + BA_m2ha_Conifer)) %>% 
                   group_by(park) %>% 
-                  summarise(treeden_ha_Hardwood = mean(treeden_ha_Hardwood, na.rm = T),
-                            treeden_ha_Conifer =  mean(treeden_ha_Conifer, na.rm = T),
-                            BA_m2ha_Hardwood =    mean(BA_m2ha_Hardwood, na.rm = T),
+                  summarise(treeden_ha_Conifer =  mean(treeden_ha_Conifer, na.rm = T),
+                            treeden_ha_Hardwood = mean(treeden_ha_Hardwood, na.rm = T),
                             BA_m2ha_Conifer =     mean(BA_m2ha_Conifer, na.rm = T),
+                            BA_m2ha_Hardwood =    mean(BA_m2ha_Hardwood, na.rm = T),
                             treeden_ha =          mean(treeden_ha, na.rm = T),
                             BA_m2ha =             mean(BA_m2ha, na.rm = T))  %>% 
                   mutate(BA_m2ha_perc_con = BA_m2ha_Conifer/BA_m2ha)
 
 # check:
-tpa_covs %>% 
-  ggplot(aes(x = park)) +
+max_ba <- max(tpa_con$BA_m2ha, na.rm = TRUE)  # or whatever your primary y variable is
+
+ggplot(tpa_con, aes(x = park)) +
   # Primary y-axis (left) - Basal Area values
   geom_point(aes(y = BA_m2ha_Hardwood), color = "blue", size = 3) +
   geom_point(aes(y = BA_m2ha_Conifer), color = "pink", size = 3) +
   
-  # Secondary y-axis (right) - Percentage values (scaled down to fit)
-  geom_line(aes(y = (1 - BA_m2ha_perc_con) * 100, group = 1), 
+  # Secondary y-axis (right) - Percentage values, scaled to match primary axis
+  geom_line(aes(y = (1 - BA_m2ha_perc_con) * max_ba, group = 1), 
             color = "blue", linewidth = 1.2) +
-  geom_line(aes(y = BA_m2ha_perc_con * 100, group = 1), 
+  geom_line(aes(y = BA_m2ha_perc_con * max_ba, group = 1), 
             color = "pink", linewidth = 1.2) +
-  
-  # Set up dual y-axes
   scale_y_continuous(
-    name = "Basal Area (m²/ha ; points) ",
-    sec.axis = sec_axis(~ . / max(tpa_covs$BA_m2ha_Hardwood + tpa_covs$BA_m2ha_Conifer), 
-                        name = "Proportion (line)",
-                        labels = scales::percent)
+    name = "Basal Area (m²/ha ; points)",
+    sec.axis = sec_axis(~ . / max_ba, name = "Proportion (line)", labels = scales::percent)
   ) +
-  
   labs(
-    title = "Basal Area by Forest Type",
+    title = "Hardwood vs Conifer Forest Metrics by Park",
+    subtitle = "pink is conifer, blue is hardwood \n dots are absolute values (left y-axis), and lines are percentages (right y-axis)",
     x = "Park"
   ) +
   theme_bw() +
@@ -222,15 +225,9 @@ tpa_covs %>%
     axis.title.y = element_text(color = "black"),
     axis.title.y.right = element_text(color = "black"),
     axis.text.x = element_text(angle = 45, hjust = 1),
-    plot.title = element_text(hjust = 0.5),
-    plot.subtitle = element_text(hjust = 0.5)  # Add this line to center subtitle
-  )+
-  labs(
-    title = "Hardwood vs Conifer Forest Metrics by Park",
-    subtitle = "pink is conifer, blue is hardwood",
-    x = "Park"
-  )
-
+    plot.title = element_text(hjust = 0.5)
+  ) +
+  geom_point(aes(y = BA_m2ha), color = "black", size = 5, shape = 4)
 
 # by size class: classify each tree accoding to DBH in BA and density of pole, mature, and large
 # size classes are 10-25.9 cm DBH (pole), 26-45.9 cm DBH (mature) and ≥ 46 cm DBH (large).
@@ -382,7 +379,6 @@ for(ii in 1:nrow(park_county)){
                          LAYER %in% c("0 to 2.0 feet", "2.1 to 6.0 feet")) %>% 
                   group_by(pltID) %>% 
                   summarise(shrub_cov = mean(PROP_COVER, na.rm = T)) %>% 
-                  ungroup() %>% 
                   select(shrub_cov) %>% 
                   summarise(shrub_cov = mean(shrub_cov, na.rm = T)) %>% 
                   mutate(park = park_county$park[ii])
@@ -419,7 +415,7 @@ for(ii in 1:nrow(park_county)){
 }
 
 #? put everyhing in the same dataframe by county (park) -----------------------------------------
-coun_covs <- full_join(tpa_covs, tpa_stage, by = "park") %>% 
+coun_covs <- full_join(tpa_con, tpa_stage, by = "park") %>% 
   full_join(stastr_tab2, by = "park") %>% 
   full_join(shrub, by = "park") %>% 
   full_join(deb_cov, by = "park") %>% 
@@ -428,6 +424,8 @@ coun_covs <- full_join(tpa_covs, tpa_stage, by = "park") %>%
 
 #! Output files -----------------------------------------
 write_rds(coun_covs, file = "data/out/coun_covs.rds")
+
+cat(paste("\n\n Done \n\n\n"))
 
 # #? summarize the files by park AND YEAR and merge them -----------------------------------------
 # tpa_tab3 <- tpa_tab %>% 
