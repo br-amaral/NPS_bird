@@ -126,7 +126,7 @@ create_individual_plot <- function(data, title, y_label) {
     theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 3),
           plot.title = element_text(hjust = 0.5)) +
     facet_wrap(~park, scales = "free_x", ncol = 2) +
-    labs(title = title, y = y_label, color = "Park Solid \n County Dashed")
+    labs(title = title, y = y_label, color = "Park Solid\n\nCounty Dashed\n")
 } 
 
 # Create individual plots
@@ -157,8 +157,8 @@ for (cov_name in names(covariate_plots)) {
     filename = glue("figures/plot_{cov_name}_scalesX.png"),
     plot = plot_obj,
     device = "png",
-    width = 6,
-    height = 18
+    width = 8,
+    height = 16
   )
 }
 

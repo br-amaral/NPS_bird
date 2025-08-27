@@ -507,7 +507,7 @@ bird_sit_covs[,13:ncol(bird_sit_covs)] %>%
 bird_sit_covs1 <- bird_sit_covs  %>% 
                       select(-for_plt, -for_b, -for_f, 
                              -latutmf, -lonutmf, -latutmb, -lonutmb, -X, -Y, -UTMZone, 
-                             -Stage, -pctBA_pole, -pctBA_mature, -pctBA_large) %>% 
+                             -pctBA_pole, -pctBA_mature, -pctBA_large) %>% 
                       mutate(BA_m2ha =             ifelse(BA_m2ha == 0, BA_m2ha + 0.001, BA_m2ha),
                              BA_m2ha_Conifer =     ifelse(BA_m2ha_Conifer == 0, BA_m2ha_Conifer + 0.001, BA_m2ha_Conifer),
                              BA_m2ha_Hardwood =    ifelse(BA_m2ha_Hardwood == 0, BA_m2ha_Hardwood + 0.001, BA_m2ha_Hardwood),
