@@ -108,16 +108,25 @@ shrub_BA_long <- reshape_and_plot(X, "shrub_BA")
 # Function for individual point plots
 create_individual_plot <- function(data, title, y_label) {
   
-  plot_data <- data  %>% 
-                filter(!is.na(value))
-  
-  ggplot(plot_data, aes(x = Point_Name, y = value, group = park)) +
-    geom_point(alpha = 0.6, size = 1.5) +
+  plot_data <- data %>% 
+                filter(!is.na(value)) %>% 
+                distinct()
+
+  ggplot() +
+    geom_point(data = plot_data %>% filter(scale == "Site"), 
+              aes(x = Point_Name, y = value),
+              size = 1.5) +
+    geom_hline(data = plot_data %>% filter(scale == "Park") %>% group_by(park) %>% distinct(value, .keep_all = TRUE), 
+              aes(yintercept = value, color = park),
+              linewidth = 1) +
+    geom_hline(data = plot_data %>% filter(scale == "County") %>% group_by(park) %>% distinct(value, .keep_all = TRUE), 
+              aes(yintercept = value, color = park),
+              linewidth = 1, linetype = "dashed") +
     theme_bw() +
     theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 3),
           plot.title = element_text(hjust = 0.5)) +
-    facet_wrap(park~scale, scales = "free_x", ncol = 3) +
-    labs(title = title, y = y_label)
+    facet_wrap(~park, scales = "free_x", ncol = 2) +
+    labs(title = title, y = y_label, color = "Park Solid \n County Dashed")
 } 
 
 # Create individual plots
@@ -125,7 +134,7 @@ create_individual_plot(tree_density_long,
                         "Tree Density", 
                         "Density (stems/ha)")
 
-ggsave("figures/test_scalesX.png", plot = last_plot(), device = "png", width = 6, height = 18)
+#ggsave("figures/test_scalesX.png", plot = last_plot(), device = "png", width = 6, height = 18)
 
 # List of reshaped data and plot titles
 covariate_plots <- list(
@@ -133,7 +142,7 @@ covariate_plots <- list(
   basal_area = list(data = basal_area_long, title = "Basal Area", ylab = "Basal Area (m2/ha)"),
   conifer_BA = list(data = conifer_BA_long, title = "Conifer Basal Area %", ylab = "Conifer BA (%)"),
   late_successional = list(data = late_successional_long, title = "Late Successional BA %", ylab = "Late Successional BA (%)"),
-  shrub_BA = list(data = shrub_BA_long, title = "Shrub Basal Area", ylab = "Shrub BA")
+  shrub_BA = list(data = shrub_BA_long, title = "Shrub Basal Area", ylab = "Shrub Cover (%)")
 )
 
 # Loop to create and save each plot

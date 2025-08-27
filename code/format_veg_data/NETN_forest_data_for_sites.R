@@ -83,6 +83,13 @@ tree_den <- tree_den_spp %>%
                     summarize(treeden_ha = sum(treeden_ha, na.rm = T),  
                               BA_m2ha = sum(BA_m2ha, na.rm = T))
 
+tree_den %>% 
+          mutate(park = substr(Plot_Name, 1, 4)) %>% 
+          group_by(park) %>% 
+          summarise(treeden_ham = mean(treeden_ha, na.rm =T),
+          BA_m2ham = mean(BA_m2ha, na.rm = T))
+
+
 # by size class: classify each tree accoding to DBH in BA and density of pole, mature, and large
 # size classes are 10-25.9 cm DBH (pole), 26-45.9 cm DBH (mature) and ≥ 46 cm DBH (large).
 tree_den_sizeclass <- joinTreeData(status = "live") %>% 
