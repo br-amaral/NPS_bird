@@ -11,14 +11,14 @@
 #SBATCH --nodes=1
 
 # specify CPUs (or cores per task)
-#SBATCH --cpus-per-task=1
+#SBATCH --cpus-per-task=10
 
 # specify which development nodes you want the job run on. Doesn't seem to work?
 # SBATCH --constraint="[intel16|intel18]"
 
 # email me
 # SBATCH --mail-type=FAIL,END
-# SBATCH --mail-user=bamaral@msu.edu
+#SBATCH --mail-user=bamaral@msu.edu
 
 # change to current directory
 cd $SLURM_SUBMIT_DIR
