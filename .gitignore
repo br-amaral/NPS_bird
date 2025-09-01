@@ -26,6 +26,8 @@ out5.rds
 # folders
 cemetery/
 data/
+manus_figs
+manus_figs/
 data/FIA
 data/BBS
 data/BBS_route_shp

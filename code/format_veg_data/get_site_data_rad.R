@@ -506,8 +506,7 @@ bird_sit_covs[,13:ncol(bird_sit_covs)] %>%
 # get an average so each forest site has only one covariate value - weighted mean according to the inverse of the distance
 bird_sit_covs1 <- bird_sit_covs  %>% 
                       select(-for_plt, -for_b, -for_f, 
-                             -latutmf, -lonutmf, -latutmb, -lonutmb, -X, -Y, -UTMZone, 
-                             -pctBA_pole, -pctBA_mature, -pctBA_large) %>% 
+                             -latutmf, -lonutmf, -latutmb, -lonutmb, -X, -Y, -UTMZone) %>% 
                       mutate(BA_m2ha =             ifelse(BA_m2ha == 0, BA_m2ha + 0.001, BA_m2ha),
                              BA_m2ha_Conifer =     ifelse(BA_m2ha_Conifer == 0, BA_m2ha_Conifer + 0.001, BA_m2ha_Conifer),
                              BA_m2ha_Hardwood =    ifelse(BA_m2ha_Hardwood == 0, BA_m2ha_Hardwood + 0.001, BA_m2ha_Hardwood),
@@ -520,19 +519,21 @@ bird_sit_covs1 <- bird_sit_covs  %>%
                              treeden_ha_large =    ifelse(treeden_ha_large == 0, treeden_ha_large + 0.001, treeden_ha_large),
                              treeden_ha_mature =   ifelse(treeden_ha_mature == 0, treeden_ha_mature + 0.001, treeden_ha_mature),
                              treeden_ha_pole =     ifelse(treeden_ha_pole == 0, treeden_ha_pole + 0.001, treeden_ha_pole),
-                             seed_den_m2 =         ifelse(seed_den_m2 == 0, seed_den_m2 + 0.001, seed_den_m2),
-                             sap_den_m2 =          ifelse(sap_den_m2 == 0, sap_den_m2 + 0.001, sap_den_m2),
-                             regen_den_m2 =        ifelse(regen_den_m2 == 0, regen_den_m2 + 0.001, regen_den_m2),
-                             shrub_avg_cov =       ifelse(shrub_avg_cov == 0, shrub_avg_cov + 0.001, shrub_avg_cov),
+                            #  seed_den_m2 =         ifelse(seed_den_m2 == 0, seed_den_m2 + 0.001, seed_den_m2),
+                            #  sap_den_m2 =          ifelse(sap_den_m2 == 0, sap_den_m2 + 0.001, sap_den_m2),
+                            #  regen_den_m2 =        ifelse(regen_den_m2 == 0, regen_den_m2 + 0.001, regen_den_m2),
+                             shrub_avg_cov =       ifelse(shrub_avg_cov == 0, shrub_avg_cov + 0.001, shrub_avg_cov)
                              # shrub_cov_nat =       ifelse(shrub_cov_nat == 0, shrub_cov_nat + 0.001, shrub_cov_nat),
                              # shrub_cov_nonat =     ifelse(shrub_cov_nonat == 0, shrub_cov_nonat + 0.001, shrub_cov_nonat),
-                             cwd =                 ifelse(cwd == 0, cwd + 0.001, cwd)) 
+                             #cwd =                 ifelse(cwd == 0, cwd + 0.001, cwd)
+                             ) 
 
 # Get list of columns to calculate weighted means for
 weight_cols <- c("BA_m2ha", "BA_m2ha_Conifer", "BA_m2ha_Hardwood", "BA_m2ha_large", "BA_m2ha_mature", "BA_m2ha_pole", 
                  "treeden_ha", "treeden_ha_Conifer", "treeden_ha_Hardwood", "treeden_ha_large", "treeden_ha_mature", "treeden_ha_pole", 
-                 "seed_den_m2", "sap_den_m2", "regen_den_m2", #"shrub_cov_nat", "shrub_cov_nonat", 
-                 "shrub_avg_cov", "cwd")
+                 #"seed_den_m2", "sap_den_m2", "regen_den_m2", "shrub_cov_nat", "shrub_cov_nonat", 
+                 "shrub_avg_cov"#, "cwd"
+                 )
 
 # Get unique bird sites
 unique_sites <- unique(bird_sit_covs1$bird_sit)

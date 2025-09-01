@@ -536,12 +536,12 @@ site_key <- y_dat6 %>%
 site_covs <- read_rds(PATH_COVS_SITE) %>% 
                 rename(Point_Name = bird_sit) %>% 
                 left_join(., site_key, by = "Point_Name") %>% 
-                select(Point_Name, site_n, park, treeden_ha_wei, BA_m2ha_perc_con, BA_m2ha_large_wei,
-                        shrub_avg_cov_wei, BA_m2ha_wei) %>%
+                select(Point_Name, site_n, park, treeden_ha_wei, BA_m2ha_wei,
+                       BA_m2ha_Conifer_wei, BA_m2ha_large_wei, shrub_avg_cov_wei,
+                BA_m2ha_perc_con) %>%
                 # Remove "_wei" suffix from all column names
                 rename_with(~str_replace(.x, "_wei$", "_site")) %>% 
-                rename(BA_m2ha_perc_con_site = BA_m2ha_perc_con,
-                       BA_m2ha_perc_large_site = BA_m2ha_large_site)
+                rename(BA_m2ha_perc_con_site = BA_m2ha_perc_con)
 
 X1 <- left_join(X, site_covs, by = c("Point_Name", "site_n", "park"))
 dim(X1)
@@ -550,9 +550,8 @@ X1 %>% select(Point_Name,treeden_ha_site) %>% distinct() %>% arrange(treeden_ha_
 ## park --------------------------------------------------------------------------------
 park_covs <- read_rds(PATH_COVS_PARK) %>% 
                 rename(park = ParkUnit) %>% 
-                select(park, treeden_ha, BA_m2ha_perc_con, BA_m2ha_large,
+                select(park, treeden_ha, BA_m2ha_perc_con, BA_m2ha_large, BA_m2ha_Conifer,
                         shrub_avg_cov, BA_m2ha)  %>% 
-                rename(BA_m2ha_perc_large = BA_m2ha_large) %>% 
                 rename_with(~paste0(.x, "_park"), -park)
 
 X2 <- left_join(X1, park_covs, by = c("park"))
@@ -560,9 +559,9 @@ dim(X2)
 
 ## county ---------------------------------------------------------------------------------
 coun_covs <- read_rds(PATH_COVS_COUN) %>% 
-                select(park, treeden_ha, BA_m2ha_perc_con, pctCANCOV_late, 
+                select(park, treeden_ha, BA_m2ha_perc_con, BA_m2ha_large, BA_m2ha_Conifer, 
                         shrub_cov, BA_m2ha)  %>% 
-                rename(BA_m2ha_perc_large = pctCANCOV_late) %>% 
+                #rename(BA_m2ha_perc_large = BA_m2ha_large) %>% 
                 rename_with(~paste0(.x, "_coun"), -park)
 
 X3 <- left_join(X2, coun_covs, by = "park")
@@ -621,8 +620,8 @@ X5 <- X5 %>%
                  Year, interval_n, EventDate2, StartTime2,
                  area,
                  treeden_ha_site, treeden_ha_park, treeden_ha_coun,
-                 BA_m2ha_perc_con_site, BA_m2ha_perc_con_park, BA_m2ha_perc_con_coun,
-                 BA_m2ha_perc_large_site, BA_m2ha_perc_large_park, BA_m2ha_perc_large_coun,
+                 BA_m2ha_Conifer_site, BA_m2ha_Conifer_park, BA_m2ha_Conifer_coun,
+                 BA_m2ha_large_site, BA_m2ha_large_park, BA_m2ha_large_coun,
                  shrub_avg_cov_site, shrub_avg_cov_park, shrub_cov_coun, 
                  BA_m2ha_site, BA_m2ha_park, BA_m2ha_coun)
 # X6 <- X5 %>% 

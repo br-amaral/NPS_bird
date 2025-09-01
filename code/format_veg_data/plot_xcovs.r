@@ -60,8 +60,10 @@ X <- read_rds(COV_SCA_PATH)
 covariate_groups <- list(
   tree_density = select(X, starts_with("treeden")),
   basal_area = select(X, matches("^BA_m2ha_(park|coun|site)")),
-  conifer_BA = select(X, starts_with("BA_m2ha_perc_con")),
-  late_successional = select(X, starts_with("BA_m2ha_perc_la")),
+  # conifer_BA = select(X, starts_with("BA_m2ha_perc_con")),
+  # late_successional = select(X, starts_with("BA_m2ha_perc_la")),
+  conifer_BA = select(X, starts_with("BA_m2ha_con")),
+  late_successional = select(X, starts_with("BA_m2ha_la")),
   shrub_BA = select(X, starts_with("shrub_"))
 )
 
@@ -140,9 +142,9 @@ create_individual_plot(tree_density_long,
 covariate_plots <- list(
   tree_density = list(data = tree_density_long, title = "Tree Density", ylab = "Density (stems/ha)"),
   basal_area = list(data = basal_area_long, title = "Basal Area", ylab = "Basal Area (m2/ha)"),
-  conifer_BA = list(data = conifer_BA_long, title = "Conifer Basal Area %", ylab = "Conifer BA (%)"),
-  late_successional = list(data = late_successional_long, title = "Late Successional BA %", ylab = "Late Successional BA (%)"),
-  shrub_BA = list(data = shrub_BA_long, title = "Shrub Basal Area", ylab = "Shrub Cover (%)")
+  conifer_BA = list(data = conifer_BA_long, title = "Conifer Basal Area", ylab = "Conifer BA (m2/ha)"),
+  late_successional = list(data = late_successional_long, title = "Late Successional BA", ylab = "Late Successional BA"),
+  shrub_BA = list(data = shrub_BA_long, title = "Shrub Cover", ylab = "Shrub Cover (%)")
 )
 
 # Loop to create and save each plot
@@ -222,3 +224,5 @@ ggpairs(
   title = "Correlation of Shrub Accross Scales (All Parks)",
   upper = list(continuous = wrap("cor", digits = 2, stars = FALSE))
 ) + theme_bw() + theme(plot.title = element_text(hjust = 0.5))
+
+

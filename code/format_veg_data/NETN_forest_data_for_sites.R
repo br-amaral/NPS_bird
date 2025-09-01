@@ -269,8 +269,9 @@ shrub <- VIEWS_NETN$StandPlantCoverStrata_NETN  %>%
             ungroup() %>% 
             select(-SampleYear) %>% 
             group_by(Plot_Name) %>%
-            summarise(shrub_avg_cov = mean(shrub_avg_cov, na.rm = T))
-            
+            summarise(shrub_avg_cov = mean(shrub_avg_cov, na.rm = T)) %>% 
+            mutate(shrub_avg_cov = ifelse(shrub_avg_cov > 1, 1, shrub_avg_cov))
+
 #? Coarse wood debris?
 cwd <- joinCWDData(park = 'all') %>% # coarse wood debris
           as_tibble() %>%        
