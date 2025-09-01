@@ -68,7 +68,7 @@ if(test == TRUE){nadapt_min <- 1} else {nadapt_min <- 500}
 #                                 "VEER", "REVI", "WBNU", "SCTA", "WOTH",
 #                                 "DOWO", "HAWO", "BLBW", "YBSA", "BCCH", "BAWW", "BTNW")
 
-master_tab <- read_csv("data/mod_key.csv") %>%
+master_tab <- read_csv("code/fit_model/mod_key.csv") %>%
         filter(run == "no") %>% 
         filter(step %in% c(1)) %>% 
         distinct()
