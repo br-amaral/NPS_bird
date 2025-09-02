@@ -40,7 +40,7 @@ freshr::freshr()
 # Installed new packages?
 #  renv::snapshot()
 
-test <- TRUE
+test <- FALSE
 interaction <- FALSE
 if(substr(getwd(), 1, 3) == "/Us") {direc <- "local"} else {direc <- "hpc"}
 
