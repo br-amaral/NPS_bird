@@ -40,8 +40,10 @@ freshr::freshr()
 # Installed new packages?
 #  renv::snapshot()
 
-test <- FALSE
+test <- TRUE
 interaction <- FALSE
+if(substr(getwd(), 1, 3) == "/Us") {direc <- "local"} else {direc <- "hpc"}
+
 #! Load packages ---------------------------------------
 #library(conflicted)
 library(tidyverse)
@@ -68,10 +70,15 @@ if(test == TRUE){nadapt_min <- 1} else {nadapt_min <- 500}
 #                                 "VEER", "REVI", "WBNU", "SCTA", "WOTH",
 #                                 "DOWO", "HAWO", "BLBW", "YBSA", "BCCH", "BAWW", "BTNW")
 
-master_tab <- read_csv("code/fit_model/mod_key.csv") %>%
-        filter(run == "no") %>% 
-        filter(step %in% c(1)) %>% 
-        distinct()
+if(direc == "local"){
+    master_tab <- read_csv("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/fit_model/mod_key.csv") %>%
+            filter(run == "no") %>% 
+            filter(step %in% c(1)) %>% 
+            distinct()
+    } else {master_tab <- read_csv("code/fit_model/mod_key.csv") %>%
+            filter(run == "no") %>% 
+            filter(step %in% c(1)) %>% 
+            distinct()}
 
 if(interaction == T){model_file <- "models/mod_all_covs2.txt"}
 if(interaction == F){model_file <- "models/mod_all_covs.txt"}
@@ -120,6 +127,7 @@ for (key_ite in 1:nrow(master_tab)){
     } else { # step 1
         # cat("Before sourcing - objects in environment:\n")
         # print(ls())
+        #  source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/fit_model/back2d_covs_scales_2min_spscov.R")
         source("code/fit_model/back2d_covs_scales_2min_spscov.R")
         # After sourcing
         # cat("After sourcing - objects in environment:\n")
