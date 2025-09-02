@@ -82,7 +82,7 @@ if(direc == "local"){
 
 if(interaction == T){model_file <- "models/mod_all_covs2.txt"}
 if(interaction == F){model_file <- "models/mod_all_covs.txt"}
-for (key_ite in 1:nrow(master_tab)){
+for (key_ite in 2:nrow(master_tab)){
     # key_ite <- 1
     tib_loop <- master_tab[key_ite, ]
 
