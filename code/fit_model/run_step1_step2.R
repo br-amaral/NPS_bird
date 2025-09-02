@@ -127,8 +127,10 @@ for (key_ite in 1:nrow(master_tab)){
     } else { # step 1
         # cat("Before sourcing - objects in environment:\n")
         # print(ls())
-        #  source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/fit_model/back2d_covs_scales_2min_spscov.R")
-        source("code/fit_model/back2d_covs_scales_2min_spscov.R")
+        if(direc == "local"){
+            source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/fit_model/back2d_covs_scales_2min_spscov.R")
+            } else {
+            source("code/fit_model/back2d_covs_scales_2min_spscov.R")}
         # After sourcing
         # cat("After sourcing - objects in environment:\n")
         # print(ls())
