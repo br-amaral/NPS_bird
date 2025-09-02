@@ -22,6 +22,20 @@ Assumptions/decisions:
 - forest covariates: average of all years with data because of the panel rotation design
 
 # --------------------------------------------------------------------
+## source:
+Rscript /Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_bird_data/1_ImportData.R
+
+Rscript /Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_veg_data/NETN_forest_data_for_sites.R
+
+Rscript /Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_veg_data/get_site_data_rad.R
+
+Rscript /Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_veg_data/get_park_data.R
+
+Rscript /Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_veg_data/get_coun_data.R
+
+Rscript /Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_bird_data/2_create_data_files.R
+
+# --------------------------------------------------------------------
 Workflow:
 ## format_bird_data/1_ImportData.R
 Rscript /Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_bird_data/1_ImportData.R
