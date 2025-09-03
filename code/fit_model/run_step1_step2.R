@@ -64,7 +64,7 @@ niterations <- 30000
 nburnin <- 15000
 nchains <- 8
 nthin <- 5
-if(test == TRUE){nadapt_min <- 1} else {nadapt_min <- 500}
+if(test == TRUE){nadapt_min <- 1} else {nadapt_min <- 2000}
 
 # b_sps <- c("BHVI", "BRCR", "BTBW", "HETH", "OVEN", 
 #                                 "VEER", "REVI", "WBNU", "SCTA", "WOTH",
@@ -80,12 +80,11 @@ if(direc == "local"){
             distinct()
 
     model_file <- glue("/Users/bamaral/Documents/GitHub/NPS_bird_copy/{model_file}")
+
     } else {master_tab <- read_csv("code/fit_model/mod_key.csv") %>%
             filter(run == "no") %>% 
             filter(step %in% c(1)) %>% 
             distinct()}
-
-
 
 for (key_ite in 2:nrow(master_tab)){
     # key_ite <- 1
