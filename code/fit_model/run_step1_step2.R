@@ -70,18 +70,23 @@ if(test == TRUE){nadapt_min <- 1} else {nadapt_min <- 500}
 #                                 "VEER", "REVI", "WBNU", "SCTA", "WOTH",
 #                                 "DOWO", "HAWO", "BLBW", "YBSA", "BCCH", "BAWW", "BTNW")
 
+if(interaction == T){model_file <- "models/mod_all_covs2.txt"}
+if(interaction == F){model_file <- "models/mod_all_covs.txt"}
+
 if(direc == "local"){
     master_tab <- read_csv("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/fit_model/mod_key.csv") %>%
             filter(run == "no") %>% 
             filter(step %in% c(1)) %>% 
             distinct()
+
+    model_file <- glue("/Users/bamaral/Documents/GitHub/NPS_bird_copy/{model_file}")
     } else {master_tab <- read_csv("code/fit_model/mod_key.csv") %>%
             filter(run == "no") %>% 
             filter(step %in% c(1)) %>% 
             distinct()}
 
-if(interaction == T){model_file <- "models/mod_all_covs2.txt"}
-if(interaction == F){model_file <- "models/mod_all_covs.txt"}
+
+
 for (key_ite in 2:nrow(master_tab)){
     # key_ite <- 1
     tib_loop <- master_tab[key_ite, ]
