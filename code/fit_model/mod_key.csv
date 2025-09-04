@@ -1,18 +1,18 @@
 ﻿ AOU_Code,step,run,result,select,all_sca
-BAWW,1,yes,,,F
-BCCH,1,yes,,,F
-BHVI,1,yes,,,F
+BAWW,1,no,,,F
+BCCH,1,no,,,F
+BHVI,1,no,,,F
 BLBW,1,yes,,,F
-BRCR,1,yes,,,F
-BTBW,1,yes,,,F
-BTNW,1,yes,,,F
+BRCR,1,no,,,F
+BTBW,1,no,,,F
+BTNW,1,no,,,F
 DOWO,1,yes,,,F
 HAWO,1,yes,,,F
 HETH,1,yes,,,F
 OVEN,1,yes,,,F
-REVI,1,yes,,,F
-SCTA,1,yes,,,F
-VEER,1,yes,,,F
+REVI,1,no,,,F
+SCTA,1,no,,,F
+VEER,1,no,,,F
 WBNU,1,yes,,,F
 WOTH,1,yes,,,F
 YBSA,1,yes,,,F
