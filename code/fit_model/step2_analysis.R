@@ -211,8 +211,8 @@ samples_jags <- jags(data = jags_data2,
                       n.iter = niterations,
                       n.burnin = nburnin,
                       n.thin = nthin,
-                      parallel = FALSE,
-                      n.cores = nchains)
+                      parallel = TRUE,
+                      n.cores = nchains/2)
 
 cat("\n\n\n model is done!!! \n\n\n\n")
 
@@ -245,7 +245,6 @@ if(niterations > 10000) {
             file = glue('data/model_res/{file_name2}.rds')
             )
 }
-
 
 system_time2 <- Sys.time()
 if(as.numeric(system_time2 - system_time1) < 60) {
