@@ -40,8 +40,9 @@ freshr::freshr()
 # Installed new packages?
 #  renv::snapshot()
 
-test <- FALSE
+test <- TRUE
 interaction <- FALSE
+step_number_define <- 2
 if(substr(getwd(), 1, 3) == "/Us") {direc <- "local"} else {direc <- "hpc"}
 
 #! Load packages ---------------------------------------
@@ -75,18 +76,18 @@ if(interaction == F){model_file <- "models/mod_all_covs.txt"}
 
 if(direc == "local"){
     master_tab <- read_csv("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/fit_model/mod_key.csv") %>%
-            filter(run == "no") %>% 
-            filter(step %in% c(1)) %>% 
+            filter(run == "yes") %>% 
+            filter(step %in% c(step_number_define)) %>% 
             distinct()
 
     model_file <- glue("/Users/bamaral/Documents/GitHub/NPS_bird_copy/{model_file}")
 
     } else {master_tab <- read_csv("code/fit_model/mod_key.csv") %>%
-            filter(run == "no") %>% 
-            filter(step %in% c(1)) %>% 
+            filter(run == "yes") %>% 
+            filter(step %in% c(step_number_define)) %>% 
             distinct()}
 
-for (key_ite in 2:nrow(master_tab)){
+for (key_ite in 1:nrow(master_tab)){
     # key_ite <- 1
     tib_loop <- master_tab[key_ite, ]
 
