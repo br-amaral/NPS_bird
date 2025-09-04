@@ -646,7 +646,7 @@ if (nburnin > 0) {
   rjags::jags.samples(
     jags_model,
     variable.names = params,
-    n.iter = niterations,
+    n.iter = nburnin,
     thin = nthin,
     quiet = FALSE,
     parallel = TRUE,
