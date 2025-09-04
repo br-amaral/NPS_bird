@@ -193,8 +193,8 @@ str(jags_data2)
 
 if(test == TRUE){
   nchains <- 1
-  niterations <- 6
-  nburnin <- 1
+  niterations <- 50
+  nburnin <- 5
   nthin <- 1
   print("test with 5 iterations")
 }
@@ -245,6 +245,7 @@ if(niterations > 10000) {
             file = glue('data/model_res/{file_name2}.rds')
             )
 }
+
 
 system_time2 <- Sys.time()
 if(as.numeric(system_time2 - system_time1) < 60) {
