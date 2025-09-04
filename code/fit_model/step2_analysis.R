@@ -166,7 +166,7 @@ mod_string <- paste(
 
 params <- c("beta0", "beta", "alpha0", "alpha", 
             "mu.beta0", "tau.beta0", "mu.alpha0", "tau.alpha0",
-            "psi", "p", "mu.beta0", "mu.alpha0") %>% # Z, psi
+            "psi", "p") %>% # Z, psi
           as.character()
 
 n_as <- 3
