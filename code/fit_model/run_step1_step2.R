@@ -86,8 +86,7 @@ if(direc == "local"){
             filter(run == "yes") %>% 
             filter(step %in% c(step_number_define)) %>% 
             distinct()}
-
-for (key_ite in 1:nrow(master_tab)){
+ for (key_ite in 1:nrow(master_tab)){
     # key_ite <- 1
     tib_loop <- master_tab[key_ite, ]
 
@@ -110,23 +109,28 @@ for (key_ite in 1:nrow(master_tab)){
             date_step1 <- substr(tib_loop$result, 19, 28)
             cov_key2 <- sca_file %>% filter(overlap0 == "no") %>% pull(betas)
 
-            sca_all <- list(`1` = rep(1, lenght(cov_key2)),
-                            `2` = rep(2, lenght(cov_key2)),
-                            `3` = rep(3, lenght(cov_key2)))
+            sca_all <- list(`1` = rep(1, length(cov_key2)),
+                            `2` = rep(2, length(cov_key2)),
+                            `3` = rep(3, length(cov_key2)))
             for (jj in 1:3){
             (scales_loop <- sca_all[[jj]])
-            source("code/fit_model/step2_analysis.R")
-            }
-
+            
+            if(direc == "hpc"){
+                source("code/fit_model/step2_analysis.R")
+                     } else {
+                        source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/fit_model/step2_analysis.R")}
+                }
         } else {
-
             # get scales for step 2
             sca_file <- read_rds(glue("data/model_res/{tib_loop$select}.rds"))
             scales_loop <- as.numeric(sca_file %>% filter(overlap0 == "no") %>% pull(sca_sel))
             date_step1 <- substr(tib_loop$result, 19, 28)
             cov_key2 <- sca_file %>% filter(overlap0 == "no") %>% pull(betas)
-            source("code/fit_model/step2_analysis.R")
-
+            if(direc == "hpc"){
+                source("code/fit_model/step2_analysis.R")
+                     } else {
+                        source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/fit_model/step2_analysis.R")
+            }
         }
 
     } else { # step 1
@@ -144,6 +148,6 @@ for (key_ite in 1:nrow(master_tab)){
 
 }
 
-cat(paste('\n ************************************** \n \n \n 
-        ---------------- all DONE Lol ----------------', 
-        '\n\n \n ************************************** \n'))
+cat(paste('\n ********************************************** \n \n \n 
+              ---------------- all DONE Lol ----------------', 
+     '\n\n \n ********************************************** \n'))
