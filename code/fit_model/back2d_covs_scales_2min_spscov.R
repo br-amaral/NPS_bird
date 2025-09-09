@@ -763,11 +763,11 @@ if(test == TRUE){
 }
 
 # code to check the data and initial values
-# r <- 10   # what is the deal with 7 versus 10? (they both have the same values and 10 does not work)
-# j <- 1
+# r <- 5   # what is the deal with 7 versus 10? (they both have the same values and 10 does not work)
+# j <- 7
 # t <- 1
-# Zst %>% filter(parkey == r, site_n == j, year_s == t)
-# y_dat6 %>% filter(parkey == r, site_n == j, year_s == t)
+# Zst %>% filter(parkey == r, site_n == j, year_n == t)
+# y_dat6 %>% filter(parkey == r, site_n == j, year_n == t)
 # Zst2[r,j,t]
 # # row 73 has the values in the loop
 
