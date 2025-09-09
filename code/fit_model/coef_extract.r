@@ -43,7 +43,9 @@ lenght <- length
 
 #! Import data -----------------------------------------
 ## file paths
-COEF_TABLE_PATH <- "data/mod_key.csv"
+COEF_TABLE_PATH <- "code/fit_model/mod_key.csv"
+if(substr(getwd(), 1, 3) == "/Us") {direc <- "local"} else {direc <- "hpc"}
+if(direc == "local"){COEF_TABLE_PATH <- glue("/Users/bamaral/Documents/GitHub/NPS_bird_copy/{COEF_TABLE_PATH}")}
 
 ## read files
 coef_path_file <- read_csv(COEF_TABLE_PATH) %>%
@@ -78,8 +80,8 @@ for(ii in 1:nrow(coef_path_file)) {
       
       }
 
-      samples_jags <- read_rds(glue("data/model_res/{coef_path_file$result[ii]}"))
-      beta_sca_names <- read_rds(glue("data/model_res/{coef_path_file$select[ii]}")) %>% 
+      samples_jags <- read_rds(glue("data/model_res/{coef_path_file$result[ii]}.rds"))
+      beta_sca_names <- read_rds(glue("data/model_res/{coef_path_file$select[ii]}.rds")) %>% 
             filter(overlap0 == "no") %>%
             add_row(betas = "park_size") %>%  # Add empty row for 3 alphas + 1 be4ta park size
             add_row(betas = "alpha1") %>%  
@@ -392,6 +394,7 @@ ggplot() +
   facet_nested(sca ~ sps, scales = "free_x", space = "free_x") +
   coord_flip()
 
+ggsave("manus_figs/fig3_2somesps.svg", plot = last_plot(), device = "svg", width = 12, height = 8)
 
 #! Figure 2 scale selection -----------------------------------------
 #? all scales with the color gradient
@@ -411,25 +414,25 @@ dat_sca <- dat1  %>%
   geom_point(data = dat_sca %>% filter(scale == 3), 
              aes(x = Covariate, y = sps, fill = selec_freq, alpha = 0.1,
                  color = ifelse(scale_selected == 1, "black","#8d8888")), 
-             size = 26, shape = 21, stroke = 0.9) +
+             size = 27, shape = 21, stroke = 0.9) +
   # park
   geom_point(data = dat_sca %>% filter(scale == 2), 
              aes(x = Covariate, y = sps), fill = "white",
                  color = "white", 
-             size = 19, shape = 21, stroke = 0.9) +
+             size = 20, shape = 21, stroke = 0.9) +
   geom_point(data = dat_sca %>% filter(scale == 2), 
              aes(x = Covariate, y = sps, fill = selec_freq, alpha = 0.1,
                  color = ifelse(scale_selected == 1, "black","#8d8888")), 
-             size = 19, shape = 21, stroke = 0.9) +
+             size = 20, shape = 21, stroke = 0.9) +
   # site
   geom_point(data = dat_sca %>% filter(scale == 1), 
              aes(x = Covariate, y = sps), fill = "white",
                  color = "white", 
-             size = 10, shape = 21, stroke = 0.9) +
+             size = 11, shape = 21, stroke = 0.9) +
   geom_point(data = dat_sca %>% filter(scale == 1), 
              aes(x = Covariate, y = sps, fill = selec_freq, alpha = 0.1,
                  color = ifelse(scale_selected == 1, "black","#8d8888")), 
-             size = 10, shape = 21, stroke = 0.9) +
+             size = 11, shape = 21, stroke = 0.9) +
   scale_color_identity() +  # This tells ggplot to use the color names as actual colors for stroke color
   scale_fill_viridis_c(option = "plasma", direction = -1, na.value = "#fff8c5",
                        limits = c(-0.001,1),
@@ -457,7 +460,7 @@ dat_sca <- dat1  %>%
   guides(fill = guide_colorbar(override.aes = list(alpha = 0.2, size = 5)))   # Control legend appearance
 )
 
-ggsave("figures/sca_plot.svg", plot = sca_plot_wleg, device = "svg", width = 14, height = 14)
+ggsave("figures/sca_plot.svg", plot = sca_plot_wleg, device = "svg", width = 9, height = 14)
 
 # no legend 
 (sca_plot_noleg <- ggplot() +
@@ -580,23 +583,23 @@ write_rds(dat_sca, "data/out/coefs_sps_sca.rds")
              aes(x = Covariate, y = sps), fill = "white", color = "white", alpha = 0) + 
   geom_point(data = dat_sca3 %>% filter(scale == 3), 
              aes(x = Covariate, y = sps, fill = median), 
-             size = 26, shape = 21, stroke = 0.9, color = "#8d8888") +
+             size = 27, shape = 21, stroke = 0.9, color = "#8d8888") +
   geom_point(data = dat_sca3 %>% filter(scale == 2), 
              aes(x = Covariate, y = sps, fill = median), 
-             size = 19, shape = 21, stroke = 0.9, color = "#8d8888") +
+             size = 20, shape = 21, stroke = 0.9, color = "#8d8888") +
   geom_point(data = dat_sca3 %>% filter(scale == 1), 
              aes(x = Covariate, y = sps, fill = median),
-             size = 10, shape = 21, stroke = 0.9, color = "#8d8888") +
+             size = 11, shape = 21, stroke = 0.9, color = "#8d8888") +
 # Add text labels for median values
-#   geom_text(data = dat_sca3 %>% filter(scale == 3), 
-#            aes(x = Covariate, y = sps, label = glue("{round(median, 2)}")), #\nCI:{round(low, 1)} : {round(up, 1)}")), #
-#             size = 4, color = "black") +
-#   geom_text(data = dat_sca3 %>% filter(scale == 2), 
-#             aes(x = Covariate, y = sps, label = glue("{round(median, 2)}")), #\nCI:{round(low, 1)} : {round(up, 1)}")), 
-#             size = 4, color = "black") +
-#   geom_text(data = dat_sca3 %>% filter(scale == 1), 
-#             aes(x = Covariate, y = sps, label = glue("{round(median, 2)}")), #\nCI:{round(low, 1)} : {round(up, 1)}")), 
-#            size = 3.5, color = "black") +
+  geom_text(data = dat_sca3 %>% filter(scale == 3), 
+           aes(x = Covariate, y = sps, label = glue("{round(median, 2)}")), #\nCI:{round(low, 1)} : {round(up, 1)}")), #
+            size = 4, color = "black") +
+  geom_text(data = dat_sca3 %>% filter(scale == 2), 
+            aes(x = Covariate, y = sps, label = glue("{round(median, 2)}")), #\nCI:{round(low, 1)} : {round(up, 1)}")), 
+            size = 4, color = "black") +
+  geom_text(data = dat_sca3 %>% filter(scale == 1), 
+            aes(x = Covariate, y = sps, label = glue("{round(median, 2)}")), #\nCI:{round(low, 1)} : {round(up, 1)}")), 
+           size = 3.5, color = "black") +
   scale_color_identity() +  # This tells ggplot to use the color names as actual colors for stroke color
   scale_fill_gradient2(low = "#078a42",           # Negative values = blue
                        mid = "white",           # Zero = white  
@@ -604,7 +607,7 @@ write_rds(dat_sca, "data/out/coefs_sps_sca.rds")
                        midpoint = 0,              # Center point at zero
                        name = "Covariate\nEffect size\n") +
   theme_minimal() +
-    theme(legend.position = "none",
+    theme(#legend.position = "none",
         axis.text.x = element_text(hjust = 0.5, size = 18),
         axis.text.y = element_text(hjust = 0, size = 19),    
         axis.title.x = element_text(size = 20),
@@ -615,19 +618,18 @@ write_rds(dat_sca, "data/out/coefs_sps_sca.rds")
   scale_x_discrete(labels = function(x) {
     cov_codes <- unique(dat_sca$Covariate)
       # Manually add line breaks
-      case_when(
-        cov_codes == "Tree Basal Area" ~ "Tree Basal\nArea",
-        cov_codes == "Tree Basal Area Squared" ~ "Tree Basal\nArea Squared", 
-        cov_codes == "Late Successional Tree Density" ~ "Late Success.\nTree %",
-        cov_codes == "Conifer Density" ~ "Conifer\n%",
-        cov_codes == "Tree Density" ~ "Tree\nDensity",
-        cov_codes == "Shrub Basal Area" ~ "Shrub\n%",
-        TRUE ~ cov_codes  # Keep others as is
-      )}) +
+     # Manually add line breaks
+    case_when(
+      cov_codes == "Tree Basal Area" ~ "Tree Basal\nArea",
+      cov_codes == "Tree Basal Area Squared" ~ "Tree Basal\nArea Squared", 
+      cov_codes == "Late Successional Tree Density" ~ "Late Success.\nTree Density",
+      cov_codes == "Shrub Basal Area" ~ "Shrub\nBasal Area",
+      TRUE ~ cov_codes  # Keep others as is
+    )}) +
   labs(x = "\nForest Covariate", y = "Species\n", fill = "Covariate\nEffect size\n")# +
 )
 
-ggsave("figures/circles_coefs.svg", plot = circles_coefs, device = "svg", width = 9, height = 14)
+ggsave("figures/circles_coefs.svg", plot = circles_coefs, device = "svg", width = 12, height = 14)
 
 # remove legend
 (circles_coefs_noleg <- ggplot() +
