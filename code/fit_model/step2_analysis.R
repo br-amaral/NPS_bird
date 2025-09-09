@@ -93,6 +93,12 @@ mod_name <- glue("models/{sps_loop}_step2_model{mod_nam_par}_scales{mod_nam_sca}
 model_file1 <- "models/mod_all_covs_hyper.txt"
 model_file3 <- "models/mod_all_covs_det.txt"
 
+if(direc == "local"){
+    model_file1 <- glue("/Users/bamaral/Documents/GitHub/NPS_bird_copy/{model_file1}")
+    model_file3 <- glue("/Users/bamaral/Documents/GitHub/NPS_bird_copy/{model_file3}")
+    mod_name <- glue("/Users/bamaral/Documents/GitHub/NPS_bird_copy/{mod_name}")
+    }
+
 covs_mod_code <- glue('')
 beta_numb <- 1
 if('beta1' %in% pars_mod$cov_name) {
@@ -224,7 +230,6 @@ file_name2 <- paste0(file_name, 'run',
                                         full.names = FALSE)) + 1)
 
 if(tib_loop$all_sca == T) {
-
   file_name2 <- glue("{file_name2}_allsca{scales_loop[1]}")
 }
 
