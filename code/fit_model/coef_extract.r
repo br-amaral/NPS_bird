@@ -51,8 +51,8 @@ if(direc == "local"){COEF_TABLE_PATH <- glue("/Users/bamaral/Documents/GitHub/NP
 coef_path_file <- read_csv(COEF_TABLE_PATH) %>%
         filter(run == "yes") %>% 
         filter(step == 3) %>% 
-        mutate(AOU_Code = substr(result, 1, 4)) %>% 
-        filter(AOU_Code != "YBSA")
+        mutate(AOU_Code = substr(result, 1, 4)) #%>% 
+        # filter(AOU_Code %!in% c("DOWO", "HAWO", "VEER", "SCTA", "REVI"))
 
 for(ii in 1:nrow(coef_path_file)) {
 
@@ -62,23 +62,23 @@ for(ii in 1:nrow(coef_path_file)) {
 
     quants <- ifelse((as.numeric(substr(loop_run, 4, 4)) %% 2 == 0) == TRUE, "25_75", "3_7")
 
-     selec_files <- 
-      list.files(path = file.path(getwd(),"data/model_res/"),
-                                          pattern = "SCA_SEL_PARS",
-                                          full.names = FALSE)  %>% 
-                as_tibble() %>% 
-                mutate(sps = substr(value, 1, 4)) %>% 
-                filter(sps == loop_sps) %>% 
-                filter(str_detect(value, quants)) %>%  # Filter for rows containing the quants text
-                pull(value)
+      # selec_files <- coef_path_file$result[ii]
+      # list.files(path = file.path(getwd(),"data/model_res/"),
+      #                                     pattern = "SCA_SEL_PARS",
+      #                                     full.names = FALSE)  %>% 
+      #           as_tibble() %>% 
+      #           mutate(sps = substr(value, 1, 4)) %>% 
+      #           filter(sps == loop_sps) %>% 
+      #           filter(str_detect(value, quants)) %>%  # Filter for rows containing the quants text
+      #           pull(value)
 
-      if(lenght(selec_files) == 1) {coef_path_file$select[ii] <- selec_files}
-      if(lenght(selec_files) == 2) {
+      # if(lenght(selec_files) == 1) {coef_path_file$select[ii] <- selec_files}
+      # if(lenght(selec_files) == 2) {
         
-        if(selec_files[1] %in% coef_path_file$select) {coef_path_file$select[ii] <- selec_files[2]}
-        if(selec_files[1] %!in% coef_path_file$select) {coef_path_file$select[ii] <- selec_files[1]}
+      #   if(selec_files[1] %in% coef_path_file$select) {coef_path_file$select[ii] <- selec_files[2]}
+      #   if(selec_files[1] %!in% coef_path_file$select) {coef_path_file$select[ii] <- selec_files[1]}
       
-      }
+      # }
 
       samples_jags <- read_rds(glue("data/model_res/{coef_path_file$result[ii]}.rds"))
       beta_sca_names <- read_rds(glue("data/model_res/{coef_path_file$select[ii]}.rds")) %>% 
@@ -88,7 +88,7 @@ for(ii in 1:nrow(coef_path_file)) {
             add_row(betas = "alpha2") %>%  
             add_row(betas = "alpha3")     
 
-      if(loop_sps == "YBSA"){beta_sca_names$betas[1] <- "beta"}
+      #if(loop_sps == "YBSA"){beta_sca_names$betas[1] <- "beta"}
 
       # Get summary with median and credible intervals
       coef_summary <- MCMCsummary(samples_jags,
@@ -99,7 +99,7 @@ for(ii in 1:nrow(coef_path_file)) {
                         as_tibble() %>% 
                         relocate(coef) %>%
                         mutate(coef = gsub("\\[|\\]", "", coef))
-
+      rm(samples_jags)
       if((nrow(beta_sca_names)) != nrow(coef_summary)) {
             stop(glue("error in {coef_path_file$result[ii]}"))
             
@@ -109,6 +109,8 @@ for(ii in 1:nrow(coef_path_file)) {
             }
       if(ii == 1) {coef_summary3 <- coef_summary2} else {coef_summary3 <- rbind(coef_summary3, coef_summary2)}
 }
+
+write_rds(coef_summary3, file = "data/out/coef_summary3_sep.rds")
 
 table(coef_summary3$mod_res)
 
