@@ -12,7 +12,6 @@
 #           - data/out/coefs_sps_sca.rds : table with all the beta coefficient estimates with their scales
 #           - data/model_res/{sps}_step2_output_20{xx}_{xx}_{xx}run{x}.rds :
 #
-# TODO: overlay species curves
 #! Output ----------------------------------------------
 #           - :
 #           - :
@@ -47,16 +46,18 @@ lenght <- length
 #! Import data -----------------------------------------
 ## file paths
 COEF_SPS_PATH <- "data/out/coefs_sps_sca.rds"
-STEP2_INFO_PATH <- "data/mod_key.csv"
+STEP2_INFO_PATH <- "code/fit_model/mod_key.csv"
+if(substr(getwd(), 1, 3) == "/Us") {direc <- "local"} else {direc <- "hpc"}
+if(direc == "local"){STEP2_INFO_PATH <- glue("/Users/bamaral/Documents/GitHub/NPS_bird_copy/{STEP2_INFO_PATH}")}
 
 ## read files
 dat_sca <- read_rds(COEF_SPS_PATH)       # which betas are important
 beta_key <- read_csv(STEP2_INFO_PATH) %>% 
               filter(step == 3,
-                     run == "yes") %>% 
-              filter(AOU_Code != "BHVI",
-                     AOU_Code != "YBSA"
-                     )
+                     run == "yes") #%>% 
+              # filter(AOU_Code != "BHVI",
+              #        AOU_Code != "YBSA"
+              #        )
 
 cov_key <- cbind(rbind("X1", "X2", "X3", "X4", "X5", "X5"),
                 rbind("beta1", "beta2", "beta3", "beta4", "beta5", "beta6"),
@@ -74,7 +75,7 @@ cov_key <- cbind(rbind("X1", "X2", "X3", "X4", "X5", "X5"),
 # get the data for the predictions
 for(sps_res in 1:nrow(beta_key)){
   RES_MOD_FILE <- beta_key$result[sps_res]
-  res_mod <- read_rds(glue("data/model_res/{RES_MOD_FILE}"))  # model file
+  res_mod <- read_rds(glue("data/model_res/{RES_MOD_FILE}.rds"))  # model file
   sps_loop <- substr(RES_MOD_FILE, 1, 4)
   sps_dat_name <- glue("{sps_loop}_step1_jagsdata")
 
