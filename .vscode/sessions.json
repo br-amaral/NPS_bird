@@ -1,5 +1,5 @@
 {
-    "$schema": "https://cdn.statically.io/gh/nguyenngoclongdev/cdn/main/schema/v10/terminal-keeper.json",
+    "$schema": "https://cdn.statically.io/gh/nguyenngoclongdev/cdn/main/schema/v11/terminal-keeper.json",
     "theme": "tribe",
     "active": "default",
     "activateOnStartup": true,
@@ -19,7 +19,7 @@
                 "name": "HPCC",
                 "autoExecuteCommands": true,
                 "icon": "squirrel",
-                "color": "terminal.ansiRed",
+                "color": "terminal.ansiBrightRed",
                 "commands": [
                     "ssh -XY bamaral@hpcc.msu.edu"
                 ]
@@ -30,7 +30,16 @@
                 "icon": "location",
                 "color": "terminal.ansiBrightGreen",
                 "commands": [
-                    "cd /Volumes/zipkinlab/bamaral/dataNPS_bird_copy"
+                    "cd /Volumes/zipkinlab/bamaral/NPS_bird_copy"
+                ]
+            },
+            {
+                "name": "Data Local",
+                "autoExecuteCommands": true,
+                "icon": "star-full",
+                "color": "terminal.ansiBrightYellow",
+                "commands": [
+                    "cd /Users/bamaral/Library/Mobile\\ Documents/com~apple~CloudDocs/GitHub_data/dataNPS_bird_copy"
                 ]
             },
             {
@@ -46,10 +55,10 @@
             {
                 "name": "R mapped",
                 "autoExecuteCommands": true,
-                "icon": "run",
+                "icon": "debug-alt",
                 "color": "terminal.ansiBrightCyan",
                 "commands": [
-                    "cd /Volumes/zipkinlab/bamaral/dataNPS_bird_copy",
+                    "cd /Volumes/zipkinlab/bamaral/NPS_bird_copy",
                     "R"
                 ]
             }

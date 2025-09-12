@@ -1,0 +1,22 @@
+
+# longer interval loop, all intervals of the removal sampling (not the first)
+  for(a in 1:nrowy){
+    logit(p[y[a,2],y[a,3],y[a,4],y[a,5]]) <-      # parkey, site_n, year_n, interval_n
+      alpha0[y[a,2],y[a,4]] +                     # intercept - parkey, year_n
+      alpha[1] * Xa[a,1] +                        # time - spskey
+      alpha[2] * Xb[a,1] +                        # day - spskey
+      alpha[3] * (Xb[a,1])^2                      # day squared - spskey,
+    
+    # y[a,1] ~ dbern(p[y[a,2],y[a,3],y[a,4],y[a,5]] * Z[y2[y_ind[a],2],y2[y_ind[a],3],y2[y_ind[a],4]])
+  
+    y[a,1] ~ dbern(p[y[a,2],y[a,3],y[a,4],y[a,5]] * Z[y[a,2],y[a,3],y[a,4]])
+  }
+}
+
+
+
+
+
+
+
+

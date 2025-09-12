@@ -87,16 +87,19 @@ for_park2 <- for_park %>%
             BA_m2ha_pole =        mean(BA_m2ha_pole, na.rm = T),         
             treeden_ha =          mean(treeden_ha, na.rm = T),         
             treeden_ha_Conifer =  mean(treeden_ha_Conifer, na.rm = T),         
-            treeden_ha_Hardwood = mean(treeden_ha_Hardwood, na.rm = T),       
+            treeden_ha_Hardwood = mean(treeden_ha_Hardwood, na.rm = T),   
+            BA_m2ha_perc_con =    mean(BA_m2ha_perc_con, na.rm = T),    
             treeden_ha_large =    mean(treeden_ha_large, na.rm = T),        
             treeden_ha_mature =   mean(treeden_ha_mature, na.rm = T),    
             treeden_ha_pole =     mean(treeden_ha_pole, na.rm = T),         
-            seed_den_m2 =         mean(seed_den_m2, na.rm = T),        
-            sap_den_m2 =          mean(sap_den_m2, na.rm = T),       
-            regen_den_m2 =        mean(regen_den_m2, na.rm = T),         
-            shrub_cov_nat =       mean(shrub_cov_nat, na.rm = T),     
-            shrub_cov_nonat =     mean(shrub_cov_nonat, na.rm = T),        
-            cwd =                 mean(cwd, na.rm = T)) 
+            # seed_den_m2 =         mean(seed_den_m2, na.rm = T),        
+            # sap_den_m2 =          mean(sap_den_m2, na.rm = T),       
+            # regen_den_m2 =        mean(regen_den_m2, na.rm = T),    
+            shrub_avg_cov =       mean(shrub_avg_cov, na.rm = T) 
+            # shrub_cov_nat =       mean(shrub_cov_nat, na.rm = T),     
+            # shrub_cov_nonat =     mean(shrub_cov_nonat, na.rm = T),        
+            #cwd =                 mean(cwd, na.rm = T)
+            )  
 
 for_park2 %>% 
   summarise(across(everything(), ~sum(is.na(.)))) %>% 

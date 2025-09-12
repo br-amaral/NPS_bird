@@ -48,20 +48,17 @@ script_name <- "step2_analysis.R"
 
 ## file paths
 # data
-SPS_DATA_PATH <- glue('data/ana_file/{date_step1}_data_{sps}_parks.rds') 
+SPS_DATA_PATH <- glue('data/ana_file/{sps}_step1_jagsdata_{date_step1}.rds') 
 
 # inital values (z)
-Z_DATA_PATH <- glue("data/ana_file/{date_step1}_data_{sps}_Z.rds")
+Z_DATA_PATH <- glue("data/ana_file/{sps}_step1_Z_{date_step1}.rds")
 
 ## read files
 jags_data <- read_rds(SPS_DATA_PATH) 
 z_mod <- read_rds(Z_DATA_PATH)$Zst2
 
 #! Get only parameters and scales that are relevant --------------------------------------------
-cov_key2 <- cov_key[,which(cov_key != 0)] %>% colnames()
-
-cov_key2_numb <- which(cov_key != 0) - 1
-cov_key2_numb <- cov_key2_numb[-1]
+cov_key2_numb <- as.numeric(substr(cov_key2, 5, 5))
 
 # get X objects being used
 pars_sca_mod <- cbind(cov_key2, cov_key2_numb, scales_loop) %>% 
@@ -70,28 +67,112 @@ pars_sca_mod <- cbind(cov_key2, cov_key2_numb, scales_loop) %>%
                          cov_numb = cov_key2_numb,
                          scal = scales_loop) %>% 
                   mutate(cov_numb = as.numeric(cov_numb),
-                         scal = as.numeric(scal),
-                         X = cov_name)
+                         scal = as.numeric(scal))
 
 # remove n_bs <- nrow(pars_sca_mod) + 1
 n_bs_new <- nrow(pars_sca_mod) + 1
 # remove beta_numbs <- glue("beta[{seq(1,n_bs-1,1)}]")
 
-par_key <- as_tibble(cbind(c("X1", "X2", "X3", "X4", 
-                             "X51", "X52", "X53", "X6", "X7"),
-                           c("BA", "DEN", "SHR", "DIV", 
-                             "EAR", "MID", "LAT", "CAN", "DEB"))) %>% 
+par_key <- as_tibble(cbind(c("X1", "X2", "X3", "X4", "X5", "X5"),
+                           c("beta1", "beta2", "beta3", "beta4", "beta5", "beta6"), 
+                           c("DEN", "BACON", "BALAT", "SHR", "BA", "BA2"))) %>% 
                     rename(xobj = V1,
-                           X = V2)
+                          cov_name = V2,
+                           X = V3)
 
-pars_mod <- left_join(pars_sca_mod, par_key, by = "X")
+pars_mod <- left_join(pars_sca_mod, par_key, by = "cov_name")
+
+## create model file:
+(mod_nam_sca <- paste(pars_mod$scal, collapse = ""))
+(mod_nam_par <- paste(pars_mod$xobj, collapse = ""))
+
+mod_name <- glue("models/{sps_loop}_step2_model{mod_nam_par}_scales{mod_nam_sca}_{date_step1}.txt") %>% 
+              as.character()
+
+# Read the content of the model file
+model_file1 <- "models/mod_all_covs_hyper.txt"
+model_file3 <- "models/mod_all_covs_det.txt"
+
+if(direc == "local"){
+    model_file1 <- glue("/Users/bamaral/Documents/GitHub/NPS_bird_copy/{model_file1}")
+    model_file3 <- glue("/Users/bamaral/Documents/GitHub/NPS_bird_copy/{model_file3}")
+    mod_name <- glue("/Users/bamaral/Documents/GitHub/NPS_bird_copy/{mod_name}")
+    }
+
+covs_mod_code <- glue('')
+beta_numb <- 1
+if('beta1' %in% pars_mod$cov_name) {
+    covs_mod_code <- glue("{covs_mod_code} \n
+      # DEN (tree density) \n
+      beta[{beta_numb}] * X1[b, {pull(pars_mod[which(pars_mod$cov_name == 'beta1'),3])}] + \n ")
+    beta_numb <- beta_numb + 1
+}
+
+if('beta2' %in% pars_mod$cov_name) {
+    covs_mod_code <- glue("{covs_mod_code} \n
+      # CON PER (percent conifer basal area) \n
+      beta[{beta_numb}] * X2[b, {pull(pars_mod[which(pars_mod$cov_name == 'beta2'),3])}] + \n ")
+    beta_numb <- beta_numb + 1
+}     
+
+if('beta3' %in% pars_mod$cov_name) {
+    covs_mod_code <- glue("{covs_mod_code} \n
+      # LAR PER (percent large tree basal area) \n
+      beta[{beta_numb}] * X3[b, {pull(pars_mod[which(pars_mod$cov_name == 'beta3'),3])}] + \n ")
+    beta_numb <- beta_numb + 1
+}     
+      
+if('beta4' %in% pars_mod$cov_name) {
+    covs_mod_code <- glue("{covs_mod_code} \n
+      # SHR (shrub basal area) \n
+      beta[{beta_numb}] * X4[b, {pull(pars_mod[which(pars_mod$cov_name == 'beta4'),3])}] + \n ")
+    beta_numb <- beta_numb + 1
+}   
+
+if('beta5' %in% pars_mod$cov_name) {
+    covs_mod_code <- glue("{covs_mod_code} \n
+      # BA (tree basal area) \n
+      beta[{beta_numb}] * X5[b, {pull(pars_mod[which(pars_mod$cov_name == 'beta5'),3])}] + \n ")
+    beta_numb <- beta_numb + 1
+}  
+
+if('beta6' %in% pars_mod$cov_name) {
+    covs_mod_code <- glue("{covs_mod_code} \n
+      # BA^2 (tree basal area squared) \n
+      beta[{beta_numb}] * pow(X5[b, {pull(pars_mod[which(pars_mod$cov_name == 'beta6'),3])}],2) + \n ")
+    beta_numb <- beta_numb + 1
+}  
+
+covs_mod_code <- glue("{covs_mod_code} \n
+     # park size \n
+      beta[{beta_numb}] * Xp[b] }\n ")
+     
+if(beta_numb - 1 != nrow(pars_mod)) {stop("model file is incorrect")}
+
+suppressWarnings({
+  mod_content1 <- readLines(model_file1)
+  mod_content3 <- readLines(model_file3)
+  })
+  
+# Combine the content into a single string
+mod_string <- paste(
+  paste(mod_content1, collapse = "\n"),
+  covs_mod_code,
+  paste(mod_content3, collapse = "\n"),
+  sep = "\n"
+)
+
+#if(test == FALSE){
+  writeLines(mod_string, mod_name)
+ # }
 
 #! Run the step 2 model ------------------------------------------------------------------------
 (covs_names <- paste(pars_mod$X, collapse = "_"))
 (sca_names <- paste(pars_mod$scal, collapse = "_"))
 
 params <- c("beta0", "beta", "alpha0", "alpha", 
-            "mu.beta0", "tau.beta0", "mu.alpha0", "tau.alpha0") %>% # Z, psi
+            "mu.beta0", "tau.beta0", "mu.alpha0", "tau.alpha0",
+            "psi", "p") %>% # Z, psi
           as.character()
 
 n_as <- 3
@@ -104,19 +185,6 @@ inits <- function() {
         alpha = rnorm(n_as, 0.5)
     )
 }
-
-# Define the model file and the output file name
-model_file <- mod_name_loop
-mod_name   <- glue("data/ana_file/{sps}_step{step_numb}_model_{date_step2}.txt") %>% as.character()
-
-# Read the content of the model file
-mod_content <- readLines(model_file)
-
-# Combine the content into a single string
-mod_string <- paste(mod_content, collapse = "\n")
-
-# Write the content to the output file
-if(test == FALSE){writeLines(mod_string, mod_name)}
 
 # get the right data for the model - remove the covariates that are no longer in use
 old_pars <- names(jags_data)
@@ -131,8 +199,8 @@ str(jags_data2)
 
 if(test == TRUE){
   nchains <- 1
-  niterations <- 6
-  nburnin <- 1
+  niterations <- 50
+  nburnin <- 5
   nthin <- 1
   print("test with 5 iterations")
 }
@@ -143,14 +211,14 @@ cat("\n\n\n running jags \n\n\n\n")
 samples_jags <- jags(data = jags_data2,
                       inits = inits,
                       parameters.to.save = params,
-                      model.file = model_file,
+                      model.file = mod_name,
                       n.chains = nchains,
                       n.adapt = max(500, ceiling(.1 * niterations)),
                       n.iter = niterations,
                       n.burnin = nburnin,
                       n.thin = nthin,
                       parallel = TRUE,
-                      n.cores = nchains)
+                      n.cores = nchains/2)
 
 cat("\n\n\n model is done!!! \n\n\n\n")
 
@@ -160,6 +228,10 @@ file_name2 <- paste0(file_name, 'run',
                       length(list.files(path = file.path(getwd(),"data/model_res/"),
                                         pattern = file_name,
                                         full.names = FALSE)) + 1)
+
+if(tib_loop$all_sca == T) {
+  file_name2 <- glue("{file_name2}_allsca{scales_loop[1]}")
+}
 
 folder_path <- "data/model_res"
 

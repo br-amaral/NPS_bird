@@ -22,14 +22,11 @@
 #           - :
 #           - :
 
-# detach packages and clear workspace
+#  setwd("/Volumes/zipkinlab/bamaral/NPS_bird_copy/")
 freshr::freshr()
 
-# Print script file name
-context <- "run_step1_step2.R" #rstudioapi::getSourceEditorContext()
-cat("\n", "\n", "\n", 
-    'Current script:', context, #basename(context[[2]]), 
-    "\n", "\n", "\n", "\n")
+# hg <- httpgd::hgd()
+# httpgd::hgd_browse()
 
 #! Package library and versions -------------------------
 #  Created a library repo?
@@ -43,7 +40,10 @@ cat("\n", "\n", "\n",
 # Installed new packages?
 #  renv::snapshot()
 
-test <- TRUE
+test <- FALSE
+interaction <- FALSE
+step_number_define <- 2
+if(substr(getwd(), 1, 3) == "/Us") {direc <- "local"} else {direc <- "hpc"}
 
 #! Load packages ---------------------------------------
 #library(conflicted)
@@ -60,66 +60,94 @@ lenght <- length
 
 ## read files
 # import file, create model names, and save it!
-master_tab <- read_csv("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/fit_model/model_sps_key.csv")  %>% 
-                mutate(#mod_name = ascharacter(mod_name),
-                       mod_name = glue("mod_{AOU_Code}_{BA}{DEN}{SHR}{DIV}{EAR}{MID}{LAT}_step{step}_sca_{scales2}"))
+#! MCMC settings ---------------------------------------------------
+niterations <- 30000
+nburnin <- 15000
+nchains <- 8
+nthin <- 5
+if(test == TRUE){nadapt_min <- 1} else {nadapt_min <- 2000}
 
-for (key_ite in 1:nrow(master_tab)){
+# b_sps <- c("BHVI", "BRCR", "BTBW", "HETH", "OVEN", 
+#                                 "VEER", "REVI", "WBNU", "SCTA", "WOTH",
+#                                 "DOWO", "HAWO", "BLBW", "YBSA", "BCCH", "BAWW", "BTNW")
+
+if(interaction == T){model_file <- "models/mod_all_covs2.txt"}
+if(interaction == F){model_file <- "models/mod_all_covs.txt"}
+
+if(direc == "local"){
+    master_tab <- read_csv("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/fit_model/mod_key.csv") %>%
+            filter(run == "yes") %>% 
+            filter(step %in% c(step_number_define)) %>% 
+            distinct()
+
+    model_file <- glue("/Users/bamaral/Documents/GitHub/NPS_bird_copy/{model_file}")
+
+    } else {master_tab <- read_csv("code/fit_model/mod_key.csv") %>%
+            filter(run == "yes") %>% 
+            filter(step %in% c(step_number_define)) %>% 
+            distinct()}
+ for (key_ite in 1:nrow(master_tab)){
     # key_ite <- 1
     tib_loop <- master_tab[key_ite, ]
 
-    (sps_loop <- tib_loop$AOU_Code)
-    (step_numb <- tib_loop$step)
-    mod_name_loop <- glue("models/{tib_loop$mod_name}.txt")
+    sps_loop <- tib_loop$AOU_Code
+    step_numb <- tib_loop$step
 
-    #! MCMC settings ---------------------------------------------------
-    niterations <- tib_loop$niterations
-    nburnin <- tib_loop$nburnin
-    nchains <- tib_loop$nchains
-    nthin <- tib_loop$nthin
-    if(test == TRUE){nadapt_min <- 1} else {nadapt_min <- 100}
-    # niterations <- 10 ; nburnin <- 5 ; nchains <- 1 ; nthin <- 1
-    
-    #! Get species and covariates --------------------------------------
-    BA  <- tib_loop$BA
-    DEN <- tib_loop$DEN
-    SHR <- tib_loop$SHR
-    DIV <- tib_loop$DIV
-    EAR <- tib_loop$EAR
-    MID <- tib_loop$MID
-    LAT <- tib_loop$LAT
-    CAN <- tib_loop$CAN
-    DEB <- tib_loop$DEB
-    
-    cov_key <- tib_loop[ ,2:10]
-    print(sps_loop)
-    print(cov_key)
-    # Print object name if the value is greater than zero
-    if (BA == 1)  print("BA")
-    if (DEN == 1) print("DEN")
-    if (SHR == 1) print("SHR")
-    if (DIV == 1) print("DIV")
-    if (EAR == 1) print("EAR")
-    if (MID == 1) print("MID")
-    if (LAT == 1) print("LAT")
-    if (CAN == 1) print("CAN")
-    if (DEB == 1) print("DEB")
-
-    cat(glue("\n \n Is it a test? {test} \n \n \n "))
+    cat(glue("\n \n 
+             The species is {sps_loop}  \n
+             Analysis on step {step_numb}  \n
+             Interaction term? {interaction} \n
+             Is it a test? {test} \n 
+             Good luck Houston! \n \n \n "))
 
     if(tib_loop$step == 2){
-        # get scales for step 2
-        scales_loop <- as.numeric(unlist(strsplit(tib_loop$scales2, split = "")))
-        date_step1 <- tib_loop$date_step1
 
-        source("code/fit_model/step2_analysis.R")
+        # run model to all vars at the same scale to compare them
+        if(tib_loop$all_sca == T) {
+           # get scales for step 2
+            sca_file <- read_rds(glue("data/model_res/{tib_loop$select}.rds"))
+            date_step1 <- substr(tib_loop$result, 19, 28)
+            cov_key2 <- sca_file %>% filter(overlap0 == "no") %>% pull(betas)
 
-    } else {
-        source("code/fit_model/back2d_covs_scales_2min_spscov.R")
+            sca_all <- list(`1` = rep(1, length(cov_key2)),
+                            `2` = rep(2, length(cov_key2)),
+                            `3` = rep(3, length(cov_key2)))
+            for (jj in 1:3){
+            (scales_loop <- sca_all[[jj]])
+            
+            if(direc == "hpc"){
+                source("code/fit_model/step2_analysis.R")
+                     } else {
+                        source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/fit_model/step2_analysis.R")}
+                }
+        } else {
+            # get scales for step 2
+            sca_file <- read_rds(glue("data/model_res/{tib_loop$select}.rds"))
+            scales_loop <- as.numeric(sca_file %>% filter(overlap0 == "no") %>% pull(sca_sel))
+            date_step1 <- substr(tib_loop$result, 19, 28)
+            cov_key2 <- sca_file %>% filter(overlap0 == "no") %>% pull(betas)
+            if(direc == "hpc"){
+                source("code/fit_model/step2_analysis.R")
+                     } else {
+                        source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/fit_model/step2_analysis.R")
+            }
+        }
+
+    } else { # step 1
+        # cat("Before sourcing - objects in environment:\n")
+        # print(ls())
+        if(direc == "local"){
+                source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/fit_model/back2d_covs_scales_2min_spscov.R")
+            } else {
+                source("code/fit_model/back2d_covs_scales_2min_spscov.R")}
+        # After sourcing
+        # cat("After sourcing - objects in environment:\n")
+        # print(ls())
+    
     }
 
 }
 
-cat(paste('\n ************************************** \n \n \n 
-        ---------------- all DONE Lol ----------------', 
-        '\n\n \n ************************************** \n'))
+cat(paste('\n ********************************************** \n \n \n 
+              ---------------- all DONE Lol ----------------', 
+     '\n\n \n ********************************************** \n'))

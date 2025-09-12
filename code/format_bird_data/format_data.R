@@ -1,19 +1,9 @@
-
-# input:    - data/src/original/NETN_2020/NETNtib.rds
-#           - data/src/guilds.rds
-
-# output:   - visits (data/out/visits.rds): 
-##          - y1: table of ones and zeros for sps detections
-#           - nsite_pk: number of sites sampled in each park
-#           - yr_pk: number of years sampled in each park
-#           - ninterval: number of intervals of removal sampling
-#           - site_vec:  
-#           - site_pk:
-#           - data/nsite_pk.csv
-#          
+# format_bird_data/format_data
+#                filtering visit and field data for only auditory, 50m distance band, and without missing info ('permanetly missing') in any columns we use, e.g. interval number
+#                in - data/out/NETNtib.rds
 
 # Load libraries -------------------------------------------------------------------------------------
-library("stringr")
+library(stringr)
 library(tidyverse)
 library(lubridate)
 library(glue)
@@ -21,9 +11,7 @@ library(glue)
 # Set working directory -------------------------------------------------------------------------------------
 # setwd("~/Documents/GitHub/NPS_birds/")
 # Data paths -------------------------------------------------------------------------------------
-NPS_DATA_PATH <- file.path("data/src/original/NETN_2020/NETNtib.rds")
-GUILD_DATA_PATH <- file.path("data/src/guilds.rds")
-FIBIRD_DATA_PATH <- file.path("data/for_int_list.csv")
+NPS_DATA_PATH <- file.path("data/out/NETNtib.rds")
 
 # Load data -------------------------------------------------------------------------------------
 dat <- read_rds(file = NPS_DATA_PATH)
@@ -38,25 +26,30 @@ field_dat <- dat$field_data[1][[1]]
 for(i in 2:nrow(dat)){
   field_dat <- rbind(field_dat, dat$field_data[i][[1]])
 }
+field_dat <- field_dat %>% 
+                filter(Interval!= "Permanently missing",
+                       Survey_Type == "Forest")
 
 visits <- dat$visits[1][[1]]   
 for(i in 2:nrow(dat)){
   visits <- rbind(visits, dat$visits[i][[1]])
 }
 visits <- visits %>%   
-  dplyr::rename(observer_name = Observer)  
+              dplyr::rename(observer_name = ObserverID) %>% 
+              filter(Survey_Type == "Forest")
 
 points <- dat$points[1][[1]] 
 for(i in 2:nrow(dat)){
   points <- rbind(points, dat$points[i][[1]])
 }
 points <- points %>%   ## PT_DESC
-  dplyr::select(-Transect_Name) 
+              dplyr::select(-Transect_Name) %>% 
+              filter(Survey_Type == "Forest")
 
 visits2 <- left_join(visits, points, by = c("Admin_Unit_Code", "Point_Name", "Survey_Type"))
 dim(visits)[1] == dim(visits2)[1]
 
-field_dat0.5 <- left_join(field_dat, visits2, 
+field_dat0.5 <- left_join(field_dat %>% select(-Transect_CODE), visits2 %>% select(-Transect_CODE), 
                           by = c("Admin_Unit_Code", "Transect_Name", "Point_Name", "Survey_Type",
                                  "Visit", "EventDate", "Year" ))
 dim(field_dat0.5)[1] == dim(field_dat)[1]
@@ -77,21 +70,15 @@ field_dat1 <- field_dat0.75 %>%
                 !is.na(Distance),
                 !is.na(Admin_Unit_Code)) 
 
-## filter forest interior birds
-#spslist_g <- read_rds(GUILD_DATA_PATH) %>% 
-#  as_tibble()
-#spslist2 <- spslist_g %>% 
-#  filter(Response_Guild == "InteriorForestObligate")     ### remove this from the rest of the analysis!!!!!
-
-spslist2 <- read_csv(FIBIRD_DATA_PATH) %>% 
-  as_tibble()
 
 ## parks --------------------------------------------------------------------------------------
 (npk <- field_dat1$Admin_Unit_Code %>% unique() %>% length())
 pk <- field_dat1$Admin_Unit_Code %>% sort() %>% unique()
+pk 
 
 ## years --------------------------------------------------------------------------------------
 years <- field_dat1$Year %>% unique() %>% sort()
+max(years)
 years_s <- years - (years[1]-1)
 (nyr_s <- max(years_s))
 
@@ -152,8 +139,6 @@ for(i in 1:npk){
   rm(a)
 }
 
-#// write_rds(sites_park_tib, file = "data/src/sites_park_tib.rds")
-
 # add numbers for site for each park
 for(i in 1:npk) {
   if(i == 1) {
@@ -182,11 +167,12 @@ field_dat1.75 <- field_dat1.5 %>%
                 !is.na(EventDate),
                 !is.na(Interval))
 
-ninterval <- field_dat1.75$Interval_Length %>% unique() %>% length()
-interval_tab <- cbind(Interval_Length = field_dat1.75$Interval_Length %>% unique() %>% sort(),
+ninterval <- field_dat1.75$Interval %>% unique() %>% length()
+interval_tab <- cbind(Interval = field_dat1.75$Interval %>% unique() %>% sort(),
                       Interval_n = seq(1,10,1)) %>% as_tibble()
 
-field_dat2 <- left_join(field_dat1.75, interval_tab, by = "Interval_Length")
+field_dat2 <- left_join(field_dat1.75, interval_tab, by = "Interval") %>% 
+                  rename(Interval_Length = Interval)
 
 # change intervals for only 5 (group 1 ans 2, and so on)
 # field_dat2 <- field_dat1.75 %>% 
@@ -227,7 +213,10 @@ for(j in 1:ncol(sps_pk)){
 # add 0 and 1 for distance
 y1 <- field_dat2 %>% 
   as_tibble() %>% 
-  cbind(.,dist) #%>% 
+  cbind(.,dist)  %>% 
+  filter(IdentificationMethod == "Audio")
+  
+  #%>% 
 #mutate(Interval = as.numeric(Interval)) %>% 
 #left_join(., intervals2, by = "Interval") %>% 
 #dplyr::filter(!Interval == "NR") %>%    # remove obs with no interval info
@@ -236,7 +225,7 @@ y1 <- field_dat2 %>%
 
 #  select visit one
 table(y1$Visit)
-table(y1$ID_Method)
+table(y1$IdentificationMethod)
 table(y1$Distance_id)
 
-write_rds(visits2, file = "data/out/visits.rds")
+# write_rds(visits2, file = "data/out/visits.rds")

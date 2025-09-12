@@ -35,5 +35,5 @@ module load R-bundle-CRAN/2023.12-foss-2023a
 export R_DISABLE_BYTECODE=1
 
 # Rscript 
-Rscript code/fit_model/run_step1_step2.R
+Rscript code/fit_model/coef_extract.r
 

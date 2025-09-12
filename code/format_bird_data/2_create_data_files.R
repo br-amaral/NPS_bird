@@ -1,37 +1,30 @@
 #! *********************************************************************************
 #! ----------------------------- 3_create_bird_data.R ------------------------------
 #! *********************************************************************************
-# Code to create the y data file to run in the JAGS model 
-#   can be run for 1, all or groups f species, in one or all parks
+#? Code to create the y data file to run in the JAGS model 
+#?   can be run for 1, all or groups f species, in one or all parks
 #
 #! Source ---------------------------------------------
-#           - code/format_bird_data/2_format_data.R:
+#?          - code/format_bird_data/2_format_data.R:
 #
 #! Input ----------------------------------------------
-#           from here: 
-#           - data/out/coun_covs.rds - covariate data from county level
-#           - data/out/park_covs.rds - covariate data from park level
-#           - data/out/site_covs.rds - covariate data from site level
-#           - data/park_raster/{pk[i]}_pb.rds : raster of each park to get park size 
-#           - data/out/site_div.rds : diversity of forest for park and sites
+#            from here: 
+#?           - data/out/coun_covs.rds
+#?           - data/out/park_covs.rds
+#?           - data/out/site_covs_fornofor_{radi_dist}m.rds or data/out/site_covs_hardcon_{radi_dist}m.rds
+#?           - data/park_raster/{park_size[i,1]}_pb.rds: shape files of park area to calculate area
 #
-#           from code/format_bird_data/format_data.R:
-#             -- y1: table of ones and zeros for sps detections
-#             -- visits (data/out/visits.rds): data from the visit files
-#             -- yr_pk: number of years sampled in each park
+#            from code/format_bird_data/format_data.R:
+#?             -- data/out/NETNtib.rds
 #
 #! Output ---------------------------------------------
-#           - data/src/sites_park_tib.rds: tibble with park, number of sites and site numbers and codes
-#           - data/out/site_n_key.rds: park and site unique key
-#           - data/out/y_dat3.rds: first tibble with ALL occasions for sps, park, site, year and interval
-#           - data/y_dat8.rds: birds data for each occasion, with park, species and site indexes
-#           - data/X10.rds: environmental variables for all scales for each occasion, same dim() as y_dat6.rds
-#           - data/sps_pk_nth.rds: species code in each park
+#?           - data/y_dat8.rds: birds data for each occasion, with park, species and site indexes
+#?           - data/X.rds: forest variables for all scales for each occasion, same dim() as y_dat6.rds
 
 ## detach packages and clear workspace
 freshr::freshr()
 
-#! Load packages --------------------------------------
+#? Load packages --------------------------------------
 library(conflicted)
 library(tidyverse)
 library(glue)
@@ -43,27 +36,33 @@ conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::filter)
 # conflicts_prefer(scales::alpha)
 
-#! Make functions --------------------------------------
+#? Make functions --------------------------------------
 colanmes <- colnames
 lenght <- length
 `%!in%` <- Negate(`%in%`)
 
-#! Source code -----------------------------------------
+#? Source code -----------------------------------------
 ## Create empty matrix with all parks, species, years, sites and intervals --------------------------
 source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_bird_data/format_data.R")
 
 yog <- y1 # reset safety ;)
-#! Define settings -------------------------------------
-radi_dist <- 500
+#? Define settings -------------------------------------
+radi_dist <- 400
+hard_con_mix <- FALSE 
 
-#! Import data -----------------------------------------
+#? Import data -----------------------------------------
 ## file paths
 PATH_COVS_COUN <- "data/out/coun_covs.rds"
 PATH_COVS_PARK <- "data/out/park_covs.rds"
-PATH_COVS_SITE <- glue("data/out/site_covs_nei_grp_{radi_dist}m.rds")
-PATH_DIV_SITE_COVS <- "data/out/site_div.rds"
-PATH_DIV_PARK_COVS <- "data/out/park_div.rds"
+# kshape files with park area 
 
+if(hard_con_mix == FALSE) {
+  PATH_COVS_SITE <-glue("data/out/site_covs_fornofor_{radi_dist}m.rds")
+}
+
+if(hard_con_mix == TRUE) {
+  PATH_COVS_SITE <-glue("data/out/site_covs_hardcon_{radi_dist}m.rds")
+}
 ## parks -------------------------------------------------------------------------------------------
 pk_list <- visits %>% 
     select(Admin_Unit_Code) %>% 
@@ -125,7 +124,7 @@ point_names <- point_names[!(substr(point_names,1,4) %in% c("ACAD", "SAIR", "ELR
 point_name_pk <- visits %>% 
                   dplyr::select(Admin_Unit_Code, Point_Name) %>% 
                   filter(Admin_Unit_Code %!in% c("ACAD", "SAIR", "ELRO")) %>% 
-                  distinct()
+                  distinct()   
 npoint_name_pk <- table(point_name_pk$Admin_Unit_Code) %>% as.vector()
 
 mxsite <- max(npoint_name_pk)
@@ -406,7 +405,7 @@ y3 %>% select(-Interval_n) %>% distinct() %>% duplicated() %>% table()
 # dupy3 %>% filter(Point_Name == "ACAD3107", Year == 2018, AOU_Code =="RBNU")
 
 ## add removal sampling intervals ------------------------------------------------------------
-# populate y_dat3 with info from y2 - add ot only detections, but zeros in both intervals and occasions
+# populate y_dat3 with info from y2 - add not only detections, but zeros in both intervals and occasions
 # y_dat3 is the dataset with all occasions and intervals that HAPPENED/EXIST - non-detections! true zeros
 y3 <- y3 %>% 
     mutate(interval_n = 10)
@@ -498,7 +497,7 @@ colnames(spy_grid_yesdetec_cov4)  == colnames(y_dat3)
 
 y_dat4 <- rbind(y_dat3,
                 spy_grid_yesdetec_cov4)
-## remember: I have only one one per row, all zeros before one, and all NA after one
+## remember: I have only one 1 (detection, 'presence') per row, all zeros before one, and all NA after one
 
 yr_pk <- yr_pk %>% 
   mutate(park = Admin_Unit_Code)
@@ -521,7 +520,7 @@ pk_key_sps <- y_dat5 %>%
 y_dat6 <- y_dat5 %>% 
   left_join(., pk_key_sps, by = c("AOU_Code", "park", "parkey"))
 
-# get covariate data ----------------------------------------------------------------------------------
+#? get forest covariate data ----------------------------------------------------------------------------------
 # index to have the same dimentions as the bird data
 X <- y_dat6 %>% 
   select(park, site_n, Year, Point_Name, interval_n)
@@ -533,50 +532,43 @@ site_key <- y_dat6 %>%
 
 ## site ----------------------------------------------------------------------------------------------
 #! it is OK if ACAD, ELRO and SAIR do not have covs now,
-#!   they are gonna be removed from the data in the next step (back2d_covs_scales_3)
+#!   they are gonna be removed from the data in the next step (back2d_covs_scales_2min_spscov)
 site_covs <- read_rds(PATH_COVS_SITE) %>% 
-                rename(Point_Name = bird_sit,
-                        park = ParkUnit) %>%
-                left_join(., site_key, by =  c("park", "Point_Name")) %>% 
-                select(-c(siteSTA, siteSAPden, park))
+                rename(Point_Name = bird_sit) %>% 
+                left_join(., site_key, by = "Point_Name") %>% 
+                select(Point_Name, site_n, park, treeden_ha_wei, BA_m2ha_wei,
+                       BA_m2ha_Conifer_wei, BA_m2ha_large_wei, shrub_avg_cov_wei,
+                BA_m2ha_perc_con) %>%
+                # Remove "_wei" suffix from all column names
+                rename_with(~str_replace(.x, "_wei$", "_site")) %>% 
+                rename(BA_m2ha_perc_con_site = BA_m2ha_perc_con)
 
-X1 <- left_join(X, site_covs, by = c("Point_Name","site_n"))
+X1 <- left_join(X, site_covs, by = c("Point_Name", "site_n", "park"))
 dim(X1)
-X1 %>% select(Point_Name,siteDEN) %>% distinct() %>% arrange(siteDEN) %>% view()
+X1 %>% select(Point_Name,treeden_ha_site) %>% distinct() %>% arrange(treeden_ha_site)
 
 ## park --------------------------------------------------------------------------------
 park_covs <- read_rds(PATH_COVS_PARK) %>% 
-                rename(park = ParkUnit) 
+                rename(park = ParkUnit) %>% 
+                select(park, treeden_ha, BA_m2ha_perc_con, BA_m2ha_large, BA_m2ha_Conifer,
+                        shrub_avg_cov, BA_m2ha)  %>% 
+                rename_with(~paste0(.x, "_park"), -park)
 
 X2 <- left_join(X1, park_covs, by = c("park"))
 dim(X2)
 
 ## county ---------------------------------------------------------------------------------
 coun_covs <- read_rds(PATH_COVS_COUN) %>% 
-                rename(park = ParkUnit)
+                select(park, treeden_ha, BA_m2ha_perc_con, BA_m2ha_large, BA_m2ha_Conifer, 
+                        shrub_cov, BA_m2ha)  %>% 
+                #rename(BA_m2ha_perc_large = BA_m2ha_large) %>% 
+                rename_with(~paste0(.x, "_coun"), -park)
 
 X3 <- left_join(X2, coun_covs, by = "park")
 dim(X3)
 
 nrow(X1) == nrow(X2)
 nrow(X2) == nrow(X3)
-
-## diversity
-div_covs_site <- read_rds(PATH_DIV_SITE_COVS) %>% 
-                    rename(siteH_g = S_mean,
-                            siteEh_g = J_mean)
-
-X4 <- left_join(X3, div_covs_site, by = "Point_Name")
-dim(X4)
-nrow(X4) == nrow(X3)
-
-div_covs_park <- read_rds(PATH_DIV_PARK_COVS) %>% 
-                    rename(parkH_g = S_mean,
-                            parkEh_g = J_mean)
-
-X5 <- left_join(X4, div_covs_park, by = "park")
-dim(X5)
-nrow(X5) == nrow(X4)
 
 ## park area ------------------------------------------------------------------
 park_size <- as_tibble(matrix(NA, nrow = length(unique(y_dat4$park)), ncol = 2))
@@ -591,9 +583,13 @@ for(i in 1:nrow(park_size)) {
 
 # write_rds(park_size, file = "data/park_size.rds")
 
-X6 <- left_join(X5, park_size, by = "park")
-dim(X6)
-nrow(X6) == nrow(X5)
+X4 <- left_join(X3, park_size, by = "park")
+dim(X4)
+nrow(X4) == nrow(X3)
+
+write_rds(X4, file = {"data/out/raw_x_covs.rds"})
+
+cat("\n\n\n environmental covs saved!!! \n\n\n\n\n")
 
 # get detection covariates! 
 inte_key <- y1 %>% 
@@ -610,15 +606,24 @@ y_dat8 <- y_dat7 %>%
                               as.numeric(),
           EventDate2 = yday(EventDate)) 
 
-table(X6$park == y_dat8$park)
-table(X6$site_n == y_dat8$site_n)
-table(X6$Year == y_dat8$Year)
-table(X6$Point_Name == y_dat8$Point_Name) 
+table(X4$park == y_dat8$park)
+table(X4$site_n == y_dat8$site_n)
+table(X4$Year == y_dat8$Year)
+table(X4$Point_Name == y_dat8$Point_Name) 
 
-X7 <- X6
+X5 <- X4 
 
-X7$EventDate2 <- y_dat8$EventDate2 ; X7$StartTime2 <- y_dat8$StartTime2
+X5$EventDate2 <- y_dat8$EventDate2 ; X5$StartTime2 <- y_dat8$StartTime2
 
+X5 <- X5 %>% 
+        relocate(park, Point_Name, site_n,
+                 Year, interval_n, EventDate2, StartTime2,
+                 area,
+                 treeden_ha_site, treeden_ha_park, treeden_ha_coun,
+                 BA_m2ha_Conifer_site, BA_m2ha_Conifer_park, BA_m2ha_Conifer_coun,
+                 BA_m2ha_large_site, BA_m2ha_large_park, BA_m2ha_large_coun,
+                 shrub_avg_cov_site, shrub_avg_cov_park, shrub_cov_coun, 
+                 BA_m2ha_site, BA_m2ha_park, BA_m2ha_coun)
 # X6 <- X5 %>% 
 #   mutate(date_jul = as.numeric(scale(EventDate2)),
 #          time_jul = as.numeric(scale(StartTime2)),
@@ -632,7 +637,11 @@ X7$EventDate2 <- y_dat8$EventDate2 ; X7$StartTime2 <- y_dat8$StartTime2
 
 ##### write files  ------
 write_rds(y_dat8, file = "data/y_dat8.rds")
-write_rds(X7, file = "data/X.rds")
+write_rds(X5, file = "data/X.rds")
 # write_rds(sps_pk_nth, file = "data/sps_pk_nth.rds")
 
 cat(paste("\n\n Done \n\n\n"))
+
+## (   ) calculate percentage of large basal area for site
+## (   ) calculate total shrub for site
+## (   ) calculate percent conifer and large tree for park
