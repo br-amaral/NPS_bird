@@ -67,6 +67,76 @@ PARK_PATH <- "data/key_park.rds"
 ## read files
 y_dat4 <- read_rds(file = YDAT_PATH)
 
+## stats
+y_sta <- y_dat4 %>% 
+          filter(AOU_Code %in% c("BAWW", "BHVI", "BLBW", "BRCR", "BTBW", "BTNW", "DOWO", "HAWO", 
+                                 "HETH", "OVEN", "REVI", "SCTA", "VEER", "WBNU", "WOTH", "YBSA"))
+
+y_sta %>% filter(bird_detec > 0) %>%  mutate(uniqueid = glue("{Point_Name}_{EventDate}")) %>% select(uniqueid, AOU_Code) %>%  distinct() %>% select(AOU_Code) %>% table()  %>% sum() 
+
+y_sta %>% filter(bird_detec > 0) %>%  mutate(uniqueid = glue("{Point_Name}_{EventDate}")) %>% select(uniqueid, AOU_Code) %>%  distinct() %>% select(AOU_Code) %>% table() 
+
+y_sta %>% filter(bird_detec > 0) %>%  mutate(uniqueid = glue("{Point_Name}_{EventDate}")) %>% select(uniqueid, AOU_Code) %>%  distinct() %>% select(AOU_Code) %>% table()   %>% sort()
+
+y_sta %>% filter(Interval_n == 1) %>%  select(park) %>% table() %>% sort()
+
+y_sta %>% filter(Interval_n == 1) %>%  select(Year, AOU_Code) %>% table() 
+
+
+y_sta %>% 
+  filter(bird_detec > 0) %>% 
+   mutate(uniqueid = glue("{Point_Name}_{EventDate}")) %>% 
+   select(uniqueid, AOU_Code, Year) %>%  
+   distinct() %>% 
+   select(Year, AOU_Code) %>% 
+   distinct() %>% 
+   select(AOU_Code) %>% 
+   table() %>% 
+   sort() # %>% mean()
+
+y_sta %>% 
+  filter(bird_detec > 0) %>% 
+   mutate(uniqueid = glue("{Point_Name}_{EventDate}")) %>% 
+   select(uniqueid, AOU_Code, Year) %>%  
+   distinct() %>% 
+   select(Year, AOU_Code) %>% 
+   distinct() %>% 
+   table()  %>% 
+   colSums()
+
+y_sta %>% 
+  filter(bird_detec > 0) %>% 
+   mutate(uniqueid = glue("{Point_Name}_{EventDate}")) %>% 
+   select(uniqueid, AOU_Code, park) %>%  
+   distinct() %>% 
+   select(park, AOU_Code) %>% 
+   distinct() %>% 
+   table()  %>% 
+   colSums()
+
+y_sta %>% 
+   mutate(uniqueid = glue("{park}_{Year}")) %>% 
+   select(uniqueid, park, Year) %>%  
+   distinct() %>% 
+   select(Year, park) %>% 
+   distinct() %>% 
+   table()  %>% 
+   colSums()
+
+y_sta %>% 
+   mutate(uniqueid = glue("{Point_Name}_{Year}")) %>% 
+   select(uniqueid, Point_Name, Year, park) %>%  
+   distinct() %>% 
+   select(Point_Name, park) %>% 
+   distinct() %>% 
+   table()  %>% 
+   colSums()
+
+y_dat4  %>% select(AOU_Code, park) %>% distinct() %>% table() %>% colSums()
+
+y_sta  %>% select(AOU_Code, park) %>% distinct() %>% table() %>% colSums()
+
+#########
 X10 <- read_rds(file = XDAT_PATH)
 
 nsite_pk <- read_rds(SITE_PK_PATH)
