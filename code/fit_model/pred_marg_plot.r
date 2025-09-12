@@ -62,18 +62,34 @@ beta_key <- read_csv(STEP2_INFO_PATH) %>%
               #        AOU_Code != "YBSA"
               #        )
 
-cov_key <- cbind(rbind("X1", "X2", "X3", "X4", "X5", "X5"),
-                rbind("beta1", "beta2", "beta3", "beta4", "beta5", "beta6"),
+baww_lims <- read_rds("data/out/X_vals_BAWW.rds")
+bhvi_lims <- read_rds("data/out/X_vals_BHVI.rds")
+blbw_lims <- read_rds("data/out/X_vals_BLBW.rds")
+brcr_lims <- read_rds("data/out/X_vals_BRCR.rds")
+btbw_lims <- read_rds("data/out/X_vals_BTBW.rds")
+btnw_lims <- read_rds("data/out/X_vals_BTNW.rds")
+dowo_lims <- read_rds("data/out/X_vals_DOWO.rds")
+hawo_lims <- read_rds("data/out/X_vals_HAWO.rds")
+heth_lims <- read_rds("data/out/X_vals_HETH.rds")
+oven_lims <- read_rds("data/out/X_vals_OVEN.rds")
+revi_lims <- read_rds("data/out/X_vals_REVI.rds")
+scta_lims <- read_rds("data/out/X_vals_SCTA.rds")
+veer_lims <- read_rds("data/out/X_vals_VEER.rds")
+wbnu_lims <- read_rds("data/out/X_vals_WBNU.rds")
+woth_lims <- read_rds("data/out/X_vals_WOTH.rds")
+ybsa_lims <- read_rds("data/out/X_vals_YBSA.rds")
+
+cov_key <- cbind(rbind("X1", "X2", "X3", "X4", "X5"),
+                rbind("beta1", "beta2", "beta3", "beta4", "beta5"),
                 rbind("Tree Density",
                       "Conifer Density",
                       "Late Successional Tree Density",
                       "Shrub Basal Area",
-                      "Tree Basal Area",
-                      "Tree Basal Area Squared")) %>% 
+                      "Tree Basal Area")) %>% 
             as_tibble() %>% 
             rename(data_tab = V1,
-                  coef_ori = V2,
-                  Covariate = V3)
+                   coef_ori = V2,
+                   Covariate = V3)
 
 # get the data for the predictions
 for(sps_res in 1:nrow(beta_key)){
@@ -107,100 +123,92 @@ for(sps_res in 1:nrow(beta_key)){
                       left_join(., cov_key, by = "Covariate") %>% 
                       relocate(data_tab, coef_ori) %>% 
                       filter(scale_selected == 1) %>% 
-                      arrange(data_tab)
+                      arrange(data_tab) %>% 
+                      filter(!is.na(coef_ori))
+  if(nrow(dat_sca2) != 0){
+    for(ii in 1:nrow(dat_sca2)){  # Fixed: dat_sca2 not dat_sca_loop
 
-  for(ii in 1:nrow(dat_sca2)){  # Fixed: dat_sca2 not dat_sca_loop
+      beta_loop <- dat_sca2[ii,]
+      scale_loop <- beta_loop %>% pull(scale) %>% as.numeric()
+      
+      element_name <- beta_loop$data_tab
+      X_loop <- sps_data[[element_name]]
+      X_loop2 <- X_loop[, scale_loop]
+      
+      X_range <- seq(from = min(X_loop2), to = max(X_loop2), length.out = 100)
+      
+      # Get beta index
+      beta_index <- as.numeric(str_extract(beta_loop$coef_ori, "\\d+"))
+      beta_index_order <- as.numeric(str_extract(beta_loop$coef, "\\d+"))
 
-    beta_loop <- dat_sca2[ii,]
-    scale_loop <- beta_loop %>% pull(scale) %>% as.numeric()
+      beta_param <- glue("beta[{beta_index}]")
     
-    element_name <- beta_loop$data_tab
-    X_loop <- sps_data[[element_name]]
-    X_loop2 <- X_loop[, scale_loop]
+      # # Extract all posterior samples from all chains
+      # all_chains <- do.call(rbind, res_mod)  # Combine all chains
     
-    X_range <- seq(from = min(X_loop2), to = max(X_loop2), length.out = 100)
-    
-    # Get beta index
-    beta_index <- as.numeric(str_extract(beta_loop$coef_ori, "\\d+"))
-    beta_index_order <- as.numeric(str_extract(beta_loop$coef, "\\d+"))
+      # # Get posterior samples for the specific beta coefficient
+      # if(beta_param %in% colnames(all_chains)) {
+      #   all_beta_samples <- all_chains[, beta_param]
+      # } else {
+      #   print(glue("Parameter {beta_param} not found"))
+      #   next
+      # }
 
-    beta_param <- glue("beta[{beta_index}]")
-  
-    # # Extract all posterior samples from all chains
-    # all_chains <- do.call(rbind, res_mod)  # Combine all chains
-  
-    # # Get posterior samples for the specific beta coefficient
-    # if(beta_param %in% colnames(all_chains)) {
-    #   all_beta_samples <- all_chains[, beta_param]
-    # } else {
-    #   print(glue("Parameter {beta_param} not found"))
-    #   next
-    # }
+      # # Get intercept - use the mean intercept across sites
+      # if("mu.beta0" %in% colnames(all_chains)) {
+      #   all_beta0_samples <- all_chains[, "mu.beta0"]
+      # } else {
+      #   # Alternative: use mean of all beta0 parameters
+      #   beta0_cols <- grep("beta0\\[", colnames(all_chains), value = TRUE)
+      #   all_beta0_samples <- apply(all_chains[, beta0_cols], 1, mean)
+      # }
 
-    # # Get intercept - use the mean intercept across sites
-    # if("mu.beta0" %in% colnames(all_chains)) {
-    #   all_beta0_samples <- all_chains[, "mu.beta0"]
-    # } else {
-    #   # Alternative: use mean of all beta0 parameters
-    #   beta0_cols <- grep("beta0\\[", colnames(all_chains), value = TRUE)
-    #   all_beta0_samples <- apply(all_chains[, beta0_cols], 1, mean)
-    # }
-
-    # Get posterior samples (efficient way)
-    all_beta0_samples <- res_mod$sims.list$mu.beta0  # Assuming this is a vector
-    all_beta_samples <- res_mod$sims.list$beta[, beta_index_order]
-    
-    # Vectorized prediction
-    n_samples <- length(all_beta_samples)
-    predictions <- matrix(NA, nrow = n_samples, ncol = length(X_range))
-    
-    if(beta_index != 6){ 
+      # Get posterior samples (efficient way)
+      all_beta0_samples <- res_mod$sims.list$mu.beta0  # Assuming this is a vector
+      all_beta_samples <- res_mod$sims.list$beta[, beta_index_order]
+      
+      # Vectorized prediction
+      n_samples <- length(all_beta_samples)
+      predictions <- matrix(NA, nrow = n_samples, ncol = length(X_range))
+      
       for(s in 1:n_samples) {
         predictions[s, ] <- plogis(all_beta0_samples[s] + all_beta_samples[s] * X_range)
       }
+      
+      # Calculate summary statistics (transpose to match your original code)
+      array_psi_pred <- t(predictions)
+      pred_mean <- apply(array_psi_pred, 1, mean)
+      pred_median <- apply(array_psi_pred, 1, median)
+      pred_lower <- apply(array_psi_pred, 1, quantile, 0.025)
+      pred_upper <- apply(array_psi_pred, 1, quantile, 0.975)
+      
+      # Store results
+      pred_data <- tibble(
+        covariate = beta_loop$Covariate,
+        x_value = X_range,
+        pred_mean = pred_mean,
+        pred_median = pred_median,
+        pred_lower = pred_lower,
+        pred_upper = pred_upper
+      ) %>% 
+      mutate(sps = sps_loop, scale = scale_loop)
+      
+      print(glue("pred_{sps_loop}_beta{beta_index}_scale{scale_loop}"))
+      assign(glue("pred_{sps_loop}_beta{beta_index}_scale{scale_loop}"), pred_data) 
+      # Create plot
+      p <- ggplot(pred_data, aes(x = x_value)) +
+        geom_ribbon(aes(ymin = pred_lower, ymax = pred_upper), 
+                    alpha = 0.3, fill = "steelblue") +
+        geom_line(aes(y = pred_mean), color = "darkblue", linewidth = 1.2) +
+        labs(x = beta_loop$Covariate, 
+            y = "Predicted Probability",
+            title = glue("{sps_loop}: {beta_loop$Covariate}"),
+            subtitle = glue("Scale: {scale_loop}")) +
+        theme_minimal()
+      
+      print(p)
+      
     }
-    
-    if(beta_index == 6){ 
-      # Get beta[5] for quadratic term
-      all_beta5_samples <- res_mod$sims.list$beta[, beta_index_order]
-      for(s in 1:n_samples) {
-        predictions[s, ] <- plogis(all_beta0_samples[s] + all_beta_samples[s] * X_range + all_beta5_samples[s] * (X_range)^2)
-      }
-    }
-  
-    # Calculate summary statistics (transpose to match your original code)
-    array_psi_pred <- t(predictions)
-    pred_mean <- apply(array_psi_pred, 1, mean)
-    pred_median <- apply(array_psi_pred, 1, median)
-    pred_lower <- apply(array_psi_pred, 1, quantile, 0.025)
-    pred_upper <- apply(array_psi_pred, 1, quantile, 0.975)
-    
-    # Store results
-    pred_data <- tibble(
-      covariate = beta_loop$Covariate,
-      x_value = X_range,
-      pred_mean = pred_mean,
-      pred_median = pred_median,
-      pred_lower = pred_lower,
-      pred_upper = pred_upper
-    ) %>% 
-    mutate(sps = sps_loop, scale = scale_loop)
-    
-    print(glue("pred_{sps_loop}_beta{beta_index}_scale{scale_loop}"))
-    assign(glue("pred_{sps_loop}_beta{beta_index}_scale{scale_loop}"), pred_data) 
-    # Create plot
-    p <- ggplot(pred_data, aes(x = x_value)) +
-      geom_ribbon(aes(ymin = pred_lower, ymax = pred_upper), 
-                  alpha = 0.3, fill = "steelblue") +
-      geom_line(aes(y = pred_mean), color = "darkblue", linewidth = 1.2) +
-      labs(x = beta_loop$Covariate, 
-          y = "Predicted Probability",
-          title = glue("{sps_loop}: {beta_loop$Covariate}"),
-          subtitle = glue("Scale: {scale_loop}")) +
-      theme_minimal()
-    
-    print(p)
-    
   }
 }
 
@@ -227,22 +235,7 @@ tree_den_axis_s <- X10 %>%
                               up_treeden_ha_park = quantile(treeden_ha_park, probs = 0.95, na.rm = T),
                               up_treeden_ha_coun = quantile(treeden_ha_coun, probs = 0.95, na.rm = T))
 
-baww_lims <- read_rds("data/out/X_vals_BAWW.rds")
-bhvi_lims <- read_rds("data/out/X_vals_BHVI.rds")
-blbw_lims <- read_rds("data/out/X_vals_BLBW.rds")
-brcr_lims <- read_rds("data/out/X_vals_BRCR.rds")
-btbw_lims <- read_rds("data/out/X_vals_BTBW.rds")
-btnw_lims <- read_rds("data/out/X_vals_BTNW.rds")
-dowo_lims <- read_rds("data/out/X_vals_DOWO.rds")
-hawo_lims <- read_rds("data/out/X_vals_HAWO.rds")
-heth_lims <- read_rds("data/out/X_vals_HETH.rds")
-oven_lims <- read_rds("data/out/X_vals_OVEN.rds")
-revi_lims <- read_rds("data/out/X_vals_REVI.rds")
-scta_lims <- read_rds("data/out/X_vals_SCTA.rds")
-veer_lims <- read_rds("data/out/X_vals_VEER.rds")
-wbnu_lims <- read_rds("data/out/X_vals_WBNU.rds")
-woth_lims <- read_rds("data/out/X_vals_WOTH.rds")
-ybsa_lims <- read_rds("data/out/X_vals_YBSA.rds")
+
 
 #? AUTOMATED PREDICTION PROCESSING FUNCTION ---------------------------------------
 process_beta_predictions <- function(beta_num, covariate_suffix) {
@@ -336,7 +329,6 @@ beta_covariates <- list(
   "3" = "BAlar",   # Late Successional Basal Area
   "4" = "SHR",     # Shrub Cover
   "5" = "BA",      # Tree Basal Area (linear)
-  "6" = "BA"       # Tree Basal Area (quadratic)
 )
 
 # Process all betas automatically
@@ -344,21 +336,7 @@ beta1_preds <- process_beta_predictions(1, beta_covariates[["1"]])
 beta2_preds <- process_beta_predictions(2, beta_covariates[["2"]])
 beta3_preds <- process_beta_predictions(3, beta_covariates[["3"]])
 beta4_preds <- process_beta_predictions(4, beta_covariates[["4"]])
-
-beta5_preds_ori <- process_beta_predictions(5, beta_covariates[["5"]]) 
-beta6_preds_ori <- process_beta_predictions(6, beta_covariates[["6"]]) 
-sps_beta5 <- beta5_preds_ori$sps %>% unique()
-sps_beta6 <- beta6_preds_ori$sps %>% unique()
-sps_beta5 <- sps_beta5[which(sps_beta5 %!in% sps_beta6)]
-
-beta5_preds <- beta5_preds_ori %>% 
-                filter(sps %in% sps_beta5)
-
-beta6_preds <- beta6_preds_ori %>% 
-                filter(sps %in% sps_beta6)
-
-# Combine beta5 and beta6 (both are basal area effects)
-beta56_preds <- rbind(beta5_preds, beta6_preds)
+beta5_preds <- process_beta_predictions(5, beta_covariates[["5"]]) 
 
 #? TREE DENSITY -----------------------------------------------------------------
 
@@ -386,8 +364,8 @@ ggplot(beta1_preds, aes(x = x_ori, y = pred_mean)) +
         legend.text = element_text(size = 12)                     # Legend text
   ) +
   scale_color_manual(values = safe_pal) +
-  ylim(0, 1) +
-  xlim(beta1_lims)
+  ylim(0, 1) #+
+  #xlim(beta1_lims)
 
 ggsave("figures/pred_den.svg", plot = last_plot(), device = "svg", width = 6, height = 6)
 ggsave("figures/pred_den.png", plot = last_plot(), device = "png", width = 6, height = 6)
@@ -431,7 +409,7 @@ ggplot(beta2_preds, aes(x = x_ori, y = pred_mean)) +
   ) +
   scale_color_manual(values = safe_pal) +
   ylim(0, 1) #+
- # xlim(beta2_lims)
+  #xlim(beta2_lims)
 
 ggsave("figures/pred_con.svg", plot = last_plot(), device = "svg", width = 10, height = 6)
 ggsave("figures/pred_con.png", plot = last_plot(), device = "png", width = 10, height = 6)
@@ -518,8 +496,8 @@ ggplot(beta4_preds, aes(x = x_ori, y = pred_mean)) +
         legend.text = element_text(size = 12)                     # Legend text
   ) +
   scale_color_manual(values = safe_pal) +
-  ylim(0, 1) +
-    xlim(beta4_lims)
+  ylim(0, 1) #+
+  # xlim(beta4_lims)
 
 ggsave("figures/pred_shr.svg", plot = last_plot(), device = "svg", width = 14, height = 6)
 ggsave("figures/pred_shr.png", plot = last_plot(), device = "png", width = 14, height = 6)
@@ -538,9 +516,9 @@ tree_BA_axis_s <- X10 %>%
                               up_BA_m2ha_park = quantile(BA_m2ha_park, probs = 0.95, na.rm = T),
                               up_BA_m2ha_coun = quantile(BA_m2ha_coun, probs = 0.95, na.rm = T))
 
-beta56_lims <- c(floor(min(beta56_preds$x_ori) / 5) * 5, ceiling(max(beta56_preds$x_ori) / 5) * 5)
+beta5_lims <- c(floor(min(beta5_preds$x_ori) / 5) * 5, ceiling(max(beta5_preds$x_ori) / 5) * 5)
 
-ggplot(beta56_preds, aes(x = x_ori, y = pred_mean)) +
+ggplot(beta5_preds, aes(x = x_ori, y = pred_mean)) +
   geom_line(aes(color = factor(sps)), linewidth = 1.2) +
   facet_wrap(~ scale, scales = "free_x",
              labeller = labeller(scale = c("3" = "Landscape Scale", 
@@ -562,8 +540,8 @@ ggplot(beta56_preds, aes(x = x_ori, y = pred_mean)) +
         legend.text = element_text(size = 12)                     # Legend text
   ) +
   scale_color_manual(values = safe_pal) +
-  ylim(0, 1) +
-  xlim(beta56_lims)
+  ylim(0, 1) #+
+  #xlim(beta5_lims)
 
 ggsave("figures/pred_BA.svg", plot = last_plot(), device = "svg", width = 14, height = 6)
 ggsave("figures/pred_BA.png", plot = last_plot(), device = "png", width = 14, height = 6)

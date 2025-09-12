@@ -40,7 +40,7 @@ freshr::freshr()
 # Installed new packages?
 #  renv::snapshot()
 
-test <- FALSE
+test <- TRUE
 interaction <- TRUE
 step_number_define <- 1
 if(substr(getwd(), 1, 3) == "/Us") {direc <- "local"} else {direc <- "hpc"}
@@ -93,12 +93,17 @@ if(direc == "local"){
     sps_loop <- tib_loop$AOU_Code
     step_numb <- tib_loop$step
 
-    cat(glue("\n \n 
-             The species is {sps_loop}  \n
-             Analysis on step {step_numb}  \n
-             Interaction term? {interaction} \n
-             Is it a test? {test} \n 
-             Good luck Houston! \n \n \n "))
+    cat(glue("\n 
+              \n
+              \n 
+              The species is {sps_loop}  \n
+              Analysis on step {step_numb}  \n
+              Interaction term? {interaction} \n
+              Is it a test? {test} \n 
+              Good luck Houston! 
+              \n
+              \n 
+              \n "))
 
     if(tib_loop$step == 2){
 
