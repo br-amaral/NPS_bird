@@ -561,7 +561,7 @@ nrow(y2)
 length(Xp)
 dim(X1)
 # number of alphas and betas
-n_bs <- 7
+n_bs <- 6
 n_beta_int <- n_bs - 2
 n_as <- 3
 if(length(sps_loop) > 1) { sps_loop <- "commu"} else {sps_loop <- sps_loop}
