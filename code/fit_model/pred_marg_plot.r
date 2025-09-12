@@ -2,6 +2,9 @@
 #? ------------------------------   pred_marg_plot.r   -----------------------------
 #? *********************************************************************************
 #
+#! #TODO: check conifer BA x axis
+#! #TODO: create panel with park values on bottom of plots
+#
 #! Code to ...
 #
 #! Source ---------------------------------------------
@@ -159,7 +162,7 @@ for(sps_res in 1:nrow(beta_key)){
     
     if(beta_index == 6){ 
       # Get beta[5] for quadratic term
-      all_beta5_samples <- res_mod$sims.list$beta[, beta_index_order - 1]
+      all_beta5_samples <- res_mod$sims.list$beta[, beta_index_order]
       for(s in 1:n_samples) {
         predictions[s, ] <- plogis(all_beta0_samples[s] + all_beta_samples[s] * X_range + all_beta5_samples[s] * (X_range)^2)
       }
@@ -225,6 +228,7 @@ tree_den_axis_s <- X10 %>%
                               up_treeden_ha_coun = quantile(treeden_ha_coun, probs = 0.95, na.rm = T))
 
 baww_lims <- read_rds("data/out/X_vals_BAWW.rds")
+bhvi_lims <- read_rds("data/out/X_vals_BHVI.rds")
 blbw_lims <- read_rds("data/out/X_vals_BLBW.rds")
 brcr_lims <- read_rds("data/out/X_vals_BRCR.rds")
 btbw_lims <- read_rds("data/out/X_vals_BTBW.rds")
@@ -238,6 +242,7 @@ scta_lims <- read_rds("data/out/X_vals_SCTA.rds")
 veer_lims <- read_rds("data/out/X_vals_VEER.rds")
 wbnu_lims <- read_rds("data/out/X_vals_WBNU.rds")
 woth_lims <- read_rds("data/out/X_vals_WOTH.rds")
+ybsa_lims <- read_rds("data/out/X_vals_YBSA.rds")
 
 #? AUTOMATED PREDICTION PROCESSING FUNCTION ---------------------------------------
 process_beta_predictions <- function(beta_num, covariate_suffix) {
@@ -262,7 +267,7 @@ process_beta_predictions <- function(beta_num, covariate_suffix) {
     # Get the prediction data
     pred_data <- get(obj_name, envir = .GlobalEnv)
     
-    # Get the corresponding limits object
+    # Get the corresponding limits object - real scale, not standardized
     lims_obj_name <- glue("{tolower(sps)}_lims")
     
     if(exists(lims_obj_name)) {
@@ -284,22 +289,23 @@ process_beta_predictions <- function(beta_num, covariate_suffix) {
         # Apply unstandardization based on scale
         pred_data_processed <- pred_data %>%
           mutate(
-            x_ori = case_when(
-              # Special handling for county-level tree density (divided by 4)
-              scale_num == 3 & covariate_suffix == "DEN" ~ 
-                ((x_value * lims_data[[sd_col]]) + lims_data[[mean_col]]),
+             x_ori = #case_when(
+            #   # Special handling for county-level tree density 
+            #   scale_num == 3 & covariate_suffix == "DEN" ~ 
+            #     ((x_value * lims_data[[sd_col]]) + lims_data[[mean_col]]),
               
-              # Special handling for county-level shrub cover 
-              scale_num == 3 & covariate_suffix == "SHR" ~ 
-                ((x_value * lims_data[[sd_col]]) + lims_data[[mean_col]]),
+            #   # Special handling for county-level shrub cover 
+            #   scale_num == 3 & covariate_suffix == "SHR" ~ 
+            #     ((x_value * lims_data[[sd_col]]) + lims_data[[mean_col]]),
               
-              # Special handling for county-level basal area (multiplied by 5)
-              scale_num == 3 & covariate_suffix == "BA" ~ 
-                (x_value * lims_data[[sd_col]]) + (lims_data[[mean_col]]),
+            #   # Special handling for county-level basal area 
+            #   scale_num == 3 & covariate_suffix == "BA" ~ 
+            #     (x_value * lims_data[[sd_col]]) + (lims_data[[mean_col]]),
               
               # Standard unstandardization for all other cases
-              TRUE ~ (x_value * lims_data[[sd_col]]) + lims_data[[mean_col]]
-            )
+              #TRUE ~ 
+              (x_value * lims_data[[sd_col]]) + lims_data[[mean_col]]
+            #)
           )
         
         pred_list[[obj_name]] <- pred_data_processed
@@ -340,21 +346,28 @@ beta3_preds <- process_beta_predictions(3, beta_covariates[["3"]])
 beta4_preds <- process_beta_predictions(4, beta_covariates[["4"]])
 
 beta5_preds_ori <- process_beta_predictions(5, beta_covariates[["5"]]) 
-beta5_preds <- beta5_preds_ori %>% 
-                filter(sps %in% c("SCTA", "WBNU", "WOTH"))
-
 beta6_preds_ori <- process_beta_predictions(6, beta_covariates[["6"]]) 
+sps_beta5 <- beta5_preds_ori$sps %>% unique()
+sps_beta6 <- beta6_preds_ori$sps %>% unique()
+sps_beta5 <- sps_beta5[which(sps_beta5 %!in% sps_beta6)]
+
+beta5_preds <- beta5_preds_ori %>% 
+                filter(sps %in% sps_beta5)
 
 beta6_preds <- beta6_preds_ori %>% 
-                filter(sps %in% c("BAWW", "BLBW", "BRCR", "BTBW", "BTNW", "DOWO", "OVEN", "REVI", "VEER"))
+                filter(sps %in% sps_beta6)
 
 # Combine beta5 and beta6 (both are basal area effects)
 beta56_preds <- rbind(beta5_preds, beta6_preds)
 
+#? TREE DENSITY -----------------------------------------------------------------
+
+beta1_lims <- c(floor(min(beta1_preds$x_ori) / 5) * 5, ceiling(max(beta1_preds$x_ori) / 5) * 5)
+
 ggplot(beta1_preds, aes(x = x_ori, y = pred_mean)) +
   geom_line(aes(color = factor(sps)), linewidth = 1.2) +
   facet_wrap(~ scale, scales = "free_x",
-             labeller = labeller(scale = c("3" = "Landscape Scale", 
+             labeller = labeller(scale = c("3" = "County Scale", 
                                            "2" = "Park Scale", 
                                            "1" = "Local Scale"))) +  
   labs(x = glue("\nTree Density (stems/ha)"), 
@@ -373,7 +386,8 @@ ggplot(beta1_preds, aes(x = x_ori, y = pred_mean)) +
         legend.text = element_text(size = 12)                     # Legend text
   ) +
   scale_color_manual(values = safe_pal) +
-  ylim(0, 1)
+  ylim(0, 1) +
+  xlim(beta1_lims)
 
 ggsave("figures/pred_den.svg", plot = last_plot(), device = "svg", width = 6, height = 6)
 ggsave("figures/pred_den.png", plot = last_plot(), device = "png", width = 6, height = 6)
@@ -392,13 +406,15 @@ BA_con_axis_s <- X10 %>%
                               up_BA_m2ha_perc_con_park = quantile(BA_m2ha_perc_con_park, probs = 0.95, na.rm = T),
                               up_BA_m2ha_perc_con_coun = quantile(BA_m2ha_perc_con_coun, probs = 0.95, na.rm = T))
 
+beta2_lims <- c(floor(min(beta2_preds$x_ori) / 5) * 5, ceiling(max(beta2_preds$x_ori) / 5) * 5)
+
 ggplot(beta2_preds, aes(x = x_ori, y = pred_mean)) +
   geom_line(aes(color = factor(sps)), linewidth = 1.2) +
   facet_wrap(~ scale, scales = "free_x",
              labeller = labeller(scale = c("3" = "Landscape Scale", 
                                            "2" = "Park Scale", 
                                            "1" = "Local Scale"))) +  
-  labs(x = glue("\nConifer Basal area %"), 
+  labs(x = glue("\nConifer Basal area  (m²/ha)"), 
        y = "Predicted Occupancy Probability\n",
        title = glue("Conifers\n"),
        color = "Species") +
@@ -414,7 +430,8 @@ ggplot(beta2_preds, aes(x = x_ori, y = pred_mean)) +
         legend.text = element_text(size = 12)                     # Legend text
   ) +
   scale_color_manual(values = safe_pal) +
-  ylim(0, 1)
+  ylim(0, 1) #+
+ # xlim(beta2_lims)
 
 ggsave("figures/pred_con.svg", plot = last_plot(), device = "svg", width = 10, height = 6)
 ggsave("figures/pred_con.png", plot = last_plot(), device = "png", width = 10, height = 6)
@@ -433,13 +450,15 @@ BA_latesuc_axis_s <- X10 %>%
                               up_BA_m2ha_perc_con_park = quantile(BA_m2ha_perc_con_park, probs = 0.95, na.rm = T),
                               up_BA_m2ha_perc_con_coun = quantile(BA_m2ha_perc_con_coun, probs = 0.95, na.rm = T))
 
+beta3_lims <- c(floor(min(beta3_preds$x_ori) / 5) * 5, ceiling(max(beta3_preds$x_ori) / 5) * 5)
+
 ggplot(beta3_preds, aes(x = x_ori, y = pred_mean)) +
   geom_line(aes(color = factor(sps)), linewidth = 1.2) +
   facet_wrap(~ scale, scales = "free_x",
              labeller = labeller(scale = c("3" = "Landscape Scale", 
                                            "2" = "Park Scale", 
                                            "1" = "Local Scale"))) +  
-  labs(x = glue("Late Success. Forest Basal area %\n"), 
+  labs(x = glue("Late Success. Forest Basal area (m²/ha)\n"), 
        y = "Predicted Occupancy Probability\n",
        title = glue("Late Success.\n"),
        color = "Species") +
@@ -455,7 +474,8 @@ ggplot(beta3_preds, aes(x = x_ori, y = pred_mean)) +
         legend.text = element_text(size = 12)                     # Legend text
   ) +
   scale_color_manual(values = safe_pal) +
-  ylim(0, 1)
+  ylim(0, 1) #+
+  #xlim(beta3_lims)
 
 ggsave("figures/pred_lat.svg", plot = last_plot(), device = "svg", width = 14, height = 6)
 ggsave("figures/pred_lat.png", plot = last_plot(), device = "png", width = 14, height = 6)
@@ -473,6 +493,8 @@ shrub_BA_axis_s <- X10 %>%
                               up_shrub_avg_cov_site = quantile(shrub_avg_cov_site, probs = 0.95, na.rm = T),
                               up_shrub_avg_cov_park = quantile(shrub_avg_cov_park, probs = 0.95, na.rm = T),
                               up_shrub_cov_coun = quantile(shrub_cov_coun, probs = 0.95, na.rm = T))
+
+beta4_lims <- c(floor(min(beta4_preds$x_ori) / 5) * 5, ceiling(max(beta4_preds$x_ori) / 5) * 5)
 
 ggplot(beta4_preds, aes(x = x_ori, y = pred_mean)) +
   geom_line(aes(color = factor(sps)), linewidth = 1.2) +
@@ -496,7 +518,8 @@ ggplot(beta4_preds, aes(x = x_ori, y = pred_mean)) +
         legend.text = element_text(size = 12)                     # Legend text
   ) +
   scale_color_manual(values = safe_pal) +
-  ylim(0, 1)
+  ylim(0, 1) +
+    xlim(beta4_lims)
 
 ggsave("figures/pred_shr.svg", plot = last_plot(), device = "svg", width = 14, height = 6)
 ggsave("figures/pred_shr.png", plot = last_plot(), device = "png", width = 14, height = 6)
@@ -515,10 +538,9 @@ tree_BA_axis_s <- X10 %>%
                               up_BA_m2ha_park = quantile(BA_m2ha_park, probs = 0.95, na.rm = T),
                               up_BA_m2ha_coun = quantile(BA_m2ha_coun, probs = 0.95, na.rm = T))
 
-beta56_preds2 <- beta56_preds %>% 
-                    filter(sps %in% c("BRCR", "BTNW", "DOWO", "OVEN", "REVI", "SCTA", "WBNU", "WOTH"))
+beta56_lims <- c(floor(min(beta56_preds$x_ori) / 5) * 5, ceiling(max(beta56_preds$x_ori) / 5) * 5)
 
-ggplot(beta5_preds, aes(x = x_ori, y = pred_mean)) +
+ggplot(beta56_preds, aes(x = x_ori, y = pred_mean)) +
   geom_line(aes(color = factor(sps)), linewidth = 1.2) +
   facet_wrap(~ scale, scales = "free_x",
              labeller = labeller(scale = c("3" = "Landscape Scale", 
@@ -540,7 +562,8 @@ ggplot(beta5_preds, aes(x = x_ori, y = pred_mean)) +
         legend.text = element_text(size = 12)                     # Legend text
   ) +
   scale_color_manual(values = safe_pal) +
-  ylim(0, 1)
+  ylim(0, 1) +
+  xlim(beta56_lims)
 
 ggsave("figures/pred_BA.svg", plot = last_plot(), device = "svg", width = 14, height = 6)
 ggsave("figures/pred_BA.png", plot = last_plot(), device = "png", width = 14, height = 6)
