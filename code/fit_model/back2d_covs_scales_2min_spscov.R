@@ -562,7 +562,7 @@ length(Xp)
 dim(X1)
 # number of alphas and betas
 n_bs <- 6
-n_beta_int <- n_bs - 2
+n_beta_int <- n_bs - 1
 n_as <- 3
 if(length(sps_loop) > 1) { sps_loop <- "commu"} else {sps_loop <- sps_loop}
 if(length((unique(y[,2]))) == 1) { park_name <- unique(y[,2])} else {park_name <- "parks"}
