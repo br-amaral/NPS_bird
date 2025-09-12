@@ -628,12 +628,12 @@ if(test == FALSE){
 }
 
 # Define the model file and the output file name (on run_step1_step2.R)
-if(substr(model_file, nchar(model_file) - 15, nchar(model_file)) == "mod_all_covs2.txt") {
+if(substr(model_file, nchar(model_file) - 16, nchar(model_file)) == "mod_all_covs2.txt") {
   mod_name <- glue("data/ana_file/{sps_loop}_step{step_numb}_model_int_{date_step1}.txt") %>% as.character()} else {
   mod_name <- glue("data/ana_file/{sps_loop}_step{step_numb}_model_{date_step1}.txt") %>% as.character()}
 
 # source("code/check_data.R") 
-if(substr(model_file, nchar(model_file) - 15, nchar(model_file)) == "mod_all_covs2.txt") {
+if(substr(model_file, nchar(model_file) - 16, nchar(model_file)) == "mod_all_covs2.txt") {
   inits <- function() {
       list(
           Z = Zst2,
@@ -672,7 +672,7 @@ paste('\n ************************************* \n \n \n   Running JAGS for:', '
       '**************************************
       ') %>% cat()
 
-if(substr(model_file, nchar(model_file) - 15, nchar(model_file)) == "models/mod_all_covs2.txt") {
+if(substr(model_file, nchar(model_file) - 16, nchar(model_file)) == "mod_all_covs2.txt") {
     scales_beta <- glue("scales_beta{seq(1,n_bs-2,1)}")
 
     params <- c("beta0", "beta", "beta_int", "alpha0", "alpha", 
