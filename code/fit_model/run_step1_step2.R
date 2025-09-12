@@ -41,7 +41,7 @@ freshr::freshr()
 #  renv::snapshot()
 
 test <- FALSE
-interaction <- FALSE
+interaction <- TRUE
 step_number_define <- 1
 if(substr(getwd(), 1, 3) == "/Us") {direc <- "local"} else {direc <- "hpc"}
 
