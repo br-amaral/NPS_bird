@@ -562,7 +562,6 @@ length(Xp)
 dim(X1)
 # number of alphas and betas
 n_bs <- 6
-n_beta_int <- n_bs - 1
 n_as <- 3
 if(length(sps_loop) > 1) { sps_loop <- "commu"} else {sps_loop <- sps_loop}
 if(length((unique(y[,2]))) == 1) { park_name <- unique(y[,2])} else {park_name <- "parks"}
@@ -599,7 +598,8 @@ jags_data <- list(
     n_pkM = length(unique(y[, 2]))
 )
 
-if(model_file == "models/mod_all_covs2.txt") {jags_data$n_beta_int <- n_beta_int}
+if(substr(model_file, nchar(model_file) - 16, nchar(model_file)) == "mod_all_covs2.txt") {
+    jags_data$n_beta_int <- 5}
 
 # Print the structure of jags_data to verify
 str(jags_data)
@@ -746,7 +746,7 @@ file_name2 <- paste0(file_name, 'run',
                                         pattern = file_name,
                                         full.names = FALSE)) + 1)
 
-if(model_file == "models/mod_all_covs2.txt") {
+if(substr(model_file, nchar(model_file) - 16, nchar(model_file)) == "mod_all_covs2.txt") {
   file_name2 <- paste0(file_name2, "_int") }
 
 folder_path <- "data/model_res"
