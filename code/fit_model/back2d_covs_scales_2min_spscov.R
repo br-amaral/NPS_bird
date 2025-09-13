@@ -26,6 +26,8 @@ library(rjags)
 library(AHMbook)
 library(fs)
 library(here)
+library(MCMCvis)
+library(BayesPostEst)
 
 conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::filter)
@@ -563,6 +565,7 @@ dim(X1)
 # number of alphas and betas
 n_bs <- 6
 n_as <- 3
+n_beta_int <- 5
 if(length(sps_loop) > 1) { sps_loop <- "commu"} else {sps_loop <- sps_loop}
 if(length((unique(y[,2]))) == 1) { park_name <- unique(y[,2])} else {park_name <- "parks"}
 
@@ -599,7 +602,7 @@ jags_data <- list(
 )
 
 if(substr(model_file, nchar(model_file) - 16, nchar(model_file)) == "mod_all_covs2.txt") {
-    jags_data$n_beta_int <- 5}
+    jags_data$n_beta_int <- n_beta_int}
 
 # Print the structure of jags_data to verify
 str(jags_data)
@@ -654,12 +657,12 @@ if(substr(model_file, nchar(model_file) - 16, nchar(model_file)) == "mod_all_cov
   } }
 
 if(test == TRUE){
-  nchains <- 1
-  niterations <- 6
-  nburnin <- 1
+  nchains <- 2
+  niterations <- 10
+  nburnin <- 2
   nthin <- 1
-  nadapt_min <- 1
-  print("test with 5 iterations")
+  nadapt_min <- 2
+  print("test with 10 iterations")
 }
 
 paste('\n ************************************* \n \n \n   Running JAGS for:', '\n',
@@ -674,7 +677,7 @@ paste('\n ************************************* \n \n \n   Running JAGS for:', '
       ') %>% cat()
 
 if(substr(model_file, nchar(model_file) - 16, nchar(model_file)) == "mod_all_covs2.txt") {
-    scales_beta <- glue("scales_beta{seq(1,n_bs-2,1)}")
+    scales_beta <- glue("scales_beta{seq(1,n_bs-1,1)}")
 
     params <- c("beta0", "beta", "beta_int", "alpha0", "alpha", 
                 scales_beta,
@@ -859,14 +862,6 @@ if(test == TRUE){
 #          #params = params[c(2,4,5,7)],
 #          ref_ovl = TRUE)
 
-# Load packages -------------------------------------------------------------------
-library(conflicted)
-library(tidyverse)
-library(glue)
-library(MCMCvis)
-library(rjags)
-library(BayesPostEst)
-
 # get parameter names
 scales_names <- grep("^scales_", colnames(samples_jags[[1]]), value = TRUE)
 all_params <- c("mu.alpha0", "mu.beta0", "beta", "alpha", scales_names)
@@ -909,7 +904,7 @@ for(ii in 1:n_betas) {
     beta_key$overlap0[ii] <- "no"
   }
 
-# scales
+  # scales
   loop_sca <- glue("scales_beta{ii}")
   sca_beta <- MCMCchains(samples_jags, params = loop_sca)
 
@@ -922,10 +917,6 @@ for(ii in 1:n_betas) {
   beta_key$sca3[ii] <- tb_mcmc_scales_i[3]
 
 }
-
-if(beta_key$overlap0[6] == "yes"){beta_key$overlap0[5] <- "yes"} 
-
-beta_key
 
 quant_name <- glue("{substr(quant_group[1], 3, 4)}_{substr(quant_group[2], 3, 4)}")
 # save beta and scale selection values

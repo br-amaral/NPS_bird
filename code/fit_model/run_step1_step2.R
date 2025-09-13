@@ -40,8 +40,8 @@ freshr::freshr()
 # Installed new packages?
 #  renv::snapshot()
 
-test <- FALSE
-interaction <- FALSE
+test <- TRUE
+interaction <- TRUE
 step_number_define <- 1
 if(substr(getwd(), 1, 3) == "/Us") {direc <- "local"} else {direc <- "hpc"}
 
@@ -55,22 +55,15 @@ colanmes <- colnames
 lenght <- length
 `%!in%` <- Negate(`%in%`)
 
-#! Source code and Import data -----------------------------------------
-## file paths
-
-## read files
-# import file, create model names, and save it!
 #! MCMC settings ---------------------------------------------------
 niterations <- 30000
 nburnin <- 15000
 nchains <- 8
 nthin <- 5
-if(test == TRUE){nadapt_min <- 1} else {nadapt_min <- 2000}
+nadapt_min <- 5000
 
-# b_sps <- c("BHVI", "BRCR", "BTBW", "HETH", "OVEN", 
-#                                 "VEER", "REVI", "WBNU", "SCTA", "WOTH",
-#                                 "DOWO", "HAWO", "BLBW", "YBSA", "BCCH", "BAWW", "BTNW")
-
+#! Source code and Import data -----------------------------------------
+## read files
 if(interaction == T){model_file <- "models/mod_all_covs2.txt"}
 if(interaction == F){model_file <- "models/mod_all_covs.txt"}
 
@@ -85,7 +78,18 @@ if(direc == "local"){
     } else {master_tab <- read_csv("code/fit_model/mod_key.csv") %>%
             filter(run == "yes") %>% 
             filter(step %in% c(step_number_define)) %>% 
-            distinct()}
+            distinct()
+    }
+
+paste('\n ************************************* \n \n \n   Running Models:', '\n',
+      '  Test?', test, '\n',
+      '  Interaction?', interaction, '\n',
+      '  Step =', step_number_define, '\n',
+      '  Number of sps =', nrow(master_tab), '\n',
+      '  Total iterations =', nburnin + niterations, '\n',
+      '  Started running on =', Sys.time(),  '\n \n \n',
+      '**************************************') %>% cat()
+
  for (key_ite in 1:nrow(master_tab)){
     # key_ite <- 1
     tib_loop <- master_tab[key_ite, ]
