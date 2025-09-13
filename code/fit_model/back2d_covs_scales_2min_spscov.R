@@ -921,6 +921,17 @@ for(ii in 1:n_betas) {
 
 }
 
+beta_int_key <- tibble(
+  betas = betas_name, 
+  overlap0 = as.character(NA), 
+  sca_sel = as.character(NA),
+  sca1 = as.numeric(NA),
+  sca2 = as.numeric(NA),
+  sca3 = as.numeric(NA),
+  qt_lo = quant_group[1],
+  qt_up = quant_group[2]
+)
+
 for(ii in 1:n_beta_int) {
 # beta_ints
   beta_int_loop1 <- MCMCchains(samples_jags, params = glue("beta_int"))
