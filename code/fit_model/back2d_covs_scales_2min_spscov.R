@@ -27,7 +27,7 @@ library(AHMbook)
 library(fs)
 library(here)
 library(MCMCvis)
-library(BayesPostEst)
+#library(BayesPostEst)
 
 conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::filter)
@@ -666,11 +666,14 @@ if(test == TRUE){
 }
 
 paste('\n ************************************* \n \n \n   Running JAGS for:', '\n',
-      '  Parks =', park_name, '\n',
       '  Species =', sps_loop, '\n',
+      '  Test =', test, '\n',      
       '  Iterations =', niterations, '\n',
       '  Interaction =', interaction, '\n',
+      '  Chains =', nchains, '\n',
       '  Burn-in =', nburnin, '\n',
+      '  Adapt =', nadapt_min, '\n',
+      '  Thinning =', nthin, '\n',
       '  Data size =', nrow(y), '\n',
       '  Started running on =', Sys.time(),  '\n \n \n',
       '**************************************
@@ -787,7 +790,6 @@ if(as.numeric(system_time2 - system_time1) > 1440) {
 paste('\n ************************************** \n \n \n ---------------- DONE ----------------', '\n\n',
       'Output File Name = ', glue('{file_name2}.rds'), '\n', 
       'Script = ', script_name, '\n', 
-      'Parks =', park_name, '\n',
       'Species =', sps_loop, '\n',
       'Iterations =', niterations, '\n',
       'Run number =', str_split(file_name2, 'run', simplify = TRUE)[2], '\n',
@@ -872,6 +874,7 @@ betas <- tidybayes::get_variables(samples_jags)
 n_betas1 <- sub("\\[.*", "", betas) 
 n_betas <- length(n_betas1[n_betas1 == "beta"]) - 1
 betas_name <- paste0(n_betas1[n_betas1 == "beta"][-1], seq(1:n_betas))
+n_beta_int <- 5
 
 quant_group <- c(0.25, 0.75)
 
@@ -918,9 +921,44 @@ for(ii in 1:n_betas) {
 
 }
 
+for(ii in 1:n_beta_int) {
+# beta_ints
+  beta_int_loop1 <- MCMCchains(samples_jags, params = glue("beta_int"))
+  beta_int_loop2 <- beta_int_loop1[,ii]
+    
+  #quantiles <- quantile(beta_int_loop2, )
+  quantiles <- quantile(beta_int_loop2, quant_group)
+
+  lower_quantile <- quantiles[1]
+  upper_quantile <- quantiles[2]
+  
+  # Check if quantiles overlap zero
+  if (lower_quantile <= 0 && upper_quantile >= 0) {
+    beta_int_key$overlap0[ii] <- "yes"
+  } else {
+    beta_int_key$overlap0[ii] <- "no"
+  }
+
+  # scales
+  loop_sca <- glue("scales_beta{ii}")
+  sca_beta_int <- MCMCchains(samples_jags, params = loop_sca)
+
+  tb_mcmc_scales_i <- table(sca_beta_int)/sum(table(sca_beta_int))
+  selected_scales <- as.integer(names(which.max(tb_mcmc_scales_i)))
+
+  beta_int_key$sca_sel[ii] <- selected_scales
+  beta_int_key$sca1[ii] <- tb_mcmc_scales_i[1]
+  beta_int_key$sca2[ii] <- tb_mcmc_scales_i[2]
+  beta_int_key$sca3[ii] <- tb_mcmc_scales_i[3]
+
+}
+
 quant_name <- glue("{substr(quant_group[1], 3, 4)}_{substr(quant_group[2], 3, 4)}")
 # save beta and scale selection values
 if(model_file == "models/mod_all_covs2.txt") {
-  write_rds(beta_key, file = glue("data/model_res/{file_name}_{quant_name}_SCA_SEL_PARS_int.rds")) } else {
-    write_rds(beta_key, file = glue("data/model_res/{file_name}_{quant_name}_SCA_SEL_PARS.rds"))
+  write_rds(beta_key, file = glue("data/model_res/{file_name2}_{quant_name}_SCA_SEL_PARS_int_b.rds")) 
+  write_rds(beta_int_key, file = glue("data/model_res/{file_name2}_{quant_name}_SCA_SEL_PARS_int_bi.rds")) 
+
+  } else {
+    write_rds(beta_key, file = glue("data/model_res/{file_name2}_{quant_name}_SCA_SEL_PARS.rds"))
   }
