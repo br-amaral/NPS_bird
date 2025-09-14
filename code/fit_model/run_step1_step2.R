@@ -90,7 +90,7 @@ paste('\n ************************************* \n \n \n   Running Models:', '\n
       '  Started running on =', Sys.time(),  '\n \n \n',
       '**************************************') %>% cat()
 
- for (key_ite in 10:nrow(master_tab)){
+ for (key_ite in 15:nrow(master_tab)){
     # key_ite <- 1
     tib_loop <- master_tab[key_ite, ]
 
