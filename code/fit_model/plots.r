@@ -28,7 +28,7 @@ lenght <- length
 #! Import data --------------------------------------------------------------------
 ## file paths and read files
 # when loading the model results, get the most updated file?
-file_name <- "BCCH_step1_output_2025_09_09run1"
+file_name <- "BAWW_step1_output_2025_09_13run5"
 
 samples_jags <- read_rds(glue("data/model_res/{file_name}.rds"))
 
@@ -65,7 +65,7 @@ n_betas1 <- sub("\\[.*", "", betas)
 n_betas <- length(n_betas1[n_betas1 == "beta"]) - 1
 betas_name <- paste0(n_betas1[n_betas1 == "beta"][-1], seq(1:n_betas))
 
- quant_group <- c(0.3, 0.7)
+quant_group <- c(0.3, 0.7)
 # quant_group <- c(0.25, 0.75)
 
 beta_key <- tibble(
@@ -110,8 +110,6 @@ for(ii in 1:n_betas) {
   beta_key$sca3[ii] <- tb_mcmc_scales_i[3]
 
 }
-
-if(beta_key$overlap0[6] == "yes"){beta_key$overlap0[5] <- "yes"} 
 
 beta_key
 
