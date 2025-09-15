@@ -2,8 +2,7 @@
 #? ------------------------------   pred_marg_plot.r   -----------------------------
 #? *********************************************************************************
 #
-#! #TODO: check conifer BA x axis
-#! #TODO: create panel with park values on bottom of plots
+#! #TODO: get better color pallete
 #
 #! Code to ...
 #
@@ -94,7 +93,7 @@ cov_key <- cbind(rbind("X1", "X2", "X3", "X4", "X5"),
 # get the data for the predictions
 for(sps_res in 1:nrow(beta_key)){
   RES_MOD_FILE <- beta_key$result[sps_res]
-  res_mod <- read_rds(glue("data/model_res/{RES_MOD_FILE}.rds"))  # model file
+  res_mod <- read_rds(glue("data/model_res/Old/{RES_MOD_FILE}.rds"))  # model file
   sps_loop <- substr(RES_MOD_FILE, 1, 4)
   sps_dat_name <- glue("{sps_loop}_step1_jagsdata")
 
@@ -110,7 +109,7 @@ for(sps_res in 1:nrow(beta_key)){
                   filter(AOU_Code == sps_loop) %>% 
                   pull(select)
 
-  beta_step2 <- read_rds(glue("data/model_res/{beta_step2_get}.rds")) %>% 
+  beta_step2 <- read_rds(glue("data/model_res/Old/{beta_step2_get}.rds")) %>% 
                     filter(overlap0 == "no") %>% 
                     pull(betas)
     
@@ -221,22 +220,6 @@ safe_pal <- carto_pal(12, "Safe")
 set.seed(123)
 safe_pal <- sample(safe_pal)
 
-#? TREE DENSITY -----------------------------------------------------------------
-tree_den_axis_s <- X10 %>% 
-                    select(park, treeden_ha_site, treeden_ha_park, treeden_ha_coun) %>% 
-                    group_by(park) %>% 
-                    summarise(mean_treeden_ha_site = mean(treeden_ha_site, na.rm = T),
-                              mean_treeden_ha_park = mean(treeden_ha_park, na.rm = T),
-                              mean_treeden_ha_coun = mean(treeden_ha_coun, na.rm = T),
-                              lo_treeden_ha_site = quantile(treeden_ha_site, probs = 0.05, na.rm = T),
-                              lo_treeden_ha_park = quantile(treeden_ha_park, probs = 0.05, na.rm = T),
-                              lo_treeden_ha_coun = quantile(treeden_ha_coun, probs = 0.05, na.rm = T),
-                              up_treeden_ha_site = quantile(treeden_ha_site, probs = 0.95, na.rm = T),
-                              up_treeden_ha_park = quantile(treeden_ha_park, probs = 0.95, na.rm = T),
-                              up_treeden_ha_coun = quantile(treeden_ha_coun, probs = 0.95, na.rm = T))
-
-
-
 #? AUTOMATED PREDICTION PROCESSING FUNCTION ---------------------------------------
 process_beta_predictions <- function(beta_num, covariate_suffix) {
   
@@ -328,7 +311,7 @@ beta_covariates <- list(
   "2" = "BAcon",   # Conifer Basal Area  
   "3" = "BAlar",   # Late Successional Basal Area
   "4" = "SHR",     # Shrub Cover
-  "5" = "BA",      # Tree Basal Area (linear)
+  "5" = "BA"       # Tree Basal Area (linear)
 )
 
 # Process all betas automatically
@@ -338,17 +321,53 @@ beta3_preds <- process_beta_predictions(3, beta_covariates[["3"]])
 beta4_preds <- process_beta_predictions(4, beta_covariates[["4"]])
 beta5_preds <- process_beta_predictions(5, beta_covariates[["5"]]) 
 
+scale_covs <-  as_tibble(cbind(c(3, 2, 1), c("coun", "park", "site"))) %>% 
+                  rename(scale = V1, scale_name = V2)
+
 #? TREE DENSITY -----------------------------------------------------------------
 
 beta1_lims <- c(floor(min(beta1_preds$x_ori) / 5) * 5, ceiling(max(beta1_preds$x_ori) / 5) * 5)
 
-ggplot(beta1_preds, aes(x = x_ori, y = pred_mean)) +
-  geom_line(aes(color = factor(sps)), linewidth = 1.2) +
+treeden_covs <- X10 %>%
+                    select(park, Point_Name, treeden_ha_site, treeden_ha_park, treeden_ha_coun) %>% 
+                    distinct() %>% 
+                    pivot_longer(cols = starts_with("treeden_ha"),
+                                 names_to = "scale_name",
+                                 values_to = "treeden_ha") %>% 
+                    distinct() %>% 
+                    mutate(scale_name = substr(scale_name, nchar(scale_name) - 3, nchar(scale_name))) %>% 
+                    select(-Point_Name) %>% 
+                    distinct() %>% 
+                    left_join(., scale_covs, by = "scale_name") 
+
+treeden_covs_pkpos <- treeden_covs %>% select(park) %>% distinct() %>% mutate(y_pos = as.numeric(NA))
+treeden_covs_pkpos[1,2] <- 1.05
+for(jj in 2:nrow(treeden_covs_pkpos)){treeden_covs_pkpos[jj,2] <- treeden_covs_pkpos[jj - 1 ,2] + 0.04}
+
+treeden_covs2 <- left_join(treeden_covs, treeden_covs_pkpos, by = "park")  %>% 
+                    filter(scale %in% beta1_preds$scale) %>% 
+                    drop_na() %>% 
+                    mutate(covariate = "cov",
+                           scale = as.numeric(scale)) %>% 
+                    rename(pred_mean = treeden_ha)
+
+max_pos_treeden <- tail(treeden_covs2, 1)["y_pos"] %>% pull()
+beta1_preds$y_pos <- as.numeric(NA)
+beta1_preds2 <- full_join(beta1_preds, treeden_covs2)
+
+nrow(treeden_covs2) + nrow(beta1_preds) == nrow(beta1_preds2)
+
+ggplot() +
+  geom_point(data = beta1_preds2 %>% filter(covariate == "cov"), 
+             aes(y = y_pos, x = pred_mean, col = park), size = 2, show.legend = FALSE) +
+  geom_hline(yintercept = 1, color = "black", linewidth = 0.4) +
+  geom_line(data = beta1_preds2 %>% filter(covariate == "Tree Density"), 
+            aes(x = x_ori, y = pred_mean, color = factor(sps)), linewidth = 1.2) +
   facet_wrap(~ scale, scales = "free_x",
              labeller = labeller(scale = c("3" = "County Scale", 
                                            "2" = "Park Scale", 
                                            "1" = "Local Scale"))) +  
-  labs(x = glue("\nTree Density (stems/ha)"), 
+  labs(x = glue("\n\n Tree Density (stems/ha)"), 
        y = "Predicted Occupancy Probability\n",
        title = glue("Tree Density\n"),
        color = "Species") +
@@ -364,37 +383,63 @@ ggplot(beta1_preds, aes(x = x_ori, y = pred_mean)) +
         legend.text = element_text(size = 12)                     # Legend text
   ) +
   scale_color_manual(values = safe_pal) +
-  ylim(0, 1) #+
+  scale_y_continuous(limits = c(0, max_pos_treeden), 
+                     breaks = c(0, 0.25, 0.5, 0.75, 1, treeden_covs_pkpos$y_pos),
+                     labels = c(0, 0.25, 0.5, 0.75, 1, treeden_covs_pkpos$park)) 
   #xlim(beta1_lims)
+
 
 ggsave("figures/pred_den.svg", plot = last_plot(), device = "svg", width = 6, height = 6)
 ggsave("figures/pred_den.png", plot = last_plot(), device = "png", width = 6, height = 6)
 
 #? CONIFER BA -----------------------------------------------------------------
-BA_con_axis_s <- X10 %>% 
-                    select(park, BA_m2ha_perc_con_site, BA_m2ha_perc_con_park, BA_m2ha_perc_con_coun) %>% 
-                    group_by(park) %>% 
-                    summarise(mean_BA_m2ha_perc_con_site = mean(BA_m2ha_perc_con_site, na.rm = T),
-                              mean_BA_m2ha_perc_con_park = mean(BA_m2ha_perc_con_park, na.rm = T),
-                              mean_BA_m2ha_perc_con_coun = mean(BA_m2ha_perc_con_coun, na.rm = T),
-                              lo_BA_m2ha_perc_con_site = quantile(BA_m2ha_perc_con_site, probs = 0.05, na.rm = T),
-                              lo_BA_m2ha_perc_con_park = quantile(BA_m2ha_perc_con_park, probs = 0.05, na.rm = T),
-                              lo_BA_m2ha_perc_con_coun = quantile(BA_m2ha_perc_con_coun, probs = 0.05, na.rm = T),
-                              up_BA_m2ha_perc_con_site = quantile(BA_m2ha_perc_con_site, probs = 0.95, na.rm = T),
-                              up_BA_m2ha_perc_con_park = quantile(BA_m2ha_perc_con_park, probs = 0.95, na.rm = T),
-                              up_BA_m2ha_perc_con_coun = quantile(BA_m2ha_perc_con_coun, probs = 0.95, na.rm = T))
-
 beta2_lims <- c(floor(min(beta2_preds$x_ori) / 5) * 5, ceiling(max(beta2_preds$x_ori) / 5) * 5)
 
-ggplot(beta2_preds, aes(x = x_ori, y = pred_mean)) +
-  geom_line(aes(color = factor(sps)), linewidth = 1.2) +
+treecon_covs <- X10 %>%
+                    select(park, Point_Name, BA_m2ha_perc_con_site, BA_m2ha_perc_con_park, BA_m2ha_perc_con_coun) %>% 
+                    rename(treecon_ha_site = BA_m2ha_perc_con_site,
+                           treecon_ha_park = BA_m2ha_perc_con_park,
+                           treecon_ha_coun = BA_m2ha_perc_con_coun) %>% 
+                    distinct() %>% 
+                    pivot_longer(cols = starts_with("treecon_ha"),
+                                 names_to = "scale_name",
+                                 values_to = "treecon_ha") %>% 
+                    distinct() %>% 
+                    mutate(scale_name = substr(scale_name, nchar(scale_name) - 3, nchar(scale_name))) %>% 
+                    select(-Point_Name) %>% 
+                    distinct() %>% 
+                    left_join(., scale_covs, by = "scale_name") 
+
+treecon_covs_pkpos <- treecon_covs %>% select(park) %>% distinct() %>% mutate(y_pos = as.numeric(NA))
+treecon_covs_pkpos[1,2] <- 1.05
+for(jj in 2:nrow(treecon_covs_pkpos)){treecon_covs_pkpos[jj,2] <- treecon_covs_pkpos[jj - 1 ,2] + 0.04}
+
+treecon_covs2 <- left_join(treecon_covs, treecon_covs_pkpos, by = "park")  %>% 
+                    filter(scale %in% beta2_preds$scale) %>% 
+                    drop_na() %>% 
+                    mutate(covariate = "cov",
+                           scale = as.numeric(scale)) %>% 
+                    rename(pred_mean = treecon_ha)
+
+max_pos_treecon <- tail(treecon_covs2, 1)["y_pos"] %>% pull()
+beta2_preds$y_pos <- as.numeric(NA)
+beta2_preds2 <- full_join(beta2_preds, treecon_covs2)
+
+nrow(treecon_covs2) + nrow(beta2_preds) == nrow(beta2_preds2)
+
+ggplot() +
+  geom_point(data = beta2_preds2 %>% filter(covariate == "cov"), 
+             aes(y = y_pos, x = pred_mean, col = park), size = 2, show.legend = FALSE) +
+  geom_hline(yintercept = 1, color = "black", linewidth = 0.4) +
+  geom_line(data = beta2_preds2 %>% filter(covariate == "Conifer Density"), 
+            aes(x = x_ori, y = pred_mean, color = factor(sps)), linewidth = 1.2) +
   facet_wrap(~ scale, scales = "free_x",
-             labeller = labeller(scale = c("3" = "Landscape Scale", 
+             labeller = labeller(scale = c("3" = "County Scale", 
                                            "2" = "Park Scale", 
                                            "1" = "Local Scale"))) +  
-  labs(x = glue("\nConifer Basal area  (m²/ha)"), 
+  labs(x = glue("\n\n Tree Density (stems/ha)"), 
        y = "Predicted Occupancy Probability\n",
-       title = glue("Conifers\n"),
+       title = glue("Tree Density\n"),
        color = "Species") +
   theme_minimal() +
   theme(panel.grid = element_blank(),
@@ -407,38 +452,63 @@ ggplot(beta2_preds, aes(x = x_ori, y = pred_mean)) +
         legend.title = element_text(size = 14, face = "bold", hjust = 0.5),    # Legend title
         legend.text = element_text(size = 12)                     # Legend text
   ) +
-  scale_color_manual(values = safe_pal) +
-  ylim(0, 1) #+
+  #scale_color_manual(values = safe_pal) +
+  scale_y_continuous(limits = c(0, max_pos_treecon), 
+                     breaks = c(0, 0.25, 0.5, 0.75, 1, treecon_covs_pkpos$y_pos),
+                     labels = c(0, 0.25, 0.5, 0.75, 1, treecon_covs_pkpos$park)) 
   #xlim(beta2_lims)
 
 ggsave("figures/pred_con.svg", plot = last_plot(), device = "svg", width = 10, height = 6)
 ggsave("figures/pred_con.png", plot = last_plot(), device = "png", width = 10, height = 6)
 
 #? LATE SUCCESSIONAL BASAL AREA -----------------------------------------------------------------
-BA_latesuc_axis_s <- X10 %>% 
-                    select(park, BA_m2ha_perc_con_site, BA_m2ha_perc_con_park, BA_m2ha_perc_con_coun) %>% 
-                    group_by(park) %>% 
-                    summarise(mean_BA_m2ha_perc_con_site = mean(BA_m2ha_perc_con_site, na.rm = T),
-                              mean_BA_m2ha_perc_con_park = mean(BA_m2ha_perc_con_park, na.rm = T),
-                              mean_BA_m2ha_perc_con_coun = mean(BA_m2ha_perc_con_coun, na.rm = T),
-                              lo_BA_m2ha_perc_con_site = quantile(BA_m2ha_perc_con_site, probs = 0.05, na.rm = T),
-                              lo_BA_m2ha_perc_con_park = quantile(BA_m2ha_perc_con_park, probs = 0.05, na.rm = T),
-                              lo_BA_m2ha_perc_con_coun = quantile(BA_m2ha_perc_con_coun, probs = 0.05, na.rm = T),
-                              up_BA_m2ha_perc_con_site = quantile(BA_m2ha_perc_con_site, probs = 0.95, na.rm = T),
-                              up_BA_m2ha_perc_con_park = quantile(BA_m2ha_perc_con_park, probs = 0.95, na.rm = T),
-                              up_BA_m2ha_perc_con_coun = quantile(BA_m2ha_perc_con_coun, probs = 0.95, na.rm = T))
-
 beta3_lims <- c(floor(min(beta3_preds$x_ori) / 5) * 5, ceiling(max(beta3_preds$x_ori) / 5) * 5)
 
-ggplot(beta3_preds, aes(x = x_ori, y = pred_mean)) +
-  geom_line(aes(color = factor(sps)), linewidth = 1.2) +
+treelat_covs <- X10 %>%
+                    select(park, Point_Name, BA_m2ha_large_site, BA_m2ha_large_park, BA_m2ha_large_coun) %>% 
+                    rename(treelat_ha_site = BA_m2ha_large_site,
+                           treelat_ha_park = BA_m2ha_large_park,
+                           treelat_ha_coun = BA_m2ha_large_coun) %>% 
+                    distinct() %>% 
+                    pivot_longer(cols = starts_with("treelat_ha"),
+                                 names_to = "scale_name",
+                                 values_to = "treelat_ha") %>% 
+                    distinct() %>% 
+                    mutate(scale_name = substr(scale_name, nchar(scale_name) - 3, nchar(scale_name))) %>% 
+                    select(-Point_Name) %>% 
+                    distinct() %>% 
+                    left_join(., scale_covs, by = "scale_name") 
+
+treelat_covs_pkpos <- treelat_covs %>% select(park) %>% distinct() %>% mutate(y_pos = as.numeric(NA))
+treelat_covs_pkpos[1,2] <- 1.05
+for(jj in 2:nrow(treelat_covs_pkpos)){treelat_covs_pkpos[jj,2] <- treelat_covs_pkpos[jj - 1 ,2] + 0.04}
+
+treelat_covs2 <- left_join(treelat_covs, treelat_covs_pkpos, by = "park")  %>% 
+                    filter(scale %in% beta3_preds$scale) %>% 
+                    drop_na() %>% 
+                    mutate(covariate = "cov",
+                           scale = as.numeric(scale)) %>% 
+                    rename(pred_mean = treelat_ha)
+
+max_pos_treelat <- tail(treelat_covs2, 1)["y_pos"] %>% pull()
+beta3_preds$y_pos <- as.numeric(NA)
+beta3_preds2 <- full_join(beta3_preds, treelat_covs2)
+
+nrow(treelat_covs2) + nrow(beta3_preds) == nrow(beta3_preds2)
+
+ggplot() +
+  geom_point(data = beta3_preds2 %>% filter(covariate == "cov"), 
+             aes(y = y_pos, x = pred_mean, col = park), size = 2, show.legend = FALSE) +
+  geom_hline(yintercept = 1, color = "black", linewidth = 0.4) +
+  geom_line(data = beta3_preds2 %>% filter(covariate == "Late Successional Tree Density"), 
+            aes(x = x_ori, y = pred_mean, color = factor(sps)), linewidth = 1.2) +
   facet_wrap(~ scale, scales = "free_x",
-             labeller = labeller(scale = c("3" = "Landscape Scale", 
+             labeller = labeller(scale = c("3" = "County Scale", 
                                            "2" = "Park Scale", 
                                            "1" = "Local Scale"))) +  
-  labs(x = glue("Late Success. Forest Basal area (m²/ha)\n"), 
+  labs(x = glue("\n\n Tree Density (stems/ha)"), 
        y = "Predicted Occupancy Probability\n",
-       title = glue("Late Success.\n"),
+       title = glue("Tree Density\n"),
        color = "Species") +
   theme_minimal() +
   theme(panel.grid = element_blank(),
@@ -452,7 +522,9 @@ ggplot(beta3_preds, aes(x = x_ori, y = pred_mean)) +
         legend.text = element_text(size = 12)                     # Legend text
   ) +
   scale_color_manual(values = safe_pal) +
-  ylim(0, 1) #+
+  scale_y_continuous(limits = c(0, max_pos_treelat), 
+                     breaks = c(0, 0.25, 0.5, 0.75, 1, treelat_covs_pkpos$y_pos),
+                     labels = c(0, 0.25, 0.5, 0.75, 1, treelat_covs_pkpos$park)) 
   #xlim(beta3_lims)
 
 ggsave("figures/pred_lat.svg", plot = last_plot(), device = "svg", width = 14, height = 6)
@@ -503,30 +575,54 @@ ggsave("figures/pred_shr.svg", plot = last_plot(), device = "svg", width = 14, h
 ggsave("figures/pred_shr.png", plot = last_plot(), device = "png", width = 14, height = 6)
 
 #? TREE BASAL AREA -----------------------------------------------------------------
-tree_BA_axis_s <- X10 %>% 
-                    select(park, BA_m2ha_site, BA_m2ha_park, BA_m2ha_coun) %>% 
-                    group_by(park) %>% 
-                    summarise(mean_BA_m2ha_site = mean(BA_m2ha_site, na.rm = T),
-                              mean_BA_m2ha_park = mean(BA_m2ha_park, na.rm = T),
-                              mean_BA_m2ha_coun = mean(BA_m2ha_coun, na.rm = T),
-                              lo_BA_m2ha_site = quantile(BA_m2ha_site, probs = 0.05, na.rm = T),
-                              lo_BA_m2ha_park = quantile(BA_m2ha_park, probs = 0.05, na.rm = T),
-                              lo_BA_m2ha_coun = quantile(BA_m2ha_coun, probs = 0.05, na.rm = T),
-                              up_BA_m2ha_site = quantile(BA_m2ha_site, probs = 0.95, na.rm = T),
-                              up_BA_m2ha_park = quantile(BA_m2ha_park, probs = 0.95, na.rm = T),
-                              up_BA_m2ha_coun = quantile(BA_m2ha_coun, probs = 0.95, na.rm = T))
 
 beta5_lims <- c(floor(min(beta5_preds$x_ori) / 5) * 5, ceiling(max(beta5_preds$x_ori) / 5) * 5)
 
-ggplot(beta5_preds, aes(x = x_ori, y = pred_mean)) +
-  geom_line(aes(color = factor(sps)), linewidth = 1.2) +
+treeba_covs <- X10 %>%
+                    select(park, Point_Name, BA_m2ha_site, BA_m2ha_park, BA_m2ha_coun) %>% 
+                    rename(treeba_ha_site = BA_m2ha_site,
+                           treeba_ha_park = BA_m2ha_park,
+                           treeba_ha_coun = BA_m2ha_coun) %>% 
+                    distinct() %>% 
+                    pivot_longer(cols = starts_with("treeba_ha"),
+                                 names_to = "scale_name",
+                                 values_to = "treeba_ha") %>% 
+                    distinct() %>% 
+                    mutate(scale_name = substr(scale_name, nchar(scale_name) - 3, nchar(scale_name))) %>% 
+                    select(-Point_Name) %>% 
+                    distinct() %>% 
+                    left_join(., scale_covs, by = "scale_name") 
+
+treeba_covs_pkpos <- treeba_covs %>% select(park) %>% distinct() %>% mutate(y_pos = as.numeric(NA))
+treeba_covs_pkpos[1,2] <- 1.05
+for(jj in 2:nrow(treeba_covs_pkpos)){treeba_covs_pkpos[jj,2] <- treeba_covs_pkpos[jj - 1 ,2] + 0.04}
+
+treeba_covs2 <- left_join(treeba_covs, treeba_covs_pkpos, by = "park")  %>% 
+                    filter(scale %in% beta5_preds$scale) %>% 
+                    drop_na() %>% 
+                    mutate(covariate = "cov",
+                           scale = as.numeric(scale)) %>% 
+                    rename(pred_mean = treeba_ha)
+
+max_pos_treeba <- tail(treeba_covs2, 1)["y_pos"] %>% pull()
+beta5_preds$y_pos <- as.numeric(NA)
+beta5_preds2 <- full_join(beta5_preds, treeba_covs2)
+
+nrow(treeba_covs2) + nrow(beta5_preds) == nrow(beta5_preds2)
+
+ggplot() +
+  geom_point(data = beta5_preds2 %>% filter(covariate == "cov"), 
+             aes(y = y_pos, x = pred_mean, col = park), size = 2, show.legend = FALSE) +
+  geom_hline(yintercept = 1, color = "black", linewidth = 0.4) +
+  geom_line(data = beta5_preds2 %>% filter(covariate == "Tree Basal Area"), 
+            aes(x = x_ori, y = pred_mean, color = factor(sps)), linewidth = 1.2) +
   facet_wrap(~ scale, scales = "free_x",
-             labeller = labeller(scale = c("3" = "Landscape Scale", 
+             labeller = labeller(scale = c("3" = "County Scale", 
                                            "2" = "Park Scale", 
                                            "1" = "Local Scale"))) +  
-  labs(x = glue("Tree Basal Area (m²/ha)\n"), 
+  labs(x = glue("\n\n Tree Density (stems/ha)"), 
        y = "Predicted Occupancy Probability\n",
-       title = glue("Tree Basal Area\n"),
+       title = glue("Tree Density\n"),
        color = "Species") +
   theme_minimal() +
   theme(panel.grid = element_blank(),
@@ -540,7 +636,9 @@ ggplot(beta5_preds, aes(x = x_ori, y = pred_mean)) +
         legend.text = element_text(size = 12)                     # Legend text
   ) +
   scale_color_manual(values = safe_pal) +
-  ylim(0, 1) #+
+  scale_y_continuous(limits = c(0, max_pos_treeba), 
+                     breaks = c(0, 0.25, 0.5, 0.75, 1, treeba_covs_pkpos$y_pos),
+                     labels = c(0, 0.25, 0.5, 0.75, 1, treeba_covs_pkpos$park)) 
   #xlim(beta5_lims)
 
 ggsave("figures/pred_BA.svg", plot = last_plot(), device = "svg", width = 14, height = 6)
