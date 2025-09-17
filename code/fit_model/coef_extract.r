@@ -211,7 +211,13 @@ dat1 <- dat %>%
             mutate(sca_col = "darkolivegreen2") %>% 
             mutate(cov_sps = glue("{Covariate}_{sps}")) %>% 
             arrange(Covariate, sps) %>%  # Sort by Covariate first, then sps alphabetically
-            mutate(cov_sps = factor(cov_sps, levels = sort(unique(cov_sps))))
+            mutate(cov_sps = factor(cov_sps, levels = sort(unique(cov_sps))))  %>% 
+            filter(sps != "BCCH")
+
+dat_sca <- dat_sca %>% filter(sps != "BCCH")
+dat_sca2 <- dat_sca2 %>% filter(sps != "BCCH")
+dat_sca3 <- dat_sca3 %>% filter(sps != "BCCH")
+dat_sca3_0 <- dat_sca3_0 %>% filter(sps != "BCCH")
 
 dat1$sca_col <- ifelse(dat1$sca == "Park Scale", "darkolivegreen3", dat1$sca_col)
 dat1$sca_col <- ifelse(dat1$sca == "County Scale", "darkolivegreen4", dat1$sca_col)
@@ -360,6 +366,16 @@ dat_sca2 <- dat_sca %>%
              aes(x = Covariate, y = sps, fill = selec_freq, 
                  color = ifelse(scale_selected == 1, "black","#8d8888")), 
              size = 10, shape = 21, stroke = 0.9, alpha = 0.5) +
+    # no overlap
+  geom_text(data = dat_sca2 %>% filter(scale == 3), 
+           aes(x = Covariate, y = sps, label = glue("{round(selec_freq * 100)}")), #\nCI:{round(low, 1)} : {round(up, 1)}")), #
+            size = 5.5, color = "black") +
+  geom_text(data = dat_sca2 %>% filter(scale == 2), 
+            aes(x = Covariate, y = sps, label = glue("{round(selec_freq * 100)}")), #\nCI:{round(low, 1)} : {round(up, 1)}")), 
+            size = 5.5, color = "black") +
+  geom_text(data = dat_sca2 %>% filter(scale == 1), 
+            aes(x = Covariate, y = sps, label = glue("{round(selec_freq * 100)}")), #\nCI:{round(low, 1)} : {round(up, 1)}")), 
+           size = 5, color = "black") +
   scale_color_identity() +  # This tells ggplot to use the color names as actual colors for stroke color
   scale_fill_viridis_c(option = "plasma", direction = -1, na.value = "#f6f5ee",
                        limits = c(0.3,1),
@@ -396,7 +412,8 @@ dat_sca2 <- dat_sca %>%
     )
   )
 
-ggsave("figures/sca_plot_select_sca_noleg.svg", plot = sca_plot_selec_sca, device = "svg", width = 9, height = 14)
+ggsave("figures/sca_plot_select_sca_noleg.svg", plot = sca_plot_selec_sca, device = "svg", width = 12, height = 16)
+ggsave("figures/sca_plot_select_sca_noleg.png", plot = sca_plot_selec_sca, device = "png", width = 12, height = 16, dpi = 1200)
 
 #? ploting not the coefficient effect sizes, not the scale values, and only the ones that did not overlap zero (?)
 dat_sca3 <- dat_sca2 %>% 
@@ -434,23 +451,23 @@ write_rds(dat_sca, "data/out/coefs_sps_sca.rds")
  # overlaps
   geom_text(data = dat_sca3_0 %>% filter(scale == 3), 
            aes(x = Covariate, y = sps, label = glue("{round(median, 2)}")), #\nCI:{round(low, 1)} : {round(up, 1)}")), #
-            size = 4, color = "#626060") +
+            size = 5, color = "#626060") +
   geom_text(data = dat_sca3_0 %>% filter(scale == 2), 
             aes(x = Covariate, y = sps, label = glue("{round(median, 2)}")), #\nCI:{round(low, 1)} : {round(up, 1)}")), 
-            size = 4, color = "#626060") +
+            size = 5, color = "#626060") +
   geom_text(data = dat_sca3_0 %>% filter(scale == 1), 
             aes(x = Covariate, y = sps, label = glue("{round(median, 2)}")), #\nCI:{round(low, 1)} : {round(up, 1)}")), 
-            size = 3.5, color = "#626060") +
+            size = 4, color = "#626060") +
   # no overlap
   geom_text(data = dat_sca3 %>% filter(scale == 3), 
            aes(x = Covariate, y = sps, label = glue("{round(median, 2)}")), #\nCI:{round(low, 1)} : {round(up, 1)}")), #
-            size = 4, color = "black") +
+            size = 5.5, color = "black") +
   geom_text(data = dat_sca3 %>% filter(scale == 2), 
             aes(x = Covariate, y = sps, label = glue("{round(median, 2)}")), #\nCI:{round(low, 1)} : {round(up, 1)}")), 
-            size = 4, color = "black") +
+            size = 5.5, color = "black") +
   geom_text(data = dat_sca3 %>% filter(scale == 1), 
             aes(x = Covariate, y = sps, label = glue("{round(median, 2)}")), #\nCI:{round(low, 1)} : {round(up, 1)}")), 
-           size = 3.5, color = "black") +
+           size = 5, color = "black") +
   scale_color_identity() +  # This tells ggplot to use the color names as actual colors for stroke color
   scale_fill_gradient2(low = "#e90061",           # Negative values = blue
                        #mid = "white",           # Zero = white  
@@ -465,7 +482,9 @@ write_rds(dat_sca, "data/out/coefs_sps_sca.rds")
         axis.title.x = element_text(size = 20),
         axis.title.y = element_text(size = 20),
         legend.title = element_text(size = 15, face = "bold", hjust = 0.5),  
-        legend.text = element_text(size = 13)) + 
+        legend.text = element_text(size = 13),
+        panel.grid.major = element_line(color = "gray85", linetype = "solid", linewidth = 0.6),
+        panel.grid.minor = element_line(color = "gray85", linetype = "solid", linewidth = 0.6)) + 
   scale_y_discrete(limits = rev(levels(factor(dat_sca$sps)))) +  # Reverse y-axis order
   scale_x_discrete(labels = function(x) {
     cov_codes <- unique(dat_sca$Covariate)
@@ -488,5 +507,6 @@ write_rds(dat_sca, "data/out/coefs_sps_sca.rds")
   )
 )
 
-ggsave("figures/circles_coefs.svg", plot = circles_coefs, device = "svg", width = 12, height = 14)
+ggsave("figures/circles_coefs.svg", plot = circles_coefs, device = "svg", width = 12, height = 16)
 
+ggsave("figures/circles_coefs.png", plot = circles_coefs, device = "png", width = 12, height = 16, dpi = 1200)

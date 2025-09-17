@@ -215,10 +215,8 @@ for(sps_res in 1:nrow(beta_key)){
 XDAT_PATH <- "data/X.rds"
 X10 <- read_rds(file = XDAT_PATH)
 
-pacman::p_load(rcartocolor, patchwork)
-safe_pal <- carto_pal(12, "Safe")
-set.seed(123)
-safe_pal <- sample(safe_pal)
+safe_pal <- microViz::distinct_palette(pal = "kelly")
+scales::show_col(safe_pal)
 
 #? AUTOMATED PREDICTION PROCESSING FUNCTION ---------------------------------------
 process_beta_predictions <- function(beta_num, covariate_suffix) {
@@ -324,7 +322,7 @@ beta5_preds <- process_beta_predictions(5, beta_covariates[["5"]])
 scale_covs <-  as_tibble(cbind(c(3, 2, 1), c("coun", "park", "site"))) %>% 
                   rename(scale = V1, scale_name = V2)
 
-save.image(file = "predictions_sps.RData")
+save.image(file = "data/predictions_sps.RData")
 
 #? TREE DENSITY -----------------------------------------------------------------
 
