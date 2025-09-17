@@ -93,7 +93,7 @@ cov_key <- cbind(rbind("X1", "X2", "X3", "X4", "X5"),
 # get the data for the predictions
 for(sps_res in 1:nrow(beta_key)){
   RES_MOD_FILE <- beta_key$result[sps_res]
-  res_mod <- read_rds(glue("data/model_res/Old/{RES_MOD_FILE}.rds"))  # model file
+  res_mod <- read_rds(glue("data/model_res/{RES_MOD_FILE}.rds"))  # model file
   sps_loop <- substr(RES_MOD_FILE, 1, 4)
   sps_dat_name <- glue("{sps_loop}_step1_jagsdata")
 
@@ -109,7 +109,7 @@ for(sps_res in 1:nrow(beta_key)){
                   filter(AOU_Code == sps_loop) %>% 
                   pull(select)
 
-  beta_step2 <- read_rds(glue("data/model_res/Old/{beta_step2_get}.rds")) %>% 
+  beta_step2 <- read_rds(glue("data/model_res/{beta_step2_get}.rds")) %>% 
                     filter(overlap0 == "no") %>% 
                     pull(betas)
     
