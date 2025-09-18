@@ -88,7 +88,34 @@ cov_key <- cbind(rbind("X1", "X2", "X3", "X4", "X5"),
             as_tibble() %>% 
             rename(data_tab = V1,
                    coef_ori = V2,
-                   Covariate = V3)
+                   Covariate = V3) %>% 
+            mutate(mean = as.character(NA), sd = as.character(NA), min = as.character(NA), max = as.character(NA))
+
+sca_key <- cbind(rbind("1", "2", "3"),
+                rbind("site", "park", "coun"),
+                rbind("Site",
+                      "Park",
+                      "County")) %>% 
+            as_tibble() %>% 
+            rename(sca_num = V1,
+                   sca_key = V2,
+                   sca_nam = V3) %>% 
+            mutate(sca_num = as.numeric(sca_num))
+
+cov_key[which(cov_key$coef_ori == 'beta1'), 4:7] <- 
+                  as.list(c("DEN_mean", "DEN_sd", "DEN_min", "DEN_max"))
+
+cov_key[which(cov_key$coef_ori == 'beta2'), 4:7] <- 
+                  as.list(c("BAcon_mean", "BAcon_sd", "BAcon_min", "BAcon_max"))
+
+cov_key[which(cov_key$coef_ori == 'beta3'), 4:7] <- 
+                  as.list(c("BAlar_mean", "BAlar_sd", "BAlar_min", "BAlar_max"))
+
+cov_key[which(cov_key$coef_ori == 'beta4'), 4:7] <- 
+                  as.list(c("SHR_mean", "SHR_sd", "SHR_min", "SHR_max"))
+
+cov_key[which(cov_key$coef_ori == 'beta5'), 4:7] <- 
+                  as.list(c("BA_mean", "BA_sd", "BA_min", "BA_max"))
 
 # get the data for the predictions
 for(sps_res in 1:nrow(beta_key)){
@@ -125,17 +152,47 @@ for(sps_res in 1:nrow(beta_key)){
                       arrange(data_tab) %>% 
                       filter(!is.na(coef_ori))
   if(nrow(dat_sca2) != 0){
-    for(ii in 1:nrow(dat_sca2)){  # Fixed: dat_sca2 not dat_sca_loop
+    for(ii in 1:nrow(dat_sca2)){  
 
       beta_loop <- dat_sca2[ii,]
       scale_loop <- beta_loop %>% pull(scale) %>% as.numeric()
       
-      element_name <- beta_loop$data_tab
-      X_loop <- sps_data[[element_name]]
-      X_loop2 <- X_loop[, scale_loop]
+      sca_key_sps <- sca_key %>% 
+                        filter(sca_num == scale_loop) %>% 
+                        pull(sca_key)
+
+      cov_key_sps <- cov_key  %>% 
+                        filter(coef_ori == beta_loop$coef_ori) %>% 
+                        mutate(mean = glue("{sca_key_sps}{mean}"),
+                               sd = glue("{sca_key_sps}{sd}"),
+                               min = glue("{sca_key_sps}{min}"),
+                               max = glue("{sca_key_sps}{max}"))
+
+      # element_name <- beta_loop$data_tab
+      # X_loop <- sps_data[[element_name]]
+      # X_loop2 <- X_loop[, scale_loop]
       
-      X_range <- seq(from = min(X_loop2), to = max(X_loop2), length.out = 100)
-      
+      # X_range <- seq(from = min(X_loop2), to = max(X_loop2), length.out = 100)
+
+      lims_obj_name <- glue("{tolower(sps_loop)}_lims")
+
+      if(exists(lims_obj_name)) {
+        lims_data <- get(lims_obj_name, envir = .GlobalEnv)  %>% 
+                        select(cov_key_sps$mean,
+                               cov_key_sps$sd,
+                               cov_key_sps$min,
+                               cov_key_sps$max) 
+        colnames(lims_data) <- c("mean", "sd", "min", "max")
+                        }
+        
+      # sd_col <- glue("{scale_suffix}{covariate_suffix}_sd")
+      # mean_col <- glue("{scale_suffix}{covariate_suffix}_mean")
+      min_col <- glue("{scale_suffix}{covariate_suffix}_min")
+      max_col <- glue("{scale_suffix}{covariate_suffix}_max")
+
+      X_range_ori <- seq(from = lims_data$min, to = lims_data$max, length.out = 100)
+      X_range <- (X_range_ori - lims_data$mean) / lims_data$sd
+
       # Get beta index
       beta_index <- as.numeric(str_extract(beta_loop$coef_ori, "\\d+"))
       beta_index_order <- as.numeric(str_extract(beta_loop$coef, "\\d+"))
@@ -170,10 +227,15 @@ for(sps_res in 1:nrow(beta_key)){
       n_samples <- length(all_beta_samples)
       predictions <- matrix(NA, nrow = n_samples, ncol = length(X_range))
       
-      for(s in 1:n_samples) {
-        predictions[s, ] <- plogis(all_beta0_samples[s] + all_beta_samples[s] * X_range)
-      }
-      
+      # for(s in 1:n_samples) {
+      #   predictions[s, ] <- plogis(all_beta0_samples[s] + all_beta_samples[s] * X_range)
+      # }
+      X <- cbind(1, X_range)  # N x 2
+      B <- cbind(all_beta0_samples, all_beta_samples)  # S x 2
+
+      linear_pred <- B %*% t(X)  # S x N matrix
+      predictions <- plogis(linear_pred)  # S x N matrix of predicted probabilities
+
       # Calculate summary statistics (transpose to match your original code)
       array_psi_pred <- t(predictions)
       pred_mean <- apply(array_psi_pred, 1, mean)
@@ -185,6 +247,7 @@ for(sps_res in 1:nrow(beta_key)){
       pred_data <- tibble(
         covariate = beta_loop$Covariate,
         x_value = X_range,
+        X_range_ori = X_range_ori,
         pred_mean = pred_mean,
         pred_median = pred_median,
         pred_lower = pred_lower,
@@ -194,15 +257,16 @@ for(sps_res in 1:nrow(beta_key)){
       
       print(glue("pred_{sps_loop}_beta{beta_index}_scale{scale_loop}"))
       assign(glue("pred_{sps_loop}_beta{beta_index}_scale{scale_loop}"), pred_data) 
+      
       # Create plot
-      p <- ggplot(pred_data, aes(x = x_value)) +
+      p <- ggplot(pred_data, aes(x = X_range_ori)) +
         geom_ribbon(aes(ymin = pred_lower, ymax = pred_upper), 
                     alpha = 0.3, fill = "steelblue") +
         geom_line(aes(y = pred_mean), color = "darkblue", linewidth = 1.2) +
         labs(x = beta_loop$Covariate, 
             y = "Predicted Probability",
             title = glue("{sps_loop}: {beta_loop$Covariate}"),
-            subtitle = glue("Scale: {scale_loop}")) +
+            subtitle = glue("Scale: {scale_loop} ; Median: {round(median(all_beta_samples),2)}")) +
         theme_minimal()
       
       print(p)
@@ -215,8 +279,8 @@ for(sps_res in 1:nrow(beta_key)){
 XDAT_PATH <- "data/X.rds"
 X10 <- read_rds(file = XDAT_PATH)
 
-safe_pal <- microViz::distinct_palette(pal = "kelly")
-scales::show_col(safe_pal)
+# safe_pal <- microViz::distinct_palette(pal = "kelly")
+# scales::show_col(safe_pal)
 
 #? AUTOMATED PREDICTION PROCESSING FUNCTION ---------------------------------------
 process_beta_predictions <- function(beta_num, covariate_suffix) {
@@ -254,16 +318,19 @@ process_beta_predictions <- function(beta_num, covariate_suffix) {
         scale_num == 3 ~ "coun"
       )
       
-      sd_col <- glue("{scale_suffix}{covariate_suffix}_sd")
-      mean_col <- glue("{scale_suffix}{covariate_suffix}_mean")
-      
+      # sd_col <- glue("{scale_suffix}{covariate_suffix}_sd")
+      # mean_col <- glue("{scale_suffix}{covariate_suffix}_mean")
+      min_col <- glue("{scale_suffix}{covariate_suffix}_min")
+      max_col <- glue("{scale_suffix}{covariate_suffix}_max")
+
       # Check if columns exist in limits data
       if(sd_col %in% names(lims_data) & mean_col %in% names(lims_data)) {
-        
+            if(sd_col %in% names(lims_data) & mean_col %in% names(lims_data)) {
+
         # Apply unstandardization based on scale
         pred_data_processed <- pred_data %>%
           mutate(
-             x_ori = #case_when(
+             x_ori = #case_when(  # values of x in the original scale
             #   # Special handling for county-level tree density 
             #   scale_num == 3 & covariate_suffix == "DEN" ~ 
             #     ((x_value * lims_data[[sd_col]]) + lims_data[[mean_col]]),
@@ -322,7 +389,7 @@ beta5_preds <- process_beta_predictions(5, beta_covariates[["5"]])
 scale_covs <-  as_tibble(cbind(c(3, 2, 1), c("coun", "park", "site"))) %>% 
                   rename(scale = V1, scale_name = V2)
 
-save.image(file = "data/predictions_sps.RData")
+#   save.image(file = "data/predictions_sps.RData")
 
 #? TREE DENSITY -----------------------------------------------------------------
 
@@ -375,6 +442,7 @@ ggplot() +
   theme(panel.grid = element_blank(),
         panel.border = element_rect(color = "black", linewidth = 0.6, fill = NA),  # Added fill = NA
         panel.background = element_rect(fill = "white", color = NA),  # Ensure white background
+        plot.background = element_rect(fill = "white", color = NA),    # White plot background
         strip.text = element_text(face = "bold", size = 16),      # Facet titles
         plot.title = element_text(size = 18, face = "bold", hjust = 0.5),      # Main title
         axis.title = element_text(size = 14),                     # Axis titles
@@ -389,17 +457,17 @@ ggplot() +
   #xlim(beta1_lims)
 
 
-ggsave("figures/pred_den.svg", plot = last_plot(), device = "svg", width = 6, height = 6)
-ggsave("figures/pred_den.png", plot = last_plot(), device = "png", width = 6, height = 6)
+ggsave("figures/pred_den.svg", plot = last_plot(), device = "svg", width = 10, height = 7.2)
+ggsave("figures/pred_den.png", plot = last_plot(), device = "png", width = 10, height = 7.2)
 
 #? CONIFER BA -----------------------------------------------------------------
 beta2_lims <- c(floor(min(beta2_preds$x_ori) / 5) * 5, ceiling(max(beta2_preds$x_ori) / 5) * 5)
 
 treecon_covs <- X10 %>%
-                    select(park, Point_Name, BA_m2ha_perc_con_site, BA_m2ha_perc_con_park, BA_m2ha_perc_con_coun) %>% 
-                    rename(treecon_ha_site = BA_m2ha_perc_con_site,
-                           treecon_ha_park = BA_m2ha_perc_con_park,
-                           treecon_ha_coun = BA_m2ha_perc_con_coun) %>% 
+                    select(park, Point_Name, BA_m2ha_Conifer_site, BA_m2ha_Conifer_park, BA_m2ha_Conifer_coun) %>% 
+                    rename(treecon_ha_site = BA_m2ha_Conifer_site,
+                           treecon_ha_park = BA_m2ha_Conifer_park,
+                           treecon_ha_coun = BA_m2ha_Conifer_coun) %>% 
                     distinct() %>% 
                     pivot_longer(cols = starts_with("treecon_ha"),
                                  names_to = "scale_name",
@@ -437,7 +505,7 @@ ggplot() +
              labeller = labeller(scale = c("3" = "County Scale", 
                                            "2" = "Park Scale", 
                                            "1" = "Local Scale"))) +  
-  labs(x = glue("\n\n Tree Density (stems/ha)"), 
+  labs(x = glue("\n\n Conifer Tree Density (stems/ha)"), 
        y = "Predicted Occupancy Probability\n",
        title = glue("Tree Density\n"),
        color = "Species") +

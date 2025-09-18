@@ -42,7 +42,7 @@ freshr::freshr()
 
 test <- FALSE
 interaction <- FALSE
-step_number_define <- 2
+step_number_define <- 1
 if(substr(getwd(), 1, 3) == "/Us") {direc <- "local"} else {direc <- "hpc"}
 
 #! Load packages ---------------------------------------
@@ -69,7 +69,7 @@ if(interaction == F){model_file <- "models/mod_all_covs.txt"}
 
 if(direc == "local"){
     master_tab <- read_csv("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/fit_model/mod_key.csv") %>%
-            filter(run == "yes") %>% 
+            #filter(run == "yes") %>% 
             filter(step %in% c(step_number_define)) %>% 
             distinct()
 
@@ -143,16 +143,13 @@ paste('\n ************************************* \n \n \n   Running Models:', '\n
         }
 
     } else { # step 1
-        # cat("Before sourcing - objects in environment:\n")
-        # print(ls())
-        if(direc == "local"){
-                source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/fit_model/back2d_covs_scales_2min_spscov.R")
-            } else {
-                source("code/fit_model/back2d_covs_scales_2min_spscov.R")}
-        # After sourcing
-        # cat("After sourcing - objects in environment:\n")
-        # print(ls())
-    
+
+        # if(direc == "local"){
+        #         source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/fit_model/back2d_covs_scales_2min_spscov.R")
+        #     } else {
+        #         source("code/fit_model/back2d_covs_scales_2min_spscov.R")}
+    source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/fit_model/x_min_max.r")
+    #source("code/fit_model/x_min_max.r")
     }
 
 }

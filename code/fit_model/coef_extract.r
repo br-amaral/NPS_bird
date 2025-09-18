@@ -28,7 +28,7 @@ library(MCMCvis)
 library(viridis)
 library(svglite)
 library(ggh4x)
-library(ggforce)
+#library(ggforce)
 
 conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::filter)
@@ -54,64 +54,46 @@ coef_path_file <- read_csv(COEF_TABLE_PATH) %>%
         mutate(AOU_Code = substr(result, 1, 4)) #%>% 
         # filter(AOU_Code %!in% c("DOWO", "HAWO", "VEER", "SCTA", "REVI"))
 
-for(ii in 1:nrow(coef_path_file)) {
+# for(ii in 1:nrow(coef_path_file)) {
 
-    (loop_sps <- substr(coef_path_file$result[ii], 1, 4))
+#     (loop_sps <- substr(coef_path_file$result[ii], 1, 4))
 
-    loop_run <- substr(coef_path_file$result[ii], nchar(coef_path_file$result[ii]) - 7, nchar(coef_path_file$result[ii]) - 4)
+#     loop_run <- substr(coef_path_file$result[ii], nchar(coef_path_file$result[ii]) - 7, nchar(coef_path_file$result[ii]) - 4)
 
-    quants <- ifelse((as.numeric(substr(loop_run, 4, 4)) %% 2 == 0) == TRUE, "25_75", "3_7")
+#     quants <- ifelse((as.numeric(substr(loop_run, 4, 4)) %% 2 == 0) == TRUE, "25_75", "3_7")
 
-      # selec_files <- coef_path_file$result[ii]
-      # list.files(path = file.path(getwd(),"data/model_res/"),
-      #                                     pattern = "SCA_SEL_PARS",
-      #                                     full.names = FALSE)  %>% 
-      #           as_tibble() %>% 
-      #           mutate(sps = substr(value, 1, 4)) %>% 
-      #           filter(sps == loop_sps) %>% 
-      #           filter(str_detect(value, quants)) %>%  # Filter for rows containing the quants text
-      #           pull(value)
+#       samples_jags <- read_rds(glue("data/model_res/{coef_path_file$result[ii]}.rds"))
+#       beta_sca_names <- read_rds(glue("data/model_res/{coef_path_file$select[ii]}.rds")) %>% 
+#             filter(overlap0 == "no") %>%
+#             add_row(betas = "park_size") %>%  # Add empty row for 3 alphas + 1 be4ta park size
+#             add_row(betas = "alpha1") %>%  
+#             add_row(betas = "alpha2") %>%  
+#             add_row(betas = "alpha3")     
 
-      # if(lenght(selec_files) == 1) {coef_path_file$select[ii] <- selec_files}
-      # if(lenght(selec_files) == 2) {
-        
-      #   if(selec_files[1] %in% coef_path_file$select) {coef_path_file$select[ii] <- selec_files[2]}
-      #   if(selec_files[1] %!in% coef_path_file$select) {coef_path_file$select[ii] <- selec_files[1]}
-      
-      # }
+#       #if(loop_sps == "YBSA"){beta_sca_names$betas[1] <- "beta"}
 
-      samples_jags <- read_rds(glue("data/model_res/{coef_path_file$result[ii]}.rds"))
-      beta_sca_names <- read_rds(glue("data/model_res/{coef_path_file$select[ii]}.rds")) %>% 
-            filter(overlap0 == "no") %>%
-            add_row(betas = "park_size") %>%  # Add empty row for 3 alphas + 1 be4ta park size
-            add_row(betas = "alpha1") %>%  
-            add_row(betas = "alpha2") %>%  
-            add_row(betas = "alpha3")     
-
-      #if(loop_sps == "YBSA"){beta_sca_names$betas[1] <- "beta"}
-
-      # Get summary with median and credible intervals
-      coef_summary <- MCMCsummary(samples_jags,
-                              params = c("beta", "alpha"), #, "beta0", "alpha0"),  # specify parameters
-                              probs = c(0.025, 0.5, 0.975),  # 2.5%, median, 97.5%
-                              round = 3) %>% 
-                        mutate(coef = rownames(.)) %>% 
-                        as_tibble() %>% 
-                        relocate(coef) %>%
-                        mutate(coef = gsub("\\[|\\]", "", coef))
-      rm(samples_jags)
-      if((nrow(beta_sca_names)) != nrow(coef_summary)) {
-            stop(glue("error in {coef_path_file$result[ii]}"))
+#       # Get summary with median and credible intervals
+#       coef_summary <- MCMCsummary(samples_jags,
+#                               params = c("beta", "alpha"), #, "beta0", "alpha0"),  # specify parameters
+#                               probs = c(0.025, 0.5, 0.975),  # 2.5%, median, 97.5%
+#                               round = 3) %>% 
+#                         mutate(coef = rownames(.)) %>% 
+#                         as_tibble() %>% 
+#                         relocate(coef) %>%
+#                         mutate(coef = gsub("\\[|\\]", "", coef))
+#       rm(samples_jags)
+#       if((nrow(beta_sca_names)) != nrow(coef_summary)) {
+#             stop(glue("error in {coef_path_file$result[ii]}"))
             
-            } else { coef_summary2 <- cbind(coef_summary, beta_sca_names) %>% 
-                                          mutate(sps = substr(coef_path_file$result[ii], 1, 4),
-                                                 mod_res = coef_path_file$select[ii])
-            }
-      if(ii == 1) {coef_summary3 <- coef_summary2} else {coef_summary3 <- rbind(coef_summary3, coef_summary2)}
-}
+#             } else { coef_summary2 <- cbind(coef_summary, beta_sca_names) %>% 
+#                                           mutate(sps = substr(coef_path_file$result[ii], 1, 4),
+#                                                  mod_res = coef_path_file$select[ii])
+#             }
+#       if(ii == 1) {coef_summary3 <- coef_summary2} else {coef_summary3 <- rbind(coef_summary3, coef_summary2)}
+# }
 
-   write_rds(coef_summary3, file = "data/out/coef_summary3_sep.rds")
-#   coef_summary3 <- read_rds(file = "data/out/coef_summary3_sep.rds")
+#    write_rds(coef_summary3, file = "data/out/coef_summary3_sep.rds")
+   coef_summary3 <- read_rds(file = "data/out/coef_summary3_sep.rds")
 
 table(coef_summary3$mod_res)
 
@@ -213,11 +195,6 @@ dat1 <- dat %>%
             arrange(Covariate, sps) %>%  # Sort by Covariate first, then sps alphabetically
             mutate(cov_sps = factor(cov_sps, levels = sort(unique(cov_sps))))  %>% 
             filter(sps != "BCCH")
-
-dat_sca <- dat_sca %>% filter(sps != "BCCH")
-dat_sca2 <- dat_sca2 %>% filter(sps != "BCCH")
-dat_sca3 <- dat_sca3 %>% filter(sps != "BCCH")
-dat_sca3_0 <- dat_sca3_0 %>% filter(sps != "BCCH")
 
 dat1$sca_col <- ifelse(dat1$sca == "Park Scale", "darkolivegreen3", dat1$sca_col)
 dat1$sca_col <- ifelse(dat1$sca == "County Scale", "darkolivegreen4", dat1$sca_col)
@@ -350,6 +327,9 @@ dat_sca <- dat1  %>%
 #? remove the scales that overlaps with zero on step one
 dat_sca2 <- dat_sca %>% 
                   filter(scale_selected == 1)  
+
+dat_sca <- dat_sca %>% filter(sps != "BCCH")
+dat_sca2 <- dat_sca2 %>% filter(sps != "BCCH")
 
 (sca_plot_selec_sca <- ggplot() +
   geom_point(data = dat_sca, 
