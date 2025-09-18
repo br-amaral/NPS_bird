@@ -187,8 +187,6 @@ for(sps_res in 1:nrow(beta_key)){
         
       # sd_col <- glue("{scale_suffix}{covariate_suffix}_sd")
       # mean_col <- glue("{scale_suffix}{covariate_suffix}_mean")
-      min_col <- glue("{scale_suffix}{covariate_suffix}_min")
-      max_col <- glue("{scale_suffix}{covariate_suffix}_max")
 
       X_range_ori <- seq(from = lims_data$min, to = lims_data$max, length.out = 100)
       X_range <- (X_range_ori - lims_data$mean) / lims_data$sd
