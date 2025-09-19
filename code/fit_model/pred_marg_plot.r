@@ -338,9 +338,9 @@ scale_covs <-  as_tibble(cbind(c(3, 2, 1), c("coun", "park", "site"))) %>%
                   rename(scale = V1, scale_name = V2)
 
 #   save.image(file = "data/predictions_sps2.RData")
+#   load("data/predictions_sps2.RData")
 
 #? TREE DENSITY -----------------------------------------------------------------
-
 beta1_lims <- c(floor(min(beta1_preds$X_range_ori) / 5) * 5, ceiling(max(beta1_preds$X_range_ori) / 5) * 5)
 
 treeden_covs <- X10 %>%
@@ -355,7 +355,13 @@ treeden_covs <- X10 %>%
                     distinct() %>% 
                     left_join(., scale_covs, by = "scale_name") 
 
-treeden_covs_pkpos <- treeden_covs %>% select(park) %>% distinct() %>% mutate(y_pos = as.numeric(NA))
+treeden_covs_pkpos <- treeden_covs %>% 
+                          select(park)  %>% 
+                          mutate(park = factor(park, levels = rev(sort(unique(park))))) %>% 
+                          arrange(park) %>%
+                          distinct() %>% 
+                          mutate(y_pos = as.numeric(NA))
+
 treeden_covs_pkpos[1,2] <- 1.05
 for(jj in 2:nrow(treeden_covs_pkpos)){treeden_covs_pkpos[jj,2] <- treeden_covs_pkpos[jj - 1 ,2] + 0.04}
 
@@ -366,9 +372,10 @@ treeden_covs2 <- left_join(treeden_covs, treeden_covs_pkpos, by = "park")  %>%
                            scale = as.numeric(scale)) %>% 
                     rename(pred_mean = treeden_ha)
 
-max_pos_treeden <- tail(treeden_covs2, 1)["y_pos"] %>% pull()
+max_pos_treeden <- max(treeden_covs2$y_pos)
 beta1_preds$y_pos <- as.numeric(NA)
-beta1_preds2 <- full_join(beta1_preds, treeden_covs2)
+beta1_preds2 <- full_join(beta1_preds, treeden_covs2) %>% 
+                  mutate(park = factor(park, levels = rev(sort(unique(park))))) 
 
 nrow(treeden_covs2) + nrow(beta1_preds) == nrow(beta1_preds2)
 
@@ -399,14 +406,14 @@ ggplot() +
         legend.text = element_text(size = 12)                     # Legend text
   ) +
   scale_color_manual(values = safe_pal) +
-  scale_y_continuous(limits = c(0, max_pos_treeden), 
-                     breaks = c(0, 0.25, 0.5, 0.75, 1, treeden_covs_pkpos$y_pos),
-                     labels = c(0, 0.25, 0.5, 0.75, 1, treeden_covs_pkpos$park)) 
+  scale_y_continuous(
+    limits = c(0, max_pos_treeden), 
+    breaks = c(0, 0.25, 0.5, 0.75, 1, treeden_covs_pkpos$y_pos),
+    labels = c(0, 0.25, 0.5, 0.75, 1, as.character(treeden_covs_pkpos$park)))
   #xlim(beta1_lims)
 
-
-ggsave("figures/pred_den.svg", plot = last_plot(), device = "svg", width = 10.5, height = 7.2)
-ggsave("figures/pred_den.png", plot = last_plot(), device = "png", width = 10.5, height = 7.2)
+ggsave("figures/pred_den.svg", plot = last_plot(), device = "svg", width = 10.2, height = 7.2)
+ggsave("figures/pred_den.png", plot = last_plot(), device = "png", width = 10.2, height = 7.2)
 
 #? CONIFER BA -----------------------------------------------------------------
 beta2_lims <- c(floor(min(beta2_preds$X_range_ori) / 5) * 5, ceiling(max(beta2_preds$X_range_ori) / 5) * 5)
@@ -426,7 +433,13 @@ treecon_covs <- X10 %>%
                     distinct() %>% 
                     left_join(., scale_covs, by = "scale_name") 
 
-treecon_covs_pkpos <- treecon_covs %>% select(park) %>% distinct() %>% mutate(y_pos = as.numeric(NA))
+treecon_covs_pkpos <- treecon_covs %>% 
+                          select(park) %>% 
+                          mutate(park = factor(park, levels = rev(sort(unique(park))))) %>% 
+                          arrange(park) %>%
+                          distinct() %>% 
+                          mutate(y_pos = as.numeric(NA))
+
 treecon_covs_pkpos[1,2] <- 1.05
 for(jj in 2:nrow(treecon_covs_pkpos)){treecon_covs_pkpos[jj,2] <- treecon_covs_pkpos[jj - 1 ,2] + 0.04}
 
@@ -437,9 +450,10 @@ treecon_covs2 <- left_join(treecon_covs, treecon_covs_pkpos, by = "park")  %>%
                            scale = as.numeric(scale)) %>% 
                     rename(pred_mean = treecon_ha)
 
-max_pos_treecon <- tail(treecon_covs2, 1)["y_pos"] %>% pull()
+max_pos_treecon <-  max(treecon_covs2$y_pos)
 beta2_preds$y_pos <- as.numeric(NA)
-beta2_preds2 <- full_join(beta2_preds, treecon_covs2)
+beta2_preds2 <- full_join(beta2_preds, treecon_covs2) %>% 
+                  mutate(park = factor(park, levels = rev(sort(unique(park))))) 
 
 nrow(treecon_covs2) + nrow(beta2_preds) == nrow(beta2_preds2)
 
@@ -468,10 +482,11 @@ ggplot() +
         legend.title = element_text(size = 14, face = "bold", hjust = 0.5),    # Legend title
         legend.text = element_text(size = 12)                     # Legend text
   ) +
-  #scale_color_manual(values = safe_pal) +
-  scale_y_continuous(limits = c(0, max_pos_treecon), 
-                     breaks = c(0, 0.25, 0.5, 0.75, 1, treecon_covs_pkpos$y_pos),
-                     labels = c(0, 0.25, 0.5, 0.75, 1, treecon_covs_pkpos$park)) 
+  scale_color_manual(values = safe_pal) +
+    scale_y_continuous(
+      limits = c(0, max_pos_treecon), 
+      breaks = c(0, 0.25, 0.5, 0.75, 1, treecon_covs_pkpos$y_pos),
+      labels = c(0, 0.25, 0.5, 0.75, 1, as.character(treecon_covs_pkpos$park))) 
   #xlim(beta2_lims)
 
 ggsave("figures/pred_con.svg", plot = last_plot(), device = "svg", width = 14, height = 7.2)
@@ -495,7 +510,12 @@ treelat_covs <- X10 %>%
                     distinct() %>% 
                     left_join(., scale_covs, by = "scale_name") 
 
-treelat_covs_pkpos <- treelat_covs %>% select(park) %>% distinct() %>% mutate(y_pos = as.numeric(NA))
+treelat_covs_pkpos <- treelat_covs %>% 
+                          select(park)  %>% 
+                          mutate(park = factor(park, levels = rev(sort(unique(park))))) %>% 
+                          arrange(park) %>%
+                          distinct() %>% 
+                          mutate(y_pos = as.numeric(NA))
 treelat_covs_pkpos[1,2] <- 1.05
 for(jj in 2:nrow(treelat_covs_pkpos)){treelat_covs_pkpos[jj,2] <- treelat_covs_pkpos[jj - 1 ,2] + 0.04}
 
@@ -506,9 +526,10 @@ treelat_covs2 <- left_join(treelat_covs, treelat_covs_pkpos, by = "park")  %>%
                            scale = as.numeric(scale)) %>% 
                     rename(pred_mean = treelat_ha)
 
-max_pos_treelat <- tail(treelat_covs2, 1)["y_pos"] %>% pull()
+max_pos_treelat <- max(treelat_covs2$y_pos)
 beta3_preds$y_pos <- as.numeric(NA)
-beta3_preds2 <- full_join(beta3_preds, treelat_covs2)
+beta3_preds2 <- full_join(beta3_preds, treelat_covs2) %>% 
+                  mutate(park = factor(park, levels = rev(sort(unique(park))))) 
 
 nrow(treelat_covs2) + nrow(beta3_preds) == nrow(beta3_preds2)
 
@@ -538,10 +559,11 @@ ggplot() +
         legend.text = element_text(size = 12)                     # Legend text
   ) +
   scale_color_manual(values = safe_pal) +
-  scale_y_continuous(limits = c(0, max_pos_treelat), 
-                     breaks = c(0, 0.25, 0.5, 0.75, 1, treelat_covs_pkpos$y_pos),
-                     labels = c(0, 0.25, 0.5, 0.75, 1, treelat_covs_pkpos$park)) 
-  #xlim(beta3_lims)
+  scale_y_continuous(
+    limits = c(0, max_pos_treelat), 
+    breaks = c(0, 0.25, 0.5, 0.75, 1, treelat_covs_pkpos$y_pos),
+    labels = c(0, 0.25, 0.5, 0.75, 1, as.character(treelat_covs_pkpos$park))) 
+   #xlim(beta3_lims)
 
 ggsave("figures/pred_lat.svg", plot = last_plot(), device = "svg", width = 14, height = 7.2)
 ggsave("figures/pred_lat.png", plot = last_plot(), device = "png", width = 14, height = 7.2)
@@ -577,7 +599,13 @@ shrub_covs <- X10 %>%
 
 beta4_lims <- c(floor(min(beta4_preds$X_range_ori) / 5) * 5, ceiling(max(beta4_preds$X_range_ori) / 5) * 5)
 
-shrub_covs_pkpos <- shrub_covs %>% select(park) %>% distinct() %>% mutate(y_pos = as.numeric(NA))
+shrub_covs_pkpos <- shrub_covs %>% 
+                        select(park) %>% 
+                        mutate(park = factor(park, levels = rev(sort(unique(park))))) %>% 
+                        arrange(park) %>%
+                        distinct() %>% 
+                        mutate(y_pos = as.numeric(NA))
+
 shrub_covs_pkpos[1,2] <- 1.05
 for(jj in 2:nrow(shrub_covs_pkpos)){shrub_covs_pkpos[jj,2] <- shrub_covs_pkpos[jj - 1 ,2] + 0.04}
 
@@ -588,9 +616,10 @@ shrub_covs2 <- left_join(shrub_covs, shrub_covs_pkpos, by = "park")  %>%
                            scale = as.numeric(scale)) %>% 
                     rename(pred_mean = shrub_ha)
 
-max_pos_shrub <- tail(shrub_covs2, 1)["y_pos"] %>% pull()
+max_pos_shrub <- max(shrub_covs2$y_pos)
 beta4_preds$y_pos <- as.numeric(NA)
-beta4_preds2 <- full_join(beta4_preds, shrub_covs2)
+beta4_preds2 <- full_join(beta4_preds, shrub_covs2) %>% 
+                    mutate(park = factor(park, levels = rev(sort(unique(park))))) 
 
 nrow(shrub_covs2) + nrow(beta4_preds) == nrow(beta4_preds2)
 
@@ -620,9 +649,10 @@ ggplot() +
         legend.text = element_text(size = 12)                     # Legend text
   ) +
   scale_color_manual(values = safe_pal) +
-  scale_y_continuous(limits = c(0, max_pos_shrub), 
-                     breaks = c(0, 0.25, 0.5, 0.75, 1, shrub_covs_pkpos$y_pos),
-                     labels = c(0, 0.25, 0.5, 0.75, 1, shrub_covs_pkpos$park)) 
+  scale_y_continuous(
+    limits = c(0, max_pos_shrub), 
+    breaks = c(0, 0.25, 0.5, 0.75, 1, shrub_covs_pkpos$y_pos),
+    labels = c(0, 0.25, 0.5, 0.75, 1, as.character(shrub_covs_pkpos$park)))
 
 ggsave("figures/pred_shr.svg", plot = last_plot(), device = "svg", width = 14, height = 7.2)
 ggsave("figures/pred_shr.png", plot = last_plot(), device = "png", width = 14, height = 7.2)
@@ -646,7 +676,13 @@ treeba_covs <- X10 %>%
                     distinct() %>% 
                     left_join(., scale_covs, by = "scale_name") 
 
-treeba_covs_pkpos <- treeba_covs %>% select(park) %>% distinct() %>% mutate(y_pos = as.numeric(NA))
+treeba_covs_pkpos <- treeba_covs %>% 
+                        select(park) %>% 
+                        distinct() %>% 
+                        mutate(park = factor(park, levels = rev(sort(unique(park))))) %>% 
+                        arrange(park) %>% 
+                        mutate(y_pos = as.numeric(NA))
+
 treeba_covs_pkpos[1,2] <- 1.05
 for(jj in 2:nrow(treeba_covs_pkpos)){treeba_covs_pkpos[jj,2] <- treeba_covs_pkpos[jj - 1 ,2] + 0.04}
 
@@ -657,9 +693,10 @@ treeba_covs2 <- left_join(treeba_covs, treeba_covs_pkpos, by = "park")  %>%
                            scale = as.numeric(scale)) %>% 
                     rename(pred_mean = treeba_ha)
 
-max_pos_treeba <- tail(treeba_covs2, 1)["y_pos"] %>% pull()
+max_pos_treeba <- max(treeba_covs2$y_pos)
 beta5_preds$y_pos <- as.numeric(NA)
-beta5_preds2 <- full_join(beta5_preds, treeba_covs2)
+beta5_preds2 <- full_join(beta5_preds, treeba_covs2)  %>% 
+                  mutate(park = factor(park, levels = rev(sort(unique(park))))) 
 
 nrow(treeba_covs2) + nrow(beta5_preds) == nrow(beta5_preds2)
 
@@ -689,11 +726,12 @@ ggplot() +
         legend.text = element_text(size = 12)                     # Legend text
   ) +
   scale_color_manual(values = safe_pal) +
-  scale_y_continuous(limits = c(0, max_pos_treeba), 
-                     breaks = c(0, 0.25, 0.5, 0.75, 1, treeba_covs_pkpos$y_pos),
-                     labels = c(0, 0.25, 0.5, 0.75, 1, treeba_covs_pkpos$park)) 
-  #xlim(beta5_lims)
+  scale_y_continuous(
+    limits = c(0, max_pos_treeba), 
+    breaks = c(0, 0.25, 0.5, 0.75, 1, treeba_covs_pkpos$y_pos),
+    labels = c(0, 0.25, 0.5, 0.75, 1, as.character(treeba_covs_pkpos$park))) 
+            #xlim(beta5_lims)
 
-ggsave("figures/pred_BA.svg", plot = last_plot(), device = "svg", width = 10.5, height = 7.2)
-ggsave("figures/pred_BA.png", plot = last_plot(), device = "png", width = 10.5, height = 7.2)
+ggsave("figures/pred_BA.svg", plot = last_plot(), device = "svg", width = 10.2, height = 7.2)
+ggsave("figures/pred_BA.png", plot = last_plot(), device = "png", width = 10.2, height = 7.2)
 
