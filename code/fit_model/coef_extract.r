@@ -102,35 +102,43 @@ coef_summary3 <- as_tibble(coef_summary3) %>%
                       mutate(overlap0 = ifelse(`2.5%` <= 0 & `97.5%` >= 0, "yes", "no"))
 
 #! Figure: park size -------------------------------------------
-coef_summary3 %>% 
+(park_sizeP <- 
+  coef_summary3 %>% 
+        filter(sps != "BCCH") %>% 
         filter(betas == "park_size") %>% 
+        arrange(desc(sps)) %>%
+        mutate(sps = factor(sps, levels = unique(sps))) %>% 
         arrange(sps) %>% 
         ggplot() +
           geom_vline(xintercept = 0, linetype = "dashed", color = "grey50", linewidth = 0.8) +
           geom_segment(aes(x = `2.5%`, xend = `97.5%`, y = sps, yend = sps, col = overlap0), 
                       linewidth = 1.2) +
           geom_point(aes(x = `50%`, y = sps, col = overlap0), 
-                    size = 3.5) +
+                    size = 4) +
           scale_color_manual(
               values = c(
                 "no" = "black",
                 "yes" = "darkgrey")) +
           theme_minimal() +
-          theme(
-            legend.position = "none",
-            strip.text = element_text(face = "bold", size = 12),
-            axis.line = element_line(color = "black", linewidth = 0.4),
-            axis.line.y.right = element_line(color = "black", linewidth = 0.4),
-            axis.line.x.bottom = element_line(color = "black", linewidth = 0.4),
-            axis.ticks.x = element_line(color = "black", linewidth = 0.4),
-            axis.ticks.y = element_line(color = "black", linewidth = 0.4),
-            axis.ticks.length = unit(0.25, "cm"),
-          ) +
+          theme(legend.position = "none",
+                axis.text.x = element_text(hjust = 0.5, size = 18),
+                axis.text.y = element_text(hjust = 0, size = 19),    
+                axis.title.x = element_text(size = 20),
+                axis.title.y = element_text(size = 20),
+                legend.title = element_text(size = 15, face = "bold", hjust = 0.5),  
+                legend.text = element_text(size = 13),
+                panel.grid.major = element_line(color = "gray85", linetype = "solid", linewidth = 0.6),
+                panel.grid.minor = element_line(color = "gray85", linetype = "solid", linewidth = 0.6)) +
           labs(
-            x = "Park size",
-            y = "Species"
+            x = "\nPark size",
+            y = "Species\n"
           ) +
-          scale_x_continuous(breaks = c(-2, -1, 0, 1, 2, 3))
+          scale_x_continuous(breaks = c(-2, -1, 0, 1, 2, 3)))
+
+ggsave("figures/park_size.svg", plot = park_sizeP, device = "svg", width = 11, height = 11, dpi = 1200)
+
+ggsave("figures/park_size.png", plot = park_sizeP, device = "png", width = 11, height = 9, dpi = 1200)
+
 
 dat <- coef_summary3 %>% 
             #filter(overlap0 == "no") %>% 
