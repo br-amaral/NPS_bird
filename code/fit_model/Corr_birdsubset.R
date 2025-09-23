@@ -8,26 +8,96 @@ X10 <- read_rds(file = XDAT_PATH)
 X_corr <- X10 %>% 
             filter(interval_n == 1) %>% 
             dplyr::select(Point_Name,
-                siteDEN, siteBA,
-                siteH_g, siteEh_g,
-                siteBA_pole, siteBA_mature, siteBA_large,
-                siteSHRUden,
-                parkDEN, parkBA, 
-                parkH_g, parkEh_g,
-                parkBA_pole, parkBA_mature, parkBA_large,   
-                parkSHRUden, 
-                counDEN, counBA, 
-                counH_g, counEh_g, ## https://rdrr.io/cran/rFIA/man/diversity.html
-                counPER_pole, counPER_matu, counPER_late,
-                counSHRUden,
-                area,
-                EventDate2, StartTime2) %>% 
-            rename(date_jul = EventDate2,
-                time_jul = StartTime2) %>% 
+                          BA_m2ha_Conifer_coun,
+                          BA_m2ha_Conifer_park,
+                          BA_m2ha_Conifer_site,
+                          BA_m2ha_coun,
+                          BA_m2ha_park,
+                          BA_m2ha_site,
+                          BA_m2ha_large_coun,
+                          BA_m2ha_large_park,
+                          BA_m2ha_large_site,
+                          shrub_cov_coun,
+                          shrub_avg_cov_park,
+                          shrub_avg_cov_site,
+                          treeden_ha_coun,
+                          treeden_ha_park,
+                          treeden_ha_site
+                          ) %>% 
             mutate(#AOU_code = sps_loop2,
                    park = substr(Point_Name,1,4))
 
 write_rds(X_corr, file = "data/X_corr.rds")
+
+dim(X_corr)
+(corr_mat <- round(cor(X_corr[,c(2:16)], use="complete.obs"),2))
+
+#? plot different ones here if needed
+#? reduce the size of correlation matrix and plot
+melted_corr_mat <- melt(corr_mat) 
+
+# plotting the correlation heatmap
+ggplot(data = melted_corr_mat, aes(x=Var1, y=Var2, 
+								fill=value)) + 
+geom_tile(color = "white")+
+ scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+   midpoint = 0, limit = c(-1,1), space = "Lab", 
+   name="Correlation \n") +
+   theme_minimal()+ 
+ theme(axis.text.x = element_text(vjust = 1, angle = 90),
+       axis.title.x = element_blank(),       # Change x axis title only
+       axis.title.y = element_blank() )+
+ geom_text(aes(Var1, Var2, label = value), 
+		color = "black", 
+        size = 4)  
+
+
+X_corr2 <- X10 %>% 
+            filter(interval_n == 1) %>% 
+            dplyr::select(Point_Name,
+                          BA_m2ha_perc_con_site,
+                          BA_m2ha_perc_con_park,
+                          BA_m2ha_perc_con_site,
+                          BA_m2ha_coun,
+                          BA_m2ha_park,
+                          BA_m2ha_site,
+                          BA_m2ha_large_coun,
+                          BA_m2ha_large_park,
+                          BA_m2ha_large_site,
+                          shrub_cov_coun,
+                          shrub_avg_cov_park,
+                          shrub_avg_cov_site,
+                          treeden_ha_coun,
+                          treeden_ha_park,
+                          treeden_ha_site
+                          ) %>% 
+            mutate(#AOU_code = sps_loop2,
+                   park = substr(Point_Name,1,4))
+
+dim(X_corr2)
+(corr_mat2 <- round(cor(X_corr2[,c(2:15)], use="complete.obs"),2))
+
+#? plot different ones here if needed
+#? reduce the size of correlation matrix and plot
+melted_corr_mat2 <- melt(corr_mat2) 
+
+# plotting the correlation heatmap
+ggplot(data = melted_corr_mat2, aes(x=Var1, y=Var2, 
+								fill=value)) + 
+geom_tile(color = "white")+
+ scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+   midpoint = 0, limit = c(-1,1), space = "Lab", 
+   name="Correlation \n") +
+   theme_minimal()+ 
+ theme(axis.text.x = element_text(vjust = 1, angle = 90),
+       axis.title.x = element_blank(),       # Change x axis title only
+       axis.title.y = element_blank() )+
+ geom_text(aes(Var1, Var2, label = value), 
+		color = "black", 
+        size = 4)  
+
+
+
 
 cbind(colnames(X_corr), seq(1,ncol(X_corr),1))
 

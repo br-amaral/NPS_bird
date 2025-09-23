@@ -4,6 +4,7 @@
 # Code to make plots
 #
 # setwd("/Volumes/zipkinlab/bamaral/NPS_bird_copy/")
+# setwd("/Volumes/rs-025/zipkinlab/bamaral/NPS_bird_copy")
 # detach packages and clear workspace
 freshr::freshr()
 hg <- httpgd::hgd()
@@ -35,7 +36,7 @@ samples_jags <- read_rds(glue("data/model_res/{file_name}.rds"))
 
 # get parameter names
 scales_names <- grep("^scales_", colnames(samples_jags[[1]]), value = TRUE)
-file_nameall_params <- c("mu.alpha0", "mu.beta0", "beta", "alpha", scales_names)
+all_params <- c("mu.alpha0", "mu.beta0", "beta", "alpha", scales_names)
 if(substr(file_name, nchar(file_name)-2, nchar(file_name)) == "int"){all_params <- c(all_params, "beta_int")}
 
 #! Par estimates ------------------------------------------------------------------
@@ -118,4 +119,45 @@ beta_key
 quant_name <- glue("{substr(quant_group[1], 3, 4)}_{substr(quant_group[2], 3, 4)}")
 # save beta and scale selection values
 write_rds(beta_key, file = glue("data/model_res/{file_name}_{quant_name}_SCA_SEL_PARS.rds"))
+
+
+
+if(substr(getwd(), 1, 3) == "/Us") {direc <- "local"} else {direc <- "hpc"}
+
+if(direc == "local"){
+    master_tab <- read_csv("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/fit_model/mod_key.csv") %>%
+            #filter(run == "yes") %>% 
+            filter(step %in% 3) %>% 
+            distinct()
+
+    } else {master_tab <- read_csv("code/fit_model/mod_key.csv") %>%
+            #filter(run == "yes") %>% 
+            filter(step %in% 3) %>% 
+            distinct()
+    }
+
+master_tab <- master_tab %>% filter(AOU_Code != "BCCH")
+coef_tab <- function(file_name){
+
+  samples_jags <- read_rds(glue("data/model_res/{file_name}.rds"))
+
+  # get parameter names
+  scales_names <- grep("^scales_", colnames(samples_jags[[1]]), value = TRUE)
+  all_params <- c("mu.alpha0", "mu.beta0", "beta", "alpha", scales_names)
+  if(substr(file_name, nchar(file_name)-2, nchar(file_name)) == "int"){all_params <- c(all_params, "beta_int")}
+
+  print(file_name)
+  sps_coef <- MCMCsummary(samples_jags,
+                          params = all_params,
+                          round = 2)  %>% 
+                          as_tibble() %>% 
+                          mutate(sps = master_tab$AOU_Code[ii])
+  if(ii == 1){coef_fim <- sps_coef}else{coef_fim <- rbind(sps_coef)}
+  write_rds(coef_fim, file = "data/out/coef_fim.rds")
+}
+
+for(ii in 1:nrow(master_tab)){
+  
+  coef_tab(master_tab$result[ii])
+}
 
