@@ -36,15 +36,11 @@ export R_DISABLE_BYTECODE=1
 
 # Rscript 
 
-Rscript /code/format_bird_data/1_ImportData.R
+Rscript code/format_veg_data/get_site_data_rad.R
 
-Rscript /code/format_veg_data/NETN_forest_data_for_sites.R
+Rscript code/format_veg_data/get_park_data.R
 
-Rscript /code/format_veg_data/get_site_data_rad.R
+Rscript code/format_veg_data/get_coun_data.R
 
-Rscript /code/format_veg_data/get_park_data.R
-
-Rscript /code/format_veg_data/get_coun_data.R
-
-Rscript /code/format_bird_data/2_create_data_files.R
+Rscript code/format_bird_data/2_create_data_files.R
 
