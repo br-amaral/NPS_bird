@@ -41,7 +41,7 @@ freshr::freshr()
 #  renv::snapshot()
 
 test <- FALSE
-interaction <- TRUE
+interaction <- FALSE
 step_number_define <- 1
 if(substr(getwd(), 1, 3) == "/Us") {direc <- "local"} else {direc <- "hpc"}
 
@@ -56,11 +56,11 @@ lenght <- length
 `%!in%` <- Negate(`%in%`)
 
 #! MCMC settings ---------------------------------------------------
-niterations <- 30000
-nburnin <- 15000
+niterations <- 60000
+nburnin <- 30000
 nchains <- 8
-nthin <- 5
-nadapt_min <- 5000
+nthin <- 10
+nadapt_min <- 10000
 
 #! Source code and Import data -----------------------------------------
 ## read files

@@ -48,7 +48,7 @@ if(substr(getwd(), 1, 3) == "/Us") {
           source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_bird_data/format_data.R")
       } else {
         direc <- "hpc"
-        source("/code/format_bird_data/format_data.R")
+        source("code/format_bird_data/format_data.R")
   }
 
 yog <- y1 # reset safety ;)
