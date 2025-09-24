@@ -23,6 +23,7 @@ Assumptions/decisions:
 
 # --------------------------------------------------------------------
 ## source:
+### locally
 Rscript /Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_bird_data/1_ImportData.R
 
 Rscript /Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_veg_data/NETN_forest_data_for_sites.R
