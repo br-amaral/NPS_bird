@@ -45,7 +45,8 @@ lenght <- length
 ## file paths
 COEF_TABLE_PATH <- "code/fit_model/mod_key.csv"
 if(substr(getwd(), 1, 3) == "/Us") {direc <- "local"} else {direc <- "hpc"}
-if(direc == "local"){COEF_TABLE_PATH <- glue("/Users/bamaral/Documents/GitHub/NPS_bird_copy/{COEF_TABLE_PATH}")}
+if(direc == "local"){COEF_TABLE_PATH <- glue("/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne/NPS_bird_copy/{COEF_TABLE_PATH}")}
+# if(direc == "local"){COEF_TABLE_PATH <- glue("/Users/bamaral/Documents/GitHub/NPS_bird_copy/{COEF_TABLE_PATH}")}
 
 ## read files
 coef_path_file <- read_csv(COEF_TABLE_PATH) %>%
@@ -427,13 +428,13 @@ write_rds(dat_sca, "data/out/coefs_sps_sca.rds")
              size = 11, shape = 21, stroke = 0.9, color = "#e4e1e1") +
   # no overlap
   geom_point(data = dat_sca3 %>% filter(scale == 3), 
-             aes(x = Covariate, y = sps, fill = median), 
+             aes(x = Covariate, y = sps, fill = median, alpha = 0.95), 
              size = 27, shape = 21, stroke = 0.9, color = "#8d8888") +
   geom_point(data = dat_sca3 %>% filter(scale == 2), 
-             aes(x = Covariate, y = sps, fill = median), 
+             aes(x = Covariate, y = sps, fill = median, alpha = 0.95), 
              size = 20, shape = 21, stroke = 0.9, color = "#8d8888") +
   geom_point(data = dat_sca3 %>% filter(scale == 1), 
-             aes(x = Covariate, y = sps, fill = median),
+             aes(x = Covariate, y = sps, fill = median, alpha = 0.95),
              size = 11, shape = 21, stroke = 0.9, color = "#8d8888") +
 # Add text labels for median values
  # overlaps
@@ -461,8 +462,7 @@ write_rds(dat_sca, "data/out/coefs_sps_sca.rds")
                        #mid = "white",           # Zero = white  
                        high = "#00a8d2",        # Positive values = pink
                        midpoint = 0,              # Center point at zero
-                       name = "Covariate\nEffect size\n",
-                       limits = c(-4, 3)) +
+                       name = "Covariate\nEffect size\n") +
   theme_minimal() +
   theme(legend.position = "bottom",
         axis.text.x = element_text(hjust = 0.5, size = 18),
@@ -497,4 +497,4 @@ write_rds(dat_sca, "data/out/coefs_sps_sca.rds")
 
 ggsave("figures/circles_coefs.svg", plot = circles_coefs, device = "svg", width = 12, height = 16)
 
-ggsave("figures/circles_coefs.png", plot = circles_coefs, device = "png", width = 12, height = 16, dpi = 1200)
+#ggsave("figures/circles_coefs.png", plot = circles_coefs, device = "png", width = 12, height = 16, dpi = 1200)
