@@ -137,8 +137,10 @@ if(direc == "local"){
     }
 
 master_tab <- master_tab %>% filter(AOU_Code != "BCCH")
-coef_tab <- function(file_name){
+# Initialize empty tibble outside the function
+coef_fim <- tibble()
 
+coef_tab <- function(file_name, species_code){
   samples_jags <- read_rds(glue("data/model_res/{file_name}.rds"))
 
   # get parameter names
@@ -151,15 +153,17 @@ coef_tab <- function(file_name){
                           params = all_params,
                           round = 2)  %>% 
                           as_tibble() %>% 
-                          mutate(sps = master_tab$AOU_Code[ii])
-  if(ii == 1){coef_fim <- sps_coef} else {coef_fim <- rbind(coef_fim, sps_coef)}
-  write_rds(coef_fim, file = "data/out/coef_fim.rds")
+                          mutate(sps = species_code)
+  
+  return(sps_coef)
 }
 
 for(ii in 1:nrow(master_tab)){
-  
-  coef_tab(master_tab$result[ii])
+  sps_result <- coef_tab(master_tab$result[ii], master_tab$AOU_Code[ii])
+  coef_fim <- bind_rows(coef_fim, sps_result)
 }
+  
+write_rds(coef_fim, file = "data/out/coef_fim.rds")
 
 #! Density and traceplots --------------------------------------------------------------
 den_tra_p <- function(file_name){
@@ -172,12 +176,27 @@ den_tra_p <- function(file_name){
   if(substr(file_name, nchar(file_name)-2, nchar(file_name)) == "int"){all_params <- c(all_params, "beta_int")}
 
   print(file_name)
-  sps_plt <- MCMCsummary(samples_jags,
-                          params = all_params,
-                          round = 2)  %>% 
-                          as_tibble() %>% 
-                          mutate(sps = master_tab$AOU_Code[ii])
-
+  
+  # Save as PDF using MCMCtrace built-in functionality
+  MCMCtrace(samples_jags,
+            params = all_params,
+            ind = TRUE,
+            pdf = TRUE,
+            filename = glue("figures/{file_name}_traceplots"),
+            exact = TRUE,
+            Rhat = TRUE,
+            n.eff = TRUE)
+  
+  # # Save as multi-page SVG (one file per page)
+  # svg(glue("figures/{file_name}_traceplots_%03d.svg"))
+  # MCMCtrace(samples_jags,
+  #           params = all_params,
+  #           ind = TRUE,
+  #           pdf = FALSE,
+  #           exact = TRUE,
+  #           Rhat = TRUE,
+  #           n.eff = TRUE)
+  # dev.off()
 }
 
 for(ii in 1:nrow(master_tab)){
