@@ -151,9 +151,14 @@ coef_tab <- function(file_name, species_code){
   print(file_name)
   sps_coef <- MCMCsummary(samples_jags,
                           params = all_params,
-                          round = 2)  %>% 
-                          as_tibble() %>% 
-                          mutate(sps = species_code)
+                          round = 2)  
+  r_nam <- rownames(sps_coef)
+
+  sps_coef <- sps_coef %>% 
+                as_tibble() %>% 
+                mutate(sps = species_code,
+                       cov = r_nam ) %>% 
+                relocate(sps, cov)
   
   return(sps_coef)
 }
