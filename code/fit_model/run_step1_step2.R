@@ -42,7 +42,7 @@ freshr::freshr()
 
 test <- FALSE
 interaction <- FALSE
-step_number_define <- 1
+step_number_define <- 2
 if(substr(getwd(), 1, 3) == "/Us") {direc <- "local"} else {direc <- "hpc"}
 
 #! Load packages ---------------------------------------
@@ -68,12 +68,12 @@ if(interaction == T){model_file <- "models/mod_all_covs2.txt"}
 if(interaction == F){model_file <- "models/mod_all_covs.txt"}
 
 if(direc == "local"){
-    master_tab <- read_csv("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/fit_model/mod_key.csv") %>%
+    master_tab <- read_csv("/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne/NPS_bird_copy/code/fit_model/mod_key.csv") %>%
             #filter(run == "yes") %>% 
             filter(step %in% c(step_number_define)) %>% 
             distinct()
 
-    model_file <- glue("/Users/bamaral/Documents/GitHub/NPS_bird_copy/{model_file}")
+    model_file <- glue("/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne//NPS_bird_copy/{model_file}")
 
     } else {master_tab <- read_csv("code/fit_model/mod_key.csv") %>%
             #filter(run == "yes") %>% 
@@ -90,7 +90,7 @@ paste('\n ************************************* \n \n \n   Running Models:', '\n
       '  Started running on =', Sys.time(),  '\n \n \n',
       '**************************************') %>% cat()
 
- for (key_ite in 12:nrow(master_tab)){
+ for (key_ite in 1:nrow(master_tab)){
     # key_ite <- 1
     tib_loop <- master_tab[key_ite, ]
 
@@ -127,7 +127,7 @@ paste('\n ************************************* \n \n \n   Running Models:', '\n
             if(direc == "hpc"){
                 source("code/fit_model/step2_analysis.R")
                      } else {
-                        source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/fit_model/step2_analysis.R")}
+                        source("/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne/NPS_bird_copy/code/fit_model/step2_analysis.R")}
                 }
         } else {
             # get scales for step 2
@@ -138,7 +138,7 @@ paste('\n ************************************* \n \n \n   Running Models:', '\n
             if(direc == "hpc"){
                 source("code/fit_model/step2_analysis.R")
                      } else {
-                        source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/fit_model/step2_analysis.R")
+                        source("/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne/NPS_bird_copy/code/fit_model/step2_analysis.R")
             }
         }
 
