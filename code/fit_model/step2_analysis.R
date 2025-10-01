@@ -145,7 +145,7 @@ if('beta6' %in% pars_mod$cov_name) {
 
 covs_mod_code <- glue("{covs_mod_code} \n
      # park size \n
-      beta[{beta_numb}] * Xp[b] }\n ")
+      beta[{beta_numb}] * Xp[b] \n ")
      
 if(beta_numb - 1 != nrow(pars_mod)) {stop("model file is incorrect")}
 
@@ -172,7 +172,8 @@ mod_string <- paste(
 
 params <- c("beta0", "beta", "alpha0", "alpha", 
             "mu.beta0", "tau.beta0", "mu.alpha0", "tau.alpha0",
-            "psi", "p") %>% # Z, psi
+            "psi", "p", "Z",
+            "mean.y", "mean.y.new", "fit.obs", "fit.sim", "bpvalue", "y.new", "Z.new") %>% 
           as.character()
 
 n_as <- 3
