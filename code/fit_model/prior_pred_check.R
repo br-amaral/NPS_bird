@@ -25,30 +25,36 @@ conflicts_prefer(dplyr::filter)
 # Same data as main model but NO observed y data
 jags_data_prior <- list(
   # Dimensions
-  nrowy = nrowy,
-  nrowy2 = nrowy2,
-  n_pkM = n_pkM,
-  n_yrM = n_yrM,
-  n_bs = n_bs,
-  n_as = n_as,
+  nrowy = jags_data$nrowy,
+  nrowy2 = jags_data$nrowy2,
+  n_pkM = jags_data$n_pkM,
+  n_yrM = jags_data$n_yrM,
+  n_bs = jags_data$n_bs,
+  n_as = jags_data$n_as,
   
   # Index matrices (same as main model)
-  y = y,        # Keep structure but values won't be used for inference
-  y2 = y2,
+  y = jags_data$y,        # Keep structure but values won't be used for inference
+  y2 = jags_data$y2,
   
   # Covariates (same as main model)
-  X1 = X1, X2 = X2, X3 = X3, X4 = X4, X5 = X5,
-  Xp = Xp, Xa = Xa, Xb = Xb
+  X1 = jags_data$X1, 
+  X2 = jags_data$X2, 
+  X3 = jags_data$X3, 
+  X4 = jags_data$X4, 
+  X5 = jags_data$X5,
+  Xp = jags_data$Xp, 
+  Xa = jags_data$Xa, 
+  Xb = jags_data$Xb
 )
 
 #! Parameters to monitor -------------------------------
 params_prior <- c(
   "beta", "alpha", "beta0", "alpha0",
   "mu.beta0", "mu.alpha0", "tau.beta0", "tau.alpha0",
-  "scales_beta1", "scales_beta2", "scales_beta3", "scales_beta4", "scales_beta5", "scales_beta6",
-  "mean.psi.prior", "mean.p.prior", "mean.y.prior",
-  "max.psi.prior", "min.psi.prior", "max.p.prior", "min.p.prior",
-  "y.prior", "Z.prior", "psi.prior", "p.prior"
+  "scales_beta1", "scales_beta2", "scales_beta3", "scales_beta4", "scales_beta5",
+  "mean.y.prior",
+  "sum.y.prior", "n.y.prior", "n.obs",
+  "y.prior", "Z.prior"
 )
 
 #! Run prior predictive check -------------------------
@@ -56,48 +62,111 @@ params_prior <- c(
 prior_samples <- jags(
   data = jags_data_prior,
   parameters.to.save = params_prior,
-  model.file = "models/mod_prior_predictive.txt",
-  n.chains = 3,
-  n.iter = 2000,   # Shorter than main analysis
-  n.burnin = 500,
-  n.thin = 1
+  model.file = "/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne/NPS_bird_copy/models/mod_prior_predictive_clean.txt",
+  n.chains = 2,
+  n.iter = 200,   
+  n.burnin = 50,
+  n.thin = 2
 )
+# Prior predictive checks don't have observed data, so no deviance
 
 #! Analyze prior predictive results -------------------
 
-# Extract samples
+# Extract samples properly for mcmc.list
 prior_chains <- as.matrix(prior_samples$samples)
+
+# Check what parameters we actually have
+cat("\\n=== AVAILABLE PARAMETERS ===\\n")
+param_names <- colnames(prior_chains)
+print("Parameter types available:")
+print(table(sub("\\[.*", "", param_names)))
+
+# Look for y.prior parameters specifically
+y_prior_params <- grep("y\\.prior", param_names, value = TRUE)
+cat("\\nNumber of y.prior parameters:", length(y_prior_params))
+if(length(y_prior_params) > 0) {
+  cat("\\nFirst few y.prior parameters:", head(y_prior_params, 10))
+}
+
+# Check for summary statistics
+summary_params <- c("mean.y.prior", "sum.y.prior", "n.y.prior", "n.obs")
+available_summaries <- summary_params[summary_params %in% param_names]
+cat("\\nAvailable summary parameters:", paste(available_summaries, collapse = ", "))
+
+# Plot y.prior if available
+if(length(y_prior_params) > 0) {
+  # Extract all y.prior values
+  y_prior_samples <- prior_chains[, y_prior_params]
+  y_prior_samples <- y_prior_samples[ ,4:ncol(y_prior_samples)]
+
+  # Plot distribution of simulated detections
+  par(mfrow = c(1, 2))
+  hist(as.vector(y_prior_samples), breaks = 50, 
+       main = glue("Prior Predictive Distribution for {sps}\n(All y.prior values)"), 
+       xlab = "Detection (0/1)")
+  
+  # Plot detection rate across iterations
+  if("mean.y.prior" %in% param_names) {
+    hist(prior_chains[, "mean.y.prior"], breaks = 30,
+         main = glue("Prior Predicted Detection Rate for {sps}"), 
+         xlab = "Mean Detection Rate")
+  }
+  par(mfrow = c(1, 1))
+} else {
+  cat("\\ny.prior parameters not found - check if they were excluded due to size")
+}
 
 # 1. Check parameter ranges from priors
 cat("\\n=== PRIOR PARAMETER SUMMARIES ===\\n")
 print("Beta coefficients (occupancy effects):")
 beta_cols <- grep("^beta\\[", colnames(prior_chains))
-print(summary(prior_chains[, beta_cols[1:7]]))  # First 7 betas
+print(summary(prior_chains[, beta_cols[1:6]]))  
+# Create histograms for each beta coefficient
+beta_matrix <- prior_chains[, beta_cols[1:6]]
+par(mfrow = c(2, 3))  # 2 rows, 3 columns for 6 histograms
+for(i in 1:ncol(beta_matrix)) {
+  hist(beta_matrix[, i], 
+       main = paste("Beta", i, "Coefficient for", sps), 
+       xlab = paste("Beta[", i, "] Value"),
+       col = "lightblue",
+       breaks = 30)
+  abline(v = 0, col = "red", lty = 2)  # Add reference line at 0
+}
+par(mfrow = c(1, 1))  # Reset plot layout
 
 print("\\nAlpha coefficients (detection effects):") 
 alpha_cols <- grep("^alpha\\[", colnames(prior_chains))
 print(summary(prior_chains[, alpha_cols[1:3]]))  # First 3 alphas
 
-# 2. Check simulated occupancy and detection rates
-cat("\\n=== SIMULATED DATA SUMMARIES ===\\n")
-print("Mean occupancy probability from priors:")
-print(summary(prior_chains[, "mean.psi.prior"]))
+# Create histograms for each alpha coefficient
+alpha_matrix <- prior_chains[, alpha_cols[1:3]]
+par(mfrow = c(1, 3))  # 1 row, 3 columns for 3 histograms
+for(i in 1:ncol(alpha_matrix)) {
+  hist(alpha_matrix[, i], 
+       main = paste("Alpha", i, "Coefficient for", sps), 
+       xlab = paste("Alpha[", i, "] Value"),
+       col = "lightgreen",
+       breaks = 30)
+  abline(v = 0, col = "red", lty = 2)  # Add reference line at 0
+}
+par(mfrow = c(1, 1))  # Reset plot layout
 
+# 2. Check simulated occupancy and detection rates
 print("\\nMean detection probability from priors:")
-print(summary(prior_chains[, "mean.p.prior"]))
+print("(Detection probability calculation simplified - check individual p.prior values if needed)")
 
 print("\\nMean detection rate from priors:")
 print(summary(prior_chains[, "mean.y.prior"]))
 
-# 3. Check for extreme values
-cat("\\n=== CHECKING FOR EXTREME VALUES ===\\n")
-print("Range of occupancy probabilities:")
-print(paste("Min:", round(mean(prior_chains[, "min.psi.prior"]), 3)))
-print(paste("Max:", round(mean(prior_chains[, "max.psi.prior"]), 3)))
+# 3. Check for extreme values - simplified version
+cat("\\n=== BASIC SUMMARIES ===\\n")
+print("Mean occupancy probability:")
+print("(Calculate manually from Z.prior samples in R - JAGS array limitations)")
 
-print("\\nRange of detection probabilities:")
-print(paste("Min:", round(mean(prior_chains[, "min.p.prior"]), 3)))
-print(paste("Max:", round(mean(prior_chains[, "max.p.prior"]), 3)))
+print("\\nTotal detections simulated:")
+if("sum.y.prior" %in% colnames(prior_chains)) {
+  print(summary(prior_chains[, "sum.y.prior"]))
+}
 
 # 4. Compare simulated vs observed detection rates
 if(exists("y")) {  # If you have observed data loaded
@@ -124,7 +193,7 @@ if(exists("y")) {  # If you have observed data loaded
 par(mfrow = c(2, 2))
 
 # Beta coefficients
-beta_samples <- prior_chains[, grep("^beta\\[", colnames(prior_chains))[1:7]]
+beta_samples <- prior_chains[, grep("^beta\\[", colnames(prior_chains))[1:6]]  # 6 betas now
 boxplot(beta_samples, main = "Beta Coefficients from Priors",
         xlab = "Beta Parameter", ylab = "Value")
 abline(h = 0, col = "red", lty = 2)
@@ -135,13 +204,6 @@ boxplot(alpha_samples, main = "Alpha Coefficients from Priors",
         xlab = "Alpha Parameter", ylab = "Value")
 abline(h = 0, col = "red", lty = 2)
 
-# Occupancy probabilities
-hist(prior_chains[, "mean.psi.prior"], main = "Prior Predicted Mean Occupancy",
-     xlab = "Mean Occupancy Probability", breaks = 30)
-
-# Detection probabilities
-hist(prior_chains[, "mean.p.prior"], main = "Prior Predicted Mean Detection",
-     xlab = "Mean Detection Probability", breaks = 30)
 
 par(mfrow = c(1, 1))
 

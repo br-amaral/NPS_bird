@@ -1,0 +1,79 @@
+# Prior Predictive Check for Occupancy Model
+# This simulates data using only priors to check if they're reasonable
+
+model {	
+  # Same priors as your main model
+  ## Sampling process
+  for(r in 1:n_pkM){	      # park r
+    for(t in 1:n_yrM) {       # year t
+      alpha0[r,t] ~ dnorm(mu.alpha0, tau.alpha0)	
+      beta0[r,t] ~ dnorm(mu.beta0, tau.beta0)	
+    }
+  }
+  
+  ## Ecological process
+  for(j in 1:n_bs){         # number of betas
+    beta[j] ~ dnorm(0, 0.36)
+  }
+     
+  for(j in 1:n_as){         # number of alphas
+    alpha[j] ~ dnorm(0, 0.36)
+  }
+  
+  # Hyperpriors for community hyperparameters	
+  mu.beta0 ~ dnorm(0, 0.36)
+  tau.beta0 ~ dgamma(0.1,0.1) 
+  mu.alpha0 ~ dnorm(0, 0.36)
+  tau.alpha0 ~ dgamma(0.1,0.1) 
+  
+  # Scales (same as original, but no scales_beta6)
+  scales_beta1 ~ dcat(c(1/3, 1/3, 1/3))	
+  scales_beta2 ~ dcat(c(1/3, 1/3, 1/3))	
+  scales_beta3 ~ dcat(c(1/3, 1/3, 1/3))	
+  scales_beta4 ~ dcat(c(1/3, 1/3, 1/3))	
+  scales_beta5 ~ dcat(c(1/3, 1/3, 1/3))	
+
+  ## PRIOR PREDICTIVE SIMULATION -------------------------------
+  # Generate occupancy probabilities using priors only
+  for(b in 1:nrowy2){
+    # Occupancy probability from priors
+    logit(psi.prior[y2[b,2],y2[b,3],y2[b,4]]) <-
+      beta0[y2[b,2],y2[b,4]] +
+      beta[1] * X1[b, scales_beta1] + 
+      beta[2] * X2[b, scales_beta2] + 
+      beta[3] * X3[b, scales_beta3] + 
+      beta[4] * X4[b, scales_beta4] + 
+      beta[5] * X5[b, scales_beta5] +  
+      # park size
+      beta[6] * Xp[b]
+    
+    # Simulate occupancy from priors
+    Z.prior[y2[b,2],y2[b,3],y2[b,4]] ~ dbern(psi.prior[y2[b,2],y2[b,3],y2[b,4]])
+  }
+  
+  # Generate detection probabilities and simulate detections
+  for(a in 1:nrowy){
+    # Detection probability from priors
+    logit(p.prior[y[a,2],y[a,3],y[a,4],y[a,5]]) <-
+      alpha0[y[a,2],y[a,4]] +
+      alpha[1] * Xa[a,1] +
+      alpha[2] * Xb[a,1] +
+      alpha[3] * (Xb[a,1])^2
+    
+    # Simulate detection data from priors
+    y.prior[a,1] ~ dbern(p.prior[y[a,2],y[a,3],y[a,4],y[a,5]] * Z.prior[y[a,2],y[a,3],y[a,4]])
+  }
+  
+  # Summary statistics to check prior reasonableness
+  # Mean detection rate 
+  mean.y.prior <- mean(y.prior[,1])          # Mean detection rate
+  # mean.psi.prior <- mean(psi.prior[,,])     # Mean occupancy probability
+  # mean.p.prior <- mean(p.prior[,,,])      # Mean detection probability  
+
+  # Calculate basic summary stats
+  sum.y.prior <- sum(y.prior[,1])
+  n.y.prior <- length(y.prior[,1])
+  
+  # Store number of observations as a constant
+  n.obs <- nrowy
+}

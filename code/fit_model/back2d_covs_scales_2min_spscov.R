@@ -84,7 +84,6 @@ y_sta %>% filter(Interval_n == 1) %>%  select(park) %>% table() %>% sort()
 
 y_sta %>% filter(Interval_n == 1) %>%  select(Year, AOU_Code) %>% table() 
 
-
 y_sta %>% 
   filter(bird_detec > 0) %>% 
    mutate(uniqueid = glue("{Point_Name}_{EventDate}")) %>% 

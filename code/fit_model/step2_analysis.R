@@ -73,9 +73,9 @@ pars_sca_mod <- cbind(cov_key2, cov_key2_numb, scales_loop) %>%
 n_bs_new <- nrow(pars_sca_mod) + 1
 # remove beta_numbs <- glue("beta[{seq(1,n_bs-1,1)}]")
 
-par_key <- as_tibble(cbind(c("X1", "X2", "X3", "X4", "X5", "X5"),
-                           c("beta1", "beta2", "beta3", "beta4", "beta5", "beta6"), 
-                           c("DEN", "BACON", "BALAT", "SHR", "BA", "BA2"))) %>% 
+par_key <- as_tibble(cbind(c("X1", "X2", "X3", "X4", "X5"),
+                           c("beta1", "beta2", "beta3", "beta4", "beta5"), 
+                           c("DEN", "BACON", "BALAT", "SHR", "BA"))) %>% 
                     rename(xobj = V1,
                           cov_name = V2,
                            X = V3)
@@ -94,9 +94,9 @@ model_file1 <- "models/mod_all_covs_hyper.txt"
 model_file3 <- "models/mod_all_covs_det.txt"
 
 if(direc == "local"){
-    model_file1 <- glue("/Users/bamaral/Documents/GitHub/NPS_bird_copy/{model_file1}")
-    model_file3 <- glue("/Users/bamaral/Documents/GitHub/NPS_bird_copy/{model_file3}")
-    mod_name <- glue("/Users/bamaral/Documents/GitHub/NPS_bird_copy/{mod_name}")
+    model_file1 <- glue("/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne/NPS_bird_copy/{model_file1}")
+    model_file3 <- glue("/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne/NPS_bird_copy/{model_file3}")
+    mod_name <- glue("/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne/NPS_bird_copy/{mod_name}")
     }
 
 covs_mod_code <- glue('')
@@ -133,13 +133,6 @@ if('beta5' %in% pars_mod$cov_name) {
     covs_mod_code <- glue("{covs_mod_code} \n
       # BA (tree basal area) \n
       beta[{beta_numb}] * X5[b, {pull(pars_mod[which(pars_mod$cov_name == 'beta5'),3])}] + \n ")
-    beta_numb <- beta_numb + 1
-}  
-
-if('beta6' %in% pars_mod$cov_name) {
-    covs_mod_code <- glue("{covs_mod_code} \n
-      # BA^2 (tree basal area squared) \n
-      beta[{beta_numb}] * pow(X5[b, {pull(pars_mod[which(pars_mod$cov_name == 'beta6'),3])}],2) + \n ")
     beta_numb <- beta_numb + 1
 }  
 
@@ -203,7 +196,7 @@ if(test == TRUE){
   niterations <- 50
   nburnin <- 5
   nthin <- 1
-  print("test with 5 iterations")
+  print(glue("test with {niterations} iterations"))
 }
 
 ## initialize JAGS
