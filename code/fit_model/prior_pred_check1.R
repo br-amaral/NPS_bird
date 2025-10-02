@@ -9,14 +9,14 @@ if(substr(getwd(), 1, 3) == "/Us") {direc <- "local"} else {direc <- "hpc"}
 
 if(direc == "local"){
     master_tab <- read_csv("/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne/NPS_bird_copy/code/fit_model/mod_key.csv") %>%
-            #filter(run == "yes") %>% 
+            filter(run == "yes") %>% 
             filter(step %in% c(step_number_define)) %>% 
             distinct()
 
     mod_name <- "/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne/NPS_bird_copy/models/model_prior_pred.txt"
             
     } else {master_tab <- read_csv("code/fit_model/mod_key.csv") %>%
-            #filter(run == "yes") %>% 
+            filter(run == "yes") %>% 
             filter(step %in% c(step_number_define)) %>% 
             distinct()
             
