@@ -1,0 +1,81 @@
+model {
+  # ---------- PRIORS (unchanged) ----------
+  ## Sampling process
+  for(r in 1:n_pkM){
+    for(t in 1:n_yrM){
+      alpha0[r,t] ~ dnorm(mu.alpha0, tau.alpha0)
+      beta0[r,t]  ~ dnorm(mu.beta0, tau.beta0)
+    }
+  }
+
+  ## Ecological process
+  for(j in 1:n_bs){
+    beta[j] ~ dnorm(0, 0.36)    # note: 0.36 is a precision -> sd ~ 1.67
+  }
+  for(j in 1:n_as){
+    alpha[j] ~ dnorm(0, 0.36)
+  }
+
+  ## Hyperpriors
+  mu.beta0  ~ dnorm(0, 0.36)
+  tau.beta0 ~ dgamma(0.1, 0.1)
+
+  mu.alpha0  ~ dnorm(0, 0.36)
+  tau.alpha0 ~ dgamma(0.1, 0.1)
+
+  # Scale selection (one scale index per beta as in your model)
+  scales_beta1 ~ dcat(c(1/3,1/3,1/3))
+  scales_beta2 ~ dcat(c(1/3,1/3,1/3))
+  scales_beta3 ~ dcat(c(1/3,1/3,1/3))
+  scales_beta4 ~ dcat(c(1/3,1/3,1/3))
+  scales_beta5 ~ dcat(c(1/3,1/3,1/3))
+
+  # ---------- PRIOR-PREDICTIVE SIMULATION ----------
+  # We iterate over your data indices (same indexing as original model).
+  for(b in 1:nrowy2){
+    # occupancy latent state drawn from prior via psi
+    logit(psi[y2[b,2], y2[b,3], y2[b,4]]) <-
+      beta0[y2[b,2], y2[b,4]] +
+      beta[1] * X1[b, scales_beta1] +
+      beta[2] * X2[b, scales_beta2] +
+      beta[3] * X3[b, scales_beta3] +
+      beta[4] * X4[b, scales_beta4] +
+      beta[5] * X5[b, scales_beta5] +
+      beta[6] * Xp[b]
+
+    Z[y2[b,2], y2[b,3], y2[b,4]] ~ dbern(psi[y2[b,2], y2[b,3], y2[b,4]])
+  }
+
+  # detection process (longer removal intervals)
+  for(a in 1:nrowy){
+    logit(p[y[a,2], y[a,3], y[a,4], y[a,5]]) <-
+      alpha0[y[a,2], y[a,4]] +
+      alpha[1] * Xa[a,1] +
+      alpha[2] * Xb[a,1] +
+      alpha[3] * (Xb[a,1])^2
+
+    # generate y_sim from the simulated Z and p
+    y_sim[a] ~ dbern(p[y[a,2], y[a,3], y[a,4], y[a,5]] * Z[y[a,2], y[a,3], y[a,4]])
+  }
+
+  # ---------- SUMMARY / DERIVED QUANTITIES for PPC ----------
+#   # overall occupancy proportion per chain iteration
+#   occ_count <- 0
+  
+#   # plausible occupancy prevalence across all site-year combinations
+#   # Derived quantities for PPC
+#   # parkey, site_n, year_n
+#   for (b in 1:nrowy2) {
+#     Z_flat[b] <- Z[y2[b,2], y2[b,3], y2[b,4]]
+#   }
+#   # site-level derived quantity
+#   for (i in 1:tot_sites) {
+#     occ_count[i] <- sum(Z[i, 1:nocc])   # number of occupied visits for site i
+#   }
+
+#   # total derived quantity
+#   occ_count_tot <- sum(occ_count[1:tot_sites])  
+#   prop_occ  <- occ_count_tot / tot_sites
+
+#   total_detections <- sum(y_sim[1:nrowy])
+}
