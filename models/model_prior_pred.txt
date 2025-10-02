@@ -58,24 +58,4 @@ model {
     y_sim[a] ~ dbern(p[y[a,2], y[a,3], y[a,4], y[a,5]] * Z[y[a,2], y[a,3], y[a,4]])
   }
 
-  # ---------- SUMMARY / DERIVED QUANTITIES for PPC ----------
-#   # overall occupancy proportion per chain iteration
-#   occ_count <- 0
-  
-#   # plausible occupancy prevalence across all site-year combinations
-#   # Derived quantities for PPC
-#   # parkey, site_n, year_n
-#   for (b in 1:nrowy2) {
-#     Z_flat[b] <- Z[y2[b,2], y2[b,3], y2[b,4]]
-#   }
-#   # site-level derived quantity
-#   for (i in 1:tot_sites) {
-#     occ_count[i] <- sum(Z[i, 1:nocc])   # number of occupied visits for site i
-#   }
-
-#   # total derived quantity
-#   occ_count_tot <- sum(occ_count[1:tot_sites])  
-#   prop_occ  <- occ_count_tot / tot_sites
-
-#   total_detections <- sum(y_sim[1:nrowy])
 }

@@ -16,9 +16,9 @@ VEER,1,yes,,,F
 WBNU,1,yes,,,F
 WOTH,1,yes,,,F
 YBSA,1,yes,,,F
-BAWW,2,no,BAWW_step1_output_2025_09_14run1.rds,BAWW_step1_output_2025_09_14run1_25_75_SCA_SEL_PARS,F
+BAWW,2,yes,BAWW_step2_output_2025_10_01run1.rds,BAWW_step1_output_2025_09_24run1_25_75_SCA_SEL_PARS,F
 BCCH,2,no,BCCH_step1_output_2025_09_14run1.rds,BCCH_step1_output_2025_09_14run1_25_75_SCA_SEL_PARS,F
-BHVI,2,no,BHVI_step1_output_2025_09_15run1.rds,BHVI_step1_output_2025_09_15run1_25_75_SCA_SEL_PARS,F
+BHVI,2,yes,BHVI_step1_output_2025_09_15run1.rds,BHVI_step1_output_2025_09_15run1_25_75_SCA_SEL_PARS,F
 BLBW,2,no,BLBW_step1_output_2025_09_15run1.rds,BLBW_step1_output_2025_09_15run1_25_75_SCA_SEL_PARS,F
 BRCR,2,no,BRCR_step1_output_2025_09_14run1.rds,BRCR_step1_output_2025_09_14run1_25_75_SCA_SEL_PARS,F
 BTBW,2,no,BTBW_step1_output_2025_09_14run1.rds,BTBW_step1_output_2025_09_14run1_25_75_SCA_SEL_PARS,F
