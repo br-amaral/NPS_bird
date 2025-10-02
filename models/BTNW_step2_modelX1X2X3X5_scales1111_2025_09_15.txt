@@ -61,7 +61,10 @@ model {
 
     # park size 
 
-     beta[5] * Xp[b] }
+     beta[5] * Xp[b] 
+  # Posterior predictive check - simulate new occupancy
+  Z.new[y2[b,2],y2[b,3],y2[b,4]] ~ dbern(psi[y2[b,2],y2[b,3],y2[b,4]])
+}
 
 # longer interval loop, all intervals of the removal sampling (not the first)
   for(a in 1:nrowy){
@@ -70,11 +73,31 @@ model {
       alpha[1] * Xa[a,1] +                        # time - spskey
       alpha[2] * Xb[a,1] +                        # day - spskey
       alpha[3] * (Xb[a,1])^2                      # day squared - spskey,
-    
-    # y[a,1] ~ dbern(p[y[a,2],y[a,3],y[a,4],y[a,5]] * Z[y2[y_ind[a],2],y2[y_ind[a],3],y2[y_ind[a],4]])
-  
+      
     y[a,1] ~ dbern(p[y[a,2],y[a,3],y[a,4],y[a,5]] * Z[y[a,2],y[a,3],y[a,4]])
+
+    # Posterior predictive check - simulate new detection data
+    y.new[a,1] ~ dbern(p[y[a,2],y[a,3],y[a,4],y[a,5]] * Z.new[y[a,2],y[a,3],y[a,4]])
   }
+
+  # Test statistics for posterior predictive check
+  # Compare observed vs simulated data
+  mean.y <- mean(y[,1])
+  mean.y.new <- mean(y.new[,1])
+
+  # Freeman-Tukey statistic (common for occupancy models)
+  for(a in 1:nrowy){
+    # residual for observed and simulated data
+    ft.obs[a] <- pow(sqrt(y[a,1]) - sqrt(p[y[a,2],y[a,3],y[a,4],y[a,5]] * Z[y[a,2],y[a,3],y[a,4]]), 2)
+    ft.sim[a] <- pow(sqrt(y.new[a,1]) - sqrt(p[y[a,2],y[a,3],y[a,4],y[a,5]] * Z.new[y[a,2],y[a,3],y[a,4]]), 2)
+  }
+
+  fit.obs <- sum(ft.obs[])
+  fit.sim <- sum(ft.sim[])
+
+  # Bayesian p-value
+  bpvalue <- step(fit.sim - fit.obs)
+
 }
 
 
