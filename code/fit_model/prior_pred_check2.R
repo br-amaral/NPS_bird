@@ -1,3 +1,6 @@
+
+freshr::freshr()
+
 library(tidyverse)
 library(jagsUI)
 library(bayesplot)
@@ -13,14 +16,16 @@ if(direc == "local"){
             filter(step %in% c(step_number_define)) %>% 
             distinct()
 
-    mod_name <- "/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne/NPS_bird_copy/models/model_prior_pred.txt"
+    dir_mod <- "/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne/NPS_bird_copy/models/"
             
-    } else {master_tab <- read_csv("code/fit_model/mod_key.csv") %>%
+    } else {
+        # This covers both HPC and mounted HPC directory
+        master_tab <- read_csv("code/fit_model/mod_key.csv") %>%
             filter(run == "yes") %>% 
             filter(step %in% c(step_number_define)) %>% 
             distinct()
             
-    mod_name <- "/models/model_prior_pred.txt"
+        dir_mod <- "models/"  # Relative path from current working directory
             
 }
 
@@ -31,10 +36,9 @@ nc <- 5
 nt <- 2
 
 paste('\n ************************************* \n \n \n   Running Models:', '\n',
-      '  Test?', test, '\n',
       '  What? =', "Prior Predictive Check", '\n',
       '  Number of sps =', nrow(master_tab), '\n',
-      '  Total iterations =', nburnin + niterations, '\n',
+      '  Total iterations =', nb + ni, '\n',
       '  Started running on =', Sys.time(),  '\n \n \n',
       '**************************************') %>% cat()
 
@@ -42,7 +46,6 @@ paste('\n ************************************* \n \n \n   Running Models:', '\n
 parameters <- c("prop_occ", "total_detections",
                 "psi", "p", "Z", "y_sim",
                 "beta", "alpha",
-                "scales_beta1","scales_beta2","scales_beta3","scales_beta4","scales_beta5",
                 "mu.beta0","tau.beta0","mu.alpha0","tau.alpha0")
 
 for (key_ite in 1:nrow(master_tab)){
@@ -52,12 +55,72 @@ for (key_ite in 1:nrow(master_tab)){
     sps_loop <- tib_loop$AOU_Code
     date_step1 <- substr(tib_loop$result, 19, 28)
 
-    SPS_DATA_PATH <- glue('data/ana_file/{sps_loop}_step1_jagsdata_{date_step1}.rds') 
+    SPS_DATA_PATH <- list.files('data/ana_file/', 
+                                pattern = glue('{sps_loop}_step1_jagsdata'), 
+                                ignore.case = TRUE) %>% 
+                                tail(1)
 
+    mod_name1 <- list.files(glue("{dir_mod}"), pattern = glue("^{sps_loop}"))
+
+    mod_name <- glue("{dir_mod}{mod_name1}")
+
+    ## Turn that model in the model with prior!!!
+
+    # Read the file
+    lines <- readLines(mod_name)
+
+    # Find the line containing certain characters - DEBUG VERSION
+    # First, let's see what lines contain "y[a,1]"
+    debug_lines <- grep("y\\[a,1\\]", lines, value = TRUE)
+    cat("Lines containing y[a,1]:\n")
+    print(debug_lines)
+    
+    # find pattern
+    target_pattern <- "y\\[a,1\\].*dbern"
+    target_line <- grep(target_pattern, lines)
+    cat("Simplified pattern found at:", target_line, "\n")
+    
+    # Insert new row after the found line
+    new_row <- "    y_sim[a] ~ dbern(p[y[a,2], y[a,3], y[a,4], y[a,5]] * Z[y[a,2], y[a,3], y[a,4]])} # prior pred"
+
+    if(length(target_line) > 0) {
+      # Insert after the first match
+      insert_pos <- target_line[1]
+      new_lines <- c(lines[1:insert_pos], 
+                     new_row, 
+                     lines[(insert_pos + 1):length(lines)])
+    }
+
+    # Find start and end of the chunk to remove
+    start_pattern <- "# Posterior predictive check - simulate new detection data"
+    end_pattern <- "bpvalue <- step\\(fit\\.sim - fit\\.obs\\)"
+
+    start_line <- grep(start_pattern, new_lines)
+    end_line <- grep(end_pattern, new_lines)
+
+    if(length(start_line) > 0 && length(end_line) > 0) {
+      # Remove lines from start to end (inclusive)
+      new_lines2 <- new_lines[-(start_line:end_line)]}
+
+    # again!
+        # Find start and end of the chunk to remove
+    start_pattern <- "# Posterior predictive check - simulate new occupancy"
+    end_pattern <- "Z\\.new\\[y2\\[b,2\\],y2\\[b,3\\],y2\\[b,4\\]\\] ~ dbern\\(psi\\[y2\\[b,2\\],y2\\[b,3\\],y2\\[b,4\\]\\]\\)"
+
+    start_line <- grep(start_pattern, new_lines2)
+    end_line <- grep(end_pattern, new_lines2)
+
+    if(length(start_line) > 0 && length(end_line) > 0) {
+      # Remove lines from start to end (inclusive)
+      new_lines3 <- new_lines2[-(start_line:end_line)]}  
+
+    # Write back to file
+    writeLines(new_lines2, glue("{dir_mod}prior_{mod_name1}"))
+    
     # ---- Prepare data for prior predictive run ----
     # Use the real covariates if you want to check priors conditional on covariate distribution.
     # Alternatively, simulate covariates with same scaling used in model fitting.
-    jags_data <- read_rds(SPS_DATA_PATH)
+    jags_data <- read_rds(glue("data/ana_file/{SPS_DATA_PATH}"))
     
     y <- jags_data$y
     jags_data$y[,1] <- rep(NA_integer_, jags_data$nrowy)
@@ -67,7 +130,7 @@ for (key_ite in 1:nrow(master_tab)){
     out_prior <- jags(data = jags_data,
                       inits = NULL,
                       parameters.to.save = parameters,
-                      model.file = mod_name,
+                      model.file =  glue("{dir_mod}prior_{mod_name1}"),
                       n.chains = nc,
                       n.iter = ni,
                       n.burnin = nb,
@@ -76,7 +139,7 @@ for (key_ite in 1:nrow(master_tab)){
 
     #summary(out_prior)
     
-    write_rds(out_prior, file = glue("data/ana_file/prior_predictive_check_{sps_loop}_{date_step1}_step1.rds"))
+    write_rds(out_prior, file = glue("data/ana_file/prior_predictive_check_{sps_loop}_{date_step1}_step2.rds"))
 
     # Extract y_sim samples correctly from jagsUI object
     y_sim_samples <- out_prior$sims.list$y_sim  # Matrix: iterations x y_sim parameters
@@ -121,14 +184,14 @@ for (key_ite in 1:nrow(master_tab)){
                        legend.text = element_text(size = 12),
                        legend.title = element_text(size = 13, face = "bold", hjust = 0.5)
                      ) +
-                     geom_vline(xintercept = 0, color = "black", linetype = "dashed", size = 0.8) +
-                     geom_vline(xintercept = 1, color = "black", linetype = "dashed", size = 0.8)
+                     geom_vline(xintercept = 0, color = "black", linetype = "dashed", linewidth = 0.8) +
+                     geom_vline(xintercept = 1, color = "black", linetype = "dashed", linewidth = 0.8)
 
     # Assign plot to variable for saving
     ppc_plot <- last_plot()
     
     # Save as SVG file
-    svg_filename <- glue("figures/prior_predictive_check_{sps_loop}_{date_step1}_step1.svg")
+    svg_filename <- glue("figures/prior_predictive_check_{sps_loop}_{date_step1}_step2.svg")
     ggsave(filename = svg_filename, 
            plot = ppc_plot, 
            device = "svg",
