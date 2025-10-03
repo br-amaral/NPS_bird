@@ -35,8 +35,8 @@ module load R-bundle-CRAN/2023.12-foss-2023a
 export R_DISABLE_BYTECODE=1
 
 # Rscript 
-Rscript code/fit_model/prior_pred_check1.R
+# Rscript code/fit_model/prior_pred_check1.R
 
-# Rscript code/fit_model/prior_pred_check2.R
+Rscript code/fit_model/prior_pred_check2.R
 
 
