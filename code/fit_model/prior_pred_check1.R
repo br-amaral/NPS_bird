@@ -51,12 +51,15 @@ for (key_ite in 1:nrow(master_tab)){
     sps_loop <- tib_loop$AOU_Code
     date_step1 <- substr(tib_loop$result, 19, 28)
 
-    SPS_DATA_PATH <- glue('data/ana_file/{sps_loop}_step1_jagsdata_{date_step1}.rds') 
+    SPS_DATA_PATH <- list.files('data/ana_file/', 
+                                pattern = glue('{sps_loop}_step1_jagsdata'), 
+                                ignore.case = TRUE) %>% 
+                                tail(1)
 
     # ---- Prepare data for prior predictive run ----
     # Use the real covariates if you want to check priors conditional on covariate distribution.
     # Alternatively, simulate covariates with same scaling used in model fitting.
-    jags_data <- read_rds(SPS_DATA_PATH)
+    jags_data <- read_rds(glue("data/ana_file/{SPS_DATA_PATH}"))
     
     y <- jags_data$y
     jags_data$y[,1] <- rep(NA_integer_, jags_data$nrowy)
