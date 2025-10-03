@@ -68,7 +68,7 @@ for (key_ite in 1:nrow(master_tab)){
   sps_loop <- tib_loop$AOU_Code
   date_step1 <- substr(tib_loop$result, 19, 28)
 
-  file_name <- "BTNW_step2_output_2025_10_02run1"
+  file_name <- tib_loop$result
 
   ## read files
   samples_jags <- read_rds(glue("data/model_res/{file_name}.rds"))
@@ -143,10 +143,10 @@ for (key_ite in 1:nrow(master_tab)){
     )
 
   # Display the combined plot
-  print(combined_plot)
+  #print(combined_plot)
 
   # Save as SVG with 1:1 aspect ratio for each plot
-  svg_filename <- glue("posterior_predictive_checks_{file_name}_{Sys.Date()}.svg")
+  svg_filename <- glue("figures/posterior_predictive_checks_{file_name}_{Sys.Date()}.svg")
   ggsave(filename = svg_filename, 
         plot = combined_plot, 
         device = "svg",
@@ -154,5 +154,5 @@ for (key_ite in 1:nrow(master_tab)){
         height = 8,   # Height maintains roughly 1:1 ratio for each plot
         units = "in")
 
-  cat(glue("Saved combined posterior predictive check plots as: {svg_filename}\n"))
+  cat( file_name )
 }

@@ -36,7 +36,7 @@ nc <- 5
 nt <- 2
 
 paste('\n ************************************* \n \n \n   Running Models:', '\n',
-      '  What? =', "Prior Predictive Check", '\n',
+      '  What? =', "Prior Predictive Check step 1", '\n',
       '  Number of sps =', nrow(master_tab), '\n',
       '  Total iterations =', nb + ni, '\n',
       '  Started running on =', Sys.time(),  '\n \n \n',
