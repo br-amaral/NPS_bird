@@ -40,7 +40,7 @@ freshr::freshr()
 # Installed new packages?
 #  renv::snapshot()
 
-test <- TRUE
+test <- FALSE
 interaction <- FALSE
 step_number_define <- 2
 if(substr(getwd(), 1, 3) == "/Us") {direc <- "local"} else {direc <- "hpc"}
@@ -90,7 +90,7 @@ paste('\n ************************************* \n \n \n   Running Models:', '\n
       '  Started running on =', Sys.time(),  '\n \n \n',
       '**************************************') %>% cat()
 
- for (key_ite in 1:nrow(master_tab)){
+ for (key_ite in 9:nrow(master_tab)){
     # key_ite <- 1
     tib_loop <- master_tab[key_ite, ]
 
