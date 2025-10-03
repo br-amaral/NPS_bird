@@ -36,7 +36,7 @@ nc <- 5
 nt <- 2
 
 paste('\n ************************************* \n \n \n   Running Models:', '\n',
-      '  What? =', "Prior Predictive Check step 1", '\n',
+      '  What? =', "Prior Predictive Check step 2", '\n',
       '  Number of sps =', nrow(master_tab), '\n',
       '  Total iterations =', nb + ni, '\n',
       '  Started running on =', Sys.time(),  '\n \n \n',
@@ -48,7 +48,7 @@ parameters <- c("prop_occ", "total_detections",
                 "beta", "alpha",
                 "mu.beta0","tau.beta0","mu.alpha0","tau.alpha0")
 
-for (key_ite in 1:nrow(master_tab)){
+for (key_ite in 4:nrow(master_tab)){
     # key_ite <- 4
     tib_loop <- master_tab[key_ite, ]
 
