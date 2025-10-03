@@ -49,7 +49,7 @@ parameters <- c("prop_occ", "total_detections",
                 "mu.beta0","tau.beta0","mu.alpha0","tau.alpha0")
 
 for (key_ite in 1:nrow(master_tab)){
-    # key_ite <- 1
+    # key_ite <- 4
     tib_loop <- master_tab[key_ite, ]
 
     sps_loop <- tib_loop$AOU_Code
@@ -153,7 +153,8 @@ for (key_ite in 1:nrow(master_tab)){
     y_observed <- y[,1]
     y_observed[is.na(y_observed)] <- 0
 
-    max_density <- max(density(y_observed)$y)  # For observed data
+    max_density <- max(max(density(y_observed)$y), 
+                       max(density(as.vector(y_sim_samples))$y))  # Calculate max density from both observed and simulated data
 
     ppc_dens_overlay(y = as.vector(y_observed), 
                      yrep = y_sim_samples, # Use subset of posterior draws
@@ -173,7 +174,7 @@ for (key_ite in 1:nrow(master_tab)){
                      theme(
                        # Remove minor grid lines, keep only major
                        panel.grid.minor = element_blank(),
-                       panel.grid.major = element_line(size = 0.5, color = "gray85"),
+                       panel.grid.major = element_line(linewidth = 0.5, color = "gray85"),
                        # Center title and subtitle, increase font sizes
                        plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
                        plot.subtitle = element_text(size = 14, hjust = 0.5),
