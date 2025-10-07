@@ -29,6 +29,11 @@ model {
   mu.alpha0 ~ dnorm(0, 0.36)
   tau.alpha0 ~ dgamma(0.1,0.1) 
 
+  # Interaction term priors
+  for(jj in 1:n_beta_int){  
+  beta_int[jj] ~ dnorm(0, 0.36)} 
+
+
   ## Vector loops -------------------------------
   # short occupancy loop; only first interval
   for(b in 1:nrowy2){
@@ -41,17 +46,17 @@ model {
       beta0[y2[b,2],y2[b,4]] +                   # parkey, year_n
       
       
-for(jj in 1:n_beta_int){  
-  beta_int[jj] ~ dnorm(0, 0.36)} 
  
 
      # DEN (tree density) 
 
-     beta[1] * X1[b, 1] +  
+     beta[1] * X1[b, 1] + 
+
+     beta_int[1] * X1[b, 1] * Xp[b] +  
 
     # park size 
 
-     beta[2] * Xp[b]  
+     beta[2] * Xp[b] + 
   # Posterior predictive check - simulate new occupancy
   Z.new[y2[b,2],y2[b,3],y2[b,4]] ~ dbern(psi[y2[b,2],y2[b,3],y2[b,4]])
 }
