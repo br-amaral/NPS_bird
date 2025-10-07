@@ -90,7 +90,7 @@ paste('\n ************************************* \n \n \n   Running Models:', '\n
       '  Started running on =', Sys.time(),  '\n \n \n',
       '**************************************') %>% cat()
 
- for (key_ite in 13:nrow(master_tab)){
+ for (key_ite in 12:12){
     # key_ite <- 1
     nburnin <- 30000
 
