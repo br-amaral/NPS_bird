@@ -1,6 +1,6 @@
-  # Posterior predictive check - simulate new occupancy
-  Z.new[y2[b,2],y2[b,3],y2[b,4]] ~ dbern(psi[y2[b,2],y2[b,3],y2[b,4]])
-}
+    # Posterior predictive check - simulate new occupancy
+    Z.new[y2[b,2],y2[b,3],y2[b,4]] ~ dbern(psi[y2[b,2],y2[b,3],y2[b,4]])
+  }
 
 # longer interval loop, all intervals of the removal sampling (not the first)
   for(a in 1:nrowy){
