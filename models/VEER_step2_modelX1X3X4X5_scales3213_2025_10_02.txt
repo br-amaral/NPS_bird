@@ -28,11 +28,6 @@ model {
   ## Sampling process	
   mu.alpha0 ~ dnorm(0, 0.36)
   tau.alpha0 ~ dgamma(0.1,0.1) 
-
-  # Interaction term priors
-  for(jj in 1:n_beta_int){  
-beta_int[jj] ~ dnorm(0, 0.36)}
-
   ## Vector loops -------------------------------
   # short occupancy loop; only first interval
   for(b in 1:nrowy2){
@@ -47,13 +42,23 @@ beta_int[jj] ~ dnorm(0, 0.36)}
 
      # DEN (tree density) 
 
-     beta[1] * X1[b, 1] + 
+     beta[1] * X1[b, 3] +  
 
-     beta_int[1] * X1[b, 1] * Xp[b] +  
+     # LAR PER (percent large tree basal area) 
+
+     beta[2] * X3[b, 2] +  
+
+     # SHR (shrub basal area) 
+
+     beta[3] * X4[b, 1] +  
+
+     # BA (tree basal area) 
+
+     beta[4] * X5[b, 3] +  
 
     # park size 
 
-     beta[2] * Xp[b]  
+     beta[5] * Xp[b] 
     # Posterior predictive check - simulate new occupancy
     Z.new[y2[b,2],y2[b,3],y2[b,4]] ~ dbern(psi[y2[b,2],y2[b,3],y2[b,4]])
   }
