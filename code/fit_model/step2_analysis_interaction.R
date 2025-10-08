@@ -143,12 +143,12 @@ if('beta5' %in% pars_mod$cov_name) {
 
 covs_mod_code <- glue("{covs_mod_code} \n
      # park size \n
-      beta[{beta_numb}] * Xp[b] + \n ")
+      beta[{beta_numb}] * Xp[b]  \n ")
      
 if(beta_numb - 1 != nrow(pars_mod)) {stop("model file is incorrect")}
 
 # interaction priors
-beta_int_prior <- glue("for(jj in 1:n_beta_int){{  \n   beta_int[jj] ~ dnorm(0, 0.36)}} \n ")
+beta_int_prior <- glue("for(jj in 1:n_beta_int){{  \n     beta_int[jj] ~ dnorm(0, 0.36)}}")
 
 suppressWarnings({
   mod_content1 <- readLines(model_file1)
@@ -182,30 +182,21 @@ mod_string <- paste(
   sep = "\n"
 )
 
-#if(test == FALSE){
-  writeLines(mod_string, mod_name)
- # }
+if(test == FALSE){
+    writeLines(mod_string, mod_name)
+}
 
 #! Run the step 2 model ------------------------------------------------------------------------
 (covs_names <- paste(pars_mod$X, collapse = "_"))
 (sca_names <- paste(pars_mod$scal, collapse = "_"))
 
-params <- c("beta0", "beta", "alpha0", "alpha", 
+params <- c("beta0", "beta", "beta_int", "alpha0", "alpha", 
             "mu.beta0", "tau.beta0", "mu.alpha0", "tau.alpha0",
             "psi", "p", "Z",
             "mean.y", "mean.y.new", "fit.obs", "fit.sim", "bpvalue", "y.new", "Z.new") %>% 
           as.character()
 
 n_as <- 3
-
-inits <- function() {
-    list(
-        Z = z_mod,
-        beta = rnorm(n_bs_new, 0.5),
-        mu.alpha0 = rnorm(1, 0.5),
-        alpha = rnorm(n_as, 0.5)
-    )
-}
 
 # get the right data for the model - remove the covariates that are no longer in use
 old_pars <- names(jags_data)
@@ -215,8 +206,20 @@ old_pars3 <- old_pars2[!old_pars2 %in% c("Xp","Xa","Xb")]
 rm_xs <- old_pars3[which(old_pars3 %!in% pars_mod$xobj)] ## which covs I have to remove from the jags data?
 jags_data2 <- jags_data[setdiff(names(jags_data), rm_xs)] # remove them!!
 jags_data2$n_bs <- n_bs_new
+n_beta_int <- n_bs_new - 1
+jags_data2$n_beta_int <- n_beta_int
 names(jags_data2)
 str(jags_data2)
+
+inits <- function() {
+    list(
+        Z = z_mod,
+        beta = rnorm(n_bs_new, 0.5),
+        beta_int = rnorm(n_beta_int, 0.5),
+        mu.alpha0 = rnorm(1, 0.5),
+        alpha = rnorm(n_as, 0.5)
+    )
+}
 
 if(test == TRUE){
   nchains <- 1
