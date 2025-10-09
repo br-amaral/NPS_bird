@@ -30,13 +30,13 @@ lenght <- length
 #! Import data --------------------------------------------------------------------
 ## file paths and read files
 # when loading the model results, get the most updated file?
-file_name <- "BTNW_step2_output_2025_10_02run1"
+file_name <- "BAWW_step2_output_2025_10_01run1"
 
 samples_jags <- read_rds(glue("data/model_res/{file_name}.rds"))
 
 # get parameter names
 scales_names <- grep("^scales_", colnames(samples_jags[[1]]), value = TRUE)
-all_params <- c("mu.alpha0", "mu.beta0", "beta", "alpha", scales_names)
+all_params <- c("mu.alpha0", "mu.beta0", "beta", "beta_int", "alpha", scales_names)
 if(substr(file_name, nchar(file_name)-2, nchar(file_name)) == "int"){all_params <- c(all_params, "beta_int")}
 
 #! Par estimates ------------------------------------------------------------------

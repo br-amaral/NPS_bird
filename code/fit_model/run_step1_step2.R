@@ -42,7 +42,7 @@ freshr::freshr()
 
 test <- FALSE 
 interaction <- TRUE
-step_number_define <- 2
+step_number_define <- 1
 if(substr(getwd(), 1, 3) == "/Us") {direc <- "local"} else {direc <- "hpc"}
 
 #! Load packages ---------------------------------------
@@ -112,61 +112,48 @@ for(key_ite in 1:nrow(master_tab)){
               \n "))
 
     if(tib_loop$step == 2){
-        print("step 2 all scales no interaction")
-        # step 2 all scales no interaction
-        # run model to all vars at the same scale to compare them
-        if(tib_loop$all_sca == T) {
-           # get scales for step 2
-            sca_file <- read_rds(glue("data/model_res/{tib_loop$select}.rds"))
-            date_step1 <- substr(tib_loop$result, 19, 28)
-            cov_key2 <- sca_file %>% filter(overlap0 == "no") %>% pull(betas)
-
-            sca_all <- list(`1` = rep(1, length(cov_key2)),
-                            `2` = rep(2, length(cov_key2)),
-                            `3` = rep(3, length(cov_key2)))
-
-            for (jj in 1:3){
-                (scales_loop <- sca_all[[jj]])
-            
-                if(direc == "hpc"){
-                    source("code/fit_model/step2_analysis.R")
-                        } else {
-                            source("/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne/NPS_bird_copy/code/fit_model/step2_analysis.R")
-                        }
-            }
-        } else {
-            print("step 2 selected scales")
-            # step 2 selected scales no or yes interaction
-            sca_file <- read_rds(glue("data/model_res/{tib_loop$select}.rds"))
-            scales_loop <- as.numeric(sca_file %>% filter(overlap0 == "no") %>% pull(sca_sel))
-            date_step1 <- substr(tib_loop$result, 19, 28)
-            cov_key2 <- sca_file %>% filter(overlap0 == "no") %>% pull(betas)
-            if(interaction == FALSE){             
-                if(direc == "hpc"){
-                    source("code/fit_model/step2_analysis.R")
-                        } else {
-                            source("/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne/NPS_bird_copy/code/fit_model/step2_analysis.R")
-                        }
-                    }
-            if(interaction == TRUE){             
-                if(direc == "hpc"){
-                    source("code/fit_model/step2_analysis_interaction.R")
-                        } else {
-                            source("/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne/NPS_bird_copy/code/fit_model/step2_analysis_interaction.R")
-                        }
-                    }    
-                }
-        } else { 
-            print("step 1 all scales no interaction")
-            # step 1 all scales no interaction
-                if(direc == "local"){
-                        source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/fit_model/back2d_covs_scales_2min_spscov.R")
+        print("step 2 selected scales")
+        # step 2 selected scales no or yes interaction
+        sca_file <- read_rds(glue("data/model_res/{tib_loop$select}.rds"))
+        scales_loop <- as.numeric(sca_file %>% filter(overlap0 == "no") %>% pull(sca_sel))
+        date_step1 <- substr(tib_loop$result, 19, 28)
+        cov_key2 <- sca_file %>% filter(overlap0 == "no") %>% pull(betas)
+        if(interaction == FALSE){             
+            if(direc == "hpc"){
+                source("code/fit_model/step2_analysis.R")
                     } else {
-                        source("code/fit_model/back2d_covs_scales_2min_spscov.R")
-                        }
-                # source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/fit_model/x_min_max.r")
-                # source("code/fit_model/x_min_max.r")
+                        source("/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne/NPS_bird_copy/code/fit_model/step2_analysis.R")
+                    }
+                }
+        if(interaction == TRUE){             
+            if(direc == "hpc"){
+                source("code/fit_model/step2_analysis_interaction.R")
+                    } else {
+                        source("/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne/NPS_bird_copy/code/fit_model/step2_analysis_interaction.R")
+                    }
+                }    
+        } else { 
+            # step 1
+            if(tib_loop$all_sca == F) {
+                print("step 1 selected scales no interaction")
+                # step 1 selected scales no interaction
+                    if(direc == "local"){
+                            source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/fit_model/back2d_covs_scales_2min_spscov.R")
+                        } else {
+                            source("code/fit_model/back2d_covs_scales_2min_spscov.R")
+                            }
+                    # source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/fit_model/x_min_max.r")
+                    # source("code/fit_model/x_min_max.r")
+            } else {
+                print("step 1 all scales no interaction")
+                # step 1 all scales with interaction
+                    if(direc == "local"){
+                            source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/fit_model/back2d_covs_scales_2min_spscov_interact.R")
+                        } else {
+                            source("code/fit_model/back2d_covs_scales_2min_spscov_interact.R")
+                            }
             }
+        }
 
 }
 
