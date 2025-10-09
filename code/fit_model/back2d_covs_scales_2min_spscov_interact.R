@@ -805,6 +805,6 @@ for(loop_sca in 1:3){
   }
 
   if(test == TRUE){
-    cat(glue(" \n \n \n Test for {sps_loop}, step {step_numb} and sale {loop_sca} done!  \n \n \n"))
+    cat(glue(" \n \n \n Test for {sps_loop}, step {step_numb} and scale {loop_sca} done!  \n \n \n"))
   }
 }
