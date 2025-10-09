@@ -36,6 +36,13 @@ Rscript /Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_veg_data/get_c
 
 Rscript /Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_bird_data/2_create_data_files.R
 
+## open R on HPC
+
+module purge
+module load JAGS/4.3.2-foss-2023a
+module load R-bundle-CRAN/2023.12-foss-2023a
+R --vanilla
+
 # --------------------------------------------------------------------
 Workflow:
 ## format_bird_data/1_ImportData.R

@@ -55,43 +55,66 @@ coef_path_file <- read_csv(COEF_TABLE_PATH) %>%
         mutate(AOU_Code = substr(result, 1, 4)) #%>% 
         # filter(AOU_Code %!in% c("DOWO", "HAWO", "VEER", "SCTA", "REVI"))
 
-# for(ii in 1:nrow(coef_path_file)) {
+for(ii in 1:nrow(coef_path_file)) {
 
-#     (loop_sps <- substr(coef_path_file$result[ii], 1, 4))
+    (loop_sps <- substr(coef_path_file$result[ii], 1, 4))
 
-#     loop_run <- substr(coef_path_file$result[ii], nchar(coef_path_file$result[ii]) - 7, nchar(coef_path_file$result[ii]) - 4)
+    loop_run <- substr(coef_path_file$result[ii], nchar(coef_path_file$result[ii]) - 7, nchar(coef_path_file$result[ii]) - 4)
 
-#     quants <- ifelse((as.numeric(substr(loop_run, 4, 4)) %% 2 == 0) == TRUE, "25_75", "3_7")
+    quants <- ifelse((as.numeric(substr(loop_run, 4, 4)) %% 2 == 0) == TRUE, "25_75", "3_7")
 
-#       samples_jags <- read_rds(glue("data/model_res/{coef_path_file$result[ii]}.rds"))
-#       beta_sca_names <- read_rds(glue("data/model_res/{coef_path_file$select[ii]}.rds")) %>% 
-#             filter(overlap0 == "no") %>%
-#             add_row(betas = "park_size") %>%  # Add empty row for 3 alphas + 1 be4ta park size
-#             add_row(betas = "alpha1") %>%  
-#             add_row(betas = "alpha2") %>%  
-#             add_row(betas = "alpha3")     
+    samples_jags <- read_rds(glue("data/model_res/{coef_path_file$result[ii]}.rds"))
+    beta_sca_names <- read_rds(glue("data/model_res/{coef_path_file$select[ii]}.rds")) %>% 
+          filter(overlap0 == "no") %>%
+          add_row(betas = "park_size") %>%  # Add empty row for 3 alphas + 1 be4ta park size
+          add_row(betas = "alpha1") %>%  
+          add_row(betas = "alpha2") %>%  
+          add_row(betas = "alpha3")     
 
-#       #if(loop_sps == "YBSA"){beta_sca_names$betas[1] <- "beta"}
+    #if(loop_sps == "YBSA"){beta_sca_names$betas[1] <- "beta"}
 
-#       # Get summary with median and credible intervals
-#       coef_summary <- MCMCsummary(samples_jags,
-#                               params = c("beta", "alpha"), #, "beta0", "alpha0"),  # specify parameters
-#                               probs = c(0.025, 0.5, 0.975),  # 2.5%, median, 97.5%
-#                               round = 3) %>% 
-#                         mutate(coef = rownames(.)) %>% 
-#                         as_tibble() %>% 
-#                         relocate(coef) %>%
-#                         mutate(coef = gsub("\\[|\\]", "", coef))
-#       rm(samples_jags)
-#       if((nrow(beta_sca_names)) != nrow(coef_summary)) {
-#             stop(glue("error in {coef_path_file$result[ii]}"))
+    # Get summary with median and credible intervals
+    coef_summary <- MCMCsummary(samples_jags,
+                            params = c("beta", "alpha"), #, "beta0", "alpha0"),  # specify parameters
+                            probs = c(0.025, 0.5, 0.975),  # 2.5%, median, 97.5%
+                            round = 3) 
+
+    # Extract posterior samples as a matrix
+    # For jagsUI object
+    samps <- samples_jags$samples  # this is a mcmc.list
+
+    samps_mat <- do.call(rbind, samps)  # now all chains stacked
+    dim(samps_mat)  # should be n_draws x n_parameters
+    colnames(samps_mat) 
+
+    # align parameter names safely
+    common_pars <- intersect(rownames(coef_summary), colnames(samps_mat))
+    if(length(common_pars)==0) stop("No common parameter names found between summary and samples.")
+
+    # compute probabilities
+    pct_gt_0  <- apply(samps_mat[, common_pars, drop=FALSE], 2, function(x) mean(x > 0) * 100)
+    pct_lt_0  <- apply(samps_mat[, common_pars, drop=FALSE], 2, function(x) mean(x < 0) * 100)
+    # Add columns to coef_summary (preserve original rows order)
+    
+    coef_summary$Pct_gt_0        <- round(pct_gt_0[rownames(coef_summary)], 1)
+    coef_summary$Pct_lt_0        <- round(pct_lt_0[rownames(coef_summary)], 1)
+
+    coef_summary <- coef_summary %>% 
+                      mutate(coef = rownames(.)) %>% 
+                      as_tibble() %>% 
+                      relocate(coef) %>%
+                      mutate(coef = gsub("\\[|\\]", "", coef))
+
+      rm(samples_jags)
+      if((nrow(beta_sca_names)) != nrow(coef_summary)) {
+            stop(glue("error in {coef_path_file$result[ii]}"))
             
-#             } else { coef_summary2 <- cbind(coef_summary, beta_sca_names) %>% 
-#                                           mutate(sps = substr(coef_path_file$result[ii], 1, 4),
-#                                                  mod_res = coef_path_file$select[ii])
-#             }
-#       if(ii == 1) {coef_summary3 <- coef_summary2} else {coef_summary3 <- rbind(coef_summary3, coef_summary2)}
-# }
+            } else { coef_summary2 <- cbind(coef_summary, beta_sca_names) %>% 
+                                          mutate(sps = substr(coef_path_file$result[ii], 1, 4),
+                                                 mod_res = coef_path_file$select[ii])
+            }
+      if(ii == 1) {coef_summary3 <- coef_summary2} else {coef_summary3 <- rbind(coef_summary3, coef_summary2)}
+}
 
 #    write_rds(coef_summary3, file = "data/out/coef_summary3_sep.rds")
    coef_summary3 <- read_rds(file = "data/out/coef_summary3_sep.rds")
