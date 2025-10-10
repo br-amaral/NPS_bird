@@ -116,8 +116,8 @@ for(ii in 1:nrow(coef_path_file)) {
       if(ii == 1) {coef_summary3 <- coef_summary2} else {coef_summary3 <- rbind(coef_summary3, coef_summary2)}
 }
 
-#    write_rds(coef_summary3, file = "data/out/coef_summary3_sep.rds")
-   coef_summary3 <- read_rds(file = "data/out/coef_summary3_sep.rds")
+    write_rds(coef_summary3, file = "data/out/coef_summary3_sep.rds")
+ #  coef_summary3 <- read_rds(file = "data/out/coef_summary3_sep.rds")
 
 table(coef_summary3$mod_res)
 
