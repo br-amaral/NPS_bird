@@ -2,6 +2,7 @@
 #? -------------------------------  coef_extract.r  --------------------------------
 #? *********************************************************************************
 #
+##! TODO: get beta interaction coefs
 #! Code to get coeficient estimates of all model results and create figures 2 and 3
 #!       of the manuscript, that repreent the scale selection and effect sizes
 #
@@ -66,16 +67,24 @@ for(ii in 1:nrow(coef_path_file)) {
     samples_jags <- read_rds(glue("data/model_res/{coef_path_file$result[ii]}.rds"))
     beta_sca_names <- read_rds(glue("data/model_res/{coef_path_file$select[ii]}.rds")) %>% 
           filter(overlap0 == "no") %>%
-          add_row(betas = "park_size") %>%  # Add empty row for 3 alphas + 1 be4ta park size
+          add_row(betas = "park_size") %>%  # Add empty row for 3 alphas + 1 beta park size
           add_row(betas = "alpha1") %>%  
           add_row(betas = "alpha2") %>%  
-          add_row(betas = "alpha3")     
+          add_row(betas = "alpha3")
 
+    numb_bet <- beta_sca_names  %>% 
+        filter(substr(betas, 1, 4) == "beta") %>% 
+        nrow()
+    
+    beta_int_add <- glue("beta_int{numb_bet}")
     #if(loop_sps == "YBSA"){beta_sca_names$betas[1] <- "beta"}
+
+    beta_sca_names <- beta_sca_names %>% 
+                          add_row(betas = beta_int_add)
 
     # Get summary with median and credible intervals
     coef_summary <- MCMCsummary(samples_jags,
-                            params = c("beta", "alpha"), #, "beta0", "alpha0"),  # specify parameters
+                            params = c("beta", "beta_int", "alpha"), #, "beta0", "alpha0"),  # specify parameters
                             probs = c(0.025, 0.5, 0.975),  # 2.5%, median, 97.5%
                             round = 3) 
 
