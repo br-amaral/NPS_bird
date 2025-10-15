@@ -52,7 +52,7 @@ if(direc == "local"){COEF_TABLE_PATH <- glue("/Users/bamaral/Library/CloudStorag
 ## read files
 coef_path_file <- read_csv(COEF_TABLE_PATH) %>%
         filter(run == "yes") %>% 
-        filter(step == 3) %>% 
+        filter(step == 4) %>% 
         mutate(AOU_Code = substr(result, 1, 4)) #%>% 
         # filter(AOU_Code %!in% c("DOWO", "HAWO", "VEER", "SCTA", "REVI"))
 
@@ -404,12 +404,14 @@ dat_sca2 <- dat_sca2 %>% filter(sps != "BCCH")
                        labels = scales::percent(c(0.5, 0.75, 1))) +
   theme_minimal() +
   theme(legend.position = "bottom",
-        axis.text.x = element_text(hjust = 0.5, size = 18),
-        axis.text.y = element_text(hjust = 0, size = 19),    
+        axis.text.x = element_text(hjust = 0.5, size = 31),
+        axis.text.y = element_text(hjust = 0, size = 31),    
         axis.title.x = element_text(size = 20),
-        axis.title.y = element_text(size = 20),
-        legend.title = element_text(size = 15, face = "bold", hjust = 0.5),  
-        legend.text = element_text(size = 13)) +
+        axis.title.y = element_text(size = 28),
+        legend.title = element_text(size = 26, face = "bold", hjust = 0.5),  
+        legend.text = element_text(size = 24),
+        panel.grid.major = element_line(color = "gray85", linetype = "solid", linewidth = 0.6),
+        panel.grid.minor = element_line(color = "gray85", linetype = "solid", linewidth = 0.6)) +
   scale_y_discrete(limits = rev(levels(factor(dat_sca$sps)))) +  # Reverse y-axis order
   scale_x_discrete(labels = function(x) {
     cov_codes <- unique(dat_sca$Covariate)
@@ -497,12 +499,12 @@ write_rds(dat_sca, "data/out/coefs_sps_sca.rds")
                        name = "Covariate\nEffect size\n") +
   theme_minimal() +
   theme(legend.position = "bottom",
-        axis.text.x = element_text(hjust = 0.5, size = 18),
-        axis.text.y = element_text(hjust = 0, size = 19),    
+        axis.text.x = element_text(hjust = 0.5, size = 31),
+        axis.text.y = element_text(hjust = 0, size = 31),    
         axis.title.x = element_text(size = 20),
-        axis.title.y = element_text(size = 20),
-        legend.title = element_text(size = 15, face = "bold", hjust = 0.5),  
-        legend.text = element_text(size = 13),
+        axis.title.y = element_text(size = 28),
+        legend.title = element_text(size = 26, face = "bold", hjust = 0.5),  
+        legend.text = element_text(size = 24),
         panel.grid.major = element_line(color = "gray85", linetype = "solid", linewidth = 0.6),
         panel.grid.minor = element_line(color = "gray85", linetype = "solid", linewidth = 0.6)) + 
   scale_y_discrete(limits = rev(levels(factor(dat_sca$sps)))) +  # Reverse y-axis order
@@ -530,3 +532,70 @@ write_rds(dat_sca, "data/out/coefs_sps_sca.rds")
 ggsave("figures/circles_coefs.svg", plot = circles_coefs, device = "svg", width = 12, height = 16)
 
 #ggsave("figures/circles_coefs.png", plot = circles_coefs, device = "png", width = 12, height = 16, dpi = 1200)
+
+# Define exactly where each color should appear
+custom_palette <- c(
+  "#003366",  # 0.0 - dark blue
+  "#0066CC",  # 0.15 - medium blue  
+  "#4CC9F0",  # 0.3 - light blue (transition point)
+  viridis::plasma(4, direction = -1)  # 0.25+ - plasma colors
+)
+
+## figure with circles and all the scales
+(sca_plot_all <- ggplot() +
+  geom_point(data = dat_sca, 
+             aes(x = Covariate, y = sps), fill = "white", color = "white", alpha = 0) + # plot empty points to keep all specis and covariates present in the data
+  geom_point(data = dat_sca %>% filter(scale == 3), 
+             aes(x = Covariate, y = sps, fill = selec_freq, 
+                 color = ifelse(scale_selected == 1, "black","#8d8888")), 
+             size = 26, shape = 21, stroke = 0.9, alpha = 0.5) +
+  geom_point(data = dat_sca %>% filter(scale == 2), 
+             aes(x = Covariate, y = sps, fill = selec_freq, 
+                 color = ifelse(scale_selected == 1, "black","#8d8888")), 
+             size = 19, shape = 21, stroke = 0.9, alpha = 0.5) +
+  geom_point(data = dat_sca %>% filter(scale == 1), 
+             aes(x = Covariate, y = sps, fill = selec_freq, 
+                 color = ifelse(scale_selected == 1, "black","#8d8888")), 
+             size = 10, shape = 21, stroke = 0.9, alpha = 0.5) +
+  scale_color_identity() +  # This tells ggplot to use the color names as actual colors for stroke color
+  scale_fill_gradientn(
+    colors = custom_palette,
+    values = scales::rescale(c(0, 0.125, 0.25, 0.5, 0.75, 1.0)),  # Exact positions
+    limits = c(0, 1),  
+    breaks = c(0, 0.25, 0.5, 0.75, 1), 
+    labels = scales::percent(c(0, 0.25, 0.5, 0.75, 1))
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom",
+        axis.text.x = element_text(hjust = 0.5, size = 31),
+        axis.text.y = element_text(hjust = 0, size = 31),    
+        axis.title.x = element_text(size = 20),
+        axis.title.y = element_text(size = 28),
+        legend.title = element_text(size = 26, face = "bold", hjust = 0.5),  
+        legend.text = element_text(size = 24),
+        panel.grid.major = element_line(color = "gray85", linetype = "solid", linewidth = 0.6),
+        panel.grid.minor = element_line(color = "gray85", linetype = "solid", linewidth = 0.6)) +
+  scale_y_discrete(limits = rev(levels(factor(dat_sca$sps)))) +  # Reverse y-axis order
+  scale_x_discrete(labels = function(x) {
+    cov_codes <- unique(dat_sca$Covariate)
+      # Manually add line breaks
+      case_when(
+        cov_codes == "Tree Basal Area" ~ "Tree Basal\nArea",
+        cov_codes == "Late Successional Tree Density" ~ "Late Success.\nTree Basal Area",
+        cov_codes == "Conifer Density" ~ "Conifer\nBasal Area",
+        cov_codes == "Tree Density" ~ "Tree\nDensity",
+        cov_codes == "Shrub Basal Area" ~ "Shrub\nCover",
+        TRUE ~ cov_codes  # Keep others as is
+      )}) +
+  labs(x = NULL, # "\nForest Covariate", 
+       y = "Species\n", fill = "Scale Selection\nFrequency\n") +
+  guides(fill = guide_colorbar(override.aes = list(alpha = 0.2, size = 5)))+
+  guides(
+    fill = guide_colorbar(
+      barwidth = unit(8, "cm"),   # wider (horizontal) color strip
+      barheight = unit(1, "cm")    # taller (vertical) color strip
+      )
+    )
+  )
+
+ggsave("figures/sca_plot_sca_plot_all.svg", plot = sca_plot_all, device = "svg", width = 12, height = 16)
