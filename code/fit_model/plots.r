@@ -7,8 +7,6 @@
 # setwd("/Volumes/rs-025/zipkinlab/bamaral/NPS_bird_copy")
 # detach packages and clear workspace
 freshr::freshr()
-hg <- httpgd::hgd()
-httpgd::hgd_browse()
 #
 # Load packages -------------------------------------------------------------------
 library(conflicted)
@@ -30,7 +28,7 @@ lenght <- length
 #! Import data --------------------------------------------------------------------
 ## file paths and read files
 # when loading the model results, get the most updated file?
-file_name <- "BAWW_step2_output_2025_10_01run1"
+file_name <- "BHVI_step2_output_2025_10_01run1"
 
 samples_jags <- read_rds(glue("data/model_res/{file_name}.rds"))
 
