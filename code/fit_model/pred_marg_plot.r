@@ -735,3 +735,164 @@ ggplot() +
 ggsave("figures/pred_BA.svg", plot = last_plot(), device = "svg", width = 10.2, height = 7.2)
 ggsave("figures/pred_BA.png", plot = last_plot(), device = "png", width = 10.2, height = 7.2)
 
+## new figures - park values on the bottom
+
+beta5_lims <- c(floor(min(beta5_preds$X_range_ori) / 5) * 5, ceiling(max(beta5_preds$X_range_ori) / 5) * 5)
+
+treeba_covs <- X10 %>%
+                    select(park, Point_Name, BA_m2ha_site, BA_m2ha_park, BA_m2ha_coun) %>% 
+                    rename(treeba_ha_site = BA_m2ha_site,
+                           treeba_ha_park = BA_m2ha_park,
+                           treeba_ha_coun = BA_m2ha_coun) %>% 
+                    distinct() %>% 
+                    pivot_longer(cols = starts_with("treeba_ha"),
+                                 names_to = "scale_name",
+                                 values_to = "treeba_ha") %>% 
+                    distinct() %>% 
+                    mutate(scale_name = substr(scale_name, nchar(scale_name) - 3, nchar(scale_name))) %>% 
+                    select(-Point_Name) %>% 
+                    distinct() %>% 
+                    left_join(., scale_covs, by = "scale_name") 
+
+treeba_covs_pkpos <- treeba_covs %>% 
+                        select(park) %>% 
+                        distinct() %>% 
+                        mutate(park = factor(park, levels = rev(sort(unique(park))))) %>% 
+                        arrange(park) %>% 
+                        mutate(y_pos = as.numeric(NA))
+
+treeba_covs_pkpos[1,2] <- - 0.33
+for(jj in 2:nrow(treeba_covs_pkpos)){treeba_covs_pkpos[jj,2] <- treeba_covs_pkpos[jj - 1 ,2] + 0.04}
+
+treeba_covs2 <- left_join(treeba_covs, treeba_covs_pkpos, by = "park")  %>% 
+                    #filter(scale %in% beta5_preds$scale) %>% 
+                    drop_na() %>% 
+                    mutate(covariate = "cov",
+                           scale = as.numeric(scale)) %>% 
+                    rename(pred_mean = treeba_ha)
+
+min_pos_treeba <- min(treeba_covs2$y_pos)
+beta5_preds$y_pos <- as.numeric(NA)
+beta5_preds2 <- full_join(beta5_preds, treeba_covs2)  %>% 
+                  mutate(park = factor(park, levels = rev(sort(unique(park))))) 
+
+nrow(treeba_covs2) + nrow(beta5_preds) == nrow(beta5_preds2)
+
+ggplot() +
+  geom_point(data = beta5_preds2 %>% filter(covariate == "cov"), 
+             aes(y = y_pos, x = pred_mean, col = park), size = 2, show.legend = FALSE) +
+  geom_hline(yintercept = -0.001, color = "black", linewidth = 0.4) +
+  geom_hline(yintercept = -0.025, color = "black", linewidth = 0.4) +
+  geom_line(data = beta5_preds2 %>% filter(covariate == "Tree Basal Area"), 
+            aes(x = X_range_ori, y = pred_mean, color = factor(sps)), linewidth = 1.2) +
+  facet_wrap(~ scale, scales = "free_x",
+             labeller = labeller(scale = c("3" = "County Scale", 
+                                           "2" = "Park Scale", 
+                                           "1" = "Local Scale"))) +  
+  labs(x = glue("\n\n Tree Basal Area (m²/ha)"), 
+       y = "Predicted Occupancy Probability\n",
+       title = glue("Tree Basal Area\n"),
+       color = "Species") +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black", linewidth = 0.6, fill = NA),  # Added fill = NA
+        panel.background = element_rect(fill = "white", color = NA),  # Ensure white background
+        strip.text = element_text(face = "bold", size = 16),      # Facet titles
+        plot.title = element_text(size = 18, face = "bold", hjust = 0.5),      # Main title
+        axis.title = element_text(size = 14),                     # Axis titles
+        axis.text.x = element_text(size = 12),                      # Axis text
+        axis.text.y = element_text(size = 12),                      # Axis text
+        legend.title = element_text(size = 14, face = "bold", hjust = 0.5),    # Legend title
+        legend.text = element_text(size = 12)                     # Legend text
+  ) +
+  scale_color_manual(values = safe_pal) +
+  scale_y_continuous(
+    limits = c(min_pos_treeba, 1), 
+    breaks = c(0, 0.25, 0.5, 0.75, 1, treeba_covs_pkpos$y_pos),
+    labels = c(0, 0.25, 0.5, 0.75, 1, as.character(treeba_covs_pkpos$park))) 
+
+ggsave("figures/pred_BA2.svg", plot = last_plot(), device = "svg", width = 10.2, height = 6.5)
+ggsave("figures/pred_BA2.png", plot = last_plot(), device = "png", width = 10.2, height = 6.5)
+
+#? LATE SUCCESSIONAL BASAL AREA - park values on the bottom ----------------------
+
+beta3_lims <- c(floor(min(beta3_preds$X_range_ori) / 5) * 5, ceiling(max(beta3_preds$X_range_ori) / 5) * 5)
+
+treelat_covs <- X10 %>%
+                    select(park, Point_Name, BA_m2ha_large_site, BA_m2ha_large_park, BA_m2ha_large_coun) %>% 
+                    rename(treelat_ha_site = BA_m2ha_large_site,
+                           treelat_ha_park = BA_m2ha_large_park,
+                           treelat_ha_coun = BA_m2ha_large_coun) %>% 
+                    distinct() %>% 
+                    pivot_longer(cols = starts_with("treelat_ha"),
+                                 names_to = "scale_name",
+                                 values_to = "treelat_ha") %>% 
+                    distinct() %>% 
+                    mutate(scale_name = substr(scale_name, nchar(scale_name) - 3, nchar(scale_name))) %>% 
+                    select(-Point_Name) %>% 
+                    distinct() %>% 
+                    left_join(., scale_covs, by = "scale_name") 
+
+treelat_covs_pkpos <- treelat_covs %>% 
+                        select(park) %>% 
+                        distinct() %>% 
+                        mutate(park = factor(park, levels = rev(sort(unique(park))))) %>% 
+                        arrange(park) %>% 
+                        mutate(y_pos = as.numeric(NA))
+
+# Position park points at the bottom (starting from negative values)
+treelat_covs_pkpos[1,2] <- -0.33
+for(jj in 2:nrow(treelat_covs_pkpos)){
+  treelat_covs_pkpos[jj,2] <- treelat_covs_pkpos[jj - 1 ,2] + 0.04
+}
+
+treelat_covs2 <- left_join(treelat_covs, treelat_covs_pkpos, by = "park")  %>% 
+                    #filter(scale %in% beta3_preds$scale) %>%  # Include all scales
+                    drop_na() %>% 
+                    mutate(covariate = "cov",
+                           scale = as.numeric(scale)) %>% 
+                    rename(pred_mean = treelat_ha)
+
+min_pos_treelat <- min(treelat_covs2$y_pos)
+beta3_preds$y_pos <- as.numeric(NA)
+beta3_preds2 <- full_join(beta3_preds, treelat_covs2) %>% 
+                  mutate(park = factor(park, levels = rev(sort(unique(park))))) 
+
+nrow(treelat_covs2) + nrow(beta3_preds) == nrow(beta3_preds2)
+
+ggplot() +
+  geom_point(data = beta3_preds2 %>% filter(covariate == "cov"), 
+             aes(y = y_pos, x = pred_mean, col = park), size = 2, show.legend = FALSE) +
+  # Add horizontal reference lines
+  geom_hline(yintercept = -0.001, color = "black", linewidth = 0.4) +
+  geom_hline(yintercept = -0.025, color = "black", linewidth = 0.4) +
+  geom_line(data = beta3_preds2 %>% filter(covariate == "Late Successional Tree Density"), 
+            aes(x = X_range_ori, y = pred_mean, color = factor(sps)), linewidth = 1.2) +
+  facet_wrap(~ scale, scales = "free_x",
+             labeller = labeller(scale = c("3" = "County Scale", 
+                                           "2" = "Park Scale", 
+                                           "1" = "Local Scale"))) +  
+  labs(x = glue("\n\n Late Succ. Tree Basal Area (m²/ha)"), 
+       y = "Predicted Occupancy Probability\n",
+       title = glue("Late Successional Trees\n"),
+       color = "Species") +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black", linewidth = 0.6, fill = NA),
+        panel.background = element_rect(fill = "white", color = NA),
+        strip.text = element_text(face = "bold", size = 16),
+        plot.title = element_text(size = 18, face = "bold", hjust = 0.5),
+        axis.title = element_text(size = 14),
+        axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        legend.title = element_text(size = 14, face = "bold", hjust = 0.5),
+        legend.text = element_text(size = 12)
+  ) +
+  scale_color_manual(values = safe_pal) +
+  scale_y_continuous(
+    limits = c(min_pos_treelat, 1), 
+    breaks = c(0, 0.25, 0.5, 0.75, 1, treelat_covs_pkpos$y_pos),
+    labels = c(0, 0.25, 0.5, 0.75, 1, as.character(treelat_covs_pkpos$park))) 
+
+ggsave("figures/pred_lat2.svg", plot = last_plot(), device = "svg", width = 10.2, height = 6.5)
+ggsave("figures/pred_lat2.png", plot = last_plot(), device = "png", width = 10.2, height = 6.5)
