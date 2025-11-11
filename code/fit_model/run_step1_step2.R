@@ -90,7 +90,7 @@ paste('\n ************************************* \n \n \n   Running Models:', '\n
       '  Started running on =', Sys.time(),  '\n \n \n',
       '**************************************') %>% cat()
 
-for(key_ite in 3:nrow(master_tab)){
+for(key_ite in 1:nrow(master_tab)){
     # key_ite <- 1
     nburnin <- 30000
 
@@ -121,7 +121,7 @@ for(key_ite in 3:nrow(master_tab)){
                         #filter(overlap0 == "no") %>% 
                         pull(betas)
         
-        if(tib_loop$all_sca == F){ 
+        # if(tib_loop$all_sca == F){ 
             print("step 1 selected scales no interaction")               
             if(interaction == FALSE){             
                 if(direc == "hpc"){
@@ -138,15 +138,15 @@ for(key_ite in 3:nrow(master_tab)){
                             source("/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne/NPS_bird_copy/code/fit_model/step2_analysis_interaction.R")
                         }
                 }  
-            } else {
-                print("step 1 all scales with interaction")
-                # step 1 all scales with interaction
-                    if(direc == "local"){
-                            source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/fit_model/back2d_covs_scales_2min_spscov_interact.R")
-                        } else {
-                            source("code/fit_model/back2d_covs_scales_2min_spscov_interact.R")
-                            }
-            }
+            # } else {
+            #     print("step 1 all scales with interaction")
+            #     # step 1 all scales with interaction
+            #         if(direc == "local"){
+            #                 source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/fit_model/back2d_covs_scales_2min_spscov_interact.R")
+            #             } else {
+            #                 source("code/fit_model/back2d_covs_scales_2min_spscov_interact.R")
+            #                 }
+            # }
         } else { 
             # step 1
                 print("step 1 selected scales no interaction")
