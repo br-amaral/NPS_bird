@@ -59,7 +59,6 @@ z_mod <- read_rds(Z_DATA_PATH)$Zst2
 
 #! Get only parameters and scales that are relevant --------------------------------------------
 cov_key2_numb <- as.numeric(substr(cov_key2, 5, 5))
-
 # get X objects being used
 pars_sca_mod <- cbind(cov_key2, cov_key2_numb, scales_loop) %>% 
                   as_tibble() %>% 

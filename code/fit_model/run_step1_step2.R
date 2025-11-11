@@ -41,7 +41,7 @@ freshr::freshr()
 #  renv::snapshot()
 
 test <- FALSE 
-interaction <- TRUE
+interaction <- FALSE
 step_number_define <- 2
 if(substr(getwd(), 1, 3) == "/Us") {direc <- "local"} else {direc <- "hpc"}
 
@@ -115,9 +115,11 @@ for(key_ite in 3:nrow(master_tab)){
         print("step 2 selected scales")
         # step 2 selected scales no or yes interaction
         sca_file <- read_rds(glue("data/model_res/{tib_loop$select}.rds"))
-        scales_loop <- as.numeric(sca_file %>% filter(overlap0 == "no") %>% pull(sca_sel))
+        scales_loop <- as.numeric(sca_file %>%  pull(sca_sel)) # filter(overlap0 == "no") %>%
         date_step1 <- substr(tib_loop$result, 19, 28)
-        cov_key2 <- sca_file %>% filter(overlap0 == "no") %>% pull(betas)
+        cov_key2 <- sca_file %>% 
+                        #filter(overlap0 == "no") %>% 
+                        pull(betas)
         
         if(tib_loop$all_sca == F){ 
             print("step 1 selected scales no interaction")               
