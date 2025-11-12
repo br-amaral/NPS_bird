@@ -4,20 +4,20 @@
 #SBATCH --time=168:00:00
 
 # how much memory?
-#SBATCH --mem=64G
+#SBATCH --mem=80G
 
 # specify nodes needed.
 #SBATCH --ntasks=1
 #SBATCH --nodes=1
 
 # specify CPUs (or cores per task)
-#SBATCH --cpus-per-task=10
+#SBATCH --cpus-per-task=4
 
 # specify which development nodes you want the job run on. Doesn't seem to work?
 # SBATCH --constraint="[intel16|intel18]"
 
 # email me
-# SBATCH --mail-type=FAIL,END
+#SBATCH --mail-type=FAIL,END
 #SBATCH --mail-user=bamaral@msu.edu
 
 # change to current directory
