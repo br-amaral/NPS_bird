@@ -122,8 +122,8 @@ for(key_ite in 1:nrow(master_tab)){
                         pull(betas)
         
         # if(tib_loop$all_sca == F){ 
-            print("step 1 selected scales no interaction")               
-            if(interaction == FALSE){             
+            if(interaction == FALSE){     
+                print("step 2 selected scales no interaction")                       
                 if(direc == "hpc"){
                     source("code/fit_model/step2_analysis.R")
                         } else {
