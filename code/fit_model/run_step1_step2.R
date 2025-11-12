@@ -56,11 +56,11 @@ lenght <- length
 `%!in%` <- Negate(`%in%`)
 
 #! MCMC settings ---------------------------------------------------
-niterations <- 60000
+niterations <- 100000
 nburnin <- 30000
 nchains <- 8
-nthin <- 10
-nadapt_min <- 10000
+nthin <- 5
+nadapt_min <- 20000
 
 #! Source code and Import data -----------------------------------------
 ## read files
@@ -90,7 +90,7 @@ paste('\n ************************************* \n \n \n   Running Models:', '\n
       '  Started running on =', Sys.time(),  '\n \n \n',
       '**************************************') %>% cat()
 
-for(key_ite in 11:nrow(master_tab)){
+for(key_ite in 1:nrow(master_tab)){
     # key_ite <- 1
     nburnin <- 30000
 

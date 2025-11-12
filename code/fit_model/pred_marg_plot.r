@@ -273,7 +273,7 @@ for(sps_res in 1:nrow(beta_key)){
   }
 }
 
-#   save.image(file = "data/predictions_sps.RData")
+ save.image(file = "data/predictions_sps3.RData")
 
 # get park ranges
 XDAT_PATH <- "data/X.rds"
@@ -337,7 +337,7 @@ beta5_preds <- process_beta_predictions(5, beta_covariates[["5"]])
 scale_covs <-  as_tibble(cbind(c(3, 2, 1), c("coun", "park", "site"))) %>% 
                   rename(scale = V1, scale_name = V2)
 
-#   save.image(file = "data/predictions_sps2.RData")
+   save.image(file = "data/predictions_sps3.RData")
 #   load("data/predictions_sps2.RData")
 
 #? TREE DENSITY -----------------------------------------------------------------
