@@ -25,101 +25,104 @@ colanmes <- colnames
 lenght <- length
 `%!in%` <- Negate(`%in%`)
 
-#! Import data --------------------------------------------------------------------
-## file paths and read files
-# when loading the model results, get the most updated file?
-file_name <- "BAWW_step1_output_2025_09_24run1"
+step_number_define <- 2
+if(substr(getwd(), 1, 3) == "/Us") {direc <- "local"} else {direc <- "hpc"}
 
-samples_jags <- read_rds(glue("data/model_res/{file_name}.rds"))
+#! Source code and Import data ----------------------------------------
+if(direc == "local"){
+    master_tab <- read_csv("/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne/NPS_bird_copy/code/fit_model/mod_key.csv") %>%
+            #filter(run == "yes") %>% 
+            filter(step %in% c(step_number_define)) %>% 
+            distinct()
 
-# get parameter names
-scales_names <- grep("^scales_", colnames(samples_jags[[1]]), value = TRUE)
-all_params <- c("mu.alpha0", "mu.beta0", "beta", #"beta_int", 
-                "alpha", scales_names)
-if(substr(file_name, nchar(file_name)-2, nchar(file_name)) == "int"){all_params <- c(all_params, "beta_int")}
+    model_file <- glue("/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne//NPS_bird_copy/{model_file}")
 
-#! Par estimates ------------------------------------------------------------------
-par(mfrow = c(1,1))
-MCMCplot(samples_jags,
-         params = all_params,
-         main = file_name,
-         ref_ovl = TRUE)
+    } else {master_tab <- read_csv("code/fit_model/mod_key.csv") %>%
+            #filter(run == "yes") %>% 
+            filter(step %in% c(step_number_define)) %>% 
+            distinct()
+    }
 
-#! Traceplots ---------------------------------------------------------------------
-MCMCtrace(samples_jags,
-          params = all_params,
-          #main = file_name,
-          ind = TRUE,
-          pdf = FALSE,
-          exact = TRUE,
-          Rhat = TRUE,
-          n.eff = TRUE)
+for(key_ite in 1:nrow(master_tab)){
 
-#! Summary ------------------------------------------------------------------------
-MCMCsummary(samples_jags,
-            params = all_params,
-            round = 2)
+    #! Import data --------------------------------------------------------------------
+    ## file paths and read files
+    # when loading the model results, get the most updated file?
+    tib_loop <- master_tab[key_ite, ]
 
-#! get beta parameters and selected scales ----------------------------------------
-# beta parameters that the 50 percent CI does not include 0
-betas <- tidybayes::get_variables(samples_jags)
-n_betas1 <- sub("\\[.*", "", betas) 
-n_betas <- length(n_betas1[n_betas1 == "beta"]) - 1
-betas_name <- paste0(n_betas1[n_betas1 == "beta"][-1], seq(1:n_betas))
+    sps_loop <- tib_loop$AOU_Code
 
-quant_group <- c(0.3, 0.7)
-# quant_group <- c(0.25, 0.75)
+    file_name <- tib_loop$result
 
-beta_key <- tibble(
-  betas = betas_name, 
-  overlap0 = as.character(NA), 
-  sca_sel = as.character(NA),
-  sca1 = as.numeric(NA),
-  sca2 = as.numeric(NA),
-  sca3 = as.numeric(NA),
-  qt_lo = quant_group[1],
-  qt_up = quant_group[2]
-)
+    samples_jags <- read_rds(glue("data/model_res/{file_name}.rds"))
 
-for(ii in 1:n_betas) {
-# betas
-  beta_loop1 <- MCMCchains(samples_jags, params = glue("beta"))
-  beta_loop2 <- beta_loop1[,ii]
-    
-  #quantiles <- quantile(beta_loop2, )
-  quantiles <- quantile(beta_loop2, quant_group)
+    # get parameter names
+    scales_names <- grep("^scales_", colnames(samples_jags[[1]]), value = TRUE)
+    all_params <- c("mu.alpha0", "mu.beta0", "beta", #"beta_int", 
+                    "alpha", scales_names)
+    if(substr(file_name, nchar(file_name)-2, nchar(file_name)) == "int"){all_params <- c(all_params, "beta_int")}
 
-  lower_quantile <- quantiles[1]
-  upper_quantile <- quantiles[2]
-  
-  # Check if quantiles overlap zero
-  if (lower_quantile <= 0 && upper_quantile >= 0) {
-    beta_key$overlap0[ii] <- "yes"
-  } else {
-    beta_key$overlap0[ii] <- "no"
-  }
+    #! get beta parameters and selected scales ----------------------------------------
+    # beta parameters that the 50 percent CI does not include 0
+    betas <- tidybayes::get_variables(samples_jags)
+    n_betas1 <- sub("\\[.*", "", betas) 
+    n_betas <- length(n_betas1[n_betas1 == "beta"]) - 1
+    betas_name <- paste0(n_betas1[n_betas1 == "beta"][-1], seq(1:n_betas))
 
-# scales
-  loop_sca <- glue("scales_beta{ii}")
-  sca_beta <- MCMCchains(samples_jags, params = loop_sca)
+    quant_group <- c(0.3, 0.7)
+    # quant_group <- c(0.25, 0.75)
 
-  tb_mcmc_scales_i <- table(sca_beta)/sum(table(sca_beta))
-  selected_scales <- as.integer(names(which.max(tb_mcmc_scales_i)))
+    beta_key <- tibble(
+      betas = betas_name, 
+      overlap0 = as.character(NA), 
+      sca_sel = as.character(NA),
+      sca1 = as.numeric(NA),
+      sca2 = as.numeric(NA),
+      sca3 = as.numeric(NA),
+      qt_lo = quant_group[1],
+      qt_up = quant_group[2]
+    )
 
-  beta_key$sca_sel[ii] <- selected_scales
-  beta_key$sca1[ii] <- tb_mcmc_scales_i[1]
-  beta_key$sca2[ii] <- tb_mcmc_scales_i[2]
-  beta_key$sca3[ii] <- tb_mcmc_scales_i[3]
-  
-  # get only covariates which scale was selected more than 50% of the time
-  if(TRUE %!in% (beta_key[ii,] %>% select(sca1, sca2, sca3) > 0.5)){beta_key$overlap0[ii] <- "yes"}
+    for(ii in 1:n_betas) {
+    # betas
+      beta_loop1 <- MCMCchains(samples_jags, params = glue("beta"))
+      beta_loop2 <- beta_loop1[,ii]
+        
+      #quantiles <- quantile(beta_loop2, )
+      quantiles <- quantile(beta_loop2, quant_group)
+
+      lower_quantile <- quantiles[1]
+      upper_quantile <- quantiles[2]
+      
+      # Check if quantiles overlap zero
+      # if (lower_quantile <= 0 && upper_quantile >= 0) {
+        beta_key$overlap0[ii] <- "yes"
+      # } else {
+      #   beta_key$overlap0[ii] <- "no"
+      # }
+
+    # scales
+      loop_sca <- glue("scales_beta{ii}")
+      sca_beta <- MCMCchains(samples_jags, params = loop_sca)
+
+      tb_mcmc_scales_i <- table(sca_beta)/sum(table(sca_beta))
+      selected_scales <- as.integer(names(which.max(tb_mcmc_scales_i)))
+
+      beta_key$sca_sel[ii] <- selected_scales
+      beta_key$sca1[ii] <- tb_mcmc_scales_i[1]
+      beta_key$sca2[ii] <- tb_mcmc_scales_i[2]
+      beta_key$sca3[ii] <- tb_mcmc_scales_i[3]
+      
+      # get only covariates which scale was selected more than 50% of the time
+      if(TRUE %in% (beta_key[ii,] %>% select(sca1, sca2, sca3) > 0.5)){beta_key$overlap0[ii] <- "no"}
+    }
+
+    beta_key
+
+    quant_name <- glue("{substr(quant_group[1], 3, 4)}_{substr(quant_group[2], 3, 4)}")
+    # save beta and scale selection values
+    write_rds(beta_key, file = glue("data/model_res/{file_name}_{quant_name}_SCA_SEL_PARS.rds"))
 }
-
-beta_key
-
-quant_name <- glue("{substr(quant_group[1], 3, 4)}_{substr(quant_group[2], 3, 4)}")
-# save beta and scale selection values
-write_rds(beta_key, file = glue("data/model_res/{file_name}_{quant_name}_SCA_SEL_PARS.rds"))
 
 #! Coefficient tables --------------------------------------------------------------
 

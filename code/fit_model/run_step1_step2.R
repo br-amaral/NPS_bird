@@ -115,7 +115,7 @@ for(key_ite in 1:nrow(master_tab)){
         print("step 2 selected scales")
         # step 2 selected scales no or yes interaction
         sca_file <- read_rds(glue("data/model_res/{tib_loop$select}.rds"))
-        scales_loop <- as.numeric(sca_file %>%  pull(sca_sel)) # filter(overlap0 == "no") %>%
+        scales_loop <- as.numeric(sca_file %>% filter(overlap0 == "no") %>% pull(sca_sel)) # filter(overlap0 == "no") %>%
         date_step1 <- substr(tib_loop$result, 19, 28)
         cov_key2 <- sca_file %>% 
                         #filter(overlap0 == "no") %>% 
