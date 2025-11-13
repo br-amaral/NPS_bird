@@ -7,7 +7,9 @@ DOOOOO(ing):
 # --------------------------------------------------------------------
 TO DOOOOOO:
 
-
+# Directories:
+setwd("/Volumes/zipkinlab/bamaral/NPS_bird_copy/")
+setwd("/Users/bamaral/Library/Mobile Documents/com~apple~CloudDocs/GitHub_data/dataNPS_bird_copy/")
 # --------------------------------------------------------------------
 Assumptions/decisions:
 
