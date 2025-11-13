@@ -50,12 +50,14 @@ lenght <- length
 COEF_SPS_PATH <- "data/out/coefs_sps_sca.rds"
 STEP2_INFO_PATH <- "code/fit_model/mod_key.csv"
 if(substr(getwd(), 1, 3) == "/Us") {direc <- "local"} else {direc <- "hpc"}
-if(direc == "local"){STEP2_INFO_PATH <- glue("/Users/bamaral/Documents/GitHub/NPS_bird_copy/{STEP2_INFO_PATH}")}
+
+#if(direc == "local"){STEP2_INFO_PATH <- glue("/Users/bamaral/Documents/GitHub/NPS_bird_copy/{STEP2_INFO_PATH}")}
+if(direc == "local"){STEP2_INFO_PATH <- glue("/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne/NPS_bird_copy/{STEP2_INFO_PATH}")}
 
 ## read files
 dat_sca <- read_rds(COEF_SPS_PATH)       # which betas are important
 beta_key <- read_csv(STEP2_INFO_PATH) %>% 
-              filter(step == 3,
+              filter(step == 4,
                      run == "yes") #%>% 
               # filter(AOU_Code != "BHVI",
               #        AOU_Code != "YBSA"
@@ -120,6 +122,7 @@ cov_key[which(cov_key$coef_ori == 'beta5'), 4:7] <-
 # get the data for the predictions
 for(sps_res in 1:nrow(beta_key)){
   RES_MOD_FILE <- beta_key$result[sps_res]
+  
   res_mod <- read_rds(glue("data/model_res/{RES_MOD_FILE}.rds"))  # model file
   sps_loop <- substr(RES_MOD_FILE, 1, 4)
   sps_dat_name <- glue("{sps_loop}_step1_jagsdata")
@@ -337,8 +340,8 @@ beta5_preds <- process_beta_predictions(5, beta_covariates[["5"]])
 scale_covs <-  as_tibble(cbind(c(3, 2, 1), c("coun", "park", "site"))) %>% 
                   rename(scale = V1, scale_name = V2)
 
-   save.image(file = "data/predictions_sps3.RData")
-#   load("data/predictions_sps2.RData")
+# save.image(file = "data/predictions_sps3.RData")
+# load("data/predictions_sps2.RData")
 
 #? TREE DENSITY -----------------------------------------------------------------
 beta1_lims <- c(floor(min(beta1_preds$X_range_ori) / 5) * 5, ceiling(max(beta1_preds$X_range_ori) / 5) * 5)
@@ -405,7 +408,7 @@ ggplot() +
         legend.title = element_text(size = 14, face = "bold", hjust = 0.5),    # Legend title
         legend.text = element_text(size = 12)                     # Legend text
   ) +
-  scale_color_manual(values = safe_pal) +
+  #scale_color_manual(values = safe_pal) +
   scale_y_continuous(
     limits = c(0, max_pos_treeden), 
     breaks = c(0, 0.25, 0.5, 0.75, 1, treeden_covs_pkpos$y_pos),
