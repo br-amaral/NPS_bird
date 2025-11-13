@@ -60,7 +60,7 @@ for(ii in 1:nrow(coef_path_file)) {
 
     (loop_sps <- substr(coef_path_file$result[ii], 1, 4))
 
-    loop_run <- substr(coef_path_file$result[ii], nchar(coef_path_file$result[ii]) - 7, nchar(coef_path_file$result[ii]) - 4)
+    loop_run <- substr(coef_path_file$result[ii], nchar(coef_path_file$result[ii]) - 11, nchar(coef_path_file$result[ii]) - 8)
 
     quants <- ifelse((as.numeric(substr(loop_run, 4, 4)) %% 2 == 0) == TRUE, "25_75", "3_7")
 
@@ -76,15 +76,15 @@ for(ii in 1:nrow(coef_path_file)) {
         filter(substr(betas, 1, 4) == "beta") %>% 
         nrow()
     
-    beta_int_add <- glue("beta_int{numb_bet}")
-    #if(loop_sps == "YBSA"){beta_sca_names$betas[1] <- "beta"}
+    # beta_int_add <- glue("beta_int{numb_bet}")
+    # #if(loop_sps == "YBSA"){beta_sca_names$betas[1] <- "beta"}
 
-    beta_sca_names <- beta_sca_names %>% 
-                          add_row(betas = beta_int_add)
+    # beta_sca_names <- beta_sca_names %>% 
+    #                       add_row(betas = beta_int_add)
 
     # Get summary with median and credible intervals
     coef_summary <- MCMCsummary(samples_jags,
-                            params = c("beta", "beta_int", "alpha"), #, "beta0", "alpha0"),  # specify parameters
+                            params = c("beta", "alpha"), #, "beta0", "alpha0", "beta_int"),  # specify parameters
                             probs = c(0.025, 0.5, 0.975),  # 2.5%, median, 97.5%
                             round = 3) 
 
@@ -125,7 +125,7 @@ for(ii in 1:nrow(coef_path_file)) {
       if(ii == 1) {coef_summary3 <- coef_summary2} else {coef_summary3 <- rbind(coef_summary3, coef_summary2)}
 }
 
-    write_rds(coef_summary3, file = "data/out/coef_summary3_sep.rds")
+ #   write_rds(coef_summary3, file = "data/out/coef_summary3_sep.rds")
  #  coef_summary3 <- read_rds(file = "data/out/coef_summary3_sep.rds")
 
 table(coef_summary3$mod_res)
@@ -168,9 +168,9 @@ coef_summary3 <- as_tibble(coef_summary3) %>%
           ) +
           scale_x_continuous(breaks = c(-2, -1, 0, 1, 2, 3)))
 
-ggsave("figures/park_size.svg", plot = park_sizeP, device = "svg", width = 11, height = 11, dpi = 1200)
+# ggsave("figures/park_size.svg", plot = park_sizeP, device = "svg", width = 11, height = 11, dpi = 1200)
 
-ggsave("figures/park_size.png", plot = park_sizeP, device = "png", width = 11, height = 9, dpi = 1200)
+# ggsave("figures/park_size.png", plot = park_sizeP, device = "png", width = 11, height = 9, dpi = 1200)
 
 
 dat <- coef_summary3 %>% 
@@ -228,7 +228,7 @@ dat <- left_join(dat, cov_name, by = "Covariate") %>%
               median = `50%`, 
               up = `97.5%`)
 
-write_rds(dat, "data/out/coef_dat_ext.rds")
+#write_rds(dat, "data/out/coef_dat_ext.rds")
 
 dat1 <- dat %>% 
             mutate(sca_col = "darkolivegreen2") %>% 
@@ -280,7 +280,7 @@ ggplot() +
                                                        "Late Successional Tree Density" = "Late Success. \nTree Density"
                      )))
 
-ggsave("manus_figs/fig3somesps.svg", plot = last_plot(), device = "svg", width = 12, height = 8)
+# ggsave("manus_figs/fig3somesps.svg", plot = last_plot(), device = "svg", width = 12, height = 8)
 
 ##? Figure 3 with all species ('zeros') ----------------------------------------------------------
 cov_name2 <- cov_name 
@@ -435,8 +435,8 @@ dat_sca2 <- dat_sca2 %>% filter(sps != "BCCH")
     )
   )
 
-ggsave("figures/sca_plot_select_sca_noleg.svg", plot = sca_plot_selec_sca, device = "svg", width = 12, height = 16)
-ggsave("figures/sca_plot_select_sca_noleg.png", plot = sca_plot_selec_sca, device = "png", width = 12, height = 16, dpi = 1200)
+# ggsave("figures/sca_plot_select_sca_noleg.svg", plot = sca_plot_selec_sca, device = "svg", width = 12, height = 16)
+# ggsave("figures/sca_plot_select_sca_noleg.png", plot = sca_plot_selec_sca, device = "png", width = 12, height = 16, dpi = 1200)
 
 #? ploting not the coefficient effect sizes, not the scale values, and only the ones that did not overlap zero (?)
 dat_sca3 <- dat_sca2 %>% 
@@ -444,7 +444,7 @@ dat_sca3 <- dat_sca2 %>%
 dat_sca3_0 <- dat_sca2 %>% 
                   filter(includes_zero == "#a9a9a9")  ## this remove the coeficient that does not overlaps with zero
 
-write_rds(dat_sca, "data/out/coefs_sps_sca.rds")
+#write_rds(dat_sca, "data/out/coefs_sps_sca.rds")
 
 (circles_coefs <- ggplot() +
 # plot empty points to keep all species and covariates present in the data
@@ -529,9 +529,9 @@ write_rds(dat_sca, "data/out/coefs_sps_sca.rds")
   )
 )
 
-ggsave("figures/circles_coefs.svg", plot = circles_coefs, device = "svg", width = 12, height = 16)
+# ggsave("figures/circles_coefs.svg", plot = circles_coefs, device = "svg", width = 12, height = 16)
 
-#ggsave("figures/circles_coefs.png", plot = circles_coefs, device = "png", width = 12, height = 16, dpi = 1200)
+# ggsave("figures/circles_coefs.png", plot = circles_coefs, device = "png", width = 12, height = 16, dpi = 1200)
 
 # Define exactly where each color should appear
 custom_palette <- c(
@@ -598,4 +598,5 @@ custom_palette <- c(
     )
   )
 
-ggsave("figures/sca_plot_sca_plot_all.svg", plot = sca_plot_all, device = "svg", width = 12, height = 16)
+# ggsave("figures/sca_plot_sca_plot_all.svg", plot = sca_plot_all, device = "svg", width = 12, height = 16)
+save.image(file = "data/coefs_ima.RData")
