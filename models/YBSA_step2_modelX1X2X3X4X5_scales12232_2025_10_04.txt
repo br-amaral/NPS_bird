@@ -42,11 +42,11 @@ model {
 
      # DEN (tree density) 
 
-     beta[1] * X1[b, 3] +  
+     beta[1] * X1[b, 1] +  
 
      # CON PER (percent conifer basal area) 
 
-     beta[2] * X2[b, 1] +  
+     beta[2] * X2[b, 2] +  
 
      # LAR PER (percent large tree basal area) 
 
@@ -58,7 +58,7 @@ model {
 
      # BA (tree basal area) 
 
-     beta[5] * X5[b, 3] +  
+     beta[5] * X5[b, 2] +  
 
     # park size 
 

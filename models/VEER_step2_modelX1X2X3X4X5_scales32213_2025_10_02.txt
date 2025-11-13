@@ -46,7 +46,7 @@ model {
 
      # CON PER (percent conifer basal area) 
 
-     beta[2] * X2[b, 1] +  
+     beta[2] * X2[b, 2] +  
 
      # LAR PER (percent large tree basal area) 
 
@@ -54,7 +54,7 @@ model {
 
      # SHR (shrub basal area) 
 
-     beta[4] * X4[b, 3] +  
+     beta[4] * X4[b, 1] +  
 
      # BA (tree basal area) 
 
