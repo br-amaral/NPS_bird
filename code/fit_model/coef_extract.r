@@ -66,7 +66,7 @@ for(ii in 1:nrow(coef_path_file)) {
 
     samples_jags <- read_rds(glue("data/model_res/{coef_path_file$result[ii]}.rds"))
     beta_sca_names <- read_rds(glue("data/model_res/{coef_path_file$select[ii]}.rds")) %>% 
-          filter(overlap0 == "no") %>%
+          #filter(overlap0 == "no") %>%
           add_row(betas = "park_size") %>%  # Add empty row for 3 alphas + 1 beta park size
           add_row(betas = "alpha1") %>%  
           add_row(betas = "alpha2") %>%  
