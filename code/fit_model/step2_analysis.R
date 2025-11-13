@@ -215,7 +215,7 @@ samples_jags <- jags(data = jags_data2,
                       n.burnin = nburnin,
                       n.thin = nthin,
                       parallel = TRUE,
-                      n.cores = nchains)
+                      n.cores = 2)
 
 cat("\n\n\n model is done!!! \n\n\n\n")
 

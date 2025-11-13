@@ -56,8 +56,8 @@ lenght <- length
 `%!in%` <- Negate(`%in%`)
 
 #! MCMC settings ---------------------------------------------------
-niterations <- 60000
-nburnin <- 20000
+niterations <- 70000
+nburnin <- 35000
 nchains <- 8
 nthin <- 2
 nadapt_min <- 20000
