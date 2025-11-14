@@ -599,4 +599,5 @@ custom_palette <- c(
   )
 
 # ggsave("figures/sca_plot_sca_plot_all.svg", plot = sca_plot_all, device = "svg", width = 12, height = 16)
-save.image(file = "data/coefs_ima.RData")
+# save.image(file = "data/coefs_ima.RData")
+# load("save.image(file = "data/coefs_ima.RData")")
