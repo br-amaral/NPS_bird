@@ -11,7 +11,7 @@
 #SBATCH --nodes=1
 
 # specify CPUs (or cores per task)
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task=2
 
 # specify which development nodes you want the job run on. Doesn't seem to work?
 # SBATCH --constraint="[intel16|intel18]"
