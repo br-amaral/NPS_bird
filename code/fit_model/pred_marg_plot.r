@@ -276,7 +276,8 @@ for(sps_res in 1:nrow(beta_key)){
   }
 }
 
- save.image(file = "data/predictions_sps3.RData")
+# save.image(file = "data/predictions_sps3.RData")
+ load(file = "data/predictions_sps3.RData")
 
 # get park ranges
 XDAT_PATH <- "data/X.rds"
@@ -899,3 +900,528 @@ ggplot() +
 
 ggsave("figures/pred_lat2.svg", plot = last_plot(), device = "svg", width = 10.2, height = 6.5)
 ggsave("figures/pred_lat2.png", plot = last_plot(), device = "png", width = 10.2, height = 6.5)
+
+#? SHRUB BASAL AREA - park values on the bottom ----------------------
+
+beta4_lims <- c(floor(min(beta4_preds$X_range_ori) / 5) * 5, ceiling(max(beta4_preds$X_range_ori) / 5) * 5)
+
+shrub_covs <- X10 %>%
+                    select(park, Point_Name, shrub_avg_cov_site, shrub_avg_cov_park, shrub_cov_coun) %>% 
+                    rename(shrub_ha_site = shrub_avg_cov_site,
+                           shrub_ha_park = shrub_avg_cov_park,
+                           shrub_ha_coun = shrub_cov_coun) %>% 
+                    distinct() %>% 
+                    pivot_longer(cols = starts_with("shrub_ha"),
+                                 names_to = "scale_name",
+                                 values_to = "shrub_ha") %>% 
+                    distinct() %>% 
+                    mutate(scale_name = substr(scale_name, nchar(scale_name) - 3, nchar(scale_name))) %>% 
+                    select(-Point_Name) %>% 
+                    distinct() %>% 
+                    left_join(., scale_covs, by = "scale_name")
+
+shrub_covs_pkpos <- shrub_covs %>% 
+                        select(park) %>% 
+                        distinct() %>% 
+                        mutate(park = factor(park, levels = rev(sort(unique(park))))) %>% 
+                        arrange(park) %>% 
+                        mutate(y_pos = as.numeric(NA))
+
+# Position park points at the bottom (starting from negative values)
+shrub_covs_pkpos[1,2] <- -0.33
+for(jj in 2:nrow(shrub_covs_pkpos)){
+  shrub_covs_pkpos[jj,2] <- shrub_covs_pkpos[jj - 1 ,2] + 0.04
+}
+
+shrub_covs2 <- left_join(shrub_covs, shrub_covs_pkpos, by = "park")  %>% 
+                    #filter(scale %in% beta4_preds$scale) %>%  # Include all scales
+                    drop_na() %>% 
+                    mutate(covariate = "cov",
+                           scale = as.numeric(scale)) %>% 
+                    rename(pred_mean = shrub_ha)
+
+min_pos_shrub <- min(shrub_covs2$y_pos)
+beta4_preds$y_pos <- as.numeric(NA)
+beta4_preds2 <- full_join(beta4_preds, shrub_covs2) %>% 
+                    mutate(park = factor(park, levels = rev(sort(unique(park))))) 
+
+nrow(shrub_covs2) + nrow(beta4_preds) == nrow(beta4_preds2)
+
+ggplot() +
+  geom_point(data = beta4_preds2 %>% filter(covariate == "cov"), 
+             aes(y = y_pos, x = pred_mean, col = park), size = 2, show.legend = FALSE) +
+  # Add horizontal reference lines
+  geom_hline(yintercept = -0.001, color = "black", linewidth = 0.4) +
+  geom_hline(yintercept = -0.025, color = "black", linewidth = 0.4) +
+  geom_line(data = beta4_preds2 %>% filter(covariate == "Shrub Basal Area"), 
+            aes(x = X_range_ori, y = pred_mean, color = factor(sps)), linewidth = 1.2) +
+  facet_wrap(~ scale, scales = "free_x",
+             labeller = labeller(scale = c("3" = "County Scale", 
+                                           "2" = "Park Scale", 
+                                           "1" = "Local Scale"))) +  
+  labs(x = glue("\n\n Shrub Coverage (%)"), 
+       y = "Predicted Occupancy Probability\n",
+       title = glue("Shrubs\n"),
+       color = "Species") +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black", linewidth = 0.6, fill = NA),
+        panel.background = element_rect(fill = "white", color = NA),
+        strip.text = element_text(face = "bold", size = 16),
+        plot.title = element_text(size = 18, face = "bold", hjust = 0.5),
+        axis.title = element_text(size = 14),
+        axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        legend.title = element_text(size = 14, face = "bold", hjust = 0.5),
+        legend.text = element_text(size = 12)
+  ) +
+  scale_color_manual(values = safe_pal) +
+  scale_y_continuous(
+    limits = c(min_pos_shrub, 1), 
+    breaks = c(0, 0.25, 0.5, 0.75, 1, shrub_covs_pkpos$y_pos),
+    labels = c(0, 0.25, 0.5, 0.75, 1, as.character(shrub_covs_pkpos$park)))
+
+ggsave("figures/pred_shr2.svg", plot = last_plot(), device = "svg", width = 10.2, height = 6.5)
+ggsave("figures/pred_shr2.png", plot = last_plot(), device = "png", width = 10.2, height = 6.5)
+
+#? CONIFER BA - park values on the bottom ----------------------
+
+beta2_lims <- c(floor(min(beta2_preds$X_range_ori) / 5) * 5, ceiling(max(beta2_preds$X_range_ori) / 5) * 5)
+
+treecon_covs <- X10 %>%
+                    select(park, Point_Name, BA_m2ha_Conifer_site, BA_m2ha_Conifer_park, BA_m2ha_Conifer_coun) %>% 
+                    rename(treecon_ha_site = BA_m2ha_Conifer_site,
+                           treecon_ha_park = BA_m2ha_Conifer_park,
+                           treecon_ha_coun = BA_m2ha_Conifer_coun) %>% 
+                    distinct() %>% 
+                    pivot_longer(cols = starts_with("treecon_ha"),
+                                 names_to = "scale_name",
+                                 values_to = "treecon_ha") %>% 
+                    distinct() %>% 
+                    mutate(scale_name = substr(scale_name, nchar(scale_name) - 3, nchar(scale_name))) %>% 
+                    select(-Point_Name) %>% 
+                    distinct() %>% 
+                    left_join(., scale_covs, by = "scale_name") 
+
+treecon_covs_pkpos <- treecon_covs %>% 
+                          select(park) %>% 
+                          distinct() %>% 
+                          mutate(park = factor(park, levels = rev(sort(unique(park))))) %>% 
+                          arrange(park) %>% 
+                          mutate(y_pos = as.numeric(NA))
+
+# Position park points at the bottom (starting from negative values)
+treecon_covs_pkpos[1,2] <- -0.33
+for(jj in 2:nrow(treecon_covs_pkpos)){
+  treecon_covs_pkpos[jj,2] <- treecon_covs_pkpos[jj - 1 ,2] + 0.04
+}
+
+treecon_covs2 <- left_join(treecon_covs, treecon_covs_pkpos, by = "park")  %>% 
+                    #filter(scale %in% beta2_preds$scale) %>%  # Include all scales
+                    drop_na() %>% 
+                    mutate(covariate = "cov",
+                           scale = as.numeric(scale)) %>% 
+                    rename(pred_mean = treecon_ha)
+
+min_pos_treecon <- min(treecon_covs2$y_pos)
+beta2_preds$y_pos <- as.numeric(NA)
+beta2_preds2 <- full_join(beta2_preds, treecon_covs2) %>% 
+                  mutate(park = factor(park, levels = rev(sort(unique(park))))) 
+
+nrow(treecon_covs2) + nrow(beta2_preds) == nrow(beta2_preds2)
+
+ggplot() +
+  geom_point(data = beta2_preds2 %>% filter(covariate == "cov"), 
+             aes(y = y_pos, x = pred_mean, col = park), size = 2, show.legend = FALSE) +
+  # Add horizontal reference lines
+  geom_hline(yintercept = -0.001, color = "black", linewidth = 0.4) +
+  geom_hline(yintercept = -0.025, color = "black", linewidth = 0.4) +
+  geom_hline(yintercept = min_pos_treecon, color = "black", linewidth = 0.4) +
+  geom_line(data = beta2_preds2 %>% filter(covariate == "Conifer Density"), 
+            aes(x = X_range_ori, y = pred_mean, color = factor(sps)), linewidth = 1.2) +
+  facet_wrap(~ scale, scales = "free_x",
+             labeller = labeller(scale = c("3" = "County Scale", 
+                                           "2" = "Park Scale", 
+                                           "1" = "Local Scale"))) +  
+  labs(x = glue("\n\n Conifer Basal Area (m²/ha)"), 
+       y = "Predicted Occupancy Probability\n",
+       title = glue("Conifer Trees\n"),
+       color = "Species") +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black", linewidth = 0.6, fill = NA),
+        panel.background = element_rect(fill = "white", color = NA),
+        strip.text = element_text(face = "bold", size = 16),
+        plot.title = element_text(size = 18, face = "bold", hjust = 0.5),
+        axis.title = element_text(size = 14),
+        axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        legend.title = element_text(size = 14, face = "bold", hjust = 0.5),
+        legend.text = element_text(size = 12)
+  ) +
+  scale_color_manual(values = safe_pal) +
+  scale_y_continuous(
+    limits = c(min_pos_treecon, 1), 
+    breaks = c(0, 0.25, 0.5, 0.75, 1, treecon_covs_pkpos$y_pos),
+    labels = c(0, 0.25, 0.5, 0.75, 1, as.character(treecon_covs_pkpos$park)))
+
+ggsave("figures/pred_con2.svg", plot = last_plot(), device = "svg", width = 10.2, height = 6.5)
+ggsave("figures/pred_con2.png", plot = last_plot(), device = "png", width = 10.2, height = 6.5)
+
+
+#? TREE DENSITY - park values on the bottom ----------------------
+
+beta1_lims <- c(floor(min(beta1_preds$X_range_ori) / 5) * 5, ceiling(max(beta1_preds$X_range_ori) / 5) * 5)
+
+treeden_covs <- X10 %>%
+                    select(park, Point_Name, treeden_ha_site, treeden_ha_park, treeden_ha_coun) %>% 
+                    distinct() %>% 
+                    pivot_longer(cols = starts_with("treeden_ha"),
+                                 names_to = "scale_name",
+                                 values_to = "treeden_ha") %>% 
+                    distinct() %>% 
+                    mutate(scale_name = substr(scale_name, nchar(scale_name) - 3, nchar(scale_name))) %>% 
+                    select(-Point_Name) %>% 
+                    distinct() %>% 
+                    left_join(., scale_covs, by = "scale_name") 
+
+treeden_covs_pkpos <- treeden_covs %>% 
+                          select(park) %>% 
+                          distinct() %>% 
+                          mutate(park = factor(park, levels = rev(sort(unique(park))))) %>% 
+                          arrange(park) %>% 
+                          mutate(y_pos = as.numeric(NA))
+
+# Position park points at the bottom (starting from negative values)
+treeden_covs_pkpos[1,2] <- -0.33
+for(jj in 2:nrow(treeden_covs_pkpos)){
+  treeden_covs_pkpos[jj,2] <- treeden_covs_pkpos[jj - 1 ,2] + 0.04
+}
+
+treeden_covs2 <- left_join(treeden_covs, treeden_covs_pkpos, by = "park")  %>% 
+                    #filter(scale %in% beta1_preds$scale) %>%  # Include all scales
+                    drop_na() %>% 
+                    mutate(covariate = "cov",
+                           scale = as.numeric(scale)) %>% 
+                    rename(pred_mean = treeden_ha)
+
+min_pos_treeden <- min(treeden_covs2$y_pos)
+beta1_preds$y_pos <- as.numeric(NA)
+beta1_preds2 <- full_join(beta1_preds, treeden_covs2) %>% 
+                  mutate(park = factor(park, levels = rev(sort(unique(park))))) 
+
+nrow(treeden_covs2) + nrow(beta1_preds) == nrow(beta1_preds2)
+
+ggplot() +
+  geom_point(data = beta1_preds2 %>% filter(covariate == "cov"), 
+             aes(y = y_pos, x = pred_mean, col = park), size = 2, show.legend = FALSE) +
+  geom_hline(yintercept = -0.001, color = "black", linewidth = 0.4) +
+  geom_hline(yintercept = -0.025, color = "black", linewidth = 0.4) +
+  geom_line(data = beta1_preds2 %>% filter(covariate == "Tree Density"), 
+            aes(x = X_range_ori, y = pred_mean, color = factor(sps)), linewidth = 1.2) +
+  facet_wrap(~ scale, scales = "free_x",
+            strip.position = "bottom",
+            labeller = labeller(scale = c("3" = "County Scale", 
+                                          "2" = "Park Scale", 
+                                          "1" = "Local Scale"))) +
+  labs(y = "Predicted Occupancy Probability\n",
+       title = glue("Tree Density (stems/ha)"),
+       color = "Species") +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black", linewidth = 0.6, fill = NA),
+        panel.background = element_rect(fill = "white", color = NA),
+        # Key changes for strip positioning:
+        strip.text.x = element_text(face = "plain", size = 14 , margin = margin(t = 3)),  # Add top margin
+        strip.placement = "outside",     # Place strips outside the plot area
+        # Remove x-axis title
+        axis.title.x = element_blank(),  # Remove x-axis title completely
+        plot.title = element_text(size = 18, face = "bold", hjust = 0.5),
+        axis.title.y = element_text(size = 14),
+        axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        legend.title = element_text(size = 14, face = "bold", hjust = 0.5),
+        legend.text = element_text(size = 12)
+  ) +
+  scale_color_manual(values = safe_pal) +
+  scale_y_continuous(
+    limits = c(min_pos_treeden, 1), 
+    breaks = c(0, 0.25, 0.5, 0.75, 1, treeden_covs_pkpos$y_pos),
+    labels = c(0, 0.25, 0.5, 0.75, 1, as.character(treeden_covs_pkpos$park)))
+
+ggsave("figures/pred_den2.svg", plot = last_plot(), device = "svg", width = 10.2, height = 6.5)
+ggsave("figures/pred_den2.png", plot = last_plot(), device = "png", width = 10.2, height = 6.5)
+
+# Get min, max, and middle for each scale
+x_stats <- beta1_preds2 %>% 
+  filter(covariate == "cov") %>% 
+  select(pred_mean, scale) %>% 
+  group_by(scale) %>% 
+  summarise(
+    min_val = min(pred_mean),
+    max_val = max(pred_mean),
+    middle_val = (min(pred_mean) + max(pred_mean)) / 2,  # Arithmetic middle
+    median_val = median(pred_mean)  # Your current approach
+  )
+
+# Extract just the middle values for centering
+x_cen <- x_stats %>% pull(middle_val) %>% as.vector()
+
+ggplot() +
+  geom_point(data = beta1_preds2 %>% filter(covariate == "cov"), 
+             aes(y = y_pos, x = pred_mean, col = park), size = 2, show.legend = FALSE) +
+  geom_hline(yintercept = -0.001, color = "black", linewidth = 0.4) +
+  geom_hline(yintercept = -0.025, color = "black", linewidth = 0.4) +
+  geom_line(data = beta1_preds2 %>% filter(covariate == "Tree Density"), 
+            aes(x = X_range_ori, y = pred_mean, color = factor(sps)), linewidth = 1.2) +
+  # Add text labels INSIDE each panel - CENTERED
+  geom_text(data = data.frame(scale = c(1, 2, 3), 
+                              label = c("Local Scale", "Park Scale", "County Scale"),
+                              x = c(x_cen[1], x_cen[2], x_cen[3]),      # Changed from 0 to Inf (right side)
+                              y = c(0.99, 0.99, 0.99)),  # Changed from 0.99 to 0.95 (slightly lower)
+            aes(x = x, y = y, label = label), 
+            hjust =0.5, vjust = 0, size = 5, fontface = "plain",  # Changed hjust and vjust
+            color = "black") +
+  facet_wrap(~ scale, scales = "free_x") +  # Remove strip labels completely
+  labs(y = "Predicted Occupancy Probability\n",
+       title = glue("Tree Density (stems/ha)"),
+       color = "Species") +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black", linewidth = 0.6, fill = NA),
+        panel.background = element_rect(fill = "white", color = NA),
+        # Remove strip completely
+        strip.text = element_blank(),     # No strip text
+        strip.background = element_blank(), # No strip background
+        axis.title.x = element_blank(),
+        plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+        axis.title.y = element_text(size = 14),
+        axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        legend.position = "none"
+        # legend.title = element_text(size = 14, face = "bold", hjust = 0.5),
+        # legend.text = element_text(size = 12)
+  ) +
+  scale_color_manual(values = safe_pal) +
+  scale_y_continuous(
+    limits = c(min_pos_treeden, 1), 
+    breaks = c(0, 0.25, 0.5, 0.75, 1, treeden_covs_pkpos$y_pos),
+    labels = c(0, 0.25, 0.5, 0.75, 1, as.character(treeden_covs_pkpos$park)))
+
+# TREE BASAL AREA - with internal labels
+# Get min, max, and middle for each scale
+x_stats_ba <- beta5_preds2 %>% 
+  filter(covariate == "cov") %>% 
+  select(pred_mean, scale) %>% 
+  group_by(scale) %>% 
+  summarise(
+    min_val = min(pred_mean),
+    max_val = max(pred_mean),
+    middle_val = (min(pred_mean) + max(pred_mean)) / 2,  # Arithmetic middle
+    median_val = median(pred_mean)  # Your current approach
+  )
+
+# Extract just the middle values for centering
+x_cen_ba <- x_stats_ba %>% pull(middle_val) %>% as.vector()
+
+ggplot() +
+  geom_point(data = beta5_preds2 %>% filter(covariate == "cov"), 
+             aes(y = y_pos, x = pred_mean, col = park), size = 2, show.legend = FALSE) +
+  geom_hline(yintercept = -0.001, color = "black", linewidth = 0.4) +
+  geom_hline(yintercept = -0.025, color = "black", linewidth = 0.4) +
+  geom_line(data = beta5_preds2 %>% filter(covariate == "Tree Basal Area"), 
+            aes(x = X_range_ori, y = pred_mean, color = factor(sps)), linewidth = 1.2, show.legend = FALSE) +
+  # Add text labels INSIDE each panel - CENTERED
+  geom_text(data = data.frame(scale = c(1, 2, 3), 
+                              label = c("Local Scale", "Park Scale", "County Scale"),
+                              x = c(x_cen_ba[1], x_cen_ba[2], x_cen_ba[3]),
+                              y = c(0.99, 0.99, 0.99)),
+            aes(x = x, y = y, label = label), 
+            hjust = 0.5, vjust = 0, size = 5, fontface = "plain",
+            color = "black") +
+  facet_wrap(~ scale, scales = "free_x") +
+  labs(y = "Predicted Occupancy Probability\n",
+       title = glue("Tree Basal Area (m²/ha)")) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black", linewidth = 0.6, fill = NA),
+        panel.background = element_rect(fill = "white", color = NA),
+        strip.text = element_blank(),
+        strip.background = element_blank(),
+        axis.title.x = element_blank(),
+        plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+        axis.title.y = element_text(size = 14),
+        axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        legend.position = "none"
+  ) +
+  scale_color_manual(values = safe_pal) +
+  scale_y_continuous(
+    limits = c(min_pos_treeba, 1), 
+    breaks = c(0, 0.25, 0.5, 0.75, 1, treeba_covs_pkpos$y_pos),
+    labels = c(0, 0.25, 0.5, 0.75, 1, as.character(treeba_covs_pkpos$park)))
+
+ggsave("figures/pred_BA3.svg", plot = last_plot(), device = "svg", width = 10.2, height = 6.5)
+ggsave("figures/pred_BA3.png", plot = last_plot(), device = "png", width = 10.2, height = 6.5)
+
+# LATE SUCCESSIONAL BASAL AREA - with internal labels
+
+# Get min, max, and middle for each scale
+x_stats_lat <- beta3_preds2 %>% 
+  filter(covariate == "cov") %>% 
+  select(pred_mean, scale) %>% 
+  group_by(scale) %>% 
+  summarise(
+    min_val = min(pred_mean),
+    max_val = max(pred_mean),
+    middle_val = (min(pred_mean) + max(pred_mean)) / 2,
+    median_val = median(pred_mean)
+  )
+
+x_cen_lat <- x_stats_lat %>% pull(middle_val) %>% as.vector()
+
+ggplot() +
+  geom_point(data = beta3_preds2 %>% filter(covariate == "cov"), 
+             aes(y = y_pos, x = pred_mean, col = park), size = 2, show.legend = FALSE) +
+  geom_hline(yintercept = -0.001, color = "black", linewidth = 0.4) +
+  geom_hline(yintercept = -0.025, color = "black", linewidth = 0.4) +
+  geom_line(data = beta3_preds2 %>% filter(covariate == "Late Successional Tree Density"), 
+            aes(x = X_range_ori, y = pred_mean, color = factor(sps)), linewidth = 1.2, show.legend = FALSE) +
+  geom_text(data = data.frame(scale = c(1, 2, 3), 
+                              label = c("Local Scale", "Park Scale", "County Scale"),
+                              x = c(x_cen_lat[1], x_cen_lat[2], x_cen_lat[3]),
+                              y = c(0.99, 0.99, 0.99)),
+            aes(x = x, y = y, label = label), 
+            hjust = 0.5, vjust = 0, size = 5, fontface = "plain",
+            color = "black") +
+  facet_wrap(~ scale, scales = "free_x") +
+  labs(y = "Predicted Occupancy Probability\n",
+       title = glue("Late Successional Trees (m²/ha)")) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black", linewidth = 0.6, fill = NA),
+        panel.background = element_rect(fill = "white", color = NA),
+        strip.text = element_blank(),
+        strip.background = element_blank(),
+        axis.title.x = element_blank(),
+        plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+        axis.title.y = element_text(size = 14),
+        axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        legend.position = "none"
+  ) +
+  scale_color_manual(values = safe_pal) +
+  scale_y_continuous(
+    limits = c(min_pos_treelat, 1), 
+    breaks = c(0, 0.25, 0.5, 0.75, 1, treelat_covs_pkpos$y_pos),
+    labels = c(0, 0.25, 0.5, 0.75, 1, as.character(treelat_covs_pkpos$park)))
+
+ggsave("figures/pred_lat3.svg", plot = last_plot(), device = "svg", width = 10.2, height = 6.5)
+ggsave("figures/pred_lat3.png", plot = last_plot(), device = "png", width = 10.2, height = 6.5)
+# SHRUB BASAL AREA - with internal labels
+
+# Get min, max, and middle for each scale
+x_stats_shr <- beta4_preds2 %>% 
+  filter(covariate == "cov") %>% 
+  select(pred_mean, scale) %>% 
+  group_by(scale) %>% 
+  summarise(
+    min_val = min(pred_mean),
+    max_val = max(pred_mean),
+    middle_val = (min(pred_mean) + max(pred_mean)) / 2,
+    median_val = median(pred_mean)
+  )
+
+x_cen_shr <- x_stats_shr %>% pull(middle_val) %>% as.vector()
+
+ggplot() +
+  geom_point(data = beta4_preds2 %>% filter(covariate == "cov"), 
+             aes(y = y_pos, x = pred_mean, col = park), size = 2, show.legend = FALSE) +
+  geom_hline(yintercept = -0.001, color = "black", linewidth = 0.4) +
+  geom_hline(yintercept = -0.025, color = "black", linewidth = 0.4) +
+  geom_line(data = beta4_preds2 %>% filter(covariate == "Shrub Basal Area"), 
+            aes(x = X_range_ori, y = pred_mean, color = factor(sps)), linewidth = 1.2, show.legend = FALSE) +
+  geom_text(data = data.frame(scale = c(1, 2, 3), 
+                              label = c("Local Scale", "Park Scale", "County Scale"),
+                              x = c(x_cen_shr[1], x_cen_shr[2], x_cen_shr[3]),
+                              y = c(0.99, 0.99, 0.99)),
+            aes(x = x, y = y, label = label), 
+            hjust = 0.5, vjust = 0, size = 5, fontface = "plain",
+            color = "black") +
+  facet_wrap(~ scale, scales = "free_x") +
+  labs(y = "Predicted Occupancy Probability\n",
+       title = glue("Shrub Coverage (%)")) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black", linewidth = 0.6, fill = NA),
+        panel.background = element_rect(fill = "white", color = NA),
+        strip.text = element_blank(),
+        strip.background = element_blank(),
+        axis.title.x = element_blank(),
+        plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+        axis.title.y = element_text(size = 14),
+        axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        legend.position = "none"
+  ) +
+  scale_color_manual(values = safe_pal) +
+  scale_y_continuous(
+    limits = c(min_pos_shrub, 1), 
+    breaks = c(0, 0.25, 0.5, 0.75, 1, shrub_covs_pkpos$y_pos),
+    labels = c(0, 0.25, 0.5, 0.75, 1, as.character(shrub_covs_pkpos$park)))
+
+ggsave("figures/pred_shr3.svg", plot = last_plot(), device = "svg", width = 10.2, height = 6.5)
+ggsave("figures/pred_shr3.png", plot = last_plot(), device = "png", width = 10.2, height = 6.5)
+# CONIFER BASAL AREA - with internal labels
+# Get min, max, and middle for each scale
+x_stats_con <- beta2_preds2 %>% 
+  filter(covariate == "cov") %>% 
+  select(pred_mean, scale) %>% 
+  group_by(scale) %>% 
+  summarise(
+    min_val = min(pred_mean),
+    max_val = max(pred_mean),
+    middle_val = (min(pred_mean) + max(pred_mean)) / 2,
+    median_val = median(pred_mean)
+  )
+
+x_cen_con <- x_stats_con %>% pull(middle_val) %>% as.vector()
+
+ggplot() +
+  geom_point(data = beta2_preds2 %>% filter(covariate == "cov"), 
+             aes(y = y_pos, x = pred_mean, col = park), size = 2, show.legend = FALSE) +
+  geom_hline(yintercept = -0.001, color = "black", linewidth = 0.4) +
+  geom_hline(yintercept = -0.025, color = "black", linewidth = 0.4) +
+  geom_line(data = beta2_preds2 %>% filter(covariate == "Conifer Density"), 
+            aes(x = X_range_ori, y = pred_mean, color = factor(sps)), linewidth = 1.2, show.legend = FALSE) +
+  geom_text(data = data.frame(scale = c(1, 2, 3), 
+                              label = c("Local Scale", "Park Scale", "County Scale"),
+                              x = c(x_cen_con[1], x_cen_con[2], x_cen_con[3]),
+                              y = c(0.99, 0.99, 0.99)),
+            aes(x = x, y = y, label = label), 
+            hjust = 0.5, vjust = 0, size = 5, fontface = "plain",
+            color = "black") +
+  facet_wrap(~ scale, scales = "free_x") +
+  labs(y = "Predicted Occupancy Probability\n",
+       title = glue("Conifer Trees (m²/ha)")) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black", linewidth = 0.6, fill = NA),
+        panel.background = element_rect(fill = "white", color = NA),
+        strip.text = element_blank(),
+        strip.background = element_blank(),
+        axis.title.x = element_blank(),
+        plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+        axis.title.y = element_text(size = 14),
+        axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        legend.position = "none"
+  ) +
+  scale_color_manual(values = safe_pal) +
+  scale_y_continuous(
+    limits = c(min_pos_treecon, 1), 
+    breaks = c(0, 0.25, 0.5, 0.75, 1, treecon_covs_pkpos$y_pos),
+    labels = c(0, 0.25, 0.5, 0.75, 1, as.character(treecon_covs_pkpos$park)))
+
+ggsave("figures/pred_con3.svg", plot = last_plot(), device = "svg", width = 10.2, height = 6.5)
+ggsave("figures/pred_con3.png", plot = last_plot(), device = "png", width = 10.2, height = 6.5)
