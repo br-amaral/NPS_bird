@@ -51,7 +51,7 @@ lenght <- length
 ## file paths
 COEF_TABLE_PATH <- "code/fit_model/mod_key.csv"
 if(substr(getwd(), 1, 3) == "/Us") {direc <- "local"} else {direc <- "hpc"}
-if(direc == "local"){COEF_TABLE_PATH <- glue("/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne/NPS_bird_copy/{COEF_TABLE_PATH}")}
+#if(direc == "local"){COEF_TABLE_PATH <- glue("/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne/NPS_bird_copy/{COEF_TABLE_PATH}")}
 # if(direc == "local"){COEF_TABLE_PATH <- glue("/Users/bamaral/Documents/GitHub/NPS_bird_copy/{COEF_TABLE_PATH}")}
 
 ## read files
@@ -325,7 +325,8 @@ for(ii in 1:nrow(coef_path_file2)) {
     # Get summary with median and credible intervals
     coef_summary2 <- MCMCsummary(samples_jags2,
                             params = params_mods2, #, "beta0", "alpha0"),  # specify parameters
-                            probs = c(0.025, 0.5, 0.975),  # 2.5%, median, 97.5%
+                            #probs = c(0.025, 0.5, 0.975),  # 2.5%, median, 97.5%
+                            probs = c(0.1, 0.5, 0.9),  # median and 0.8 percentile
                             round = 3)  
     coef_summary2$betas <- rownames(coef_summary2)
     coef_summary2 <- coef_summary2 %>% relocate(betas)
