@@ -299,7 +299,7 @@ ggsave("figures/sca_plot_select_sca_noleg.svg", plot = sca_plot_selec_sca,
 
 #? Figure 3 --------------------------------------------------------------
 coef_path_file2 <- read_csv(COEF_TABLE_PATH) %>%
-        #filter(run == "yes") %>% 
+        filter(run == "yes") %>% 
         filter(step == 3) %>% 
         mutate(AOU_Code = substr(result, 1, 4)) %>% 
         filter(AOU_Code %!in% c("BCCH"))
@@ -379,7 +379,7 @@ for(ii in 1:nrow(coef_path_file2)) {
     print(ii)
 }
 
-write_rds(coef_summary4, file = "data/out/coefs_step2.rds")
+# write_rds(coef_summary4, file = "data/out/coefs_step2.rds")
 
 table(coef_summary4$sps)
 table(coef_summary4$cov_name)
