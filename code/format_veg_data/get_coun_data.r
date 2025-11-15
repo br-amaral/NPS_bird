@@ -114,11 +114,17 @@ for(ii in 1:nrow(park_county)){
 ## TPA bySizeClass
 
 # get only years that match bird sampling
-years <- seq(2006, 2023, by = 1)
 ###? Tree basal area and density -----------------------------------------
 # by species
 # classify each species in coniferous or hardwood. create categories first
 tree_cat <- read_csv("data/tree_sps_harcon.csv")
+
+# Replace line 123 with:
+park_county <- park_county %>% 
+  mutate(years = case_when(
+    park == "SAGA" ~ list(2007:2023),  # SAGA gets 2007-2023
+    TRUE ~ list(2006:2023)             # All other parks get 2006-2023
+  ))
 
 for(ii in 1:nrow(park_county)){
   tpaRI <- tpa(get(glue("fia_{park_county$park[ii]}")), 
@@ -127,7 +133,7 @@ for(ii in 1:nrow(park_county)){
                   treeType = 'live',
                   bySpecies = TRUE,
                   treeDomain =  DIA > 5.0) %>%                 # exclude saplings    
-               filter(YEAR %in% years) %>% 
+               filter(YEAR %in% unlist(park_county$years[ii])) %>% 
                mutate(genus = stringr::word(SCIENTIFIC_NAME, 1)) %>% 
                left_join(., tree_cat, by = "genus") %>% 
                select(type, pltID, YEAR, TPA, BAA, SCIENTIFIC_NAME) %>% 
@@ -220,7 +226,7 @@ for(ii in 1:nrow(park_county)){
                   bySpecies = TRUE, 
                   treeDomain =  DIA >= 10/2.54 & DIA < 26/2.54,   ## cm to inches
                   treeType = 'live') %>% 
-                  filter(YEAR %in% years) %>% 
+                  filter(YEAR %in% unlist(park_county$years[ii])) %>% 
                   mutate(siz_cla = "pole")  %>% 
                     select(pltID, YEAR, TPA, BAA, SCIENTIFIC_NAME) %>% 
                     arrange(pltID) %>% 
@@ -252,7 +258,7 @@ for(ii in 1:nrow(park_county)){
                   treeDomain =  DIA >= 26/2.54 & DIA < 46/2.54,   ## cm to inches
                   bySpecies = TRUE, 
                   treeType = 'live') %>% 
-                  filter(YEAR %in% years) %>% 
+                  filter(YEAR %in% unlist(park_county$years[ii])) %>% 
                   mutate(siz_cla = "mature")  %>% 
                     select(pltID, YEAR, TPA, BAA, SCIENTIFIC_NAME) %>% 
                     arrange(pltID) %>% 
@@ -286,7 +292,7 @@ for(ii in 1:nrow(park_county)){
                         bySpecies = TRUE, 
                         treeType = 'live') %>% 
                         mutate(siz_cla = "large") %>% 
-                    filter(YEAR %in% years) %>% 
+                    filter(YEAR %in% unlist(park_county$years[ii])) %>% 
                     select(pltID, YEAR, TPA, BAA, SCIENTIFIC_NAME) %>% 
                     arrange(pltID) %>% 
                     # converting units and summing species that have multiple lines
@@ -422,7 +428,7 @@ for(ii in 1:nrow(park_county)){
                bySpecies = TRUE,
                treeDomain = DIA > 5.0) %>%      # exclude saplings
                arrange(pltID) %>%
-               filter(YEAR %in% years) %>% 
+               filter(YEAR %in% unlist(park_county$years[ii])) %>% 
                group_by(pltID, YEAR, SCIENTIFIC_NAME) %>%
                # sum all trees of the same sps to get sps ba and den
                summarise(treeden_ha = sum(TPA, na.rm = T) * 2.47105,     # convert trees per acre to trees per hectare 
@@ -459,7 +465,7 @@ for(ii in 1:nrow(park_county)){
     shrub_loop <- vegStruct(get(glue("fia_{park_county$park[ii]}")), 
                             #totals = TRUE, 
                             byPlot = TRUE)  %>% 
-                  filter(YEAR %in% years) %>% 
+                  filter(YEAR %in% unlist(park_county$years[ii])) %>% 
                   filter(GROWTH_HABIT %in% c('Shrubs/vines','Forbs'),
                          LAYER %in% c("0 to 2.0 feet", "2.1 to 6.0 feet")) %>% 
                   group_by(pltID, YEAR) %>% 
@@ -485,7 +491,7 @@ for(ii in 1:nrow(park_county)){
 for(ii in 1:nrow(park_county)){
     deb_cov_loop <- dwm(get(glue("fia_{park_county$park[ii]}")), 
                         byPlot = TRUE) %>% 
-                      filter(YEAR %in% years) %>% 
+                      filter(YEAR %in% unlist(park_county$years[ii])) %>% 
                       group_by(pltID) %>%
                       summarise(dwd_bio = mean(BIO_ACRE, na.rm = T)) %>% 
                       ungroup() %>% 
