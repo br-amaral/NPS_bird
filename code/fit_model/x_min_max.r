@@ -50,7 +50,7 @@ sum_na <- function(df){ # sum fuction to ignore NAs, but keep NA if all entries 
 }
 
 # Get the script name and time that it started running --
-script_name <- "x_min_max.R"
+script_name <- "back2d_covs_scales_2min_spscovs.R"
 
 cat("\n", "\n", "\n", 
     'Current script:', script_name, 
@@ -181,6 +181,8 @@ if(length(sps_loop) == 1){
   print('analazing a community: {sps_loop}')
 }
 
+y_dat6 <- y_dat6 %>% filter(bird_detec > 0) 
+
 X10 <- X10 %>% 
     dplyr::filter(unique_index %in% y_dat6$unique_index)
 
@@ -215,11 +217,11 @@ y_test <- y %>%
             select(unique_occ, bird_detec_na) %>%
             table() 
 
-rowSums(y_test) %>% unique()
+rowSums(y_test) %>% unique() # has to be always 10
 colSums(y_test)
 sum(y_test) == nrow(y)
-sum(y_test[,2]) == sum(y$bird_detec, na.rm = T)
-sum(y_dat6$bird_detec, na.rm = T) == sum(y_test[,2])
+sum(y_test[,1]) == sum(y$bird_detec, na.rm = T)
+sum(y_dat6$bird_detec, na.rm = T) == sum(y_test[,1])
 
 # check detections by:
 ## park
