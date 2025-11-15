@@ -28,14 +28,14 @@ lenght <- length
 #! Import data --------------------------------------------------------------------
 ## file paths and read files
 # when loading the model results, get the most updated file?
-file_name <- "BAWW_step1_output_2025_09_24run1"
+file_name <- "OVEN_step1_output_2025_09_30run1"
 
 samples_jags <- read_rds(glue("data/model_res/{file_name}.rds"))
 
 # get parameter names
 scales_names <- grep("^scales_", colnames(samples_jags[[1]]), value = TRUE)
-all_params <- c("mu.alpha0", "mu.beta0", "beta", #"beta_int", 
-                "alpha", scales_names)
+(all_params <- c("mu.alpha0", "mu.beta0", "beta", #"beta_int", 
+                "alpha", scales_names))
 if(substr(file_name, nchar(file_name)-2, nchar(file_name)) == "int"){all_params <- c(all_params, "beta_int")}
 
 #! Par estimates ------------------------------------------------------------------
@@ -43,7 +43,8 @@ par(mfrow = c(1,1))
 MCMCplot(samples_jags,
          params = all_params,
          main = file_name,
-         ref_ovl = TRUE)
+         ref_ovl = TRUE,
+         ci = c(10,90))
 
 #! Traceplots ---------------------------------------------------------------------
 MCMCtrace(samples_jags,
@@ -73,12 +74,15 @@ quant_group <- c(0.3, 0.7)
 beta_key <- tibble(
   betas = betas_name, 
   overlap0 = as.character(NA), 
+  scale50 = as.character(NA), 
   sca_sel = as.character(NA),
   sca1 = as.numeric(NA),
   sca2 = as.numeric(NA),
   sca3 = as.numeric(NA),
   qt_lo = quant_group[1],
-  qt_up = quant_group[2]
+  qt_up = quant_group[2],
+  qt_lo1 = as.numeric(NA),
+  qt_up1 = as.numeric(NA)
 )
 
 for(ii in 1:n_betas) {
@@ -89,8 +93,8 @@ for(ii in 1:n_betas) {
   #quantiles <- quantile(beta_loop2, )
   quantiles <- quantile(beta_loop2, quant_group)
 
-  lower_quantile <- quantiles[1]
-  upper_quantile <- quantiles[2]
+  beta_key$qt_lo1[ii] <- lower_quantile <- quantiles[1]
+  beta_key$qt_up1[ii] <- upper_quantile <- quantiles[2]
   
   # Check if quantiles overlap zero
   if (lower_quantile <= 0 && upper_quantile >= 0) {
@@ -112,7 +116,7 @@ for(ii in 1:n_betas) {
   beta_key$sca3[ii] <- tb_mcmc_scales_i[3]
   
   # get only covariates which scale was selected more than 50% of the time
-  if(TRUE %!in% (beta_key[ii,] %>% select(sca1, sca2, sca3) > 0.5)){beta_key$overlap0[ii] <- "yes"}
+  if(TRUE %in% (beta_key[ii,] %>% select(sca1, sca2, sca3) > 0.5)){beta_key$scale50[ii] <- "no"} else {"yes"}
 }
 
 beta_key

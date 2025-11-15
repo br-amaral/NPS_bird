@@ -57,7 +57,7 @@ if(direc == "local"){STEP2_INFO_PATH <- glue("/Users/bamaral/Library/CloudStorag
 ## read files
 dat_sca <- read_rds(COEF_SPS_PATH)       # which betas are important
 beta_key <- read_csv(STEP2_INFO_PATH) %>% 
-              filter(step == 4,
+              filter(step == 3,
                      run == "yes") #%>% 
               # filter(AOU_Code != "BHVI",
               #        AOU_Code != "YBSA"
@@ -285,6 +285,16 @@ X10 <- read_rds(file = XDAT_PATH)
 
 safe_pal <- microViz::distinct_palette(pal = "kelly")
 # scales::show_col(safe_pal)
+
+# Replace the microViz line with:
+if (!require("microViz", quietly = TRUE)) {
+  # Fallback color palette if microViz is not available
+  safe_pal <- c("#F0A3FF", "#0075DC", "#993F00", "#4C005C", "#191919", 
+                "#005C31", "#2BCE48", "#FFCC99", "#808080", "#94FFB5", 
+                "#8F7C00", "#C20088", "#FFA405", "#FFA8BB", "#426600", "#4ECDC4")
+} else {
+  safe_pal <- microViz::distinct_palette(pal = "kelly")
+}
 
 #? AUTOMATED PREDICTION PROCESSING FUNCTION ---------------------------------------
 process_beta_predictions <- function(beta_num, covariate_suffix) {
