@@ -300,7 +300,7 @@ ggsave("figures/sca_plot_select_sca_noleg.svg", plot = sca_plot_selec_sca,
 #? Figure 3 --------------------------------------------------------------
 coef_path_file2 <- read_csv(COEF_TABLE_PATH) %>%
         filter(run == "yes") %>% 
-        filter(step == 3) %>% 
+        filter(step == 5) %>% 
         mutate(AOU_Code = substr(result, 1, 4)) %>% 
         filter(AOU_Code %!in% c("BCCH"))
 

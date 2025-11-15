@@ -42,7 +42,7 @@ freshr::freshr()
 
 test <- FALSE 
 interaction <- FALSE
-step_number_define <- 2
+step_number_define <- 1
 if(substr(getwd(), 1, 3) == "/Us") {direc <- "local"} else {direc <- "hpc"}
 
 #! Load packages ---------------------------------------
@@ -56,10 +56,10 @@ lenght <- length
 `%!in%` <- Negate(`%in%`)
 
 #! MCMC settings ---------------------------------------------------
-niterations <- 60000
-nburnin <- 30000
+niterations <- 120000
+nburnin <- 60000
 nchains <- 6
-nthin <- 4
+nthin <- 6
 nadapt_min <- 20000
 
 #! Source code and Import data -----------------------------------------
