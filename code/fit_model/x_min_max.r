@@ -50,7 +50,7 @@ sum_na <- function(df){ # sum fuction to ignore NAs, but keep NA if all entries 
 }
 
 # Get the script name and time that it started running --
-script_name <- "back2d_covs_scales_2min_spscovs.R"
+script_name <- "x_min_max.r"
 
 cat("\n", "\n", "\n", 
     'Current script:', script_name, 

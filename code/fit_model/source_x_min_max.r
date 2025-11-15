@@ -49,8 +49,6 @@ if(direc == "local"){
             filter(step %in% c(step_number_define)) %>% 
             distinct()
 
-    model_file <- glue("/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne//NPS_bird_copy/{model_file}")
-
     } else {master_tab <- read_csv("code/fit_model/mod_key.csv") %>%
             #filter(run == "yes") %>% 
             filter(step %in% c(step_number_define)) %>% 
@@ -73,11 +71,11 @@ for(key_ite in 1:nrow(master_tab)){
               \n
               \n 
               \n "))
-    #source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/fit_model/x_min_max.r")
-    source("code/fit_model/x_min_max.r")
+    if(direc == "local"){
+        source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/fit_model/x_min_max.r")
+        } else {source("code/fit_model/x_min_max.r")}
     
 }
-
 
 cat(paste('\n ********************************************** \n \n \n 
               ---------------- all DONE Lol ----------------', 
