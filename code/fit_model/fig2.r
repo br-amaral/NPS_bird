@@ -300,7 +300,7 @@ ggsave("figures/sca_plot_select_sca_noleg.svg", plot = sca_plot_selec_sca,
 #? Figure 3 --------------------------------------------------------------
 coef_path_file2 <- read_csv(COEF_TABLE_PATH) %>%
         filter(run == "yes") %>% 
-        filter(step == 5) %>% 
+        filter(step == 2) %>% 
         mutate(AOU_Code = substr(result, 1, 4)) %>% 
         filter(AOU_Code %!in% c("BCCH"))
 
@@ -357,6 +357,8 @@ for(ii in 1:nrow(coef_path_file2)) {
     # Extract posterior samples as a matrix
     # For jagsUI object
     samps <- samples_jags2$samples  # this is a mcmc.list - not $samples
+    
+    if(class(samples_jags2) == "mcmc.list"){samps <- coda::as.mcmc.list(samples_jags2)}
 
     samps_mat <- do.call(rbind, samps)  # now all chains stacked
     dim(samps_mat)  # should be n_draws x n_parameters
@@ -366,7 +368,7 @@ for(ii in 1:nrow(coef_path_file2)) {
     (common_pars <- intersect(coef_summary3$betaind, colnames(samps_mat)))
     if(length(common_pars)==0) stop("No common parameter names found between summary and samples.")
 
-    # compute probabilities
+    # compute probabilities - pencentage of the posterior bellow and above zero
     pct_gt_0  <- apply(samps_mat[, common_pars, drop=FALSE], 2, function(x) mean(x > 0) * 100)
     pct_lt_0  <- apply(samps_mat[, common_pars, drop=FALSE], 2, function(x) mean(x < 0) * 100)
     # Add columns to coef_summary (preserve original rows order)
@@ -380,7 +382,7 @@ for(ii in 1:nrow(coef_path_file2)) {
     print(ii)
 }
 
-# write_rds(coef_summary4, file = "data/out/coefs_step2.rds")
+# write_rds(coef_summary4, file = "data/out/coefs_step1_1.rds")
 
 table(coef_summary4$sps)
 table(coef_summary4$cov_name)
@@ -400,7 +402,7 @@ dat_sca2[which(dat_sca2$betas == "park_size"),"scale"] <- NA
 dat_sca2[which(substr(dat_sca2$betas, 1, 5) == "alpha"),"scale"] <- NA
 
 nrow(dat_sca2)
-dat_sca2 <- dat_sca2  %>% distinct()  %>% mutate(scale = as.numeric(scale))
+dat_sca2 <- dat_sca2  %>% distinct() %>% mutate(scale = as.numeric(scale))
 nrow(dat_sca2)
 
 cov_name <- cbind(c("den",
@@ -449,17 +451,35 @@ table(dat_sca3$sca_name)
 dat_sca3$overlap0med <- NA
 
 for(ii in 1:nrow(dat_sca3)){  
-  if(dat_sca3$`2.5%`[ii] <= 0 && dat_sca3$`97.5%`[ii] >= 0) {
+  # Get the actual lower and upper bounds
+  lower_bound <- min(dat_sca3$`10%`[ii], dat_sca3$`90%`[ii])
+  upper_bound <- max(dat_sca3$`10%`[ii], dat_sca3$`90%`[ii])
+  
+  # Check if zero falls within the corrected interval
+  if(lower_bound <= 0 && upper_bound >= 0) {
       dat_sca3$overlap0med[ii] <- "yes"
     } else {
       dat_sca3$overlap0med[ii] <- "no"
     }
-  }
+}
+
+# dat_sca3 <- dat_sca3 %>% mutate(Covariate = betas) %>% filter(substr(betas, 1, 4) == "beta")
 
 (circles_coefs <- ggplot() +
-  geom_point(data = dat_sca3 %>% filter(!is.na(Covariate)), 
+  geom_point(data = dat_sca3, #%>% filter(!is.na(Covariate)), 
              aes(x = Covariate, y = sps), 
              size = 1, fill = "white", alpha = 0) +
+  # only non overlating CIs
+  # geom_point(data = dat_sca3 %>% filter(scale == 3, overlap0med == "no"), 
+  #            aes(x = Covariate, y = sps, fill = median), 
+  #            size = 31, shape = 21, stroke = 0.9) +
+  # geom_point(data = dat_sca3 %>% filter(scale == 2, overlap0med == "no"), 
+  #            aes(x = Covariate, y = sps, fill = median), 
+  #            size = 24, shape = 21, stroke = 0.9) +
+  # geom_point(data = dat_sca3 %>% filter(scale == 1, overlap0med == "no"), 
+  #            aes(x = Covariate, y = sps, fill = median),
+  #            size = 18.5, shape = 21, stroke = 0.9) +
+  # all values
   geom_point(data = dat_sca3 %>% filter(scale == 3), 
              aes(x = Covariate, y = sps, fill = median), 
              size = 31, shape = 21, stroke = 0.9) +
@@ -527,6 +547,9 @@ for(ii in 1:nrow(dat_sca3)){
     )
   )
 )
+
+ggsave("figures/TESTcoef_circles_step1_1.png", plot = circles_coefs, 
+       device = "png", width = 13, height = 18)
 
 ggsave("figures/coef_circles.svg", plot = circles_coefs, 
        device = "svg", width = 13, height = 18)
