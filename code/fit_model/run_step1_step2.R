@@ -92,7 +92,7 @@ paste('\n ************************************* \n \n \n   Running Models:', '\n
 
 for(key_ite in 1:nrow(master_tab)){
     # key_ite <- 1
-    nburnin <- 30000
+    #nburnin <- 30000
 
     tib_loop <- master_tab[key_ite, ]
 

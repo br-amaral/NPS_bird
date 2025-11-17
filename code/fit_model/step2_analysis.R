@@ -219,7 +219,7 @@ samples_jags <- jags(data = jags_data2,
 
 cat("\n\n\n model is done!!! \n\n\n\n")
 
-file_name <- glue("{sps}_step{step_numb}_output_{date_step2}")
+file_name <- glue("{sps}_step{step_numb}_output_{date_step2}_new")
 
 file_name2 <- paste0(file_name, 'run',
                       length(list.files(path = file.path(getwd(),"data/model_res/"),
