@@ -1547,3 +1547,183 @@ x_cen_den <- x_stats_den %>% pull(middle_val) %>% as.vector()
   ) +
   scale_color_manual(values = safe_pal_species) +  # Only species colors
   ylim(0, 1))
+
+
+ggsave("figures/pred_den4.svg", plot = plot_den4, device = "svg", width = 10.2, height = 4)
+ggsave("figures/pred_den4.png", plot = plot_den4, device = "png", width = 10.2, height = 4)
+
+# Tree Basal Area
+x_stats_ba <- beta5_preds2 %>% 
+  filter(covariate == "cov") %>% 
+  select(pred_mean, scale) %>% 
+  group_by(scale) %>% 
+  summarise(
+    min_val = min(pred_mean), max_val = max(pred_mean),
+    middle_val = (min(pred_mean) + max(pred_mean)) / 2, median_val = median(pred_mean))
+
+x_cen_ba <- x_stats_ba %>% pull(middle_val) %>% as.vector()
+
+(plot_ba4 <- ggplot() +
+  geom_line(data = beta5_preds2 %>% filter(covariate == "Tree Basal Area"), 
+            aes(x = X_range_ori, y = pred_mean, color = factor(sps)), linewidth = 1.2, show.legend = FALSE) +
+  geom_rug(data = beta5_preds2 %>% filter(covariate == "cov"), 
+           aes(x = pred_mean), 
+           color = "gray50", sides = "b", size = 0.8, length = unit(0.05, "npc"), show.legend = FALSE) +
+  geom_text(data = data.frame(scale = c(1, 2, 3), 
+                              label = c("Local Scale", "Park Scale", "County Scale"),
+                              x = c(x_cen_ba[1], x_cen_ba[2], x_cen_ba[3]),
+                              y = c(0.97, 0.97, 0.97)),
+            aes(x = x, y = y, label = label), 
+            hjust = 0.5, vjust = 0, size = 5, fontface = "plain", color = "black") +
+  facet_wrap(~ scale, scales = "free_x") +
+  labs(y = "Predicted Occupancy Probability\n", title = "Tree Basal Area (m²/ha)") +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black", linewidth = 0.6, fill = NA),
+        panel.background = element_rect(fill = "white", color = NA),
+        strip.text = element_blank(), strip.background = element_blank(),
+        axis.title.x = element_blank(),
+        plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+        axis.title.y = element_text(size = 14),
+        axis.text.x = element_text(size = 12), axis.text.y = element_text(size = 12)) +
+  scale_color_manual(values = safe_pal_species) + ylim(0, 1))
+
+ggsave("figures/pred_BA4.svg", plot = plot_ba4, device = "svg", width = 10.2, height = 4)
+ggsave("figures/pred_BA4.png", plot = plot_ba4, device = "png", width = 10.2, height = 4)
+
+# Late Successional Trees
+x_stats_lat <- beta3_preds2 %>% 
+  filter(covariate == "cov") %>% 
+  select(pred_mean, scale) %>% 
+  group_by(scale) %>% 
+  summarise(
+    min_val = min(pred_mean), max_val = max(pred_mean),
+    middle_val = (min(pred_mean) + max(pred_mean)) / 2, median_val = median(pred_mean))
+
+x_cen_lat <- x_stats_lat %>% pull(middle_val) %>% as.vector()
+
+(plot_lat4 <- ggplot() +
+  geom_line(data = beta3_preds2 %>% filter(covariate == "Late Successional Tree Density"), 
+            aes(x = X_range_ori, y = pred_mean, color = factor(sps)), linewidth = 1.2, show.legend = FALSE) +
+  geom_rug(data = beta3_preds2 %>% filter(covariate == "cov"), 
+           aes(x = pred_mean), 
+           color = "gray50", sides = "b", size = 0.8, length = unit(0.05, "npc"), show.legend = FALSE) +
+  geom_text(data = data.frame(scale = c(1, 2, 3), 
+                              label = c("Local Scale", "Park Scale", "County Scale"),
+                              x = c(x_cen_lat[1], x_cen_lat[2], x_cen_lat[3]),
+                              y = c(0.97, 0.97, 0.97)),
+            aes(x = x, y = y, label = label), 
+            hjust = 0.5, vjust = 0, size = 5, fontface = "plain", color = "black") +
+  facet_wrap(~ scale, scales = "free_x") +
+  labs(y = "Predicted Occupancy Probability\n", title = "Late Successional Trees (m²/ha)") +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black", linewidth = 0.6, fill = NA),
+        panel.background = element_rect(fill = "white", color = NA),
+        strip.text = element_blank(), strip.background = element_blank(),
+        axis.title.x = element_blank(),
+        plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+        axis.title.y = element_text(size = 14),
+        axis.text.x = element_text(size = 12), axis.text.y = element_text(size = 12)) +
+  scale_color_manual(values = safe_pal_species) + ylim(0, 1))
+
+ggsave("figures/pred_lat4.svg", plot = plot_lat4, device = "svg", width = 10.2, height = 4)
+ggsave("figures/pred_lat4.png", plot = plot_lat4, device = "png", width = 10.2, height = 4)
+
+# Shrub Coverage
+x_stats_shr <- beta4_preds2 %>% 
+  filter(covariate == "cov") %>% 
+  select(pred_mean, scale) %>% 
+  group_by(scale) %>% 
+  summarise(
+    min_val = min(pred_mean), max_val = max(pred_mean),
+    middle_val = (min(pred_mean) + max(pred_mean)) / 2, median_val = median(pred_mean))
+
+x_cen_shr <- x_stats_shr %>% pull(middle_val) %>% as.vector()
+
+(plot_shr4 <- ggplot() +
+  geom_line(data = beta4_preds2 %>% filter(covariate == "Shrub Basal Area"), 
+            aes(x = X_range_ori, y = pred_mean, color = factor(sps)), linewidth = 1.2, show.legend = FALSE) +
+  geom_rug(data = beta4_preds2 %>% filter(covariate == "cov"), 
+           aes(x = pred_mean), 
+           color = "gray50", sides = "b", size = 0.8, length = unit(0.05, "npc"), show.legend = FALSE) +
+  geom_text(data = data.frame(scale = c(1, 2, 3), 
+                              label = c("Local Scale", "Park Scale", "County Scale"),
+                              x = c(x_cen_shr[1], x_cen_shr[2], x_cen_shr[3]),
+                              y = c(0.97, 0.97, 0.97)),
+            aes(x = x, y = y, label = label), 
+            hjust = 0.5, vjust = 0, size = 5, fontface = "plain", color = "black") +
+  facet_wrap(~ scale, scales = "free_x") +
+  labs(y = "Predicted Occupancy Probability\n", title = "Shrub Coverage (%)") +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black", linewidth = 0.6, fill = NA),
+        panel.background = element_rect(fill = "white", color = NA),
+        strip.text = element_blank(), strip.background = element_blank(),
+        axis.title.x = element_blank(),
+        plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+        axis.title.y = element_text(size = 14),
+        axis.text.x = element_text(size = 12), axis.text.y = element_text(size = 12)) +
+  scale_color_manual(values = safe_pal_species) + ylim(0, 1))
+
+ggsave("figures/pred_shr4.svg", plot = plot_shr4, device = "svg", width = 10.2, height = 4)
+ggsave("figures/pred_shr4.png", plot = plot_shr4, device = "png", width = 10.2, height = 4)
+
+# Conifer Trees
+x_stats_con <- beta2_preds2 %>% 
+  filter(covariate == "cov") %>% 
+  select(pred_mean, scale) %>% 
+  group_by(scale) %>% 
+  summarise(
+    min_val = min(pred_mean), max_val = max(pred_mean),
+    middle_val = (min(pred_mean) + max(pred_mean)) / 2, median_val = median(pred_mean))
+
+x_cen_con <- x_stats_con %>% pull(middle_val) %>% as.vector()
+
+(plot_con4 <- ggplot() +
+  geom_line(data = beta2_preds2 %>% filter(covariate == "Conifer Density"), 
+            aes(x = X_range_ori, y = pred_mean, color = factor(sps)), linewidth = 1.2, show.legend = FALSE) +
+  geom_rug(data = beta2_preds2 %>% filter(covariate == "cov"), 
+           aes(x = pred_mean), 
+           color = "gray50", sides = "b", size = 0.8, length = unit(0.05, "npc"), show.legend = FALSE) +
+  geom_text(data = data.frame(scale = c(1, 2, 3), 
+                              label = c("Local Scale", "Park Scale", "County Scale"),
+                              x = c(x_cen_con[1], x_cen_con[2], x_cen_con[3]),
+                              y = c(0.97, 0.97, 0.97)),
+            aes(x = x, y = y, label = label), 
+            hjust = 0.5, vjust = 0, size = 5, fontface = "plain", color = "black") +
+  facet_wrap(~ scale, scales = "free_x") +
+  labs(y = "Predicted Occupancy Probability\n", title = "Conifer Trees (m²/ha)") +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black", linewidth = 0.6, fill = NA),
+        panel.background = element_rect(fill = "white", color = NA),
+        strip.text = element_blank(), strip.background = element_blank(),
+        axis.title.x = element_blank(),
+        plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+        axis.title.y = element_text(size = 14),
+        axis.text.x = element_text(size = 12), axis.text.y = element_text(size = 12)) +
+  scale_color_manual(values = safe_pal_species) + ylim(0, 1))
+
+ggsave("figures/pred_con4.svg", plot = plot_con4, device = "svg", width = 10.2, height = 4)
+ggsave("figures/pred_con4.png", plot = plot_con4, device = "png", width = 10.2, height = 4)
+
+# Create species legend plot
+legend_plot <- ggplot() +
+  geom_line(data = beta1_preds2 %>% filter(covariate == "Tree Density") %>% slice(1:17), 
+            aes(x = X_range_ori, y = pred_mean, color = factor(sps)), linewidth = 1.2) +
+  scale_color_manual(values = safe_pal_species, name = "Species") +
+  theme_void() +
+  theme(legend.position = "bottom",
+        legend.title = element_text(size = 14, face = "bold"),
+        legend.text = element_text(size = 12),
+        legend.key.width = unit(1.5, "cm")) +
+  guides(color = guide_legend(nrow = 2, byrow = TRUE))
+
+# Extract just the legend
+library(cowplot)
+species_legend <- get_legend(legend_plot)
+
+# Save the legend separately
+ggsave("figures/species_legend.svg", plot = species_legend, device = "svg", width = 12, height = 2)
+ggsave("figures/species_legend.png", plot = species_legend, device = "png", width = 12, height = 2)
