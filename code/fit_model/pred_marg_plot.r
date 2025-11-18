@@ -47,7 +47,7 @@ lenght <- length
 
 #! Import data -----------------------------------------
 ## file paths
-COEF_SPS_PATH <- "data/out/coefs_sps_sca.rds"
+COEF_SPS_PATH <- "data/out/coefs_sps_sca2.rds"
 STEP2_INFO_PATH <- "code/fit_model/mod_key.csv"
 if(substr(getwd(), 1, 3) == "/Us") {direc <- "local"} else {direc <- "hpc"}
 
@@ -57,7 +57,7 @@ if(direc == "local"){STEP2_INFO_PATH <- glue("/Users/bamaral/Library/CloudStorag
 ## read files
 dat_sca <- read_rds(COEF_SPS_PATH)       # which betas are important
 beta_key <- read_csv(STEP2_INFO_PATH) %>% 
-              filter(step == 3,
+              filter(step == 4,
                      run == "yes") #%>% 
               # filter(AOU_Code != "BHVI",
               #        AOU_Code != "YBSA"
@@ -140,7 +140,7 @@ for(sps_res in 1:nrow(beta_key)){
                   pull(select)
 
   beta_step2 <- read_rds(glue("data/model_res/{beta_step2_get}.rds")) %>% 
-                    filter(overlap0 == "no") %>% 
+                    #filter(overlap0 == "no") %>% 
                     pull(betas)
     
   sps_data <- read_rds(glue("data/ana_file/{DATA_SPS_PATH}"))
@@ -148,10 +148,10 @@ for(sps_res in 1:nrow(beta_key)){
   dat_sca2 <- dat_sca %>% 
                       filter(sps == sps_loop,  
                       #! plot only non-overlapping zeros
-                             includes_zero == "black")  %>%
+                             overlap0med == "no")  %>%
                       left_join(., cov_key, by = "Covariate") %>% 
                       relocate(data_tab, coef_ori) %>% 
-                      filter(scale_selected == 1) %>% 
+                      #filter(scale_selected == 1) %>% 
                       arrange(data_tab) %>% 
                       filter(!is.na(coef_ori))
   if(nrow(dat_sca2) != 0){
@@ -196,7 +196,7 @@ for(sps_res in 1:nrow(beta_key)){
 
       # Get beta index
       beta_index <- as.numeric(str_extract(beta_loop$coef_ori, "\\d+"))
-      beta_index_order <- as.numeric(str_extract(beta_loop$coef, "\\d+"))
+      beta_index_order <- as.numeric(str_extract(beta_loop$betas, "\\d+"))
 
       beta_param <- glue("beta[{beta_index}]")
     
@@ -276,9 +276,9 @@ for(sps_res in 1:nrow(beta_key)){
   }
 }
 
-# save.image(file = "data/predictions_sps3.RData")
- load(file = "data/predictions_sps3.RData")
-
+# save.image(file = "data/predictions_sps3_step2_1.RData")
+# load(file = "data/predictions_sps3.RData")
+# dat_sca3 <- read_rds(file = "data/dat_sca3.rds")
 # get park ranges
 XDAT_PATH <- "data/X.rds"
 X10 <- read_rds(file = XDAT_PATH)
@@ -291,7 +291,7 @@ if (!require("microViz", quietly = TRUE)) {
   # Fallback color palette if microViz is not available
   safe_pal <- c("#F0A3FF", "#0075DC", "#993F00", "#4C005C", "#191919", 
                 "#005C31", "#2BCE48", "#FFCC99", "#808080", "#94FFB5", 
-                "#8F7C00", "#C20088", "#FFA405", "#FFA8BB", "#426600", "#4ECDC4")
+                "#8F7C00", "#C20088", "#FFA405", "#FFA8BB", "#426600", "#4ECDC4", "#07a1cb")
 } else {
   safe_pal <- microViz::distinct_palette(pal = "kelly")
 }
@@ -351,7 +351,7 @@ beta5_preds <- process_beta_predictions(5, beta_covariates[["5"]])
 scale_covs <-  as_tibble(cbind(c(3, 2, 1), c("coun", "park", "site"))) %>% 
                   rename(scale = V1, scale_name = V2)
 
-# save.image(file = "data/predictions_sps3.RData")
+# save.image(file = "data/predictions_sps3_step2_1.RData")
 # load("data/predictions_sps2.RData")
 
 #? TREE DENSITY -----------------------------------------------------------------
@@ -419,7 +419,7 @@ ggplot() +
         legend.title = element_text(size = 14, face = "bold", hjust = 0.5),    # Legend title
         legend.text = element_text(size = 12)                     # Legend text
   ) +
-  #scale_color_manual(values = safe_pal) +
+  scale_color_manual(values = safe_pal) +
   scale_y_continuous(
     limits = c(0, max_pos_treeden), 
     breaks = c(0, 0.25, 0.5, 0.75, 1, treeden_covs_pkpos$y_pos),
@@ -1218,7 +1218,62 @@ ggplot() +
     breaks = c(0, 0.25, 0.5, 0.75, 1, treeden_covs_pkpos$y_pos),
     labels = c(0, 0.25, 0.5, 0.75, 1, as.character(treeden_covs_pkpos$park)))
 
-# TREE BASAL AREA - with internal labels
+#
+
+
+## rugggg
+
+# Get min, max, and middle for each scale
+x_stats_den <- beta1_preds2 %>% 
+  filter(covariate == "cov") %>% 
+  select(pred_mean, scale) %>% 
+  group_by(scale) %>% 
+  summarise(
+    min_val = min(pred_mean),
+    max_val = max(pred_mean),
+    middle_val = (min(pred_mean) + max(pred_mean)) / 2,
+    median_val = median(pred_mean)
+  )
+
+x_cen_den <- x_stats_den %>% pull(middle_val) %>% as.vector()
+
+ggplot() +
+  geom_line(data = beta1_preds2 %>% filter(covariate == "Tree Density"), 
+            aes(x = X_range_ori, y = pred_mean, color = factor(sps)), linewidth = 1.2, show.legend = FALSE) +
+  # Add rug plot for park values
+  geom_rug(data = beta1_preds2 %>% filter(covariate == "cov"), 
+           aes(x = pred_mean, color = park), 
+           sides = "b", size = 0.8, length = unit(0.05, "npc"), show.legend = FALSE) +
+  # Add text labels INSIDE each panel - CENTERED
+  geom_text(data = data.frame(scale = c(1, 2, 3), 
+                              label = c("Local Scale", "Park Scale", "County Scale"),
+                              x = c(x_cen_den[1], x_cen_den[2], x_cen_den[3]),
+                              y = c(0.95, 0.95, 0.95)),
+            aes(x = x, y = y, label = label), 
+            hjust = 0.5, vjust = 0, size = 5, fontface = "plain",
+            color = "black") +
+  facet_wrap(~ scale, scales = "free_x") +
+  labs(y = "Predicted Occupancy Probability\n",
+       title = glue("Tree Density (stems/ha)")) +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black", linewidth = 0.6, fill = NA),
+        panel.background = element_rect(fill = "white", color = NA),
+        strip.text = element_blank(),
+        strip.background = element_blank(),
+        axis.title.x = element_blank(),
+        plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+        axis.title.y = element_text(size = 14),
+        axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12)
+  ) +
+  scale_color_manual(values = safe_pal) +
+  ylim(0, 1)
+
+ggsave("figures/pred_den4.svg", plot = last_plot(), device = "svg", width = 10.2, height = 4)
+ggsave("figures/pred_den4.png", plot = last_plot(), device = "png", width = 10.2, height = 4)
+
+# tree ba
 # Get min, max, and middle for each scale
 x_stats_ba <- beta5_preds2 %>% 
   filter(covariate == "cov") %>% 
@@ -1227,25 +1282,24 @@ x_stats_ba <- beta5_preds2 %>%
   summarise(
     min_val = min(pred_mean),
     max_val = max(pred_mean),
-    middle_val = (min(pred_mean) + max(pred_mean)) / 2,  # Arithmetic middle
-    median_val = median(pred_mean)  # Your current approach
+    middle_val = (min(pred_mean) + max(pred_mean)) / 2,
+    median_val = median(pred_mean)
   )
 
-# Extract just the middle values for centering
 x_cen_ba <- x_stats_ba %>% pull(middle_val) %>% as.vector()
 
 ggplot() +
-  geom_point(data = beta5_preds2 %>% filter(covariate == "cov"), 
-             aes(y = y_pos, x = pred_mean, col = park), size = 2, show.legend = FALSE) +
-  geom_hline(yintercept = -0.001, color = "black", linewidth = 0.4) +
-  geom_hline(yintercept = -0.025, color = "black", linewidth = 0.4) +
   geom_line(data = beta5_preds2 %>% filter(covariate == "Tree Basal Area"), 
             aes(x = X_range_ori, y = pred_mean, color = factor(sps)), linewidth = 1.2, show.legend = FALSE) +
+  # Add rug plot for park values
+  geom_rug(data = beta5_preds2 %>% filter(covariate == "cov"), 
+           aes(x = pred_mean, color = park), 
+           sides = "b", size = 0.8, length = unit(0.05, "npc"), show.legend = FALSE) +
   # Add text labels INSIDE each panel - CENTERED
   geom_text(data = data.frame(scale = c(1, 2, 3), 
                               label = c("Local Scale", "Park Scale", "County Scale"),
                               x = c(x_cen_ba[1], x_cen_ba[2], x_cen_ba[3]),
-                              y = c(0.99, 0.99, 0.99)),
+                              y = c(0.95, 0.95, 0.95)),
             aes(x = x, y = y, label = label), 
             hjust = 0.5, vjust = 0, size = 5, fontface = "plain",
             color = "black") +
@@ -1262,20 +1316,15 @@ ggplot() +
         plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
         axis.title.y = element_text(size = 14),
         axis.text.x = element_text(size = 12),
-        axis.text.y = element_text(size = 12),
-        legend.position = "none"
+        axis.text.y = element_text(size = 12)
   ) +
   scale_color_manual(values = safe_pal) +
-  scale_y_continuous(
-    limits = c(min_pos_treeba, 1), 
-    breaks = c(0, 0.25, 0.5, 0.75, 1, treeba_covs_pkpos$y_pos),
-    labels = c(0, 0.25, 0.5, 0.75, 1, as.character(treeba_covs_pkpos$park)))
+  ylim(0, 1)
 
-ggsave("figures/pred_BA3.svg", plot = last_plot(), device = "svg", width = 10.2, height = 6.5)
-ggsave("figures/pred_BA3.png", plot = last_plot(), device = "png", width = 10.2, height = 6.5)
+ggsave("figures/pred_BA4.svg", plot = last_plot(), device = "svg", width = 10.2, height = 4)
+ggsave("figures/pred_BA4.png", plot = last_plot(), device = "png", width = 10.2, height = 4)
 
-# LATE SUCCESSIONAL BASAL AREA - with internal labels
-
+## lat
 # Get min, max, and middle for each scale
 x_stats_lat <- beta3_preds2 %>% 
   filter(covariate == "cov") %>% 
@@ -1291,16 +1340,17 @@ x_stats_lat <- beta3_preds2 %>%
 x_cen_lat <- x_stats_lat %>% pull(middle_val) %>% as.vector()
 
 ggplot() +
-  geom_point(data = beta3_preds2 %>% filter(covariate == "cov"), 
-             aes(y = y_pos, x = pred_mean, col = park), size = 2, show.legend = FALSE) +
-  geom_hline(yintercept = -0.001, color = "black", linewidth = 0.4) +
-  geom_hline(yintercept = -0.025, color = "black", linewidth = 0.4) +
   geom_line(data = beta3_preds2 %>% filter(covariate == "Late Successional Tree Density"), 
             aes(x = X_range_ori, y = pred_mean, color = factor(sps)), linewidth = 1.2, show.legend = FALSE) +
+  # Add rug plot for park values
+  geom_rug(data = beta3_preds2 %>% filter(covariate == "cov"), 
+           aes(x = pred_mean, color = park), 
+           sides = "b", size = 0.8, length = unit(0.05, "npc"), show.legend = FALSE) +
+  # Add text labels INSIDE each panel - CENTERED
   geom_text(data = data.frame(scale = c(1, 2, 3), 
                               label = c("Local Scale", "Park Scale", "County Scale"),
                               x = c(x_cen_lat[1], x_cen_lat[2], x_cen_lat[3]),
-                              y = c(0.99, 0.99, 0.99)),
+                              y = c(0.95, 0.95, 0.95)),
             aes(x = x, y = y, label = label), 
             hjust = 0.5, vjust = 0, size = 5, fontface = "plain",
             color = "black") +
@@ -1317,18 +1367,16 @@ ggplot() +
         plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
         axis.title.y = element_text(size = 14),
         axis.text.x = element_text(size = 12),
-        axis.text.y = element_text(size = 12),
-        legend.position = "none"
+        axis.text.y = element_text(size = 12)
   ) +
   scale_color_manual(values = safe_pal) +
-  scale_y_continuous(
-    limits = c(min_pos_treelat, 1), 
-    breaks = c(0, 0.25, 0.5, 0.75, 1, treelat_covs_pkpos$y_pos),
-    labels = c(0, 0.25, 0.5, 0.75, 1, as.character(treelat_covs_pkpos$park)))
+  ylim(0, 1)
 
-ggsave("figures/pred_lat3.svg", plot = last_plot(), device = "svg", width = 10.2, height = 6.5)
-ggsave("figures/pred_lat3.png", plot = last_plot(), device = "png", width = 10.2, height = 6.5)
-# SHRUB BASAL AREA - with internal labels
+ggsave("figures/pred_lat4.svg", plot = last_plot(), device = "svg", width = 10.2, height = 4)
+ggsave("figures/pred_lat4.png", plot = last_plot(), device = "png", width = 10.2, height = 4)
+
+
+# shrub
 
 # Get min, max, and middle for each scale
 x_stats_shr <- beta4_preds2 %>% 
@@ -1345,16 +1393,17 @@ x_stats_shr <- beta4_preds2 %>%
 x_cen_shr <- x_stats_shr %>% pull(middle_val) %>% as.vector()
 
 ggplot() +
-  geom_point(data = beta4_preds2 %>% filter(covariate == "cov"), 
-             aes(y = y_pos, x = pred_mean, col = park), size = 2, show.legend = FALSE) +
-  geom_hline(yintercept = -0.001, color = "black", linewidth = 0.4) +
-  geom_hline(yintercept = -0.025, color = "black", linewidth = 0.4) +
   geom_line(data = beta4_preds2 %>% filter(covariate == "Shrub Basal Area"), 
             aes(x = X_range_ori, y = pred_mean, color = factor(sps)), linewidth = 1.2, show.legend = FALSE) +
+  # Add rug plot for park values
+  geom_rug(data = beta4_preds2 %>% filter(covariate == "cov"), 
+           aes(x = pred_mean, color = park), 
+           sides = "b", size = 0.8, length = unit(0.05, "npc"), show.legend = FALSE) +
+  # Add text labels INSIDE each panel - CENTERED
   geom_text(data = data.frame(scale = c(1, 2, 3), 
                               label = c("Local Scale", "Park Scale", "County Scale"),
                               x = c(x_cen_shr[1], x_cen_shr[2], x_cen_shr[3]),
-                              y = c(0.99, 0.99, 0.99)),
+                              y = c(0.95, 0.95, 0.95)),
             aes(x = x, y = y, label = label), 
             hjust = 0.5, vjust = 0, size = 5, fontface = "plain",
             color = "black") +
@@ -1371,18 +1420,15 @@ ggplot() +
         plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
         axis.title.y = element_text(size = 14),
         axis.text.x = element_text(size = 12),
-        axis.text.y = element_text(size = 12),
-        legend.position = "none"
+        axis.text.y = element_text(size = 12)
   ) +
   scale_color_manual(values = safe_pal) +
-  scale_y_continuous(
-    limits = c(min_pos_shrub, 1), 
-    breaks = c(0, 0.25, 0.5, 0.75, 1, shrub_covs_pkpos$y_pos),
-    labels = c(0, 0.25, 0.5, 0.75, 1, as.character(shrub_covs_pkpos$park)))
+  ylim(0, 1)
 
-ggsave("figures/pred_shr3.svg", plot = last_plot(), device = "svg", width = 10.2, height = 6.5)
-ggsave("figures/pred_shr3.png", plot = last_plot(), device = "png", width = 10.2, height = 6.5)
-# CONIFER BASAL AREA - with internal labels
+ggsave("figures/pred_shr4.svg", plot = last_plot(), device = "svg", width = 10.2, height = 4)
+ggsave("figures/pred_shr4.png", plot = last_plot(), device = "png", width = 10.2, height = 4)
+
+# conifer
 # Get min, max, and middle for each scale
 x_stats_con <- beta2_preds2 %>% 
   filter(covariate == "cov") %>% 
@@ -1398,16 +1444,17 @@ x_stats_con <- beta2_preds2 %>%
 x_cen_con <- x_stats_con %>% pull(middle_val) %>% as.vector()
 
 ggplot() +
-  geom_point(data = beta2_preds2 %>% filter(covariate == "cov"), 
-             aes(y = y_pos, x = pred_mean, col = park), size = 2, show.legend = FALSE) +
-  geom_hline(yintercept = -0.001, color = "black", linewidth = 0.4) +
-  geom_hline(yintercept = -0.025, color = "black", linewidth = 0.4) +
   geom_line(data = beta2_preds2 %>% filter(covariate == "Conifer Density"), 
             aes(x = X_range_ori, y = pred_mean, color = factor(sps)), linewidth = 1.2, show.legend = FALSE) +
+  # Add rug plot for park values
+  geom_rug(data = beta2_preds2 %>% filter(covariate == "cov"), 
+           aes(x = pred_mean, color = park), 
+           sides = "b", size = 0.8, length = unit(0.05, "npc"), show.legend = FALSE) +
+  # Add text labels INSIDE each panel - CENTERED
   geom_text(data = data.frame(scale = c(1, 2, 3), 
                               label = c("Local Scale", "Park Scale", "County Scale"),
                               x = c(x_cen_con[1], x_cen_con[2], x_cen_con[3]),
-                              y = c(0.99, 0.99, 0.99)),
+                              y = c(0.95, 0.95, 0.95)),
             aes(x = x, y = y, label = label), 
             hjust = 0.5, vjust = 0, size = 5, fontface = "plain",
             color = "black") +
@@ -1424,14 +1471,79 @@ ggplot() +
         plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
         axis.title.y = element_text(size = 14),
         axis.text.x = element_text(size = 12),
-        axis.text.y = element_text(size = 12),
-        legend.position = "none"
+        axis.text.y = element_text(size = 12)
   ) +
   scale_color_manual(values = safe_pal) +
-  scale_y_continuous(
-    limits = c(min_pos_treecon, 1), 
-    breaks = c(0, 0.25, 0.5, 0.75, 1, treecon_covs_pkpos$y_pos),
-    labels = c(0, 0.25, 0.5, 0.75, 1, as.character(treecon_covs_pkpos$park)))
+  ylim(0, 1)
 
-ggsave("figures/pred_con3.svg", plot = last_plot(), device = "svg", width = 10.2, height = 6.5)
-ggsave("figures/pred_con3.png", plot = last_plot(), device = "png", width = 10.2, height = 6.5)
+ggsave("figures/pred_con4.svg", plot = last_plot(), device = "svg", width = 10.2, height = 4)
+ggsave("figures/pred_con4.png", plot = last_plot(), device = "png", width = 10.2, height = 4)
+
+
+
+
+### gray rug and species legend
+
+# Create gray palette specifically for parks
+park_names <- unique(beta1_preds2$park[!is.na(beta1_preds2$park)])
+n_parks <- length(park_names)
+gray_pal <- gray.colors(n_parks, start = 0.3, end = 0.8)
+names(gray_pal) <- sort(park_names)
+
+# Keep species palette separate
+SPS_ORDER_PATH <- "data/src/sps_order.csv"
+
+sps_order <- read_csv(SPS_ORDER_PATH) %>% 
+                rename(sps = Aou_code) %>% 
+                mutate(sps_name = factor(sps_name, levels = sps_name)) 
+
+species_names <- unique(sps_order$sps)
+n_species <- length(species_names)
+safe_pal_species <- safe_pal[1:n_species]
+names(safe_pal_species) <- sort(species_names)
+
+x_stats_den <- beta1_preds2 %>% 
+  filter(covariate == "cov") %>% 
+  select(pred_mean, scale) %>% 
+  group_by(scale) %>% 
+  summarise(
+    min_val = min(pred_mean),
+    max_val = max(pred_mean),
+    middle_val = (min(pred_mean) + max(pred_mean)) / 2,
+    median_val = median(pred_mean)
+  )
+
+x_cen_den <- x_stats_den %>% pull(middle_val) %>% as.vector()
+
+(plot_den4 <- ggplot() +
+  geom_line(data = beta1_preds2 %>% filter(covariate == "Tree Density"), 
+            aes(x = X_range_ori, y = pred_mean, color = factor(sps)), linewidth = 1.2, show.legend = FALSE) +
+  # Add rug plot for park values with explicit gray colors
+  geom_rug(data = beta1_preds2 %>% filter(covariate == "cov"), 
+           aes(x = pred_mean), 
+           color = "gray50",  # Single gray color for all parks
+           sides = "b", size = 0.8, length = unit(0.05, "npc"), show.legend = FALSE) +
+  geom_text(data = data.frame(scale = c(1, 2, 3), 
+                              label = c("Local Scale", "Park Scale", "County Scale"),
+                              x = c(x_cen_den[1], x_cen_den[2], x_cen_den[3]),
+                              y = c(0.97, 0.97, 0.97)),
+            aes(x = x, y = y, label = label), 
+            hjust = 0.5, vjust = 0, size = 5, fontface = "plain",
+            color = "black") +
+  facet_wrap(~ scale, scales = "free_x") +
+  labs(y = "Predicted Occupancy Probability\n",
+       title = "Tree Density (stems/ha)") +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        panel.border = element_rect(color = "black", linewidth = 0.6, fill = NA),
+        panel.background = element_rect(fill = "white", color = NA),
+        strip.text = element_blank(),
+        strip.background = element_blank(),
+        axis.title.x = element_blank(),
+        plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+        axis.title.y = element_text(size = 14),
+        axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12)
+  ) +
+  scale_color_manual(values = safe_pal_species) +  # Only species colors
+  ylim(0, 1))
