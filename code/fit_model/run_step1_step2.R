@@ -118,7 +118,7 @@ for(key_ite in 1:nrow(master_tab)){
         scales_loop <- as.numeric(sca_file %>% filter(overlap0 == "no") %>% pull(sca_sel)) # filter(overlap0 == "no") %>%
         date_step1 <- substr(tib_loop$result, 19, 28)
         cov_key2 <- sca_file %>% 
-                        filter(scale50 == "no") %>% 
+                        #filter(scale50 == "no") %>% 
                         pull(betas)
         
         # if(tib_loop$all_sca == F){ 

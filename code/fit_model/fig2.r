@@ -26,7 +26,7 @@
 #  renv::snapshot()
 
 # detach packages and clear workspace
-freshr::freshr()
+freshr::freshr() 
 
 #! Load packages ----------------------------------------
 library(tidyverse)
@@ -56,8 +56,8 @@ if(substr(getwd(), 1, 3) == "/Us") {direc <- "local"} else {direc <- "hpc"}
 
 ## read files
 coef_path_file <- read_csv(COEF_TABLE_PATH) %>%
-        #filter(run == "yes") %>% 
-        filter(step == 2) %>% 
+        filter(run == "yes") %>% 
+        filter(step == 4) %>% 
         mutate(AOU_Code = substr(result, 1, 4)) %>% 
         filter(AOU_Code %!in% c("BCCH"))
 
@@ -103,8 +103,19 @@ for(ii in 1:nrow(coef_path_file)) {
 
     # Extract posterior samples as a matrix
     # For jagsUI object
-    samps <- coda::as.mcmc.list(samples_jags)  # this is a mcmc.list - not $samples
+    print("here")
 
+    # Handle different MCMC object types
+    if(class(samples_jags)[1] == "mcmc.list"){
+        samps <- samples_jags  # Already an mcmc.list
+    } else if("samples" %in% names(samples_jags)) {
+        samps <- samples_jags$samples  # jagsUI object
+    } else if("mcmc" %in% names(samples_jags)) {
+        samps <- samples_jags$mcmc  # Different structure
+    } else {
+        # Try to convert directly
+        samps <- coda::as.mcmc.list(samples_jags)
+    }
     samps_mat <- do.call(rbind, samps)  # now all chains stacked
     dim(samps_mat)  # should be n_draws x n_parameters
     colnames(samps_mat) 
@@ -138,7 +149,8 @@ for(ii in 1:nrow(coef_path_file)) {
       if(ii == 1) {coef_summary3 <- coef_summary2} else {coef_summary3 <- rbind(coef_summary3, coef_summary2)}
 }
 
-write_rds(coef_summary3, file = "data/out/coefs_step1.rds")
+# write_rds(coef_summary3, file = "data/out/coefs_step2_1_fig2.rds")
+# coef_summary3<- read_rds(file = "data/out/coefs_step2_1_fig2.rds")
 
 #? Figure 2 --------------------------------------------------------------
 dat <- coef_summary3 %>% 
@@ -224,6 +236,15 @@ dat_sca <- dat1 %>%
                   
 dat1 %>% filter(is.na(sca_col)) %>% select(sps, coef, overlap0, sca1, sca2, sca3, sca_name, sca_col, select_sca, cov_sps, Covariate)
 
+SPS_ORDER_PATH <- "data/src/sps_order.csv"
+
+sps_order <- read_csv(SPS_ORDER_PATH) %>% 
+                rename(sps = Aou_code) %>% 
+                mutate(sps_name = factor(sps_name, levels = sps_name))  # Use current order as levels
+
+dat_sca <- dat_sca %>% 
+              left_join(., sps_order, by = "sps")
+
 (sca_plot_selec_sca <- ggplot() +
   geom_point(data = dat_sca %>% filter(sca_select == 3), 
              aes(x = Covariate, y = sps, fill = sca_col), 
@@ -292,6 +313,148 @@ dat1 %>% filter(is.na(sca_col)) %>% select(sps, coef, overlap0, sca1, sca2, sca3
   )
 )
 
+
+
+(sca_plot_selec_sca2 <- ggplot() +
+  geom_point(data = dat_sca %>% filter(sca_select == 3), 
+             aes(x = Covariate, y = sps_name, fill = sca_col), 
+             size = 31, shape = 21, stroke = 0.9) +
+  geom_point(data = dat_sca %>% filter(sca_select == 2), 
+             aes(x = Covariate, y = sps_name, fill = sca_col), 
+             size = 24, shape = 21, stroke = 0.9) +
+  geom_point(data = dat_sca %>% filter(sca_select == 1), 
+             aes(x = Covariate, y = sps_name, fill = sca_col), 
+             size = 18.5, shape = 21, stroke = 0.9) +
+  geom_text(data = dat_sca %>% filter(sca_select == 3), 
+            aes(x = Covariate, y = sps_name, label = glue("{round(select_sca * 100)}")), #\nCI:{round(low, 1)} : {round(up, 1)}")), #
+            size = 7, color = "black") +
+  geom_text(data = dat_sca %>% filter(sca_select == 2), 
+            aes(x = Covariate, y = sps_name, label = glue("{round(select_sca * 100)}")), #\nCI:{round(low, 1)} : {round(up, 1)}")), 
+            size = 7, color = "black") +
+  geom_text(data = dat_sca %>% filter(sca_select == 1), 
+            aes(x = Covariate, y = sps_name, label = glue("{round(select_sca * 100)}")), #\nCI:{round(low, 1)} : {round(up, 1)}")), 
+            size = 6, color = "black") +
+  scale_fill_identity() +  # This tells ggplot to use the hex color values as actual colors
+  theme_minimal() +
+  theme(legend.position = "bottom",
+        legend.margin = margin(t = 25, r = 0, b = 0, l = 0),  # Add top margin to legend
+        axis.text.x = element_text(hjust = 0.5, size = 24),
+        axis.text.y = element_text(hjust = 0, size = 26),    
+        axis.title.x = element_text(size = 20),
+        axis.title.y = element_text(size = 30),
+        legend.title = element_text(size = 22, face = "bold", hjust = 0.5),  
+        legend.text = element_text(size = 22),
+        panel.grid.major = element_line(color = "gray85", linetype = "solid", linewidth = 0.6),
+        panel.grid.minor = element_line(color = "gray85", linetype = "solid", linewidth = 0.6)) +
+  scale_y_discrete(limits = rev(levels(factor(dat_sca$sps_name)))) +  # Reverse y-axis order
+  scale_x_discrete(labels = function(x) {
+    cov_codes <- unique(dat_sca$Covariate)
+      # Manually add line breaks
+      case_when(
+        cov_codes == "Tree Basal Area" ~ "Tree Basal\nArea",
+        cov_codes == "Late Successional Tree Density" ~ "Late Success.\n Tree Basal Area",
+        cov_codes == "Conifer Density" ~ "Conifer \nBasal Area  ",
+        cov_codes == "Tree Density" ~ "Tree\nDensity",
+        cov_codes == "Shrub Basal Area" ~ "Shrub\nCover",
+        TRUE ~ cov_codes  # Keep others as is
+      )}) +
+  labs(x = NULL, # "\nForest Covariate", 
+       y = "Species\n", fill = "Scale Selection\nFrequency\n") +
+  # Create manual legend for discrete colors
+  scale_fill_manual(
+    name = "Scale Selection\nFrequency",
+    values = c("(33-50]%" = "#e9e3e9", 
+               "(50-75]%" = "#d0add0", 
+               ">75%" = "#ad70ad"),
+    breaks = c("(33-50]%", "(50-75]%", ">75%"),
+    labels = c("(33-50]%", "(50-75]%", ">75%"),
+    na.value = "white",  # Handle any NA values
+    guide = guide_legend(
+      title.position = "left",
+      title.hjust = 0.5,
+      title.vjust = 0.5,  # Center title vertically with legend items
+      label.vjust = 0.5,  # Center labels vertically with legend items
+      nrow = 1,
+      byrow = TRUE,  # Arrange legend items by row
+      keywidth = unit(1.5, "cm"),  # Width of legend keys (affects spacing)
+      keyheight = unit(0.8, "cm"), # Height of legend keys
+      override.aes = list(size = 10, shape = 21, stroke = 0.9)
+    )
+  )
+)
+
+(sca_plot_selec_sca2 <- ggplot() +
+  geom_point(data = dat_sca %>% filter(sca_select == 3), 
+             aes(x = sps_name, y = Covariate, fill = sca_col),  
+             size = 33, shape = 21, stroke = 0.8, color = "#4A4A4A") +
+  geom_point(data = dat_sca %>% filter(sca_select == 2), 
+             aes(x = sps_name, y = Covariate, fill = sca_col),  
+             size = 23, shape = 21, stroke = 0.8, color = "#4A4A4A") +
+  geom_point(data = dat_sca %>% filter(sca_select == 1), 
+             aes(x = sps_name, y = Covariate, fill = sca_col),  
+             size = 17, shape = 21, stroke = 0.8, color = "#4A4A4A") +
+  geom_text(data = dat_sca %>% filter(sca_select == 3), 
+            aes(x = sps_name, y = Covariate, label = glue("{round(select_sca * 100)}")),  
+            size = 7, color = "black") +
+  geom_text(data = dat_sca %>% filter(sca_select == 2), 
+            aes(x = sps_name, y = Covariate, label = glue("{round(select_sca * 100)}")),  
+            size = 7, color = "black") +
+  geom_text(data = dat_sca %>% filter(sca_select == 1), 
+            aes(x = sps_name, y = Covariate, label = glue("{round(select_sca * 100)}")),  
+            size = 6, color = "black") +
+  scale_fill_identity() +
+  theme_minimal() +
+  theme(legend.position = "right",  # Changed from "bottom" to "right"
+        legend.margin = margin(t = 0, r = 0, b = 0, l = 25),  # Adjusted margin (left margin for spacing)
+        axis.text.x = element_text(hjust = 1, size = 22, angle = 90, vjust = 0.5),  
+        axis.text.y = element_text(hjust = 1, size = 26),    
+        axis.title.x = element_text(size = 30),  
+        axis.title.y = element_text(size = 25),  
+        legend.title = element_text(size = 22, face = "bold", hjust = 0.5),  
+        legend.text = element_text(size = 22),
+        panel.grid.major = element_line(color = "#6A635E", linetype = "solid", linewidth = 0.6),
+        panel.grid.minor = element_line(color = "#6A635E", linetype = "solid", linewidth = 0.6)) +
+  scale_x_discrete(limits = levels(factor(dat_sca$sps_name))) +  
+  scale_y_discrete(labels = function(y) {  
+    case_when(
+      y == "Tree Basal Area" ~ "Tree Basal\nArea",
+      y == "Late Successional Tree Density" ~ "Late Success.\n Tree Basal Area",
+      y == "Conifer Density" ~ "Conifer \nBasal Area  ",
+      y == "Tree Density" ~ "Tree\nDensity",
+      y == "Shrub Basal Area" ~ "Shrub\nCover",
+      TRUE ~ y
+    )},
+    limits = rev(levels(factor(dat_sca$Covariate)))) +  
+  labs(y = "Forest Covariate",  
+       x = "Species", 
+       fill = "Scale Selection\nFrequency\n\n") +
+  scale_fill_manual(
+    name = "Scale Selection\nFrequency",
+    values = c("(33-50]%" = "#E8E3DA", 
+               "(50-75]%" = "#C6B7C9", 
+               ">75%" = "#a07499"),
+    breaks = c("(33-50]%", "(50-75]%", ">75%"),
+    labels = c("\n(33-50]%\n", "(50-75]%\n", ">75%\n"),
+    na.value = "white",
+    guide = guide_legend(
+      title.position = "top",  # Changed from "left" to "top" for vertical legend
+      title.hjust = 0.5,
+      title.vjust = 0.5,  
+      label.vjust = 0.5,  
+      ncol = 1,  # Changed from nrow = 1 to ncol = 1 for vertical arrangement
+      byrow = FALSE,  # Changed to FALSE for vertical arrangement
+      keywidth = unit(1.5, "cm"),  
+      keyheight = unit(0.8, "cm"), 
+      override.aes = list(size = 10, shape = 21, stroke = 0.9)
+    )
+  )
+)
+
+ggsave("figures/sca_plot_select_sca_noleg2long.png", plot = sca_plot_selec_sca2, device = "png", width = 24, height = 14, dpi = 800)
+
+ggsave("figures/sca_plot_select_sca_noleg2long.svg", plot = sca_plot_selec_sca2, device = "svg", width = 24, height = 14)
+
+
 ggsave("figures/sca_plot_select_sca_noleg.png", plot = sca_plot_selec_sca, device = "png", width = 13, height = 17, dpi = 800)
 
 ggsave("figures/sca_plot_select_sca_noleg.svg", plot = sca_plot_selec_sca, 
@@ -300,7 +463,7 @@ ggsave("figures/sca_plot_select_sca_noleg.svg", plot = sca_plot_selec_sca,
 #? Figure 3 --------------------------------------------------------------
 coef_path_file2 <- read_csv(COEF_TABLE_PATH) %>%
         filter(run == "yes") %>% 
-        filter(step == 2) %>% 
+        filter(step == 4) %>% 
         mutate(AOU_Code = substr(result, 1, 4)) %>% 
         filter(AOU_Code %!in% c("BCCH"))
 
@@ -335,12 +498,12 @@ for(ii in 1:nrow(coef_path_file2)) {
     beta_sca_names2[1:5,1] <- glue("beta[{seq(1,5,1)}]")
     beta_sca_names2$cov_name <- c("den", "con", "lat", "shr", "bas")
     numb_bet <- beta_sca_names2  %>% 
-        filter(overlap0 == "no") %>% 
+        #filter(overlap0 == "no") %>% 
         filter(substr(betas, 1, 4) == "beta") %>% 
         nrow()
 
     beta_sca_names2 <- beta_sca_names2  %>% 
-        filter(overlap0 == "no") %>% 
+        #filter(overlap0 == "no") %>% 
         filter(substr(betas, 1, 4) == "beta")
     
     beta_sca_names2$betas <- glue("beta[{seq(1,nrow(beta_sca_names2),1)}]")
@@ -356,9 +519,17 @@ for(ii in 1:nrow(coef_path_file2)) {
 
     # Extract posterior samples as a matrix
     # For jagsUI object
-    samps <- samples_jags2$samples  # this is a mcmc.list - not $samples
-    
-    if(class(samples_jags2) == "mcmc.list"){samps <- coda::as.mcmc.list(samples_jags2)}
+   # Handle different MCMC object types
+    if(class(samples_jags2)[1] == "mcmc.list"){
+        samps <- samples_jags2  # Already an mcmc.list
+    } else if("samples" %in% names(samples_jags2)) {
+        samps <- samples_jags2$samples  # jagsUI object
+    } else if("mcmc" %in% names(samples_jags2)) {
+        samps <- samples_jags2$mcmc  # Different structure
+    } else {
+        # Try to convert directly
+        samps <- coda::as.mcmc.list(samples_jags2)
+    }
 
     samps_mat <- do.call(rbind, samps)  # now all chains stacked
     dim(samps_mat)  # should be n_draws x n_parameters
@@ -380,9 +551,11 @@ for(ii in 1:nrow(coef_path_file2)) {
     rm(samples_jags2)
     if(ii == 1) {coef_summary4 <- coef_summary3} else {coef_summary4 <- rbind(coef_summary4, coef_summary3)}
     print(ii)
+    write_rds(coef_summary4, file = "data/coef_summary4.rds")
 }
 
-# write_rds(coef_summary4, file = "data/out/coefs_step1_1.rds")
+# write_rds(coef_summary4, file = "data/out/coefs_step2_1_fig3.rds")
+# coef_summary4 <- read_rds(file = "data/out/coefs_step2_1_fig3.rds")
 
 table(coef_summary4$sps)
 table(coef_summary4$cov_name)
@@ -464,42 +637,48 @@ for(ii in 1:nrow(dat_sca3)){
 }
 
 # dat_sca3 <- dat_sca3 %>% mutate(Covariate = betas) %>% filter(substr(betas, 1, 4) == "beta")
+dat_sca3 <- dat_sca3  %>% 
+      left_join(., sps_order, by = "sps")  %>% 
+      filter(!is.na(sca_sel),
+             betas != "park_size")
+
+dat_sca3$scale %>% table()
 
 (circles_coefs <- ggplot() +
   geom_point(data = dat_sca3, #%>% filter(!is.na(Covariate)), 
              aes(x = Covariate, y = sps), 
              size = 1, fill = "white", alpha = 0) +
-  # only non overlating CIs
-  # geom_point(data = dat_sca3 %>% filter(scale == 3, overlap0med == "no"), 
-  #            aes(x = Covariate, y = sps, fill = median), 
-  #            size = 31, shape = 21, stroke = 0.9) +
-  # geom_point(data = dat_sca3 %>% filter(scale == 2, overlap0med == "no"), 
-  #            aes(x = Covariate, y = sps, fill = median), 
-  #            size = 24, shape = 21, stroke = 0.9) +
-  # geom_point(data = dat_sca3 %>% filter(scale == 1, overlap0med == "no"), 
-  #            aes(x = Covariate, y = sps, fill = median),
-  #            size = 18.5, shape = 21, stroke = 0.9) +
-  # all values
-  geom_point(data = dat_sca3 %>% filter(scale == 3), 
+  #only non overlating CIs
+  geom_point(data = dat_sca3 %>% filter(scale == 3, overlap0med == "no"), 
              aes(x = Covariate, y = sps, fill = median), 
              size = 31, shape = 21, stroke = 0.9) +
-  geom_point(data = dat_sca3 %>% filter(scale == 2), 
+  geom_point(data = dat_sca3 %>% filter(scale == 2, overlap0med == "no"), 
              aes(x = Covariate, y = sps, fill = median), 
              size = 24, shape = 21, stroke = 0.9) +
-  geom_point(data = dat_sca3 %>% filter(scale == 1), 
+  geom_point(data = dat_sca3 %>% filter(scale == 1, overlap0med == "no"), 
              aes(x = Covariate, y = sps, fill = median),
              size = 18.5, shape = 21, stroke = 0.9) +
-# Add text labels for median values
- # overlaps
-  geom_text(data = dat_sca3 %>% filter(scale == 3, overlap0med == "yes"), 
-           aes(x = Covariate, y = sps, label = glue("{round(median, 2)}")), #\nCI:{round(low, 1)} : {round(up, 1)}")), #
-            size = 7, color = "#626060") +
-  geom_text(data = dat_sca3 %>% filter(scale == 2, overlap0med == "yes"), 
-            aes(x = Covariate, y = sps, label = glue("{round(median, 2)}")), #\nCI:{round(low, 1)} : {round(up, 1)}")), 
-            size = 7, color = "#626060") +
-  geom_text(data = dat_sca3 %>% filter(scale == 1, overlap0med == "yes"), 
-            aes(x = Covariate, y = sps, label = glue("{round(median, 2)}")), #\nCI:{round(low, 1)} : {round(up, 1)}")), 
-            size = 6, color = "#626060") +
+#   # all values
+#   geom_point(data = dat_sca3 %>% filter(scale == 3), 
+#              aes(x = Covariate, y = sps, fill = median), 
+#              size = 31, shape = 21, stroke = 0.9) +
+#   geom_point(data = dat_sca3 %>% filter(scale == 2), 
+#              aes(x = Covariate, y = sps, fill = median), 
+#              size = 24, shape = 21, stroke = 0.9) +
+#   geom_point(data = dat_sca3 %>% filter(scale == 1), 
+#              aes(x = Covariate, y = sps, fill = median),
+#              size = 18.5, shape = 21, stroke = 0.9) +
+# # Add text labels for median values
+#  # overlaps
+#   geom_text(data = dat_sca3 %>% filter(scale == 3, overlap0med == "yes"), 
+#            aes(x = Covariate, y = sps, label = glue("{round(median, 2)}")), #\nCI:{round(low, 1)} : {round(up, 1)}")), #
+#             size = 7, color = "#626060") +
+#   geom_text(data = dat_sca3 %>% filter(scale == 2, overlap0med == "yes"), 
+#             aes(x = Covariate, y = sps, label = glue("{round(median, 2)}")), #\nCI:{round(low, 1)} : {round(up, 1)}")), 
+#             size = 7, color = "#626060") +
+#   geom_text(data = dat_sca3 %>% filter(scale == 1, overlap0med == "yes"), 
+#             aes(x = Covariate, y = sps, label = glue("{round(median, 2)}")), #\nCI:{round(low, 1)} : {round(up, 1)}")), 
+#             size = 6, color = "#626060") +
   # no overlap
   geom_text(data = dat_sca3 %>% filter(scale == 3, overlap0med == "no"), 
            aes(x = Covariate, y = sps, label = glue("{round(median, 2)}")), #\nCI:{round(low, 1)} : {round(up, 1)}")), #
@@ -555,264 +734,76 @@ ggsave("figures/coef_circles.svg", plot = circles_coefs,
        device = "svg", width = 13, height = 18)
 
 
-#####
+dat_sca3 %>% filter(overlap0med == "no")  %>% pull(sca_sel) %>% table()
 
-# Create pie chart data function for circles with median-based colors and directional percentages
-create_pie_data_median_directional <- function(x_pos, y_pos, pct_gt_0, pct_lt_0, median_val, radius = 0.3, n_segments = 100) {
-  # Determine which percentage to use based on the sign of the median
-  if(median_val >= 0) {
-    # For positive effects, use pct_gt_0
-    pie_percentage <- pct_gt_0
-  } else {
-    # For negative effects, use pct_lt_0
-    pie_percentage <- pct_lt_0
-  }
-  
-  # Create angles for pie segments
-  angle_colored <- (pie_percentage / 100) * 2 * pi  # Proportion for colored segment
-  
-  # Colored segment (colored by median effect size)
-  if(pie_percentage > 0) {
-    angles_colored <- seq(0, angle_colored, length.out = max(3, ceiling(n_segments * pie_percentage / 100)))
-    x_colored_seg <- x_pos + radius * cos(angles_colored)
-    y_colored_seg <- y_pos + radius * sin(angles_colored)
-    
-    colored_segment <- data.frame(
-      x = c(x_pos, x_colored_seg, x_pos),
-      y = c(y_pos, y_colored_seg, y_pos),
-      segment = "colored",
-      median = median_val
-    )
-  } else {
-    colored_segment <- data.frame(x = numeric(0), y = numeric(0), segment = character(0), median = numeric(0))
-  }
-  
-  # Remaining segment (white)
-  if(pie_percentage < 100) {
-    angles_remaining <- seq(angle_colored, 2 * pi, length.out = max(3, ceiling(n_segments * (100 - pie_percentage) / 100)))
-    x_remaining_seg <- x_pos + radius * cos(angles_remaining)
-    y_remaining_seg <- y_pos + radius * sin(angles_remaining)
-    
-    remaining_segment <- data.frame(
-      x = c(x_pos, x_remaining_seg, x_pos),
-      y = c(y_pos, y_remaining_seg, y_pos),
-      segment = "remaining",
-      median = NA
-    )
-  } else {
-    remaining_segment <- data.frame(x = numeric(0), y = numeric(0), segment = character(0), median = numeric(0))
-  }
-  
-  rbind(colored_segment, remaining_segment)
-}
+dat_sca3 <- dat_sca3 %>% filter(sps != "HETH")
 
-# Prepare data for pie charts with different positions for each scale
-dat_pie_median_dir <- dat_sca3 %>% 
-  filter(!is.na(Covariate)) %>%
-  mutate(
-    # Convert factors to numeric for positioning
-    x_base = as.numeric(factor(Covariate, levels = levels(Covariate))),
-    y_base = as.numeric(factor(sps, levels = rev(levels(factor(sps))))),
-    # Offset x position based on scale
-    x_offset = case_when(
-      scale == 1 ~ -0.25,  # Local scale (left)
-      scale == 2 ~ 0,      # Park scale (center) 
-      scale == 3 ~ 0.25    # County scale (right)
-    ),
-    x_pos = x_base + x_offset,
-    y_pos = y_base,
-    # Set radius based on scale - convert size to radius
-    radius = case_when(
-      scale == 3 ~ 0.42,   # Largest (size 31)
-      scale == 2 ~ 0.32,   # Medium (size 24)
-      scale == 1 ~ 0.24    # Smallest (size 18.5)
-    ),
-    # Calculate the percentage to display based on effect direction
-    display_pct = ifelse(median >= 0, Pct_gt_0, Pct_lt_0)
-  )
+write_rds(dat_sca3, file = "data/dat_sca3.rds")
 
-# Create pie chart data for all points
-pie_data_median_dir_list <- list()
-for(i in 1:nrow(dat_pie_median_dir)) {
-  row_data <- dat_pie_median_dir[i, ]
-  pie_segments <- create_pie_data_median_directional(
-    x_pos = row_data$x_pos,
-    y_pos = row_data$y_pos, 
-    pct_gt_0 = row_data$Pct_gt_0,
-    pct_lt_0 = row_data$Pct_lt_0,
-    median_val = row_data$median,
-    radius = row_data$radius
-  )
-  # Add metadata
-  if(nrow(pie_segments) > 0) {
-    pie_segments$scale <- row_data$scale
-    pie_segments$sps <- row_data$sps
-    pie_segments$Covariate <- row_data$Covariate
-    pie_segments$overlap0med <- row_data$overlap0med
-    pie_segments$Pct_gt_0 <- row_data$Pct_gt_0
-    pie_segments$Pct_lt_0 <- row_data$Pct_lt_0
-    pie_segments$display_pct <- row_data$display_pct
-    pie_segments$original_median <- row_data$median
-    
-    pie_data_median_dir_list[[i]] <- pie_segments
-  }
-}
 
-# Combine all pie data
-all_pie_data_median_dir <- do.call(rbind, pie_data_median_dir_list)
-
-# Create the pie chart plot with directional percentages
-(pie_coefs_median_dir <- ggplot() +
-  # Colored segments based on median effect size
-  geom_polygon(data = all_pie_data_median_dir %>% filter(segment == "colored"), 
-               aes(x = x, y = y, group = interaction(sps, Covariate, scale), fill = median),
-               color = "white", linewidth = 0.5) +
-  # Remaining segments in white
-  geom_polygon(data = all_pie_data_median_dir %>% filter(segment == "remaining"), 
-               aes(x = x, y = y, group = interaction(sps, Covariate, scale)),
-               fill = "white", color = "white", linewidth = 0.5) +
-  # Add text labels for median values (keeping the same text labels as your original)
-  # Overlapping CI (gray text)
-  geom_text(data = dat_pie_median_dir %>% filter(scale == 3, overlap0med == "yes"), 
-           aes(x = x_pos, y = y_pos, label = glue("{round(median, 2)}")), 
-            size = 7, color = "#626060") +
-  geom_text(data = dat_pie_median_dir %>% filter(scale == 2, overlap0med == "yes"), 
-            aes(x = x_pos, y = y_pos, label = glue("{round(median, 2)}")), 
-            size = 7, color = "#626060") +
-  geom_text(data = dat_pie_median_dir %>% filter(scale == 1, overlap0med == "yes"), 
-            aes(x = x_pos, y = y_pos, label = glue("{round(median, 2)}")), 
-            size = 6, color = "#626060") +
-  # Non-overlapping CI (black text)
-  geom_text(data = dat_pie_median_dir %>% filter(scale == 3, overlap0med == "no"), 
-           aes(x = x_pos, y = y_pos, label = glue("{round(median, 2)}")), 
+(circles_coefs <- ggplot() +
+  geom_point(data = dat_sca3, #%>% filter(!is.na(Covariate)), 
+             aes(x = sps_name, y = Covariate),  # Switched x and y to match sca_plot_selec_sca2
+             size = 1, fill = "white", alpha = 0) +
+  #only non overlating CIs
+  geom_point(data = dat_sca3 %>% filter(scale == 3, overlap0med == "no"), 
+             aes(x = sps_name, y = Covariate, fill = median),  # Switched x and y
+             size = 31, shape = 21, stroke = 0.8, color = "#4A4A4A") +  # Match stroke color
+  geom_point(data = dat_sca3 %>% filter(scale == 2, overlap0med == "no"), 
+             aes(x = sps_name, y = Covariate, fill = median),  # Switched x and y
+             size = 24, shape = 21, stroke = 0.8, color = "#4A4A4A") +  # Match stroke color
+  geom_point(data = dat_sca3 %>% filter(scale == 1, overlap0med == "no"), 
+             aes(x = sps_name, y = Covariate, fill = median),  # Switched x and y
+             size = 18.5, shape = 21, stroke = 0.8, color = "#4A4A4A") +  # Match stroke color
+  # no overlap
+  geom_text(data = dat_sca3 %>% filter(scale == 3, overlap0med == "no"), 
+           aes(x = sps_name, y = Covariate, label = glue("{round(median, 2)}")),  # Switched x and y
             size = 7, color = "black") +
-  geom_text(data = dat_pie_median_dir %>% filter(scale == 2, overlap0med == "no"), 
-            aes(x = x_pos, y = y_pos, label = glue("{round(median, 2)}")), 
+  geom_text(data = dat_sca3 %>% filter(scale == 2, overlap0med == "no"), 
+            aes(x = sps_name, y = Covariate, label = glue("{round(median, 2)}")),  # Switched x and y
             size = 7, color = "black") +
-  geom_text(data = dat_pie_median_dir %>% filter(scale == 1, overlap0med == "no"), 
-            aes(x = x_pos, y = y_pos, label = glue("{round(median, 2)}")), 
+  geom_text(data = dat_sca3 %>% filter(scale == 1, overlap0med == "no"), 
+            aes(x = sps_name, y = Covariate, label = glue("{round(median, 2)}")),  # Switched x and y
             size = 6, color = "black") +
-  # Color scale for effect sizes (fixed range from -2 to 2)
-  scale_fill_gradient2(low = "#ca0557",           # Negative values = red
-                       high = "#0794b7",          # Positive values = blue
-                       midpoint = 0,              # Center point at zero
-                       name = "Covariate\nEffect size\n") +   
+  scale_color_identity() +  
+  scale_fill_gradient2(low = "#ca0557",           # Keep your color scheme
+                       high = "#0794b7",        
+                       midpoint = 0,              
+                       name = "Covariate\nEffect size\n") +
   theme_minimal() +
-  theme(legend.position = "bottom",
-        legend.margin = margin(t = 25, r = 0, b = 0, l = 0),
-        axis.text.x = element_text(hjust = 0.5, size = 24),
-        axis.text.y = element_text(hjust = 0, size = 26),    
-        axis.title.x = element_text(size = 20),
-        axis.title.y = element_text(size = 30),
+  theme(legend.position = "right",  # Changed to match sca_plot_selec_sca2
+        legend.margin = margin(t = 0, r = 0, b = 0, l = 25),  # Match margin
+        axis.text.x = element_text(hjust = 1, size = 22, angle = 90, vjust = 0.5),  # Match rotation and centering
+        axis.text.y = element_text(hjust = 1, size = 26),  # Match right alignment    
+        axis.title.x = element_text(size = 30),  # Match sizes
+        axis.title.y = element_text(size = 25),  # Match sizes
         legend.title = element_text(size = 22, face = "bold", hjust = 0.5),  
         legend.text = element_text(size = 22),
-        panel.grid.major = element_line(color = "black", linetype = "solid", linewidth = 0.6),
-        panel.grid.minor = element_line(color = "black", linetype = "solid", linewidth = 0.6)) + 
-  scale_y_continuous(breaks = 1:length(unique(dat_pie_median_dir$sps)), 
-                    labels = rev(levels(factor(dat_sca3$sps)))) +
-  scale_x_continuous(breaks = 1:length(unique(dat_pie_median_dir$Covariate)), 
-                    labels = function(x) {
-                      cov_levels <- levels(unique(dat_pie_median_dir$Covariate))
-                      case_when(
-                        cov_levels == "Tree Basal Area" ~ "Tree Basal\nArea",
-                        cov_levels == "Late Successional Tree Density" ~ "Late Success.\n Tree Basal Area",
-                        cov_levels == "Conifer Density" ~ "Conifer \nBasal Area  ",
-                        cov_levels == "Tree Density" ~ "Tree\nDensity",
-                        cov_levels == "Shrub Basal Area" ~ "Shrub\nCover",
-                        TRUE ~ cov_levels
-                      )}) +
-  labs(x = NULL, 
-       y = "Species\n", 
+        panel.grid.major = element_line(color = "#6A635E", linetype = "solid", linewidth = 0.6),  # Match grid color
+        panel.grid.minor = element_line(color = "#6A635E", linetype = "solid", linewidth = 0.6)) +  # Match grid color
+  scale_x_discrete(limits = levels(factor(dat_sca3$sps_name))) +  # Use sps_name and match order
+  scale_y_discrete(labels = function(y) {  # Now y is covariates
+      case_when(
+        y == "Tree Basal Area" ~ "Tree Basal\nArea",
+        y == "Late Successional Tree Density" ~ "Late Success.\n Tree Basal Area",
+        y == "Conifer Density" ~ "Conifer \nBasal Area  ",
+        y == "Tree Density" ~ "Tree\nDensity",
+        y == "Shrub Basal Area" ~ "Shrub\nCover",
+        TRUE ~ y
+      )},
+      limits = rev(levels(factor(dat_sca3$Covariate)))) +  # Match reversed covariate order
+  labs(y = "Forest Covariate",  # Switched labels to match
+       x = "Species", 
        fill = "Covariate\nEffect size\n") +
   guides(
     fill = guide_colorbar(
-      barwidth = unit(8, "cm"),   
-      barheight = unit(1, "cm")    
+      barwidth = unit(1, "cm"),    # Narrower for vertical legend
+      barheight = unit(8, "cm")    # Taller for vertical legend
     )
-  ) +
-  coord_fixed(ratio = 1) # Maintain circular pie shapes
+  )
 )
 
-# Save the pie chart plot
+ggsave("figures/circles_coefs.png", plot = circles_coefs, device = "png", width = 24, height = 14, dpi = 800)
 
+ggsave("figures/circles_coefsnoheth.svg", plot = circles_coefs, device = "svg", width = 24, height = 14)
 
-
-       # Create the pie chart plot with directional percentages
-(pie_coefs_median_dir <- ggplot() +
-  # Colored segments based on median effect size with black borders
-  geom_polygon(data = all_pie_data_median_dir %>% filter(segment == "colored"), 
-               aes(x = x, y = y, group = interaction(sps, Covariate, scale), fill = median),
-               color = "black", linewidth = 0.8) +
-  # Remaining segments in white with black borders
-  geom_polygon(data = all_pie_data_median_dir %>% filter(segment == "remaining"), 
-               aes(x = x, y = y, group = interaction(sps, Covariate, scale)),
-               fill = "white", color = "black", linewidth = 0.8) +
-  # Add text labels for median values (keeping the same text labels as your original)
-  # Overlapping CI (gray text)
-  geom_text(data = dat_pie_median_dir %>% filter(scale == 3, overlap0med == "yes"), 
-           aes(x = x_pos, y = y_pos, label = glue("{round(median, 2)}")), 
-            size = 7, color = "#626060") +
-  geom_text(data = dat_pie_median_dir %>% filter(scale == 2, overlap0med == "yes"), 
-            aes(x = x_pos, y = y_pos, label = glue("{round(median, 2)}")), 
-            size = 7, color = "#626060") +
-  geom_text(data = dat_pie_median_dir %>% filter(scale == 1, overlap0med == "yes"), 
-            aes(x = x_pos, y = y_pos, label = glue("{round(median, 2)}")), 
-            size = 6, color = "#626060") +
-  # Non-overlapping CI (black text)
-  geom_text(data = dat_pie_median_dir %>% filter(scale == 3, overlap0med == "no"), 
-           aes(x = x_pos, y = y_pos, label = glue("{round(median, 2)}")), 
-            size = 7, color = "black") +
-  geom_text(data = dat_pie_median_dir %>% filter(scale == 2, overlap0med == "no"), 
-            aes(x = x_pos, y = y_pos, label = glue("{round(median, 2)}")), 
-            size = 7, color = "black") +
-  geom_text(data = dat_pie_median_dir %>% filter(scale == 1, overlap0med == "no"), 
-            aes(x = x_pos, y = y_pos, label = glue("{round(median, 2)}")), 
-            size = 6, color = "black") +
-  # Color scale for effect sizes (fixed range from -2 to 2)
-  scale_fill_gradient2(low = "#ca0557",           # Negative values = red
-                       high = "#0794b7",          # Positive values = blue
-                       midpoint = 0,              # Center point at zero
-                       limits = c(-2, 2),         # Fixed scale from -2 to 2
-                       name = "Covariate\nEffect size\n",
-                       oob = scales::squish) +    # Squish values outside limits
-  theme_minimal() +
-  theme(legend.position = "bottom",
-        legend.margin = margin(t = 25, r = 0, b = 0, l = 0),
-        axis.text.x = element_text(hjust = 0.5, size = 24),
-        axis.text.y = element_text(hjust = 0, size = 26),    
-        axis.title.x = element_text(size = 20),
-        axis.title.y = element_text(size = 30),
-        legend.title = element_text(size = 22, face = "bold", hjust = 0.5),  
-        legend.text = element_text(size = 22),
-        panel.grid.major = element_line(color = "gray85", linetype = "solid", linewidth = 0.6),
-        panel.grid.minor = element_line(color = "gray85", linetype = "solid", linewidth = 0.6)) + 
-  scale_y_continuous(breaks = 1:length(unique(dat_pie_median_dir$sps)), 
-                    labels = rev(levels(factor(dat_sca3$sps)))) +
-  scale_x_continuous(breaks = 1:length(unique(dat_pie_median_dir$Covariate)), 
-                    labels = function(x) {
-                      # Get the actual covariate names in the correct order
-                      cov_levels <- levels(factor(dat_pie_median_dir$Covariate))
-                      # Match the position x to the actual covariate name
-                      covariate_names <- cov_levels[x]
-                      case_when(
-                        covariate_names == "Tree Basal Area" ~ "Tree Basal\nArea",
-                        covariate_names == "Late Successional Tree Density" ~ "Late Success.\n Tree Basal Area",
-                        covariate_names == "Conifer Density" ~ "Conifer \nBasal Area  ",
-                        covariate_names == "Tree Density" ~ "Tree\nDensity",
-                        covariate_names == "Shrub Basal Area" ~ "Shrub\nCover",
-                        TRUE ~ covariate_names
-                      )}) +
-  labs(x = NULL, 
-       y = "Species\n", 
-       fill = "Covariate\nEffect size\n") +
-  guides(
-    fill = guide_colorbar(
-      barwidth = unit(8, "cm"),   
-      barheight = unit(1, "cm")    
-    )
-  ) +
-  coord_fixed(ratio = 1) # Maintain circular pie shapes
-)
-
-ggsave("figures/pie_coefs_directional.svg", plot = pie_coefs_median_dir, 
-       device = "svg", width = 13, height = 18)
