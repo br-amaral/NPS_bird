@@ -352,7 +352,7 @@ scale_covs <-  as_tibble(cbind(c(3, 2, 1), c("coun", "park", "site"))) %>%
                   rename(scale = V1, scale_name = V2)
 
 # save.image(file = "data/predictions_sps3_step2_1.RData")
-# load("data/predictions_sps2.RData")
+# load("data/predictions_sps3_step2_1.RData")
 
 #? TREE DENSITY -----------------------------------------------------------------
 beta1_lims <- c(floor(min(beta1_preds$X_range_ori) / 5) * 5, ceiling(max(beta1_preds$X_range_ori) / 5) * 5)

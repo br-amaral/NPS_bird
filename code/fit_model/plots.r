@@ -28,7 +28,7 @@ lenght <- length
 #! Import data --------------------------------------------------------------------
 ## file paths and read files
 # when loading the model results, get the most updated file?
-file_name <- "OVEN_step1_output_2025_09_30run1"
+file_name <- "BAWW_step2_output_2025_11_17_newrun1"
 
 samples_jags <- read_rds(glue("data/model_res/{file_name}.rds"))
 
