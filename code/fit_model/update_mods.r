@@ -1,6 +1,7 @@
 library(tidyverse)
 library(glue)
 library(jagsUI) 
+library(MCMCvis)
 
 COEF_TABLE_PATH <- "code/fit_model/mod_key.csv"
 if(substr(getwd(), 1, 3) == "/Us") {direc <- "local"} else {direc <- "hpc"}
