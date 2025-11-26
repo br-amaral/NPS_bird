@@ -198,7 +198,7 @@ HETH,3,yes,HETH_step2_output_2025_11_25_newrun1,HETH_step1_output_2025_11_17run1
 OVEN,3,yes,OVEN_step2_output_2025_11_25_newrun1,OVEN_step1_output_2025_11_18run1_25_75_SCA_SEL_PARS,new models
 REVI,3,no,,REVI_step1_output_2025_11_18run1_25_75_SCA_SEL_PARS,new models
 SCTA,3,no,,SCTA_step1_output_2025_11_19run1_25_75_SCA_SEL_PARS,new models
-VEER,3,no,,VEER_step1_output_2025_11_19run1_25_75_SCA_SEL_PARS,new models
+VEER,3,yes,VEER_step2_output_2025_11_26_newrun1,VEER_step1_output_2025_11_19run1_25_75_SCA_SEL_PARS,new models
 WBNU,3,no,,WBNU_step1_output_2025_11_20run1_25_75_SCA_SEL_PARS,new models
 WOTH,3,no,,WOTH_step1_output_2025_11_20run1_25_75_SCA_SEL_PARS,new models
 YBSA,3,no,,YBSA_step1_output_2025_11_21run1_25_75_SCA_SEL_PARS,new models
