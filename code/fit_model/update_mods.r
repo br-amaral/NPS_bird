@@ -12,7 +12,7 @@ coef_update <- read_csv(COEF_TABLE_PATH) %>%
         filter(run == "yes") %>% 
         filter(step == 3) %>% 
         mutate(AOU_Code = substr(result, 1, 4)) %>% 
-        filter(AOU_Code %!in% c("BLBW", "SCTA", "YBSA", "WBNU", "VEER", "REVI",
+        filter(AOU_Code %in% c("BLBW", "SCTA", "YBSA", "WBNU", "VEER", "REVI",
                                 "OVEN", "HAWO", "DOWO", "BTNW", "BRCR", "BAWW"))
 
 for(ii in 1:nrow(coef_update)){
