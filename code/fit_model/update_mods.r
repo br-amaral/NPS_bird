@@ -34,7 +34,7 @@ for(ii in 1:nrow(coef_update)){
 
     if(nrow(high_rhat) > 0) {
       if(how_many > 0){test_file2 <- model_updated}
-      model_updated <- update(test_file2, n.iter = 10000)
+      model_updated <- update(test_file2, n.iter = 80000)
       how_many <- how_many + 1
 
       rhat_summary_up <- MCMCsummary(model_updated, round = 3)
