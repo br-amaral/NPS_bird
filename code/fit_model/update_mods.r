@@ -18,7 +18,7 @@ coef_update <- read_csv(COEF_TABLE_PATH) %>%
 for(ii in 1:nrow(coef_update)){
     # Get samples from your jagsUI object
 
-    test_file <- read_rds(glue("{coef_update$result[ii]}.rds"))
+    test_file <- read_rds(glue("data/model_res/{coef_update$result[ii]}.rds"))
     samples <- test_file$samples
 
     # Check Rhat using MCMCvis
@@ -42,5 +42,5 @@ for(ii in 1:nrow(coef_update)){
       high_rhat <- rhat_summary_up[rhat_summary_up$Rhat > 1.1, ]
     }
 
-    write_rds(model_updated, file = glue("{coef_update$result[ii]}_updated{how_many}.rds"))
+    write_rds(model_updated, file = glue("data/model_res/{coef_update$result[ii]}_updated{how_many}.rds"))
 }
