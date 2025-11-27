@@ -78,7 +78,8 @@ if(direc == "local"){
     } else {master_tab <- read_csv("code/fit_model/mod_key.csv") %>%
             filter(run == "yes") %>% 
             filter(step %in% c(step_number_define)) %>% 
-            distinct()
+            distinct() %>% 
+            filter(AOU_Code %in% c("REVI", "SCTA"))
     }
 
 paste('\n ************************************* \n \n \n   Running Models:', '\n',
