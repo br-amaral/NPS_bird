@@ -198,9 +198,9 @@ if(test == TRUE){
   print(glue("test with {niterations} iterations"))
 }
 
-if(sps_loop == "REVI"){
-  nburnin <- 40000
-}
+# if(sps_loop == "REVI"){
+#   nburnin <- 40000
+# }
 
 ## initialize JAGS
 cat("\n\n\n running jags \n\n\n\n")
