@@ -132,12 +132,12 @@ if(substr(getwd(), 1, 3) == "/Us") {direc <- "local"} else {direc <- "hpc"}
 if(direc == "local"){
     master_tab <- read_csv("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/fit_model/mod_key.csv") %>%
             filter(run == "yes") %>% 
-            filter(step %in% c(3,4)) %>% 
+            filter(step %in% c(3)) %>% 
             distinct()
 
     } else {master_tab <- read_csv("code/fit_model/mod_key.csv") %>%
             filter(run == "yes") %>% 
-            filter(step %in% c(2,3)) %>% 
+            filter(step %in% c(3)) %>% 
             distinct()
     }
 
@@ -178,8 +178,9 @@ coef_tab <- function(file_name, species_code){
   return(sps_coef)
 }
 
+#? check wheter I'm matching the species properly
 for(ii in 1:nrow(master_tab)){
-# Check if all three strings are equal
+# Check if all three strings are equal (different steps and models for the same species)
   if(substr(master_tab$result[ii], 1, 4) == master_tab$AOU_Code[ii] && 
       master_tab$AOU_Code[ii] == substr(master_tab$select[ii], 1, 4)) {
       # All three are equal
@@ -191,8 +192,8 @@ for(ii in 1:nrow(master_tab)){
   coef_fim <- bind_rows(coef_fim, sps_result)
 }
 
-write_rds(coef_fim, file = "data/out/coef_fim_80_new.rds")
-write_csv(coef_fim, file = "data/out/coef_fim_80_new.csv")
+write_rds(coef_fim, file = "data/out/coef_fim_80_new2.rds")
+write_csv(coef_fim, file = "data/out/coef_fim_80_new2.csv")
 
 # coef_fim <- read_rds(file = "data/out/coef_fim.rds")
 

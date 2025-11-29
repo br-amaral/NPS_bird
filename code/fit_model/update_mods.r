@@ -10,9 +10,9 @@ if(substr(getwd(), 1, 3) == "/Us") {direc <- "local"} else {direc <- "hpc"}
 coef_update <- read_csv(COEF_TABLE_PATH) %>%
         filter(run == "yes") %>% 
         filter(step == 3) %>% 
-        mutate(AOU_Code = substr(result, 1, 4)) %>% 
-        filter(AOU_Code %in% c("BLBW", "SCTA", "YBSA", "WBNU", "VEER", "REVI",
-                                "OVEN", "HAWO", "DOWO", "BTNW", "BRCR", "BAWW"))
+         mutate(AOU_Code = substr(result, 1, 4)) #%>% 
+        # filter(AOU_Code %in% c("BLBW", "SCTA", "YBSA", "WBNU", "VEER", "REVI",
+        #                         "OVEN", "HAWO", "DOWO", "BTNW", "BRCR", "BAWW"))
 
 for(ii in 1:nrow(coef_update)){
     
@@ -38,7 +38,7 @@ for(ii in 1:nrow(coef_update)){
             cat("Updating model with 50,000 additional iterations...\n")
             
             # Update with fewer iterations to avoid memory issues
-            model_updated <- update(test_file, n.iter = 50000)  # Reduced from 80000
+            model_updated <- update(test_file, n.iter = 80000)  # Reduced from 80000
             
             # Check convergence again
             rhat_summary_up <- MCMCsummary(model_updated, round = 3)
