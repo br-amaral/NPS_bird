@@ -52,7 +52,7 @@ if(substr(getwd(), 1, 3) == "/Us") {direc <- "local"} else {direc <- "hpc"}
 ## read files
 coef_path_file <- read_csv(COEF_TABLE_PATH) %>%
         filter(run == "yes") %>% 
-        filter(step == 4) %>% 
+        filter(step == 3) %>% 
         mutate(AOU_Code = substr(result, 1, 4)) #%>% 
         # filter(AOU_Code %!in% c("DOWO", "HAWO", "VEER", "SCTA", "REVI"))
 
@@ -62,7 +62,7 @@ for(ii in 1:nrow(coef_path_file)) {
 
     loop_run <- substr(coef_path_file$result[ii], nchar(coef_path_file$result[ii]) - 11, nchar(coef_path_file$result[ii]) - 8)
 
-    quants <- ifelse((as.numeric(substr(loop_run, 4, 4)) %% 2 == 0) == TRUE, "25_75", "3_7")
+    #quants <- ifelse((as.numeric(substr(loop_run, 4, 4)) %% 2 == 0) == TRUE, "25_75", "3_7")
 
     samples_jags <- read_rds(glue("data/model_res/{coef_path_file$result[ii]}.rds"))
     beta_sca_names <- read_rds(glue("data/model_res/{coef_path_file$select[ii]}.rds")) %>% 
