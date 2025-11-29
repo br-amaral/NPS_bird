@@ -85,7 +85,7 @@ for(ii in 1:nrow(coef_path_file)) {
     # Get summary with median and credible intervals
     coef_summary <- MCMCsummary(samples_jags,
                             params = c("beta", "alpha"), #, "beta0", "alpha0", "beta_int"),  # specify parameters
-                            probs = c(0.025, 0.5, 0.975),  # 2.5%, median, 97.5%
+                            probs = c(0.1, 0.5, 0.9),  # 2.5%, median, 97.5%
                             round = 3) 
 
     # Extract posterior samples as a matrix
