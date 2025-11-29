@@ -96,7 +96,7 @@ for(key_ite in 1:nrow(master_tab)){
     #nburnin <- 30000
 
     tib_loop <- master_tab[key_ite, ]
-
+ 
     sps_loop <- tib_loop$AOU_Code
     step_numb <- tib_loop$step
 
