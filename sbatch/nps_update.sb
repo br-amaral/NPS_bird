@@ -11,7 +11,7 @@
 #SBATCH --nodes=1
 
 # specify CPUs (or cores per task) - INCREASED for jagsUI parallel
-#SBATCH --cpus-per-task=4
+#SBATCH --cpus-per-task=2
 
 # email me
 #SBATCH --mail-type=FAIL,END
@@ -19,8 +19,8 @@
 
 # Add job name and output files for better tracking
 #SBATCH --job-name=nps_update
-#SBATCH --output=nps_update_%j.out
-#SBATCH --error=nps_update_%j.err
+# SBATCH --output=nps_update_%j.out
+# SBATCH --error=nps_update_%j.err
 
 # change to current directory
 cd $SLURM_SUBMIT_DIR
