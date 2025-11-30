@@ -14,6 +14,10 @@ coef_update <- read_csv(COEF_TABLE_PATH) %>%
         # filter(AOU_Code %in% c("BLBW", "SCTA", "YBSA", "WBNU", "VEER", "REVI",
         #                         "OVEN", "HAWO", "DOWO", "BTNW", "BRCR", "BAWW"))
 
+cat("Total rows in mod_key.csv:", total_rows, "\n")
+cat("Rows with run == 'yes':", run_yes, "\n") 
+cat("Step 3 models with run == 'yes':", step3_only, "\n")
+
 for(ii in 1:nrow(coef_update)){
     
     cat(paste("Processing", ii, "of", nrow(coef_update), ":", coef_update$result[ii], "\n"))
@@ -38,7 +42,7 @@ for(ii in 1:nrow(coef_update)){
             cat("Updating model with 50,000 additional iterations...\n")
             
             # Update with fewer iterations to avoid memory issues
-            model_updated <- update(test_file, n.iter = 80000)  # Reduced from 80000
+            model_updated <- update(test_file, n.iter = 70000)  # Reduced from 80000
             
             # Check convergence again
             rhat_summary_up <- MCMCsummary(model_updated, round = 3)
