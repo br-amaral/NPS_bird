@@ -14,9 +14,7 @@ coef_update <- read_csv(COEF_TABLE_PATH) %>%
         # filter(AOU_Code %in% c("BLBW", "SCTA", "YBSA", "WBNU", "VEER", "REVI",
         #                         "OVEN", "HAWO", "DOWO", "BTNW", "BRCR", "BAWW"))
 
-cat("Total rows in mod_key.csv:", total_rows, "\n")
-cat("Rows with run == 'yes':", run_yes, "\n") 
-cat("Step 3 models with run == 'yes':", step3_only, "\n")
+cat("Total rows in mod_key.csv:", nrow(coef_update), "\n")
 
 for(ii in 1:nrow(coef_update)){
     
