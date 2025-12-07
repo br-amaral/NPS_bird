@@ -125,6 +125,7 @@ for(ii in 1:nrow(coef_path_file)) {
                                                  mod_res = coef_path_file$select[ii])
             }
       if(ii == 1) {coef_summary3 <- coef_summary2} else {coef_summary3 <- rbind(coef_summary3, coef_summary2)}
+      print(ii)
 }
 
     write_rds(coef_summary3, file = "data/out/coef_summary4_sep.rds")
@@ -134,7 +135,7 @@ table(coef_summary3$mod_res)
 
 coef_summary3 <- as_tibble(coef_summary3) %>% 
                       filter(betas != "beta6") %>% 
-                      mutate(overlap0 = ifelse(`10%` <= 0 & `9%` >= 0, "yes", "no"))
+                      mutate(overlap0 = ifelse(`10%` <= 0 & `90%` >= 0, "yes", "no"))
 
 #! Figure: park size -------------------------------------------
 (park_sizeP <- 
