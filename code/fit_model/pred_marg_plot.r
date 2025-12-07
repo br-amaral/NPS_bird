@@ -47,7 +47,7 @@ lenght <- length
 
 #! Import data -----------------------------------------
 ## file paths
-COEF_SPS_PATH <- "data/out/coefs_sps_sca2.rds"
+COEF_SPS_PATH <- "data/out/coefs_sps_sca.rds"
 STEP2_INFO_PATH <- "code/fit_model/mod_key.csv"
 if(substr(getwd(), 1, 3) == "/Us") {direc <- "local"} else {direc <- "hpc"}
 
@@ -57,7 +57,7 @@ if(direc == "local"){STEP2_INFO_PATH <- glue("/Users/bamaral/Library/CloudStorag
 ## read files
 dat_sca <- read_rds(COEF_SPS_PATH)       # which betas are important
 beta_key <- read_csv(STEP2_INFO_PATH) %>% 
-              filter(step == 4,
+              filter(step == 3,
                      run == "yes") #%>% 
               # filter(AOU_Code != "BHVI",
               #        AOU_Code != "YBSA"
@@ -351,7 +351,7 @@ beta5_preds <- process_beta_predictions(5, beta_covariates[["5"]])
 scale_covs <-  as_tibble(cbind(c(3, 2, 1), c("coun", "park", "site"))) %>% 
                   rename(scale = V1, scale_name = V2)
 
-# save.image(file = "data/predictions_sps3_step2_1.RData")
+ save.image(file = "data/predictions_sps3_step2_1.RData")
 # load("data/predictions_sps3_step2_1.RData")
 
 #? TREE DENSITY -----------------------------------------------------------------
@@ -426,8 +426,8 @@ ggplot() +
     labels = c(0, 0.25, 0.5, 0.75, 1, as.character(treeden_covs_pkpos$park)))
   #xlim(beta1_lims)
 
-ggsave("figures/pred_den.svg", plot = last_plot(), device = "svg", width = 10.2, height = 7.2)
-ggsave("figures/pred_den.png", plot = last_plot(), device = "png", width = 10.2, height = 7.2)
+# ggsave("figures/pred_den.svg", plot = last_plot(), device = "svg", width = 10.2, height = 7.2)
+# ggsave("figures/pred_den.png", plot = last_plot(), device = "png", width = 10.2, height = 7.2)
 
 #? CONIFER BA -----------------------------------------------------------------
 beta2_lims <- c(floor(min(beta2_preds$X_range_ori) / 5) * 5, ceiling(max(beta2_preds$X_range_ori) / 5) * 5)
@@ -503,8 +503,8 @@ ggplot() +
       labels = c(0, 0.25, 0.5, 0.75, 1, as.character(treecon_covs_pkpos$park))) 
   #xlim(beta2_lims)
 
-ggsave("figures/pred_con.svg", plot = last_plot(), device = "svg", width = 14, height = 7.2)
-ggsave("figures/pred_con.png", plot = last_plot(), device = "png", width = 14, height = 7.2)
+# ggsave("figures/pred_con.svg", plot = last_plot(), device = "svg", width = 14, height = 7.2)
+# ggsave("figures/pred_con.png", plot = last_plot(), device = "png", width = 14, height = 7.2)
 
 #? LATE SUCCESSIONAL BASAL AREA -----------------------------------------------------------------
 beta3_lims <- c(floor(min(beta3_preds$X_range_ori) / 5) * 5, ceiling(max(beta3_preds$X_range_ori) / 5) * 5)
@@ -579,8 +579,8 @@ ggplot() +
     labels = c(0, 0.25, 0.5, 0.75, 1, as.character(treelat_covs_pkpos$park))) 
    #xlim(beta3_lims)
 
-ggsave("figures/pred_lat.svg", plot = last_plot(), device = "svg", width = 14, height = 7.2)
-ggsave("figures/pred_lat.png", plot = last_plot(), device = "png", width = 14, height = 7.2)
+# ggsave("figures/pred_lat.svg", plot = last_plot(), device = "svg", width = 14, height = 7.2)
+# ggsave("figures/pred_lat.png", plot = last_plot(), device = "png", width = 14, height = 7.2)
 
 #? SHRUB BASAL AREA -----------------------------------------------------------------
 shrub_BA_axis_s <- X10 %>% 
@@ -668,8 +668,8 @@ ggplot() +
     breaks = c(0, 0.25, 0.5, 0.75, 1, shrub_covs_pkpos$y_pos),
     labels = c(0, 0.25, 0.5, 0.75, 1, as.character(shrub_covs_pkpos$park)))
 
-ggsave("figures/pred_shr.svg", plot = last_plot(), device = "svg", width = 14, height = 7.2)
-ggsave("figures/pred_shr.png", plot = last_plot(), device = "png", width = 14, height = 7.2)
+# ggsave("figures/pred_shr.svg", plot = last_plot(), device = "svg", width = 14, height = 7.2)
+# ggsave("figures/pred_shr.png", plot = last_plot(), device = "png", width = 14, height = 7.2)
 
 #? TREE BASAL AREA -----------------------------------------------------------------
 
@@ -746,8 +746,8 @@ ggplot() +
     labels = c(0, 0.25, 0.5, 0.75, 1, as.character(treeba_covs_pkpos$park))) 
             #xlim(beta5_lims)
 
-ggsave("figures/pred_BA.svg", plot = last_plot(), device = "svg", width = 10.2, height = 7.2)
-ggsave("figures/pred_BA.png", plot = last_plot(), device = "png", width = 10.2, height = 7.2)
+# ggsave("figures/pred_BA.svg", plot = last_plot(), device = "svg", width = 10.2, height = 7.2)
+# ggsave("figures/pred_BA.png", plot = last_plot(), device = "png", width = 10.2, height = 7.2)
 
 ## new figures - park values on the bottom
 
@@ -825,8 +825,8 @@ ggplot() +
     breaks = c(0, 0.25, 0.5, 0.75, 1, treeba_covs_pkpos$y_pos),
     labels = c(0, 0.25, 0.5, 0.75, 1, as.character(treeba_covs_pkpos$park))) 
 
-ggsave("figures/pred_BA2.svg", plot = last_plot(), device = "svg", width = 10.2, height = 6.5)
-ggsave("figures/pred_BA2.png", plot = last_plot(), device = "png", width = 10.2, height = 6.5)
+# ggsave("figures/pred_BA2.svg", plot = last_plot(), device = "svg", width = 10.2, height = 6.5)
+# ggsave("figures/pred_BA2.png", plot = last_plot(), device = "png", width = 10.2, height = 6.5)
 
 #? LATE SUCCESSIONAL BASAL AREA - park values on the bottom ----------------------
 
@@ -908,8 +908,8 @@ ggplot() +
     breaks = c(0, 0.25, 0.5, 0.75, 1, treelat_covs_pkpos$y_pos),
     labels = c(0, 0.25, 0.5, 0.75, 1, as.character(treelat_covs_pkpos$park))) 
 
-ggsave("figures/pred_lat2.svg", plot = last_plot(), device = "svg", width = 10.2, height = 6.5)
-ggsave("figures/pred_lat2.png", plot = last_plot(), device = "png", width = 10.2, height = 6.5)
+# ggsave("figures/pred_lat2.svg", plot = last_plot(), device = "svg", width = 10.2, height = 6.5)
+# ggsave("figures/pred_lat2.png", plot = last_plot(), device = "png", width = 10.2, height = 6.5)
 
 #? SHRUB BASAL AREA - park values on the bottom ----------------------
 
@@ -991,8 +991,8 @@ ggplot() +
     breaks = c(0, 0.25, 0.5, 0.75, 1, shrub_covs_pkpos$y_pos),
     labels = c(0, 0.25, 0.5, 0.75, 1, as.character(shrub_covs_pkpos$park)))
 
-ggsave("figures/pred_shr2.svg", plot = last_plot(), device = "svg", width = 10.2, height = 6.5)
-ggsave("figures/pred_shr2.png", plot = last_plot(), device = "png", width = 10.2, height = 6.5)
+# ggsave("figures/pred_shr2.svg", plot = last_plot(), device = "svg", width = 10.2, height = 6.5)
+# ggsave("figures/pred_shr2.png", plot = last_plot(), device = "png", width = 10.2, height = 6.5)
 
 #? CONIFER BA - park values on the bottom ----------------------
 

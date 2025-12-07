@@ -132,7 +132,7 @@ table(coef_summary3$mod_res)
 
 coef_summary3 <- as_tibble(coef_summary3) %>% 
                       filter(betas != "beta6") %>% 
-                      mutate(overlap0 = ifelse(`2.5%` <= 0 & `97.5%` >= 0, "yes", "no"))
+                      mutate(overlap0 = ifelse(`10%` <= 0 & `9%` >= 0, "yes", "no"))
 
 #! Figure: park size -------------------------------------------
 (park_sizeP <- 
@@ -144,7 +144,7 @@ coef_summary3 <- as_tibble(coef_summary3) %>%
         arrange(sps) %>% 
         ggplot() +
           geom_vline(xintercept = 0, linetype = "dashed", color = "grey50", linewidth = 0.8) +
-          geom_segment(aes(x = `2.5%`, xend = `97.5%`, y = sps, yend = sps, col = overlap0), 
+          geom_segment(aes(x = `10%`, xend = `90%`, y = sps, yend = sps, col = overlap0), 
                       linewidth = 1.2) +
           geom_point(aes(x = `50%`, y = sps, col = overlap0), 
                     size = 4) +
@@ -224,9 +224,9 @@ dat <- left_join(dat, cov_name, by = "Covariate") %>%
        left_join(.,sca_name, by = "sca") %>% 
        select(-sca) %>% 
        rename(sca = sca_name,
-              low = `2.5%`,  
+              low = `10%`,  
               median = `50%`, 
-              up = `97.5%`)
+              up = `90%`)
 
 #write_rds(dat, "data/out/coef_dat_ext.rds")
 
@@ -444,7 +444,7 @@ dat_sca3 <- dat_sca2 %>%
 dat_sca3_0 <- dat_sca2 %>% 
                   filter(includes_zero == "#a9a9a9")  ## this remove the coeficient that does not overlaps with zero
 
-#write_rds(dat_sca, "data/out/coefs_sps_sca.rds")
+write_rds(dat_sca, "data/out/coefs_sps_sca.rds")
 
 (circles_coefs <- ggplot() +
 # plot empty points to keep all species and covariates present in the data
