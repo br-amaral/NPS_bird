@@ -12,7 +12,6 @@
 
 # specify CPUs (or cores per task)
 #SBATCH --cpus-per-task=8
-#SBATCH --array=1-8%2               # run chains 1..8, at most 2 running at once
 
 # job name
 #SBATCH --job-name=nps_coefs
