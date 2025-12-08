@@ -56,8 +56,8 @@ if(substr(getwd(), 1, 3) == "/Us") {direc <- "local"} else {direc <- "hpc"}
 
 ## read files
 coef_path_file <- read_csv(COEF_TABLE_PATH) %>%
-        filter(run == "yes") %>% 
-        filter(step == 4) %>% 
+        #filter(run == "yes") %>% 
+        filter(step == 3) %>% 
         mutate(AOU_Code = substr(result, 1, 4)) %>% 
         filter(AOU_Code %!in% c("BCCH"))
 
@@ -149,8 +149,8 @@ for(ii in 1:nrow(coef_path_file)) {
       if(ii == 1) {coef_summary3 <- coef_summary2} else {coef_summary3 <- rbind(coef_summary3, coef_summary2)}
 }
 
-# write_rds(coef_summary3, file = "data/out/coefs_step2_1_fig2.rds")
-# coef_summary3<- read_rds(file = "data/out/coefs_step2_1_fig2.rds")
+ write_rds(coef_summary3, file = "data/out/coefs_step2_2_fig2.rds")
+# coef_summary3<- read_rds(file = "data/out/coefs_step2_2_fig2.rds")
 
 #? Figure 2 --------------------------------------------------------------
 dat <- coef_summary3 %>% 
