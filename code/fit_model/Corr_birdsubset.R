@@ -36,6 +36,7 @@ dim(X_corr)
 #? reduce the size of correlation matrix and plot
 melted_corr_mat <- melt(corr_mat) 
 
+melted_corr_mat  %>%  mutate(cor = abs(value)) %>% arrange(-cor)
 # plotting the correlation heatmap
 ggplot(data = melted_corr_mat, aes(x=Var1, y=Var2, 
 								fill=value)) + 

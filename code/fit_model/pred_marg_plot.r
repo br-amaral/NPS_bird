@@ -58,10 +58,10 @@ if(direc == "local"){STEP2_INFO_PATH <- glue("/Users/bamaral/Library/CloudStorag
 dat_sca <- read_rds(COEF_SPS_PATH) %>% as_tibble()    # which betas are important
 beta_key <- read_csv(STEP2_INFO_PATH) %>% 
               filter(step == 3,
-                     run == "yes") #%>% 
-              # filter(AOU_Code != "BHVI",
+               #      run == "yes") #%>% 
+              AOU_Code != "BCCH"
               #        AOU_Code != "YBSA"
-              #        )
+                      )
 
 baww_lims <- read_rds("data/out/X_vals_BAWW.rds")
 bhvi_lims <- read_rds("data/out/X_vals_BHVI.rds")
@@ -287,9 +287,6 @@ for(sps_res in 1:nrow(beta_key)){
 XDAT_PATH <- "data/X.rds"
 X10 <- read_rds(file = XDAT_PATH)
 
-safe_pal <- microViz::distinct_palette(pal = "kelly")
-# scales::show_col(safe_pal)
-
 # Replace the microViz line with:
 if (!require("microViz", quietly = TRUE)) {
   # Fallback color palette if microViz is not available
@@ -380,7 +377,7 @@ beta5_preds <- process_beta_predictions(5, beta_covariates[["5"]])
 scale_covs <-  as_tibble(cbind(c(3, 2, 1), c("coun", "park", "site"))) %>% 
                   rename(scale = V1, scale_name = V2)
 
- save.image(file = "data/predictions_sps3_step2_1.RData")
+ save.image(file = "data/predictions_sps3_step2_2.RData")
 # load("data/predictions_sps3_step2_1.RData")
 
 #? TREE DENSITY -----------------------------------------------------------------
@@ -563,7 +560,7 @@ treelat_covs_pkpos[1,2] <- 1.05
 for(jj in 2:nrow(treelat_covs_pkpos)){treelat_covs_pkpos[jj,2] <- treelat_covs_pkpos[jj - 1 ,2] + 0.04}
 
 treelat_covs2 <- left_join(treelat_covs, treelat_covs_pkpos, by = "park")  %>% 
-                    filter(scale %in% beta3_preds$scale) %>% 
+                    #filter(scale %in% beta3_preds$scale) %>% 
                     drop_na() %>% 
                     mutate(covariate = "cov",
                            scale = as.numeric(scale)) %>% 
@@ -1272,7 +1269,7 @@ ggplot() +
   # Add rug plot for park values
   geom_rug(data = beta1_preds2 %>% filter(covariate == "cov"), 
            aes(x = pred_mean, color = park), 
-           sides = "b", size = 0.8, length = unit(0.05, "npc"), show.legend = FALSE) +
+           sides = "b", linewidth = 0.8, length = unit(0.05, "npc"), show.legend = FALSE) +
   # Add text labels INSIDE each panel - CENTERED
   geom_text(data = data.frame(scale = c(1, 2, 3), 
                               label = c("Local Scale", "Park Scale", "County Scale"),
@@ -1751,8 +1748,27 @@ legend_plot <- ggplot() +
 
 # Extract just the legend
 library(cowplot)
+# Create a minimal legend-only plot with unique species data
+legend_data <- data.frame(
+  sps = names(safe_pal_species),
+  x = 1:length(safe_pal_species),
+  y = 1
+)
+
+legend_plot <- ggplot(legend_data, aes(x = x, y = y, color = sps)) +
+  geom_point(size = 0) +  # Invisible points, just for legend
+  geom_line(aes(group = sps), size = 2) +  # Thick lines for legend
+  scale_color_manual(values = safe_pal_species, name = "Species") +
+  theme_void() +
+  theme(legend.position = "bottom",
+        legend.title = element_text(size = 14, face = "bold"),
+        legend.text = element_text(size = 12),
+        legend.key.width = unit(1.5, "cm")) +
+  guides(color = guide_legend(nrow = 2, byrow = TRUE))
+
+# Extract legend (should be cleaner now)
 species_legend <- get_legend(legend_plot)
 
-# Save the legend separately
-ggsave("figures/species_legend.svg", plot = species_legend, device = "svg", width = 12, height = 2)
-ggsave("figures/species_legend.png", plot = species_legend, device = "png", width = 12, height = 2)
+# Save the legend
+ggsave("figures/species_legend.svg", plot = legend_plot, device = "svg", width = 12, height = 12)
+ggsave("figures/species_legend.png", plot = legend_plot, device = "png", width = 12, height = 12)
