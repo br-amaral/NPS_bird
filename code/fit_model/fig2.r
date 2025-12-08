@@ -95,7 +95,7 @@ for(ii in 1:nrow(coef_path_file)) {
     # Get summary with median and credible intervals
     coef_summary <- MCMCsummary(samples_jags,
                             params = params_mods, #, "beta0", "alpha0"),  # specify parameters
-                            probs = c(0.025, 0.5, 0.975),  # 2.5%, median, 97.5%
+                            probs = c(0.1, 0.5, 0.9),  # 2.5%, median, 97.5%
                             round = 3)  %>% 
                     cbind(beta_sca_names)
 
@@ -117,8 +117,8 @@ for(ii in 1:nrow(coef_path_file)) {
         samps <- coda::as.mcmc.list(samples_jags)
     }
     samps_mat <- do.call(rbind, samps)  # now all chains stacked
-    dim(samps_mat)  # should be n_draws x n_parameters
-    colnames(samps_mat) 
+    # dim(samps_mat)  # should be n_draws x n_parameters
+    # colnames(samps_mat) 
 
     # align parameter names safely
     common_pars <- intersect(rownames(coef_summary), colnames(samps_mat))
