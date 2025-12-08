@@ -198,9 +198,9 @@ dat0 <- left_join(dat, cov_name, by = "coef") %>%
             select(-Covariate) %>%  
             mutate(sca_select = as.numeric(sca_select)) %>% 
             rename(Covariate = cov_name,
-                    low = `2.5%`,  
+                    low = `10%`,  
                     median = `50%`, 
-                    up = `97.5%`) %>% 
+                    up = `90%`) %>% 
             arrange(sps, coef) %>% 
             relocate(sps)  %>% 
             left_join(., sca_name, by = "sca_select") 
