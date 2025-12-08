@@ -171,9 +171,9 @@ coef_summary3 <- as_tibble(coef_summary3) %>%
           ) +
           scale_x_continuous(breaks = c(-2, -1, 0, 1, 2, 3)))
 
-# ggsave("figures/park_size.svg", plot = park_sizeP, device = "svg", width = 11, height = 11, dpi = 1200)
-
-# ggsave("figures/park_size.png", plot = park_sizeP, device = "png", width = 11, height = 9, dpi = 1200)
+#  ggsave("figures/park_size.svg", plot = park_sizeP, device = "svg", width = 11, height = 11, dpi = 1200)
+#  ggsave("figures/park_size.pdf", plot = park_sizeP, device = "pdf", width = 11, height = 11, dpi = 1200)
+#  ggsave("figures/park_size.png", plot = park_sizeP, device = "png", width = 11, height = 9, dpi = 1200)
 
 
 dat <- coef_summary3 %>% 
@@ -242,6 +242,13 @@ dat1 <- dat %>%
 
 dat1$sca_col <- ifelse(dat1$sca == "Park Scale", "darkolivegreen3", dat1$sca_col)
 dat1$sca_col <- ifelse(dat1$sca == "County Scale", "darkolivegreen4", dat1$sca_col)
+
+coef_tab <- dat1 %>% 
+                select(sps, coef, Covariate, mean, sd, low, median, up, sca, Rhat, n.eff) %>% 
+                arrange(sps)
+
+write_rds(coef_tab, file = "data/out/coef_tab_wsca.rds")
+write_csv(coef_tab, file = "data/out/coef_tab_wsca.csv")
 
 #! Figure 3 ---------------------------------------------
 sca_col <- c("#B0EDB9", "#64CC81", "#088A0F")

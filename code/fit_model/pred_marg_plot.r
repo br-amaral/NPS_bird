@@ -55,7 +55,7 @@ if(substr(getwd(), 1, 3) == "/Us") {direc <- "local"} else {direc <- "hpc"}
 if(direc == "local"){STEP2_INFO_PATH <- glue("/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne/NPS_bird_copy/{STEP2_INFO_PATH}")}
 
 ## read files
-dat_sca <- read_rds(COEF_SPS_PATH)       # which betas are important
+dat_sca <- read_rds(COEF_SPS_PATH) %>% as_tibble()    # which betas are important
 beta_key <- read_csv(STEP2_INFO_PATH) %>% 
               filter(step == 3,
                      run == "yes") #%>% 
@@ -118,6 +118,7 @@ cov_key[which(cov_key$coef_ori == 'beta4'), 4:7] <-
 
 cov_key[which(cov_key$coef_ori == 'beta5'), 4:7] <- 
                   as.list(c("BA_mean", "BA_sd", "BA_min", "BA_max"))
+cov_key <- cov_key %>% mutate(coef = coef_ori) %>% rename(meanc = mean, sdc = sd)
 
 # get the data for the predictions
 for(sps_res in 1:nrow(beta_key)){
@@ -146,14 +147,16 @@ for(sps_res in 1:nrow(beta_key)){
   sps_data <- read_rds(glue("data/ana_file/{DATA_SPS_PATH}"))
 
   dat_sca2 <- dat_sca %>% 
+                      mutate(overlap0med = overlap0)  %>% 
                       filter(sps == sps_loop,  
                       #! plot only non-overlapping zeros
                              overlap0med == "no")  %>%
-                      left_join(., cov_key, by = "Covariate") %>% 
+                      left_join(., cov_key, by = c("coef", "Covariate")) %>% 
                       relocate(data_tab, coef_ori) %>% 
-                      #filter(scale_selected == 1) %>% 
+                      filter(scale_selected == 1) %>% 
                       arrange(data_tab) %>% 
                       filter(!is.na(coef_ori))
+                      
   if(nrow(dat_sca2) != 0){
     for(ii in 1:nrow(dat_sca2)){  
 
@@ -166,8 +169,8 @@ for(sps_res in 1:nrow(beta_key)){
 
       cov_key_sps <- cov_key  %>% 
                         filter(coef_ori == beta_loop$coef_ori) %>% 
-                        mutate(mean = glue("{sca_key_sps}{mean}"),
-                               sd = glue("{sca_key_sps}{sd}"),
+                        mutate(meanc = glue("{sca_key_sps}{meanc}"),
+                               sdc = glue("{sca_key_sps}{sdc}"),
                                min = glue("{sca_key_sps}{min}"),
                                max = glue("{sca_key_sps}{max}"))
 
@@ -181,22 +184,23 @@ for(sps_res in 1:nrow(beta_key)){
 
       if(exists(lims_obj_name)) {
         lims_data <- get(lims_obj_name, envir = .GlobalEnv)  %>% 
-                        select(cov_key_sps$mean,
-                               cov_key_sps$sd,
+                        select(cov_key_sps$meanc,
+                               cov_key_sps$sdc,
                                cov_key_sps$min,
                                cov_key_sps$max) 
-        colnames(lims_data) <- c("mean", "sd", "min", "max")
+        colnames(lims_data) <- c("meanc", "sdc", "min", "max")
                         }
         
       # sd_col <- glue("{scale_suffix}{covariate_suffix}_sd")
       # mean_col <- glue("{scale_suffix}{covariate_suffix}_mean")
 
       X_range_ori <- seq(from = lims_data$min, to = lims_data$max, length.out = 100)
-      X_range <- (X_range_ori - lims_data$mean) / lims_data$sd
+      X_range <- (X_range_ori - lims_data$meanc) / lims_data$sdc
 
       # Get beta index
       beta_index <- as.numeric(str_extract(beta_loop$coef_ori, "\\d+"))
-      beta_index_order <- as.numeric(str_extract(beta_loop$betas, "\\d+"))
+
+      beta_index_order <- as.numeric(str_extract(beta_loop$coef_ori, "\\d+")) # as.numeric(str_extract(beta_loop$betas, "\\d+"))
 
       beta_param <- glue("beta[{beta_index}]")
     
@@ -276,7 +280,7 @@ for(sps_res in 1:nrow(beta_key)){
   }
 }
 
-# save.image(file = "data/predictions_sps3_step2_1.RData")
+# save.image(file = "data/predictions_sps3_step2_2.RData")
 # load(file = "data/predictions_sps3.RData")
 # dat_sca3 <- read_rds(file = "data/dat_sca3.rds")
 # get park ranges
@@ -295,6 +299,31 @@ if (!require("microViz", quietly = TRUE)) {
 } else {
   safe_pal <- microViz::distinct_palette(pal = "kelly")
 }
+
+safe_pal <- c(
+  VEER = "#5b3d32",   # warm cinnamon rose-brown
+  HETH = "#8C7A58",   # muted olive-tan
+  WOTH = "#ba7a50",   # brighter warm orange-brown
+
+  OVEN = "#446506",   # clearer bright olive
+  BAWW = "#1b1919",   # charcoal (contrast anchor)
+
+  BTNW = "#81ca3d",   # vivid yellow-green
+  BTBW = "#0c3889",   # bright blue
+  BLBW = "#ef6f1f",   # flame orange
+
+  SCTA = "#CC2F4A",   # *magenta-red* (CB-safe vs green)
+  REVI = "#4e0707",   # cleaner light green
+  BHVI = "#8296d7",   # **violet** to differentiate from blue
+
+  BRCR = "#9E886A",   # neutral brown
+  WBNU = "#7cb7e5",   # icy blue
+
+  DOWO = "#aa48a5",   # black (anchor)
+  HAWO = "#4d167e",   # **deep purple**
+  YBSA = "#E3C228"    # bright yellow-gold
+)
+
 
 #? AUTOMATED PREDICTION PROCESSING FUNCTION ---------------------------------------
 process_beta_predictions <- function(beta_num, covariate_suffix) {
