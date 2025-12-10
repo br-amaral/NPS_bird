@@ -122,7 +122,7 @@ for(ii in 1:nrow(master_tab)){
     } else {
       stop(glue("\n\n\n error on {master_tab$result[ii]} on row {ii}\n\n\n"))
     }
-
+  print(ii)
   sps_result <- coef_tab(ii)
   coef_fim <- bind_rows(coef_fim, sps_result)
 }
