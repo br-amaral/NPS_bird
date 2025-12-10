@@ -143,11 +143,9 @@ coef_tab <- function(row_index) {
       as_tibble() %>%
       left_join(sca_mod1, by = "coef")
 
+    } else {coef_tablp2 <- coef_tablp1}
+    
     return(coef_tablp2)
-  }
-
-  # For step 3 and 4 (or others), return the basic table
-  coef_tablp1
 }
 
 # ------------------------------------------------------------------------------
