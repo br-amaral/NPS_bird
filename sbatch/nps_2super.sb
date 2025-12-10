@@ -2,11 +2,11 @@
 
 #SBATCH --job-name=nps_super
 #SBATCH --time=24:00:00           # adjust if some rows are slow
-#SBATCH --mem=8G                  # memory PER TASK
+#SBATCH --mem=80G                  # memory PER TASK
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
-#SBATCH --array=1-48%8            # 48 rows total, 8 at a time
+#SBATCH --array=1-48%4            # 48 rows total, 4 at a time
 
 #SBATCH --mail-type=FAIL,END
 #SBATCH --mail-user=bamaral@msu.edu
