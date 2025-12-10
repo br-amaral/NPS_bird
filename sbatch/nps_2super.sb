@@ -14,6 +14,7 @@
 cd "$SLURM_SUBMIT_DIR"
 
 module purge
+module load JAGS/4.3.2-foss-2023a
 module load R-bundle-CRAN/2023.12-foss-2023a
 
 export R_DISABLE_BYTECODE=1
