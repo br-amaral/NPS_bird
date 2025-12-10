@@ -127,4 +127,4 @@ for(ii in 1:nrow(master_tab)){
   coef_fim <- bind_rows(coef_fim, sps_result)
 }
 
-write.rds(coef_fim, file = "data/out/super_test_table.rds")
+write_rds(coef_fim, file = "data/out/super_test_table.rds")
