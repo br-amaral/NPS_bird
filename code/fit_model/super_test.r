@@ -290,8 +290,8 @@ for(ii in 1:length(coef_fim3_be)){
     pred_upper = pred_upper) %>% 
     mutate(sps = sps_loop, scale = scale_loop)
   
-  print(glue("pred_{sps_loop}_beta{as.numeric(substr(beta_loop, 6, 6))}_scale{kk}"))
-  assign(glue("pred_{sps_loop}_beta{as.numeric(substr(beta_loop, 6, 6))}_scale{kk}"), pred_data) 
+  print(glue("pred_{sps_loop}_beta{as.numeric(substr(beta_loop, 6, 6))}_scale{coef_fim3_be$sca_sel[ii]}"))
+  assign(glue("pred_{sps_loop}_beta{as.numeric(substr(beta_loop, 6, 6))}_scale{coef_fim3_be$sca_sel[ii]}"), pred_data) 
   
   # Create plot
   p <- ggplot(pred_data, aes(x = X_range_ori)) +
@@ -307,7 +307,7 @@ for(ii in 1:length(coef_fim3_be)){
   
   print(p)
 
-  ggsave(file = glue("figures/pred_{sps_loop}_beta{as.numeric(substr(beta_loop, 6, 6))}_scale{kk}.png"),
+  ggsave(file = glue("figures/pred_{sps_loop}_beta{as.numeric(substr(beta_loop, 6, 6))}_scale{coef_fim3_be$sca_sel[ii]}.png"),
           plot = p, device = "png", width = 7, height = 6)
 }
 
