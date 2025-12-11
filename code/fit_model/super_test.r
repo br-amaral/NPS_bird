@@ -133,7 +133,7 @@ master_tab <- master_tab %>% filter(AOU_Code != "BCCH")
 
 # write_rds(coef_fim, file = "data/out/super_test_table.rds")
 
- coef_fim <- read_rds(file = "data/out/super_test_table.rds") %>% 
+ coef_fim <- read_rds(file = "data/out/super_test_table.rds")  
 
 # compare model results for different steps
 coef_fim2 <- coef_fim %>% 
