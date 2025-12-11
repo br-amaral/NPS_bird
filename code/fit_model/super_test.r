@@ -220,6 +220,8 @@ sps_list <- coef_fim3 %>% select(sps) %>% distinct() %>% pull()
 
 cov_list <- cov_key %>% select(coef) %>% pull()
 
+files <- tibble()
+
 for(ii in 1:length(coef_fim3_be)){ 
   beta_loop <- coef_fim3_be$coef[ii]
 
@@ -292,6 +294,11 @@ for(ii in 1:length(coef_fim3_be)){
   
   print(glue("pred_{sps_loop}_beta{as.numeric(substr(beta_loop, 6, 6))}_scale{coef_fim3_be$sca_sel[ii]}"))
   assign(glue("pred_{sps_loop}_beta{as.numeric(substr(beta_loop, 6, 6))}_scale{coef_fim3_be$sca_sel[ii]}"), pred_data) 
+  write_rds(pred_data, file = glue("data/out/pred_{sps_loop}_beta{as.numeric(substr(beta_loop, 6, 6))}_scale{coef_fim3_be$sca_sel[ii]}.rds"))
+  
+  files <- rbind(files, glue("data/out/pred_{sps_loop}_beta{as.numeric(substr(beta_loop, 6, 6))}_scale{coef_fim3_be$sca_sel[ii]}.rds"))
+  colnames(files) <- "pred_name"
+  write_rds(files, file = "data/out/pred_file_names.rds")
   
   # Create plot
   p <- ggplot(pred_data, aes(x = X_range_ori)) +
