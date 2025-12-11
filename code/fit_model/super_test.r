@@ -311,21 +311,11 @@ for(ii in 1:length(coef_fim3_be)){
           plot = p, device = "png", width = 7, height = 6)
 }
 
-save.image("data/out/supertest1.RData")
+save.image(file = "data/out/supertest1.RData")
 
 # get park ranges
 XDAT_PATH <- "data/X.rds"
 X10 <- read_rds(file = XDAT_PATH)
-
-# Replace the microViz line with:
-if (!require("microViz", quietly = TRUE)) {
-  # Fallback color palette if microViz is not available
-  safe_pal <- c("#F0A3FF", "#0075DC", "#993F00", "#4C005C", "#191919", 
-                "#005C31", "#2BCE48", "#FFCC99", "#808080", "#94FFB5", 
-                "#8F7C00", "#C20088", "#FFA405", "#FFA8BB", "#426600", "#4ECDC4", "#07a1cb")
-} else {
-  safe_pal <- microViz::distinct_palette(pal = "kelly")
-}
 
 safe_pal <- c(
   VEER = "#5b3d32",   # warm cinnamon rose-brown
@@ -406,3 +396,5 @@ beta5_preds <- process_beta_predictions(5, beta_covariates[["5"]])
 
 scale_covs <-  as_tibble(cbind(c(3, 2, 1), c("coun", "park", "site"))) %>% 
                   rename(scale = V1, scale_name = V2)
+
+save.image(file = "data/out/supertest2.RData")
