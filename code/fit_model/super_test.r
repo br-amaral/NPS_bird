@@ -27,13 +27,13 @@ if(substr(getwd(), 1, 3) == "/Us") {direc <- "local"} else {direc <- "hpc"}
 if(direc == "local"){
     master_tab <- read_csv("/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne/NPS_bird_copy/code/fit_model/mod_key.csv") %>%
             #filter(run == "yes") %>% 
-            filter(step %in% c(2,3,4)) %>% 
+            filter(step %in% c(2,3)) %>% 
             distinct() %>% 
             arrange(AOU_Code, step)
 
     } else {master_tab <- read_csv("code/fit_model/mod_key.csv") %>%
             #filter(run == "yes") %>% 
-            filter(step %in% c(2,3,4)) %>% 
+            filter(step %in% c(2,3)) %>% 
             distinct()%>% 
             arrange(AOU_Code, step)
     }
@@ -136,12 +136,16 @@ coef_fim <- tibble()
  coef_fim <- read_rds(file = "data/out/super_test_table.rds")  
 
 # compare model results for different steps
+coef_fim <- coef_fim %>% 
+                  filter(step %in% c(2,3)) %>% 
+                  distinct() 
+
 coef_fim2 <- coef_fim %>% 
                   select(sps, coef, step, mean) %>% 
                   pivot_wider(names_from = step,
                               values_from = mean) %>%
-                  mutate(`2_3` = `2` - `3`,
-                        `3_4` = `3` - `4`) 
+                  mutate(`2_3` = `2` - `3`)
+                        #`3_4` = `3` - `4`) 
 
 #write_csv(coef_fim2, file = "data/out/super_test_table2.csv")
 
@@ -1056,85 +1060,16 @@ sps_order <- read_csv(SPS_ORDER_PATH) %>%
 dat_sca <- dat_sca %>% 
               left_join(., sps_order, by = "sps")
 
-(sca_plot_selec_sca <- ggplot() +
-  geom_point(data = dat_sca %>% filter(sca_select == 3), 
-             aes(x = Covariate, y = sps, fill = sca_col), 
-             size = 31, shape = 21, stroke = 0.9) +
-  geom_point(data = dat_sca %>% filter(sca_select == 2), 
-             aes(x = Covariate, y = sps, fill = sca_col), 
-             size = 24, shape = 21, stroke = 0.9) +
-  geom_point(data = dat_sca %>% filter(sca_select == 1), 
-             aes(x = Covariate, y = sps, fill = sca_col), 
-             size = 18.5, shape = 21, stroke = 0.9) +
-  geom_text(data = dat_sca %>% filter(sca_select == 3), 
-            aes(x = Covariate, y = sps, label = glue("{round(select_sca * 100)}")), #\nCI:{round(low, 1)} : {round(up, 1)}")), #
-            size = 7, color = "black") +
-  geom_text(data = dat_sca %>% filter(sca_select == 2), 
-            aes(x = Covariate, y = sps, label = glue("{round(select_sca * 100)}")), #\nCI:{round(low, 1)} : {round(up, 1)}")), 
-            size = 7, color = "black") +
-  geom_text(data = dat_sca %>% filter(sca_select == 1), 
-            aes(x = Covariate, y = sps, label = glue("{round(select_sca * 100)}")), #\nCI:{round(low, 1)} : {round(up, 1)}")), 
-            size = 6, color = "black") +
-  scale_fill_identity() +  # This tells ggplot to use the hex color values as actual colors
-  theme_minimal() +
-  theme(legend.position = "bottom",
-        legend.margin = margin(t = 25, r = 0, b = 0, l = 0),  # Add top margin to legend
-        axis.text.x = element_text(hjust = 0.5, size = 24),
-        axis.text.y = element_text(hjust = 0, size = 26),    
-        axis.title.x = element_text(size = 20),
-        axis.title.y = element_text(size = 30),
-        legend.title = element_text(size = 22, face = "bold", hjust = 0.5),  
-        legend.text = element_text(size = 22),
-        panel.grid.major = element_line(color = "gray85", linetype = "solid", linewidth = 0.6),
-        panel.grid.minor = element_line(color = "gray85", linetype = "solid", linewidth = 0.6)) +
-  scale_y_discrete(limits = rev(levels(factor(dat_sca$sps)))) +  # Reverse y-axis order
-  scale_x_discrete(labels = function(x) {
-    cov_codes <- unique(dat_sca$Covariate)
-      # Manually add line breaks
-      case_when(
-        cov_codes == "Tree Basal Area" ~ "Tree Basal\nArea",
-        cov_codes == "Late Successional Tree Density" ~ "Late Success.\n Tree Basal Area",
-        cov_codes == "Conifer Density" ~ "Conifer \nBasal Area  ",
-        cov_codes == "Tree Density" ~ "Tree\nDensity",
-        cov_codes == "Shrub Basal Area" ~ "Shrub\nCover",
-        TRUE ~ cov_codes  # Keep others as is
-      )}) +
-  labs(x = NULL, # "\nForest Covariate", 
-       y = "Species\n", fill = "Scale Selection\nFrequency\n") +
-  # Create manual legend for discrete colors
-  scale_fill_manual(
-    name = "Scale Selection\nFrequency",
-    values = c("(33-50]%" = "#e9e3e9", 
-               "(50-75]%" = "#d0add0", 
-               ">75%" = "#ad70ad"),
-    breaks = c("(33-50]%", "(50-75]%", ">75%"),
-    labels = c("(33-50]%", "(50-75]%", ">75%"),
-    na.value = "white",  # Handle any NA values
-    guide = guide_legend(
-      title.position = "left",
-      title.hjust = 0.5,
-      title.vjust = 0.5,  # Center title vertically with legend items
-      label.vjust = 0.5,  # Center labels vertically with legend items
-      nrow = 1,
-      byrow = TRUE,  # Arrange legend items by row
-      keywidth = unit(1.5, "cm"),  # Width of legend keys (affects spacing)
-      keyheight = unit(0.8, "cm"), # Height of legend keys
-      override.aes = list(size = 10, shape = 21, stroke = 0.9)
-    )
-  )
-)
-
-
 (sca_plot_selec_sca2_long <- ggplot() +
   geom_point(data = dat_sca %>% filter(sca_select == 3), 
              aes(x = sps_name, y = Covariate, fill = sca_col),  
-             size = 33, shape = 21, stroke = 0.8, color = "#4A4A4A") +
+             size = 31, shape = 21, stroke = 0.8, color = "#4A4A4A") +
   geom_point(data = dat_sca %>% filter(sca_select == 2), 
              aes(x = sps_name, y = Covariate, fill = sca_col),  
-             size = 23, shape = 21, stroke = 0.8, color = "#4A4A4A") +
+             size = 24, shape = 21, stroke = 0.8, color = "#4A4A4A") +
   geom_point(data = dat_sca %>% filter(sca_select == 1), 
              aes(x = sps_name, y = Covariate, fill = sca_col),  
-             size = 17, shape = 21, stroke = 0.8, color = "#4A4A4A") +
+             size = 18.5, shape = 21, stroke = 0.8, color = "#4A4A4A") +
   geom_text(data = dat_sca %>% filter(sca_select == 3), 
             aes(x = sps_name, y = Covariate, label = glue("{round(select_sca * 100)}")),  
             size = 7, color = "black") +
@@ -1148,7 +1083,7 @@ dat_sca <- dat_sca %>%
   theme_minimal() +
   theme(legend.position = "right",  # Changed from "bottom" to "right"
         legend.margin = margin(t = 0, r = 0, b = 0, l = 25),  # Adjusted margin (left margin for spacing)
-        axis.text.x = element_text(hjust = 1, size = 22, angle = 90, vjust = 0.5),  
+        axis.text.x = element_text(hjust = 1, size = 22, angle = 30, vjust = 0.5),  
         axis.text.y = element_text(hjust = 1, size = 26),    
         axis.title.x = element_text(size = 30),  
         axis.title.y = element_text(size = 25),  
@@ -1313,14 +1248,14 @@ dat_sca3$scale %>% table()
             aes(x = sps_name, y = Covariate, label = glue("{round(median, 2)}")),  # Switched x and y
             size = 6, color = "black") +
   scale_color_identity() +  
-  scale_fill_gradient2(low = "#ca0557",           # Keep your color scheme
-                       high = "#0794b7",        
+  scale_fill_gradient2(low = "#8C510A",           # Keep your color scheme
+                       high = "#01665E",        
                        midpoint = 0,              
                        name = "Covariate\nEffect size\n") +
   theme_minimal() +
   theme(legend.position = "right",  # Changed to match sca_plot_selec_sca2
         legend.margin = margin(t = 0, r = 0, b = 0, l = 25),  # Match margin
-        axis.text.x = element_text(hjust = 1, size = 22, angle = 90, vjust = 0.5),  # Match rotation and centering
+        axis.text.x = element_text(hjust = 1, size = 22, angle = 30, vjust = 1),  # Changed vjust to 1 for closer positioning
         axis.text.y = element_text(hjust = 1, size = 26),  # Match right alignment    
         axis.title.x = element_text(size = 30),  # Match sizes
         axis.title.y = element_text(size = 25),  # Match sizes
