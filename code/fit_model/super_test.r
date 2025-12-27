@@ -335,28 +335,34 @@ XDAT_PATH <- "data/X.rds"
 X10 <- read_rds(file = XDAT_PATH)
 
 safe_pal <- c(
-  VEER = "#5b3d32",   # warm cinnamon rose-brown
-  HETH = "#8C7A58",   # muted olive-tan
-  WOTH = "#ba7a50",   # brighter warm orange-brown
+  VEER = "#3FA072",   # lighter cinnamon (was too dark)
+  HETH = "#8C7A58",   # muted olive-tan (ok)
+  WOTH = "#d99e79",   # brighter warm brown
 
-  OVEN = "#446506",   # clearer bright olive
-  BAWW = "#1b1919",   # charcoal (contrast anchor)
+  OVEN = "#49731c",   # olive, lifted in luminance
+  BAWW = "#2F2F2F",   # ONLY near-black anchor
 
-  BTNW = "#81ca3d",   # vivid yellow-green
-  BTBW = "#0c3889",   # bright blue
-  BLBW = "#ef6f1f",   # flame orange
+  BTNW = "#adf26d",   # vivid yellow-green (ok)
+  BTBW = "#1F5CB8",   # mid-blue, not too dark
+  BLBW = "#FF5F1F",   # flame orange
 
-  SCTA = "#CC2F4A",   # *magenta-red* (CB-safe vs green)
-  REVI = "#4e0707",   # cleaner light green
-  BHVI = "#8296d7",   # **violet** to differentiate from blue
+  SCTA = "#D63A5A",   # magenta-red (clearer, lighter)
+  REVI = "#be2000",   # teal-green (fixes dark red confusion)
+  BHVI = "#7B6FE6",   # violet (distinct from BTBW)
 
-  BRCR = "#9E886A",   # neutral brown
-  WBNU = "#7cb7e5",   # icy blue
+  BRCR = "#717171",   # lighter bark brown
+  WBNU = "#8CC6ED",   # icy light blue
 
-  DOWO = "#aa48a5",   # black (anchor)
-  HAWO = "#4d167e",   # **deep purple**
-  YBSA = "#E3C228"    # bright yellow-gold
+  DOWO = "#C05BB9",   # lavender-magenta (lighter than HAWO)
+  HAWO = "#6A2CA4",   # deep purple, but not near-black
+  YBSA = "#E8C933"    # bright yellow-gold
 )
+
+SPS_ORDER_PATH <- "data/src/sps_order.csv"
+
+sps_order <- read_csv(SPS_ORDER_PATH) %>% 
+                rename(sps = Aou_code) %>% 
+                mutate(sps_name = factor(sps_name, levels = sps_name))  # Use current order as levels
 
 #? AUTOMATED PREDICTION PROCESSING FUNCTION ---------------------------------------
 process_beta_predictions <- function(beta_num, covariate_suffix) {
@@ -477,7 +483,8 @@ x_cen_den <- x_stats_den %>% pull(middle_val) %>% as.vector()
 
 (pred_den_rug <- ggplot() +
                   geom_line(data = beta1_preds2 %>% filter(covariate == "beta[1]"), 
-                            aes(x = X_range_ori, y = pred_mean, color = factor(sps)), linewidth = 1.2, show.legend = FALSE) +
+                            aes(x = X_range_ori, y = pred_mean, color = factor(sps)), 
+                            linewidth = 1.3, show.legend = FALSE) +
                   # Add rug plot for park values
                   geom_rug(data = beta1_preds2 %>% filter(covariate == "cov"), 
                           aes(x = pred_mean, color = park), 
@@ -503,7 +510,9 @@ x_cen_den <- x_stats_den %>% pull(middle_val) %>% as.vector()
                         plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
                         axis.title.y = element_text(size = 14),
                         axis.text.x = element_text(size = 12),
-                        axis.text.y = element_text(size = 12)) +
+                        axis.text.y = element_text(size = 12),
+                        axis.ticks.x = element_line(linewidth = 0.6, color = "black"),
+                        axis.ticks.length.x = unit(0.2, "cm")) +
                   scale_color_manual(values = safe_pal) +
                   ylim(0, 1)
 )
@@ -581,7 +590,8 @@ x_cen_con <- x_stats_con %>% pull(middle_val) %>% as.vector()
 
 pred_con_rug <- ggplot() +
                   geom_line(data = beta2_preds2 %>% filter(covariate == "beta[2]"), 
-                            aes(x = X_range_ori, y = pred_mean, color = factor(sps)), linewidth = 1.2, show.legend = FALSE) +
+                            aes(x = X_range_ori, y = pred_mean, color = factor(sps)), 
+                            linewidth = 1.3, show.legend = FALSE) +
                   # Add rug plot for park values
                   geom_rug(data = beta2_preds2 %>% filter(covariate == "cov"), 
                            aes(x = pred_mean, color = park), 
@@ -607,7 +617,9 @@ pred_con_rug <- ggplot() +
                         plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
                         axis.title.y = element_text(size = 14),
                         axis.text.x = element_text(size = 12),
-                        axis.text.y = element_text(size = 12)) +
+                        axis.text.y = element_text(size = 12),
+                        axis.ticks.x = element_line(linewidth = 0.6, color = "black"),
+                        axis.ticks.length.x = unit(0.2, "cm")) +
                   scale_color_manual(values = safe_pal) +
                   ylim(0, 1)
 
@@ -684,7 +696,8 @@ x_cen_lat <- x_stats_lat %>% pull(middle_val) %>% as.vector()
 
 pred_lat_rug <- ggplot() +
         geom_line(data = beta3_preds2 %>% filter(covariate == "beta[3]"), 
-                  aes(x = X_range_ori, y = pred_mean, color = factor(sps)), linewidth = 1.2, show.legend = FALSE) +
+                  aes(x = X_range_ori, y = pred_mean, color = factor(sps)), 
+                  linewidth = 1.3, show.legend = FALSE) +
         # Add rug plot for park values
         geom_rug(data = beta3_preds2 %>% filter(covariate == "cov"), 
                 aes(x = pred_mean, color = park), 
@@ -710,7 +723,9 @@ pred_lat_rug <- ggplot() +
               plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
               axis.title.y = element_text(size = 14),
               axis.text.x = element_text(size = 12),
-              axis.text.y = element_text(size = 12)
+              axis.text.y = element_text(size = 12),
+              axis.ticks.x = element_line(linewidth = 0.6, color = "black"),
+              axis.ticks.length.x = unit(0.2, "cm")
         ) +
         scale_color_manual(values = safe_pal) +
         ylim(0, 1)
@@ -788,7 +803,8 @@ x_cen_shr <- x_stats_shr %>% pull(middle_val) %>% as.vector()
 
 pred_shr_rug <- ggplot() +
                   geom_line(data = beta4_preds2 %>% filter(covariate == "beta[4]"), 
-                            aes(x = X_range_ori, y = pred_mean, color = factor(sps)), linewidth = 1.2, show.legend = FALSE) +
+                            aes(x = X_range_ori, y = pred_mean, color = factor(sps)), 
+                            linewidth = 1.3, show.legend = FALSE) +
                   # Add rug plot for park values
                   geom_rug(data = beta4_preds2 %>% filter(covariate == "cov"), 
                           aes(x = pred_mean, color = park), 
@@ -814,7 +830,9 @@ pred_shr_rug <- ggplot() +
                         plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
                         axis.title.y = element_text(size = 14),
                         axis.text.x = element_text(size = 12),
-                        axis.text.y = element_text(size = 12)
+                        axis.text.y = element_text(size = 12),
+                        axis.ticks.x = element_line(linewidth = 0.6, color = "black"),
+                        axis.ticks.length.x = unit(0.2, "cm")
                   ) +
                   scale_color_manual(values = safe_pal) +
                   ylim(0, 1)
@@ -889,7 +907,8 @@ x_cen_ba <- x_stats_ba %>% pull(middle_val) %>% as.vector()
 
 pred_ba_rug <- ggplot() +
                   geom_line(data = beta5_preds2 %>% filter(covariate == "beta[5]"), 
-                            aes(x = X_range_ori, y = pred_mean, color = factor(sps)), linewidth = 1.2, show.legend = FALSE) +
+                            aes(x = X_range_ori, y = pred_mean, color = factor(sps)), 
+                            linewidth = 1.3, show.legend = FALSE) +
                   # Add rug plot for park values
                   geom_rug(data = beta5_preds2 %>% filter(covariate == "cov"), 
                           aes(x = pred_mean, color = park), 
@@ -915,7 +934,9 @@ pred_ba_rug <- ggplot() +
                         plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
                         axis.title.y = element_text(size = 14),
                         axis.text.x = element_text(size = 12),
-                        axis.text.y = element_text(size = 12)
+                        axis.text.y = element_text(size = 12),
+                        axis.ticks.x = element_line(linewidth = 0.6, color = "black"),
+                        axis.ticks.length.x = unit(0.2, "cm")
                   ) +
                   scale_color_manual(values = safe_pal) +
                   ylim(0, 1)
@@ -924,43 +945,34 @@ ggsave("figures/pred_ba_rug.svg", plot = pred_ba_rug, device = "svg", width = 10
 ggsave("figures/pred_ba_rug.png", plot = pred_ba_rug, device = "png", width = 10.2, height = 4)
 
 # Create species legend plot
-legend_plot <- ggplot() +
-  geom_line(data = beta1_preds2 %>% filter(covariate == "Tree Density") %>% slice(1:17), 
-            aes(x = X_range_ori, y = pred_mean, color = factor(sps)), linewidth = 1.2) +
-  scale_color_manual(values = safe_pal_species, name = "Species") +
-  theme_void() +
-  theme(legend.position = "bottom",
-        legend.title = element_text(size = 14, face = "bold"),
-        legend.text = element_text(size = 12),
-        legend.key.width = unit(1.5, "cm")) +
-  guides(color = guide_legend(nrow = 2, byrow = TRUE))
 
-# Extract just the legend
-library(cowplot)
-# Create a minimal legend-only plot with unique species data
-legend_data <- data.frame(
-  sps = names(safe_pal_species),
-  x = 1:length(safe_pal_species),
-  y = 1
-)
+legend_data <- left_join(legend_data1, sps_order, by = "sps") %>%
+  arrange(sps_order) %>%  # Order by the factor levels of sps_name
+  mutate(x = 1:n())  # Reassign x positions based on new order
+
+# Create ordered species vector for the legend
+ordered_sps <- legend_data$sps
+ordered_labels <- setNames(as.character(legend_data$sps_name), legend_data$sps)
 
 legend_plot <- ggplot(legend_data, aes(x = x, y = y, color = sps)) +
   geom_point(size = 0) +  # Invisible points, just for legend
   geom_line(aes(group = sps), size = 2) +  # Thick lines for legend
-  scale_color_manual(values = safe_pal_species, name = "Species") +
+  scale_color_manual(values = safe_pal, name = "Species", 
+                     labels = ordered_labels,
+                     breaks = ordered_sps) +  # Use ordered breaks
   theme_void() +
   theme(legend.position = "bottom",
         legend.title = element_text(size = 14, face = "bold"),
         legend.text = element_text(size = 12),
         legend.key.width = unit(1.5, "cm")) +
-  guides(color = guide_legend(nrow = 2, byrow = TRUE))
+  guides(color = guide_legend(nrow = 6, byrow = TRUE))
 
 # Extract legend (should be cleaner now)
 species_legend <- get_legend(legend_plot)
 
 # Save the legend
-ggsave("figures/species_legend.svg", plot = legend_plot, device = "svg", width = 12, height = 12)
 ggsave("figures/species_legend.png", plot = legend_plot, device = "png", width = 12, height = 12)
+ggsave("figures/species_legend.svg", plot = legend_plot, device = "svg", width = 12, height = 12)
 
 ## SCALE PLOT ----------------------------------------------------
 dat <- coef_fim %>% 
@@ -1050,12 +1062,6 @@ dat_sca <- dat1 %>%
               ungroup() %>% 
               select(-scale, -selec_freq) %>% 
               distinct()
-                  
-SPS_ORDER_PATH <- "data/src/sps_order.csv"
-
-sps_order <- read_csv(SPS_ORDER_PATH) %>% 
-                rename(sps = Aou_code) %>% 
-                mutate(sps_name = factor(sps_name, levels = sps_name))  # Use current order as levels
 
 dat_sca <- dat_sca %>% 
               left_join(., sps_order, by = "sps")
@@ -1069,7 +1075,7 @@ dat_sca <- dat_sca %>%
              size = 24, shape = 21, stroke = 0.8, color = "#4A4A4A") +
   geom_point(data = dat_sca %>% filter(sca_select == 1), 
              aes(x = sps_name, y = Covariate, fill = sca_col),  
-             size = 18.5, shape = 21, stroke = 0.8, color = "#4A4A4A") +
+             size = 17, shape = 21, stroke = 0.8, color = "#4A4A4A") +
   geom_text(data = dat_sca %>% filter(sca_select == 3), 
             aes(x = sps_name, y = Covariate, label = glue("{round(select_sca * 100)}")),  
             size = 7, color = "black") +
@@ -1078,12 +1084,12 @@ dat_sca <- dat_sca %>%
             size = 7, color = "black") +
   geom_text(data = dat_sca %>% filter(sca_select == 1), 
             aes(x = sps_name, y = Covariate, label = glue("{round(select_sca * 100)}")),  
-            size = 6, color = "black") +
+            size = 7, color = "black") +
   scale_fill_identity() +
   theme_minimal() +
   theme(legend.position = "right",  # Changed from "bottom" to "right"
         legend.margin = margin(t = 0, r = 0, b = 0, l = 25),  # Adjusted margin (left margin for spacing)
-        axis.text.x = element_text(hjust = 1, size = 22, angle = 30, vjust = 0.5),  
+        axis.text.x = element_text(hjust = 1, size = 22, angle = 30, vjust = 1),  
         axis.text.y = element_text(hjust = 1, size = 26),    
         axis.title.x = element_text(size = 30),  
         axis.title.y = element_text(size = 25),  
@@ -1130,6 +1136,10 @@ dat_sca <- dat_sca %>%
  ggsave("figures/sca_plot_select_sca_noleg2long.png", plot = sca_plot_selec_sca2_long, device = "png", width = 24, height = 14, dpi = 800)
 
  ggsave("figures/sca_plot_select_sca_noleg2long.svg", plot = sca_plot_selec_sca2_long, device = "svg", width = 24, height = 14)
+
+# go on Inkspace and:
+#  - set stroke on font as white
+#  - add scale legend (circles of different sizes)
 
 ## COEFFICENT PLOTS ----------------------------------------------
 dat_sca <- coef_fim3 %>% 
@@ -1236,17 +1246,17 @@ dat_sca3$scale %>% table()
              size = 24, shape = 21, stroke = 0.8, color = "#4A4A4A") +  # Match stroke color
   geom_point(data = dat_sca3 %>% filter(scale == 1, overlap0med == "no"), 
              aes(x = sps_name, y = Covariate, fill = median),  # Switched x and y
-             size = 18.5, shape = 21, stroke = 0.8, color = "#4A4A4A") +  # Match stroke color
+             size = 17, shape = 21, stroke = 0.8, color = "#4A4A4A") +  # Match stroke color
   # no overlap
   geom_text(data = dat_sca3 %>% filter(scale == 3, overlap0med == "no"), 
            aes(x = sps_name, y = Covariate, label = glue("{round(median, 2)}")),  # Switched x and y
-            size = 7, color = "black") +
+            size = 7, color = "black", fontface = "plain") +
   geom_text(data = dat_sca3 %>% filter(scale == 2, overlap0med == "no"), 
             aes(x = sps_name, y = Covariate, label = glue("{round(median, 2)}")),  # Switched x and y
-            size = 7, color = "black") +
+            size = 7, color = "black", fontface = "plain") +
   geom_text(data = dat_sca3 %>% filter(scale == 1, overlap0med == "no"), 
             aes(x = sps_name, y = Covariate, label = glue("{round(median, 2)}")),  # Switched x and y
-            size = 6, color = "black") +
+            size = 7, color = "black", fontface = "plain") +
   scale_color_identity() +  
   scale_fill_gradient2(low = "#8C510A",           # Keep your color scheme
                        high = "#01665E",        
@@ -1285,7 +1295,10 @@ dat_sca3$scale %>% table()
   )
 )
 
-# ggsave("figures/circles_coefs.png", plot = circles_coefs, device = "png", width = 24, height = 14, dpi = 800)
+ggsave("figures/circles_coefs.png", plot = circles_coefs, device = "png", width = 24, height = 14, dpi = 800)
 
-# ggsave("figures/circles_coefs.svg", plot = circles_coefs, device = "svg", width = 24, height = 14)
+ggsave("figures/circles_coefs.svg", plot = circles_coefs, device = "svg", width = 24, height = 14)
 
+# go on Inkspace and:
+#  - set stroke on font as white
+#  - add scale legend (circles of different sizes)
