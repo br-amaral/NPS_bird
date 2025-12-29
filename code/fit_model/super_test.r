@@ -1302,3 +1302,192 @@ ggsave("figures/circles_coefs.svg", plot = circles_coefs, device = "svg", width 
 # go on Inkspace and:
 #  - set stroke on font as white
 #  - add scale legend (circles of different sizes)
+
+#! Figure: park size -------------------------------------------
+parks_sizes <- X10 %>% 
+                select(park,area) %>% 
+                mutate(area_s = AHMbook::standardize(area)) %>% 
+                distinct()
+
+YDAT_PATH <- "data/y_dat8.rds"
+y_dat4 <- read_rds(file = YDAT_PATH)
+
+## stats
+y_dat5 <- y_dat4 %>% 
+          filter(AOU_Code %in% unique(sps_order$sps),
+                 bird_detec > 0) %>% 
+          select(AOU_Code, park) 
+
+y_dat5_tab <- table(y_dat5) %>% 
+                  as_tibble() %>% 
+                  rename(sps = AOU_Code)
+
+y_dat5 <- y_dat5 %>% 
+          rename(sps = AOU_Code) %>% 
+          left_join(., sps_order, by = "sps") %>% 
+          left_join(., parks_sizes, by = "park") %>% 
+          left_join(., y_dat5_tab, by = c("sps", "park")) %>% 
+          distinct()  %>% 
+          mutate(n = as.numeric(n),
+                 n2 = n * 100)
+
+(park_sizeP <- 
+coef_fim %>% 
+  filter(coef == "beta[6]", step == 3) %>% 
+  left_join(., sps_order, by = "sps") %>% 
+  mutate(direction = ifelse(overlap_zero == "yes", "yes", ifelse(mean > 0, "pos", "neg")),
+         sps_name = forcats::fct_reorder(sps_name, sps_order, .desc = TRUE)) %>% 
+  ggplot() +
+    geom_vline(xintercept = 0, linetype = "dashed", color = "grey50", linewidth = 0.8) +
+    geom_segment(aes(x = `10%`, xend = `90%`, y = sps_name, yend = sps_name, col = direction), linewidth = 1.2) +
+    geom_point(aes(x = `50%`, y = sps_name, col = direction), size = 4) +
+    scale_color_manual(values = c("pos" = "#01665E", "neg" = "#8C510A", "yes" = "darkgrey")) +
+    theme_minimal() +
+    theme(legend.position = "none",
+          axis.text.x = element_text(hjust = 0.5, size = 18),
+          axis.text.y = element_text(hjust = 1, size = 19),
+          axis.title.x = element_text(size = 20),
+          axis.title.y = element_text(size = 20),
+          panel.grid.major = element_line(color = "gray85", linetype = "solid", linewidth = 0.6),
+          panel.grid.minor = element_line(color = "gray85", linetype = "solid", linewidth = 0.6)) +
+    labs(x = "\nPark size effect on bird occurrence", y = "Species\n") +
+    #scale_x_continuous(breaks = c(-3, -2, -1, 0, 1, 2, 3)) +
+    scale_y_discrete(limits = rev(as.character(sps_order$sps_name[-16]))))
+
+# Save outputs
+ggsave("figures/park_size.svg", plot = park_sizeP, device = "svg", width = 11, height = 11, dpi = 1200)
+#  ggsave("figures/park_size.pdf", plot = park_sizeP, device = "pdf", width = 11, height = 11, dpi = 1200)
+ggsave("figures/park_size.png", plot = park_sizeP, device = "png", width = 11, height = 9, dpi = 1200)
+
+
+df_plot <- coef_fim %>% 
+  filter(coef == "beta[6]", step == 3) %>% 
+  left_join(sps_order, by = "sps") %>% 
+  mutate(direction = ifelse(overlap_zero == "yes", "yes", ifelse(mean > 0, "pos", "neg")),
+         sps_name = forcats::fct_reorder(sps_name, sps_order, .desc = TRUE)) %>%
+  filter(!is.na(`10%`), !is.na(`50%`), !is.na(`90%`), !is.na(sps_name))
+
+# Diagnose which were excluded by your manual limits
+setdiff(unique(df_plot$sps_name), rev(as.character(sps_order$sps_name[-16])))
+
+park_name_size_order <- y_dat5 %>% 
+                            select(park, area) %>% 
+                            distinct() %>% 
+                            arrange(area) %>%
+                            mutate(area_km = round((area/1000), 0),
+                                   leg = glue("{area_km}\n{park}")) 
+
+(detection_plot <- ggplot(y_dat5 %>% 
+          mutate(sps_name = forcats::fct_reorder(sps_name, -sps_order)) %>% 
+          filter(sps != "YBSA"),
+       aes(x = log(area), y = sps_name, fill = park)) +
+  geom_point(aes(size = n), shape = 21, stroke = 0) +
+  geom_text(aes(x = log(area), y = sps_name, label = glue("{n}")),
+                size = 5, color = "black", fontface = "plain") +
+  # Use log transformation for size to handle wide range
+  scale_size_continuous(
+    range = c(2, 12),
+    trans = "log10",
+    breaks = c(1, 5, 25, 100, 350),
+    labels = c("1", "5", "25", "100", "350")
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none",
+        axis.text.x = element_text(hjust = 0.5, size = 14),
+        axis.text.y = element_text(hjust = 1, size = 19),    
+        axis.title.x = element_text(size = 20),
+        axis.title.y = element_text(size = 20),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        plot.title = element_text(size = 22, face = "bold", hjust = 0.5),  
+        panel.grid.major = element_line(color = "gray85", linetype = "solid", linewidth = 0.6),
+        panel.grid.minor = element_line(color = "gray85", linetype = "solid", linewidth = 0.6)) +
+  labs(
+    x = "\nPark size (km\u00B2, log scale)",
+    y = "Species\n",
+    size = "Detection\nCount",
+    title = "Species number of detections per park\n") +
+   scale_x_continuous(breaks = log(y_dat5$area) %>% unique() %>% sort(),
+                      labels = round((y_dat5$area/1000), 0) %>% unique() %>% sort(),
+                      sec.axis = sec_axis(~ .,
+                          breaks = log(y_dat5$area) %>% unique() %>% sort(), 
+                          labels = park_name_size_order$park)))
+
+# Save outputs
+ggsave("figures/park_detections.png", plot = detection_plot, width = 12, height = 8, dpi = 600)
+ggsave("figures/park_detections.svg", plot = detection_plot, width = 12, height = 8)
+
+# coef tables
+dat <- coef_summary3 %>% 
+            #filter(overlap0 == "no") %>% 
+            rename(sca = sca_sel,
+                   cov = betas) %>% 
+            arrange(sca, cov, sps)  %>% 
+            mutate(sps_p = glue("{row_number()}_{sps}")) %>% 
+            as_tibble() %>% 
+            mutate(sps = toupper(sps),
+                   sps_p = factor(sps_p, levels = sps_p)) %>% 
+            rename(Covariate = cov)
+
+cov_name <- cbind(c("beta1",
+                    "beta2",
+                    "beta3",
+                    "beta4",
+                    "beta5"),
+                  c("Tree Density",
+                    "Conifer Density",
+                    "Late Successional Tree Density",
+                    "Shrub Basal Area",
+                    "Tree Basal Area")) %>% 
+            as_tibble() %>% 
+            rename(Covariate = V1,
+                   cov_name = V2)  %>% 
+            mutate(cov_name = factor(cov_name, 
+                              levels = c("Tree Density",
+                                         "Conifer Density",
+                                         "Late Successional Tree Density",
+                                         "Shrub Basal Area",
+                                         "Tree Basal Area")))
+
+sca_name <- cbind(unique(na.omit(dat$sca)),
+                  c("Local Scale",
+                    "Park Scale",
+                    "County Scale")) %>% 
+            as_tibble() %>% 
+            rename(sca = V1,
+                   sca_name = V2)  %>% 
+            mutate(sca_name = factor(sca_name, 
+                              levels = c("Local Scale",
+                                         "Park Scale",
+                                         "County Scale")),
+                   sca = as.numeric(sca))
+
+dat <- left_join(dat, cov_name, by = "Covariate") %>% 
+       select(-Covariate)  %>% 
+       rename(Covariate = cov_name) %>% 
+       mutate(sca = as.numeric(sca)) %>% 
+       left_join(.,sca_name, by = "sca") %>% 
+       select(-sca) %>% 
+       rename(sca = sca_name,
+              low = `10%`,  
+              median = `50%`, 
+              up = `90%`)
+
+#write_rds(dat, "data/out/coef_dat_ext.rds")
+
+dat1 <- dat %>% 
+            mutate(sca_col = "darkolivegreen2") %>% 
+            mutate(cov_sps = glue("{Covariate}_{sps}")) %>% 
+            arrange(Covariate, sps) %>%  # Sort by Covariate first, then sps alphabetically
+            mutate(cov_sps = factor(cov_sps, levels = sort(unique(cov_sps))))  %>% 
+            filter(sps != "BCCH")
+
+dat1$sca_col <- ifelse(dat1$sca == "Park Scale", "darkolivegreen3", dat1$sca_col)
+dat1$sca_col <- ifelse(dat1$sca == "County Scale", "darkolivegreen4", dat1$sca_col)
+
+coef_tab <- dat1 %>% 
+                select(sps, coef, Covariate, mean, sd, low, median, up, sca, Rhat, n.eff) %>% 
+                arrange(sps)
+
+write_rds(coef_tab, file = "data/out/coef_tab_wsca.rds")
+write_csv(coef_tab, file = "data/out/coef_tab_wsca.csv")
