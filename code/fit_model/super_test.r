@@ -27,13 +27,13 @@ if(substr(getwd(), 1, 3) == "/Us") {direc <- "local"} else {direc <- "hpc"}
 if(direc == "local"){
     master_tab <- read_csv("/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne/NPS_bird_copy/code/fit_model/mod_key.csv") %>%
             #filter(run == "yes") %>% 
-            filter(step %in% c(2,3)) %>% 
+            filter(step %in% c(3)) %>% 
             distinct() %>% 
             arrange(AOU_Code, step)
 
     } else {master_tab <- read_csv("code/fit_model/mod_key.csv") %>%
             #filter(run == "yes") %>% 
-            filter(step %in% c(2,3)) %>% 
+            filter(step %in% c(3)) %>% 
             distinct()%>% 
             arrange(AOU_Code, step)
     }
@@ -137,15 +137,15 @@ coef_fim <- tibble()
 
 # compare model results for different steps
 coef_fim <- coef_fim %>% 
-                  filter(step %in% c(2,3)) %>% 
+                  filter(step %in% c(3)) %>% 
                   distinct() 
 
-coef_fim2 <- coef_fim %>% 
-                  select(sps, coef, step, mean) %>% 
-                  pivot_wider(names_from = step,
-                              values_from = mean) %>%
-                  mutate(`2_3` = `2` - `3`)
-                        #`3_4` = `3` - `4`) 
+# coef_fim2 <- coef_fim %>% 
+#                   select(sps, coef, step, mean) %>% 
+#                   pivot_wider(names_from = step,
+#                               values_from = mean)# %>%
+#                  # mutate(`2_3` = `2` - `3`)
+#                         #`3_4` = `3` - `4`) 
 
 #write_csv(coef_fim2, file = "data/out/super_test_table2.csv")
 
@@ -167,18 +167,17 @@ wbnu_lims <- read_rds("data/out/X_vals_WBNU.rds")
 woth_lims <- read_rds("data/out/X_vals_WOTH.rds")
 ybsa_lims <- read_rds("data/out/X_vals_YBSA.rds")
 
-cov_key <- cbind(rbind("X1", "X2", "X3", "X4", "X5"),
-                rbind("beta[1]", "beta[2]", "beta[3]", "beta[4]", "beta[5]"),
-                rbind("Tree Density",
-                      "Conifer Density",
-                      "Late Successional Tree Density",
-                      "Shrub Basal Area",
-                      "Tree Basal Area")) %>% 
-            as_tibble() %>% 
-            rename(data_tab = V1,
-                   coef = V2,
-                   Covariate = V3) %>% 
-            mutate(mean = as.character(NA), sd = as.character(NA), min = as.character(NA), max = as.character(NA))
+cov_key <- tibble(
+        data_tab = c("X1", "X2", "X3", "X4", "X5"),
+        coef = c("beta[1]", "beta[2]", "beta[3]", "beta[4]", "beta[5]"),
+        Covariate = c("Tree Density", "Conifer Density", 
+                      "Late Successional Tree Density", 
+                      "Shrub Basal Area", "Tree Basal Area"),
+        mean = as.character(NA),
+        sd = as.character(NA),
+        min = as.character(NA),
+        max = as.character(NA)
+      )
 
 sca_key <- cbind(rbind("1", "2", "3"),
                 rbind("site", "park", "coun"),
@@ -207,6 +206,7 @@ cov_key[which(cov_key$coef == 'beta[5]'), 4:7] <-
                   as.list(c("BA_mean", "BA_sd", "BA_min", "BA_max"))
 cov_key <- cov_key %>% rename(meanc = mean, sdc = sd)
 
+# for predictions:
 coef_fim3_mu <- coef_fim %>% 
                     filter(step == 3) %>% 
                     filter(coef == "mu.beta0") 
@@ -226,98 +226,98 @@ cov_list <- cov_key %>% select(coef) %>% pull()
 
 files <- tibble()
 
-# for(ii in 1:nrow(coef_fim3_be)){ 
-#   beta_loop <- coef_fim3_be$coef[ii]
+for(ii in 1:nrow(coef_fim3_be)){ 
+  beta_loop <- coef_fim3_be$coef[ii]
 
-#   scale_loop <- sca_key %>% filter(sca_num == coef_fim3_be$sca_sel[ii]) %>% pull(sca_key)
+  scale_loop <- sca_key %>% filter(sca_num == coef_fim3_be$sca_sel[ii]) %>% pull(sca_key)
           
-#   sps_loop <- coef_fim3_be$sps[ii]
+  sps_loop <- coef_fim3_be$sps[ii]
 
-#   coef_fim3_be1 <- coef_fim3_be[ii,]
+  coef_fim3_be1 <- coef_fim3_be[ii,]
 
-#   cov_key_sps <- cov_key  %>% 
-#                     filter(coef == beta_loop) %>% 
-#                     mutate(meanc = glue("{scale_loop}{meanc}"),
-#                             sdc = glue("{scale_loop}{sdc}"),
-#                             min = glue("{scale_loop}{min}"),
-#                             max = glue("{scale_loop}{max}"))
+  cov_key_sps <- cov_key  %>% 
+                    filter(coef == beta_loop) %>% 
+                    mutate(meanc = glue("{scale_loop}{meanc}"),
+                            sdc = glue("{scale_loop}{sdc}"),
+                            min = glue("{scale_loop}{min}"),
+                            max = glue("{scale_loop}{max}"))
 
-#   lims_obj_name <- glue("{tolower(sps_loop)}_lims")
+  lims_obj_name <- glue("{tolower(sps_loop)}_lims")
 
-#   if(exists(lims_obj_name)) {
-#     lims_data <- get(lims_obj_name, envir = .GlobalEnv)  %>% 
-#                     select(cov_key_sps$meanc,
-#                            cov_key_sps$sdc,
-#                            cov_key_sps$min,
-#                            cov_key_sps$max) 
-#     colnames(lims_data) <- c("meanc", "sdc", "min", "max")
-#   }
+  if(exists(lims_obj_name)) {
+    lims_data <- get(lims_obj_name, envir = .GlobalEnv)  %>% 
+                    select(cov_key_sps$meanc,
+                           cov_key_sps$sdc,
+                           cov_key_sps$min,
+                           cov_key_sps$max) 
+    colnames(lims_data) <- c("meanc", "sdc", "min", "max")
+  }
 
-#   X_range_ori <- seq(from = lims_data$min, to = lims_data$max, length.out = 100)
-#   X_range <- (X_range_ori - lims_data$meanc) / lims_data$sdc
+  X_range_ori <- seq(from = lims_data$min, to = lims_data$max, length.out = 100)
+  X_range <- (X_range_ori - lims_data$meanc) / lims_data$sdc
 
-#   beta_param <- coef_fim3_be1$coef 
-#   beta_index_order <- as.numeric(substr(beta_param, 6, 6))
+  beta_param <- coef_fim3_be1$coef 
+  beta_index_order <- as.numeric(substr(beta_param, 6, 6))
 
-#   res_mod <- read_rds(glue("data/model_res/{coef_fim3_be1$result_file}.rds"))
+  res_mod <- read_rds(glue("data/model_res/{coef_fim3_be1$result_file}.rds"))
 
-#   # Get posterior samples (efficient way)
-#   all_beta0_samples <- res_mod$sims.list$mu.beta0
-#   all_beta_samples <- res_mod$sims.list$beta[, beta_index_order]
+  # Get posterior samples (efficient way)
+  all_beta0_samples <- res_mod$sims.list$mu.beta0
+  all_beta_samples <- res_mod$sims.list$beta[, beta_index_order]
   
-#   # Vectorized prediction
-#   n_samples <- length(all_beta_samples)
-#   predictions <- matrix(NA, nrow = n_samples, ncol = length(X_range))
+  # Vectorized prediction
+  n_samples <- length(all_beta_samples)
+  predictions <- matrix(NA, nrow = n_samples, ncol = length(X_range))
   
-#   X <- cbind(1, X_range)  # N x 2
-#   B <- cbind(all_beta0_samples, all_beta_samples)  # S x 2
+  X <- cbind(1, X_range)  # N x 2
+  B <- cbind(all_beta0_samples, all_beta_samples)  # S x 2
 
-#   linear_pred <- B %*% t(X)  # S x N matrix
-#   predictions <- plogis(linear_pred)  # S x N matrix of predicted probabilities
+  linear_pred <- B %*% t(X)  # S x N matrix
+  predictions <- plogis(linear_pred)  # S x N matrix of predicted probabilities
 
-#   # Calculate summary statistics (transpose to match your original code)
-#   array_psi_pred <- t(predictions)
-#   pred_mean      <- apply(array_psi_pred, 1, mean)
-#   pred_median    <- apply(array_psi_pred, 1, median)
-#   pred_lower     <- apply(array_psi_pred, 1, quantile, 0.025)
-#   pred_upper     <- apply(array_psi_pred, 1, quantile, 0.975)
+  # Calculate summary statistics (transpose to match your original code)
+  array_psi_pred <- t(predictions)
+  pred_mean      <- apply(array_psi_pred, 1, mean)
+  pred_median    <- apply(array_psi_pred, 1, median)
+  pred_lower     <- apply(array_psi_pred, 1, quantile, 0.025)
+  pred_upper     <- apply(array_psi_pred, 1, quantile, 0.975)
   
-#   # Store results
-#   pred_data <- tibble(
-#     covariate = beta_loop,
-#     x_value = X_range,
-#     X_range_ori = X_range_ori,
-#     pred_mean = pred_mean,
-#     pred_median = pred_median,
-#     pred_lower = pred_lower,
-#     pred_upper = pred_upper) %>% 
-#     mutate(sps = sps_loop, scale = scale_loop)
+  # Store results
+  pred_data <- tibble(
+    covariate = beta_loop,
+    x_value = X_range,
+    X_range_ori = X_range_ori,
+    pred_mean = pred_mean,
+    pred_median = pred_median,
+    pred_lower = pred_lower,
+    pred_upper = pred_upper) %>% 
+    mutate(sps = sps_loop, scale = scale_loop)
   
-#   print(glue("pred_{sps_loop}_beta{as.numeric(substr(beta_loop, 6, 6))}_scale{coef_fim3_be$sca_sel[ii]}"))
-#   assign(glue("pred_{sps_loop}_beta{as.numeric(substr(beta_loop, 6, 6))}_scale{coef_fim3_be$sca_sel[ii]}"), pred_data) 
-#   write_rds(pred_data, file = glue("data/out/pred_{sps_loop}_beta{as.numeric(substr(beta_loop, 6, 6))}_scale{coef_fim3_be$sca_sel[ii]}.rds"))
+  print(glue("pred_{sps_loop}_beta{as.numeric(substr(beta_loop, 6, 6))}_scale{coef_fim3_be$sca_sel[ii]}"))
+  assign(glue("pred_{sps_loop}_beta{as.numeric(substr(beta_loop, 6, 6))}_scale{coef_fim3_be$sca_sel[ii]}"), pred_data) 
+  write_rds(pred_data, file = glue("data/out/pred_{sps_loop}_beta{as.numeric(substr(beta_loop, 6, 6))}_scale{coef_fim3_be$sca_sel[ii]}.rds"))
   
-#   files <- rbind(files, glue("data/out/pred_{sps_loop}_beta{as.numeric(substr(beta_loop, 6, 6))}_scale{coef_fim3_be$sca_sel[ii]}.rds"))
-#   colnames(files) <- "pred_name"
-#   write_rds(files, file = "data/out/pred_file_names.rds")
+  files <- rbind(files, glue("data/out/pred_{sps_loop}_beta{as.numeric(substr(beta_loop, 6, 6))}_scale{coef_fim3_be$sca_sel[ii]}.rds"))
+  colnames(files) <- "pred_name"
+  write_rds(files, file = "data/out/pred_file_names.rds")
 
-#   Create plot
-#   p <- ggplot(pred_data, aes(x = X_range_ori)) +
-#     geom_ribbon(aes(ymin = pred_lower, ymax = pred_upper), 
-#                 #alpha = 0.3, 
-#                 fill = "#c4dce5") +
-#     geom_line(aes(y = pred_mean), color = "darkblue", linewidth = 1.2) +
-#     labs(x = cov_key %>% filter(coef == beta_loop) %>% pull(Covariate), 
-#         y = "Predicted Probability",
-#         title = glue("{sps_loop}: {cov_key %>% filter(coef == beta_loop) %>% pull(Covariate)}"),
-#         subtitle = glue("Scale: {scale_loop} ; Mean: {round(mean(all_beta_samples),2)}")) +
-#     theme_minimal()
+  ##Create plot
+  p <- ggplot(pred_data, aes(x = X_range_ori)) +
+    geom_ribbon(aes(ymin = pred_lower, ymax = pred_upper), 
+                #alpha = 0.3, 
+                fill = "#c4dce5") +
+    geom_line(aes(y = pred_mean), color = "darkblue", linewidth = 1.2) +
+    labs(x = cov_key %>% filter(coef == beta_loop) %>% pull(Covariate), 
+        y = "Predicted Probability",
+        title = glue("{sps_loop}: {cov_key %>% filter(coef == beta_loop) %>% pull(Covariate)}"),
+        subtitle = glue("Scale: {scale_loop} ; Mean: {round(mean(all_beta_samples),2)}")) +
+    theme_minimal()
   
-#   print(p)
+  print(p)
 
-#   ggsave(file = glue("figures/pred_{sps_loop}_beta{as.numeric(substr(beta_loop, 6, 6))}_scale{coef_fim3_be$sca_sel[ii]}.png"),
-#          plot = p, device = "png", width = 7, height = 6)
-# }
+  ggsave(file = glue("figures/pred_{sps_loop}_beta{as.numeric(substr(beta_loop, 6, 6))}_scale{coef_fim3_be$sca_sel[ii]}.png"),
+         plot = p, device = "png", width = 7, height = 6)
+}
 
 # make sure all preds arewe loaded
 preds_load <- coef_fim3_be  %>% 
@@ -1142,7 +1142,7 @@ dat_sca <- dat_sca %>%
 #  - add scale legend (circles of different sizes)
 
 ## COEFFICENT PLOTS ----------------------------------------------
-dat_sca <- coef_fim3 %>% 
+dat_sca0 <- coef_fim3 %>% 
                   filter(coef != "mu.beta0") %>% 
                   #select(Covariate, sps, sca1, sca2, sca3, overlap0) %>% 
                   pivot_longer(cols =c("sca1", "sca2", "sca3"),
@@ -1151,7 +1151,7 @@ dat_sca <- coef_fim3 %>%
                                names_prefix = "sca")  %>%
                   filter(is.na(sca_sel) | sca_sel == as.numeric(scale))
 
-dat_sca2 <- dat_sca
+dat_sca2 <- dat_sca0
 
 nrow(dat_sca2)
 dat_sca2 <- dat_sca2  %>% distinct() %>% mutate(scale = as.numeric(scale))
@@ -1418,10 +1418,10 @@ ggsave("figures/park_detections.png", plot = detection_plot, width = 12, height 
 ggsave("figures/park_detections.svg", plot = detection_plot, width = 12, height = 8)
 
 # coef tables
-dat <- coef_summary3 %>% 
+dat <- coef_fim %>% 
             #filter(overlap0 == "no") %>% 
             rename(sca = sca_sel,
-                   cov = betas) %>% 
+                   cov = coef) %>% 
             arrange(sca, cov, sps)  %>% 
             mutate(sps_p = glue("{row_number()}_{sps}")) %>% 
             as_tibble() %>% 
@@ -1429,25 +1429,40 @@ dat <- coef_summary3 %>%
                    sps_p = factor(sps_p, levels = sps_p)) %>% 
             rename(Covariate = cov)
 
-cov_name <- cbind(c("beta1",
-                    "beta2",
-                    "beta3",
-                    "beta4",
-                    "beta5"),
-                  c("Tree Density",
+cov_name <- cbind(c("mu.beta0",
+                    "beta[1]",
+                    "beta[2]",
+                    "beta[3]",
+                    "beta[4]",
+                    "beta[5]",
+                    "mu.alpha0",
+                    "alpha[1]",
+                    "alpha[2]",
+                    "alpha[3]"),
+                  c("Occurence Probability",
+                    "Tree Density",
                     "Conifer Density",
                     "Late Successional Tree Density",
                     "Shrub Basal Area",
-                    "Tree Basal Area")) %>% 
+                    "Tree Basal Area",
+                    "Detection Probability",
+                    "Time of the Day",
+                    "Day of the Year",
+                    "(Day of the Year)\u00B2")) %>% 
             as_tibble() %>% 
             rename(Covariate = V1,
                    cov_name = V2)  %>% 
             mutate(cov_name = factor(cov_name, 
-                              levels = c("Tree Density",
+                              levels = c("Occurence Probability",
+                                         "Tree Density",
                                          "Conifer Density",
                                          "Late Successional Tree Density",
                                          "Shrub Basal Area",
-                                         "Tree Basal Area")))
+                                         "Tree Basal Area",
+                                         "Detection Probability",
+                                         "Time of the Day",
+                                         "Day of the Year",
+                                         "(Day of the Year)\u00B2")))
 
 sca_name <- cbind(unique(na.omit(dat$sca)),
                   c("Local Scale",
@@ -1468,10 +1483,7 @@ dat <- left_join(dat, cov_name, by = "Covariate") %>%
        mutate(sca = as.numeric(sca)) %>% 
        left_join(.,sca_name, by = "sca") %>% 
        select(-sca) %>% 
-       rename(sca = sca_name,
-              low = `10%`,  
-              median = `50%`, 
-              up = `90%`)
+       rename(sca = sca_name)
 
 #write_rds(dat, "data/out/coef_dat_ext.rds")
 
@@ -1486,8 +1498,38 @@ dat1$sca_col <- ifelse(dat1$sca == "Park Scale", "darkolivegreen3", dat1$sca_col
 dat1$sca_col <- ifelse(dat1$sca == "County Scale", "darkolivegreen4", dat1$sca_col)
 
 coef_tab <- dat1 %>% 
-                select(sps, coef, Covariate, mean, sd, low, median, up, sca, Rhat, n.eff) %>% 
+                filter(step == 3) %>% 
+                select(sps, Covariate, mean, sd, low, median, up, sca_name, Rhat, n.eff) %>% 
                 arrange(sps)
 
 write_rds(coef_tab, file = "data/out/coef_tab_wsca.rds")
 write_csv(coef_tab, file = "data/out/coef_tab_wsca.csv")
+
+# results text
+# scale selected most often at each level
+dat_sca %>% filter(step == 3) %>% select(sca_select) %>% table()
+# scale selected most often at each level greater than 50% - how many
+dat_sca %>% filter(step == 3) %>% select(select_sca) %>% filter(select_sca > 0.5) %>% nrow()
+# how many selected scales did not overlap zero?
+dat_sca %>% filter(step == 3, overlap_zero == "no") %>% select(sca_select) %>% table() %>% sum()
+# how many selected scales did not overlap zero for each level?
+dat_sca %>% filter(step == 3, overlap_zero == "no") %>% select(sca_select) %>% table()
+#how many times each level was selected by each species
+dat_sca %>% filter(step == 3, overlap_zero == "no") %>% select(sps, sca_select) %>% table()
+
+# how many species had selected scales did not have CI overlapping zero for beta estimate for each level?
+tib_sps <- dat_sca %>% filter(step == 3, overlap_zero == "no") %>% select(sps, sca_select) %>% table() %>% as.tibble() %>% filter(n > 0)
+tib_sps %>% filter(sca_select == 1) %>% select(sps) %>% distinct() %>% nrow()
+tib_sps %>% filter(sca_select == 2) %>% select(sps) %>% distinct() %>% nrow()
+tib_sps %>% filter(sca_select == 3) %>% select(sps) %>% distinct() %>% nrow()
+
+dat_sca %>% filter(step == 3, overlap_zero == "no") %>% select(sps) %>% table()
+
+coef_tab %>% filter(n.eff < 200)
+coef_tab %>% filter(Rhat > 1.1)
+
+coef_tab_save <- coef_tab  %>% 
+                    left_join(., sps_order, by = "sps") %>% 
+                    arrange(sps_order) %>% 
+                    relocate(sps_name) %>% 
+                    select(-sps, -sps_order)
