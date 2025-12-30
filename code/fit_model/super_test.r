@@ -701,7 +701,7 @@ pred_lat_rug <- ggplot() +
         # Add rug plot for park values
         geom_rug(data = beta3_preds2 %>% filter(covariate == "cov"), 
                 aes(x = pred_mean, color = park), 
-                sides = "b", size = 0.8, length = unit(0.05, "npc"), show.legend = FALSE) +
+                sides = "b", linewidth = 0.8, length = unit(0.05, "npc"), show.legend = FALSE) +
         # Add text labels INSIDE each panel - CENTERED
         geom_text(data = data.frame(scale = c(1, 2, 3), 
                                     label = c("Local Scale", "Park Scale", "County Scale"),
@@ -946,33 +946,33 @@ ggsave("figures/pred_ba_rug.png", plot = pred_ba_rug, device = "png", width = 10
 
 # Create species legend plot
 
-legend_data <- left_join(legend_data1, sps_order, by = "sps") %>%
-  arrange(sps_order) %>%  # Order by the factor levels of sps_name
-  mutate(x = 1:n())  # Reassign x positions based on new order
+# legend_data <- left_join(legend_data1, sps_order, by = "sps") %>%
+#   arrange(sps_order) %>%  # Order by the factor levels of sps_name
+#   mutate(x = 1:n())  # Reassign x positions based on new order
 
-# Create ordered species vector for the legend
-ordered_sps <- legend_data$sps
-ordered_labels <- setNames(as.character(legend_data$sps_name), legend_data$sps)
+# # Create ordered species vector for the legend
+# ordered_sps <- legend_data$sps
+# ordered_labels <- setNames(as.character(legend_data$sps_name), legend_data$sps)
 
-legend_plot <- ggplot(legend_data, aes(x = x, y = y, color = sps)) +
-  geom_point(size = 0) +  # Invisible points, just for legend
-  geom_line(aes(group = sps), size = 2) +  # Thick lines for legend
-  scale_color_manual(values = safe_pal, name = "Species", 
-                     labels = ordered_labels,
-                     breaks = ordered_sps) +  # Use ordered breaks
-  theme_void() +
-  theme(legend.position = "bottom",
-        legend.title = element_text(size = 14, face = "bold"),
-        legend.text = element_text(size = 12),
-        legend.key.width = unit(1.5, "cm")) +
-  guides(color = guide_legend(nrow = 6, byrow = TRUE))
+# legend_plot <- ggplot(legend_data, aes(x = x, y = y, color = sps)) +
+#   geom_point(size = 0) +  # Invisible points, just for legend
+#   geom_line(aes(group = sps), size = 2) +  # Thick lines for legend
+#   scale_color_manual(values = safe_pal, name = "Species", 
+#                      labels = ordered_labels,
+#                      breaks = ordered_sps) +  # Use ordered breaks
+#   theme_void() +
+#   theme(legend.position = "bottom",
+#         legend.title = element_text(size = 14, face = "bold"),
+#         legend.text = element_text(size = 12),
+#         legend.key.width = unit(1.5, "cm")) +
+#   guides(color = guide_legend(nrow = 6, byrow = TRUE))
 
-# Extract legend (should be cleaner now)
-species_legend <- get_legend(legend_plot)
+# # Extract legend (should be cleaner now)
+# species_legend <- get_legend(legend_plot)
 
-# Save the legend
-ggsave("figures/species_legend.png", plot = legend_plot, device = "png", width = 12, height = 12)
-ggsave("figures/species_legend.svg", plot = legend_plot, device = "svg", width = 12, height = 12)
+# # Save the legend
+# ggsave("figures/species_legend.png", plot = legend_plot, device = "png", width = 12, height = 12)
+# ggsave("figures/species_legend.svg", plot = legend_plot, device = "svg", width = 12, height = 12)
 
 ## SCALE PLOT ----------------------------------------------------
 dat <- coef_fim %>% 
@@ -1478,12 +1478,12 @@ sca_name <- cbind(unique(na.omit(dat$sca)),
                    sca = as.numeric(sca))
 
 dat <- left_join(dat, cov_name, by = "Covariate") %>% 
-       select(-Covariate)  %>% 
-       rename(Covariate = cov_name) %>% 
-       mutate(sca = as.numeric(sca)) %>% 
-       left_join(.,sca_name, by = "sca") %>% 
-       select(-sca) %>% 
-       rename(sca = sca_name)
+              select(-Covariate)  %>% 
+              rename(Covariate = cov_name) %>% 
+              mutate(sca = as.numeric(sca)) %>% 
+              left_join(.,sca_name, by = "sca") %>% 
+              select(-sca) %>% 
+              rename(sca = sca_name)
 
 #write_rds(dat, "data/out/coef_dat_ext.rds")
 
@@ -1499,7 +1499,10 @@ dat1$sca_col <- ifelse(dat1$sca == "County Scale", "darkolivegreen4", dat1$sca_c
 
 coef_tab <- dat1 %>% 
                 filter(step == 3) %>% 
-                select(sps, Covariate, mean, sd, low, median, up, sca_name, Rhat, n.eff) %>% 
+                rename(low = `10%`,
+                       median = `50%`,
+                       up = `90%`) %>% 
+                select(sps, Covariate, mean, sd, low, median, up, sca, Rhat, n.eff) %>% 
                 arrange(sps)
 
 write_rds(coef_tab, file = "data/out/coef_tab_wsca.rds")
@@ -1523,7 +1526,8 @@ tib_sps %>% filter(sca_select == 1) %>% select(sps) %>% distinct() %>% nrow()
 tib_sps %>% filter(sca_select == 2) %>% select(sps) %>% distinct() %>% nrow()
 tib_sps %>% filter(sca_select == 3) %>% select(sps) %>% distinct() %>% nrow()
 
-dat_sca %>% filter(step == 3, overlap_zero == "no") %>% select(sps) %>% table()
+dat_sca %>% filter(step == 3, overlap_zero == "no") %>% select(sps) %>% table() %>% sort()
+dat_sca %>% filter(step == 3, overlap_zero == "no") %>% select(sca_select) %>% table() %>% sort()
 
 coef_tab %>% filter(n.eff < 200)
 coef_tab %>% filter(Rhat > 1.1)
@@ -1532,4 +1536,15 @@ coef_tab_save <- coef_tab  %>%
                     left_join(., sps_order, by = "sps") %>% 
                     arrange(sps_order) %>% 
                     relocate(sps_name) %>% 
-                    select(-sps, -sps_order)
+                    select(-sps, -sps_order) %>% 
+                    rename(Species = sps_name, 
+                           Mean = mean,
+                           `Standard Deviation` = sd,
+                           `10%` = low,
+                           `50%` = median,
+                           `90%` = up,
+                           `Spatial Level` = sca,
+                           `R-hat` = Rhat,
+                           `Effective number of parameters` = n.eff)
+
+write_csv(coef_tab_save, file = "data/coef_tab_save.csv")
