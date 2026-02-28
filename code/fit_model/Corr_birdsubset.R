@@ -25,7 +25,8 @@ X_corr <- X10 %>%
                           treeden_ha_site
                           ) %>% 
             mutate(#AOU_code = sps_loop2,
-                   park = substr(Point_Name,1,4))
+                   park = substr(Point_Name,1,4)) %>% 
+            distinct()
 
 write_rds(X_corr, file = "data/X_corr.rds")
 
@@ -52,6 +53,108 @@ geom_tile(color = "white")+
 		color = "black", 
         size = 4)  
 
+# Correlation matrices for the different scales
+
+
+
+X_corr_site <- X_corr %>% 
+                  select(ends_with("_site")) %>% 
+                  cor(., use="complete.obs") %>% 
+                  round(.,2) %>% 
+                  melt()
+
+ggplot(data = X_corr_site, aes(x=Var1, y=Var2, 
+								fill=value)) + 
+geom_tile(color = "white")+
+ scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+   midpoint = 0, limit = c(-1,1), space = "Lab", 
+   name="Correlation \n") +
+   theme_minimal()+ 
+ theme(axis.text.x = element_text(vjust = 1, angle = 90),
+       axis.title.x = element_blank(),       # Change x axis title only
+       axis.title.y = element_blank() )+
+ geom_text(aes(Var1, Var2, label = value), 
+		color = "black", 
+        size = 4)  
+
+X_corr_park <- X_corr %>% 
+                  select(ends_with("_park")) %>% 
+                  cor(., use="complete.obs") %>% 
+                  round(.,2) %>% 
+                  melt()
+
+ggplot(data = X_corr_park, aes(x=Var1, y=Var2, 
+								fill=value)) + 
+    geom_tile(color = "white")+
+    scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+      midpoint = 0, limit = c(-1,1), space = "Lab", 
+      name="Correlation \n") +
+      theme_minimal()+ 
+    theme(axis.text.x = element_text(vjust = 1, angle = 90),
+          axis.title.x = element_blank(),       # Change x axis title only
+          axis.title.y = element_blank() )+
+    geom_text(aes(Var1, Var2, label = value), 
+        color = "black", 
+            size = 4) 
+
+#? COUNTY ------------------------------------------------------------------
+nice_labs <- c(
+  aBA_m2ha_coun = "Basal area",
+  bBA_m2ha_Conifer_coun = "Conifer basal area",
+  cBA_m2ha_large_coun = "Late succes.\nbasal area",
+  dshrub_cov_coun = "Shrub cover",
+  etreeden_ha_coun = "Tree density"
+)
+ord <- names(nice_labs)
+
+# correlation matrix
+X_corr_coun_num <- X_corr %>%
+  dplyr::select(dplyr::ends_with("_coun")) %>%
+  dplyr::select(where(is.numeric)) %>%
+  distinct() %>%
+  rename(aBA_m2ha_coun = BA_m2ha_coun,
+         bBA_m2ha_Conifer_coun = BA_m2ha_Conifer_coun,
+         cBA_m2ha_large_coun = BA_m2ha_large_coun,
+         dshrub_cov_coun = shrub_cov_coun,
+         etreeden_ha_coun = treeden_ha_coun) 
+
+# full matrix (no lower/upper.tri masking)
+corr_coun_mat <- X_corr_coun_num %>%
+  cor(use = "pairwise.complete.obs", method = "pearson") %>%
+  round(2)
+
+X_corr_coun <- reshape2::melt(corr_coun_mat, na.rm = TRUE) %>%
+  dplyr::mutate(
+    i = match(as.character(Var1), ord),
+    j = match(as.character(Var2), ord)
+  ) %>%
+  dplyr::filter(i > j) %>%   # keep one triangle only
+  dplyr::mutate(
+    Var1 = factor(Var1, levels = ord),
+    Var2 = factor(Var2, levels = rev(ord))
+  )
+  
+ggplot(data = X_corr_coun, aes(x=Var1, y=Var2, 
+								fill=value)) + 
+    geom_tile(color = "white")+
+    scale_fill_gradient2(low = "steelblue", high = "darkred", mid = "white", 
+      midpoint = 0, limit = c(-1,1), space = "Lab", 
+      name="Correlation \n") +
+    theme(axis.title.x     = element_blank(),       # Change x axis title only
+          axis.title.y     = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.background = element_rect(fill = "white", color = NA),
+          plot.background  = element_rect(fill = "white", color = NA),
+          panel.border     = element_rect(color = "black", fill = NA, linewidth = 0.8),
+          axis.text.x = element_text(angle = 0, vjust = 0.5, hjust = 0.5)) +
+    geom_text(aes(Var1, Var2, label = value), 
+        color = "black", 
+            size = 4) +
+    scale_x_discrete(limits = rev(ord), labels = nice_labs, drop = FALSE) +
+    scale_y_discrete(limits = (ord), labels = nice_labs[rev(ord)], drop = FALSE)    
+
+#-------------------------------------------------------------------------
 
 X_corr2 <- X10 %>% 
             filter(interval_n == 1) %>% 
@@ -97,10 +200,6 @@ geom_tile(color = "white")+
 		color = "black", 
         size = 4)  
 
-
-
-
-cbind(colnames(X_corr), seq(1,ncol(X_corr),1))
 
 # creating correlation matrices
 
