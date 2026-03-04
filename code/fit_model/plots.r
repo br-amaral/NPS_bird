@@ -199,6 +199,36 @@ for(ii in 1:nrow(master_tab)){
   coef_fim <- bind_rows(coef_fim, sps_result)
 }
 
+out_dir <- "data/temp_scratch/coef_output"
+dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
+
+for(ii in 1:nrow(master_tab)) {
+  # Check codes
+  if(substr(master_tab$result[ii], 1, 4) != master_tab$AOU_Code[ii] ||
+     master_tab$AOU_Code[ii]  != substr(master_tab$select[ii], 1, 4)) {
+    stop(glue("error on {master_tab$result[ii]} on row {ii}\n"))
+  }
+
+  sps_result <- coef_tab(
+    master_tab$result[ii],
+    master_tab$AOU_Code[ii],
+    master_tab$select[ii]
+  )
+
+  # Add an identifier so you can track origin
+  sps_result$.species_id <- master_tab$AOU_Code[ii]
+
+  # Write immediately; don't keep in RAM
+  write_csv(
+    sps_result,
+    path = file.path(out_dir, sprintf("sp_%03d.csv", ii))
+  )
+}
+
+# bind all CSV files at the end
+files <- list.files(out_dir, pattern = "^sp_", full.names = TRUE)
+coef_fim <- readr::read_csv(files, id = "source")
+
 write_rds(coef_fim, file = "data/out/coef_fim_80_new4.rds")
 write_csv(coef_fim, file = "data/out/coef_fim_80_new4.csv")
 
