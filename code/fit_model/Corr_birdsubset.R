@@ -61,27 +61,73 @@ geom_tile(color = "white")+
 
 # Correlation matrices for the different scales
 
+# sites
 
+nice_labs_site <- c(
+  aBA_m2ha_site= "Basal area",
+  bBA_m2ha_Conifer_site = "Conifer basal area",
+  cBA_m2ha_large_site = "Late succes.\nbasal area",
+  dshrub_cov_site = "Shrub cover",
+  etreeden_ha_site = "Tree density"
+)
+ord_site <- names(nice_labs_site)
 
-X_corr_site <- X_corr %>% 
-                  select(ends_with("_site")) %>% 
-                  cor(., use="complete.obs") %>% 
-                  round(.,2) %>% 
-                  melt()
+# correlation matrix
+X_corr_site_num <- X_corr %>%
+  dplyr::select(dplyr::ends_with("_site")) %>%
+  dplyr::select(where(is.numeric)) %>%
+  distinct() %>%
+  rename(aBA_m2ha_site = BA_m2ha_site,
+         bBA_m2ha_Conifer_site = BA_m2ha_Conifer_site,
+         cBA_m2ha_large_site = BA_m2ha_large_site,
+         dshrub_cov_site = shrub_avg_cov_site,
+         etreeden_ha_site = treeden_ha_site) 
 
+# full matrix (no lower/upper.tri masking)
+corr_site_mat <- X_corr_site_num %>%
+  cor(use = "pairwise.complete.obs", method = "pearson") %>%
+  round(2)
+
+X_corr_site <- reshape2::melt(corr_site_mat, na.rm = TRUE) %>%
+  dplyr::mutate(
+    i = match(as.character(Var1), ord_site),
+    j = match(as.character(Var2), ord_site)
+  ) %>%
+  dplyr::filter(i > j) %>%   # keep one triangle only
+  dplyr::mutate(
+    Var1 = factor(Var1, levels = ord_site),
+    Var2 = factor(Var2, levels = rev(ord_site))
+  )
+  
 ggplot(data = X_corr_site, aes(x=Var1, y=Var2, 
 								fill=value)) + 
-geom_tile(color = "white")+
- scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
-   midpoint = 0, limit = c(-1,1), space = "Lab", 
-   name="Correlation \n") +
-   theme_minimal()+ 
- theme(axis.text.x = element_text(vjust = 1, angle = 90),
-       axis.title.x = element_blank(),       # Change x axis title only
-       axis.title.y = element_blank() )+
- geom_text(aes(Var1, Var2, label = value), 
-		color = "black", 
-        size = 4)  
+    geom_tile(color = "white")+
+    scale_fill_gradient2(low = "steelblue", high = "darkred", mid = "white", 
+      midpoint = 0, limit = c(-1,1), space = "Lab", 
+      name="Correlation \n") +
+    theme(axis.title.x     = element_blank(),       # Change x axis title only
+          axis.title.y     = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.background = element_rect(fill = "white", color = NA),
+          plot.background  = element_rect(fill = "white", color = NA),
+          panel.border     = element_rect(color = "black", fill = NA, linewidth = 0.8),
+          axis.text.x = element_text(angle = 0, vjust = 0.5, hjust = 0.5, size = 14),
+          axis.text.y = element_text(size = 14),
+          plot.title   = element_text(
+            hjust    = 0.5,      # horizontally centered
+            size     = 18,       
+            margin   = margin(t = 10, b = 10),
+            vjust    = -8         # just inside the plot area
+    )) +
+    geom_text(aes(Var1, Var2, label = value), 
+        color = "black", 
+            size = 4) +
+    scale_x_discrete(limits = rev(ord_site), labels = nice_labs_site, drop = FALSE) +
+    scale_y_discrete(limits = (ord_site), labels = nice_labs_site[rev(ord_site)], drop = FALSE) +
+    labs(title = "Stand")
+
+# PARK
 
 X_corr_park <- X_corr %>% 
                   select(ends_with("_park")) %>% 
