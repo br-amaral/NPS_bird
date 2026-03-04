@@ -238,9 +238,9 @@ for(ii in 1:nrow(coef_fim3_be)){
   cov_key_sps <- cov_key  %>% 
                     filter(coef == beta_loop) %>% 
                     mutate(meanc = glue("{scale_loop}{meanc}"),
-                            sdc = glue("{scale_loop}{sdc}"),
-                            min = glue("{scale_loop}{min}"),
-                            max = glue("{scale_loop}{max}"))
+                             sdc = glue("{scale_loop}{sdc}"), 
+                             min = glue("{scale_loop}{min}"),
+                             max = glue("{scale_loop}{max}"))
 
   lims_obj_name <- glue("{tolower(sps_loop)}_lims")
 

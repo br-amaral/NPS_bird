@@ -133,12 +133,12 @@ if(substr(getwd(), 1, 3) == "/Us") {direc <- "local"} else {direc <- "hpc"}
 if(direc == "local"){
     master_tab <- read_csv("/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne/NPS_bird_copy/code/fit_model/mod_key.csv") %>%
             #filter(run == "yes") %>% 
-            filter(step %in% c(3,2)) %>% 
+            filter(step %in% c(3)) %>% 
             distinct()
 
     } else {master_tab <- read_csv("code/fit_model/mod_key.csv") %>%
             #filter(run == "yes") %>% 
-            filter(step %in% c(3,2)) %>% 
+            filter(step %in% c(3)) %>% 
             distinct()
     }
 
@@ -185,6 +185,7 @@ coef_tab <- function(file_name, species_code, sca_select){
 }
 
 #? check wheter I'm matching the species properly and run function!
+memory.limit(size = 64000)
 for(ii in 1:nrow(master_tab)){
 # Check if all three strings are equal (different steps and models for the same species)
   if(substr(master_tab$result[ii], 1, 4) == master_tab$AOU_Code[ii] && 
@@ -201,9 +202,33 @@ for(ii in 1:nrow(master_tab)){
 write_rds(coef_fim, file = "data/out/coef_fim_80_new4.rds")
 write_csv(coef_fim, file = "data/out/coef_fim_80_new4.csv")
 
-# coef_fim <- read_rds(file = "data/out/coef_fim_80_new3.rds")
+## order and organize things for plotting
+phylo_order <- readxl::read_excel("data/src/original/AviList-v2025-11Jun-short.xlsx") %>% 
+                  select(Sequence, Scientific_name)
+my_sps <- read_csv("data/src/sps_order.csv")
+
+my_sps[which(my_sps$Scientific_name %in% phylo_order$Scientific_name),]
+my_sps[which(my_sps$Scientific_name %!in% phylo_order$Scientific_name),]
+
+phylo_order2 <- phylo_order %>% 
+                  filter(Scientific_name %in% my_sps$Scientific_name) %>% 
+                  arrange(Sequence) %>% 
+                  left_join(., my_sps, by = "Scientific_name") %>% 
+                  mutate(sps_order = seq(1, n()))
+
+nrow(phylo_order2) == nrow(my_sps)
+
+write_rds(phylo_order2, file = "data/src/sps_phylo_order.rds")
 
 head(coef_fim)
+tables3 <- coef_fim %>% 
+              filter(step == 2)
+
+coef_fim$step %>% table()
+
+
+
+
 
 plot_cov_steps <- function(sps) {
   

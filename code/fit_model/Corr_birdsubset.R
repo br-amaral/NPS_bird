@@ -1,6 +1,8 @@
 freshr::freshr()
 library(reshape2)
 library(tidyverse)
+library(ggplot2)
+# httpgd::hgd()
 
 XDAT_PATH <- "data/X.rds"
 X10 <- read_rds(file = XDAT_PATH)
@@ -27,6 +29,10 @@ X_corr <- X10 %>%
             mutate(#AOU_code = sps_loop2,
                    park = substr(Point_Name,1,4)) %>% 
             distinct()
+
+# Remove X10 to free memory
+rm(X10)
+gc()
 
 write_rds(X_corr, file = "data/X_corr.rds")
 
@@ -325,21 +331,12 @@ X1000 <- read_rds(file = "data/X_1000.rds")
 X500 <- read_rds(file = "data/X_500.rds")
 X1000for <- read_rds(file = "data/X_1000nei.rds")
 
-X_corr <- X10 %>% 
-            filter(interval_n == 1) %>% 
-            dplyr::select(Point_Name,
-                siteDEN, siteBA,
-                siteH_g, siteEh_g,
-                siteBA_pole, siteBA_mature, siteBA_large,
-                siteSHRUden,
-                parkDEN, parkBA, 
-                parkH_g, parkEh_g,
-                parkBA_pole, parkBA_mature, parkBA_large,   
-                parkSHRUden, 
-                counDEN, counBA, 
-                counH_g, counEh_g, ## https://rdrr.io/cran/rFIA/man/diversity.html
-                counPER_pole, counPER_matu, counPER_late,
-                counSHRUden,
+# Load X_corr from saved file instead of recreating
+X_corr <- read_rds(file = "data/X_corr.rds")
+
+# Remove loaded files to free memory
+rm(X1000, X500, X1000for)
+gc()
                 area,
                 EventDate2, StartTime2) %>% 
             rename(date_jul = EventDate2,
