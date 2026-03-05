@@ -1,10 +1,60 @@
-freshr::freshr()
-library(reshape2)
-library(tidyverse)
-library(ggplot2)
-# httpgd::hgd()
+#? *********************************************************************************
+#? -------------------------------   Amazing Title   -------------------------------
+#? *********************************************************************************
+#
+#! Code to ...
+#
+#! Source ---------------------------------------------
+#           - :
+#           - :
+#
+#! Input ----------------------------------------------
+#           - :
+#           - :
+#
+#! Output ----------------------------------------------
+#           - :
+#           - :
 
+#! Package library and versions -------------------------
+#  Created a library repo?
+#  (  )yes  (  )no
+#  renv::init()
+# Load an existing library?
+#  renv::restore()
+# Installed new packages?
+#  renv::snapshot()
+
+# detach packages and clear workspace
+freshr::freshr()
+
+#! Load packages ---------------------------------------
+library(tidyverse)
+library(conflicted)
+library(glue)
+library(reshape2)
+library(ggplot2)
+library(patchwork)  
+
+# httpgd::hgd()
+conflicts_prefer(dplyr::select)
+conflicts_prefer(dplyr::filter)
+
+#! Make functions --------------------------------------
+colanmes <- colnames
+lenght <- length
+`%!in%` <- Negate(`%in%`)
+
+#! Get working directory for figures --------------------------------------
+if(substr(getwd(), 1, 3) == "/Us") {direc <- "local"} else {direc <- "hpc" ; httpgd::hgd_browse()}
+
+#! Source code -----------------------------------------
+
+#! Import data -----------------------------------------
+## file paths
 XDAT_PATH <- "data/X.rds"
+
+## read files
 X10 <- read_rds(file = XDAT_PATH)
 
 X_corr <- X10 %>% 
@@ -29,10 +79,6 @@ X_corr <- X10 %>%
             mutate(#AOU_code = sps_loop2,
                    park = substr(Point_Name,1,4)) %>% 
             distinct()
-
-# Remove X10 to free memory
-rm(X10)
-gc()
 
 write_rds(X_corr, file = "data/X_corr.rds")
 
@@ -61,11 +107,10 @@ geom_tile(color = "white")+
 
 # Correlation matrices for the different scales
 
-# sites
-
+#? Stand -------------------------------------------------------------------------------
 nice_labs_site <- c(
   aBA_m2ha_site= "Basal area",
-  bBA_m2ha_Conifer_site = "Conifer basal area",
+  bBA_m2ha_Conifer_site = "Conifer\nbasal area",
   cBA_m2ha_large_site = "Late succes.\nbasal area",
   dshrub_cov_site = "Shrub cover",
   etreeden_ha_site = "Tree density"
@@ -99,7 +144,74 @@ X_corr_site <- reshape2::melt(corr_site_mat, na.rm = TRUE) %>%
     Var2 = factor(Var2, levels = rev(ord_site))
   )
   
-ggplot(data = X_corr_site, aes(x=Var1, y=Var2, 
+p1 <- ggplot(data = X_corr_site, aes(x=Var1, y=Var2, 
+								fill=value)) + 
+    geom_tile(color = "white")+
+    scale_fill_gradient2(low = "steelblue", high = "darkred", mid = "white", 
+      midpoint = 0, limit = c(-1,1), space = "Lab", 
+      name="Correlation\n(Pearson)\n") +
+    theme(axis.title.x     = element_blank(),       # Change x axis title only
+          axis.title.y     = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.background = element_rect(fill = "white", color = NA),
+          plot.background  = element_rect(fill = "white", color = NA),
+          panel.border     = element_rect(color = "black", fill = NA, linewidth = 0.8),
+          axis.text.x = element_text(angle = 0, vjust = 0.5, hjust = 0.5, size = 14),
+          axis.text.y = element_text(size = 14),
+           legend.title.align = 0.5,
+          plot.title   = element_text(
+            hjust    = 0.5,      # horizontally centered
+            size     = 20,       
+            margin   = margin(t = 10, b = 10),
+            vjust    = -8         # just inside the plot area
+    )) +
+    geom_text(aes(Var1, Var2, label = value), 
+        color = "black", 
+            size = 4) +
+    scale_x_discrete(limits = rev(ord_site), labels = nice_labs_site, drop = FALSE) +
+    scale_y_discrete(limits = (ord_site), labels = nice_labs_site[rev(ord_site)], drop = FALSE) +
+    labs(title = "Stand") +
+    guides(color = guide_legend(title = "Correlation\n (Pearson)"))
+
+#? Park -------------------------------------------------------------------------------
+nice_labs_park <- c(
+  aBA_m2ha_park= "Basal area",
+  bBA_m2ha_Conifer_park = "Conifer\nbasal area",
+  cBA_m2ha_large_park = "Late succes.\nbasal area",
+  dshrub_cov_park = "Shrub cover",
+  etreeden_ha_park = "Tree density"
+)
+ord_park <- names(nice_labs_park)
+
+# correlation matrix
+X_corr_park_num <- X_corr %>%
+  dplyr::select(dplyr::ends_with("_park")) %>%
+  dplyr::select(where(is.numeric)) %>%
+  distinct() %>%
+  rename(aBA_m2ha_park = BA_m2ha_park,
+         bBA_m2ha_Conifer_park = BA_m2ha_Conifer_park,
+         cBA_m2ha_large_park = BA_m2ha_large_park,
+         dshrub_cov_park = shrub_avg_cov_park,
+         etreeden_ha_park = treeden_ha_park) 
+
+# full matrix (no lower/upper.tri masking)
+corr_park_mat <- X_corr_park_num %>%
+  cor(use = "pairwise.complete.obs", method = "pearson") %>%
+  round(2)
+
+X_corr_park <- reshape2::melt(corr_park_mat, na.rm = TRUE) %>%
+  dplyr::mutate(
+    i = match(as.character(Var1), ord_park),
+    j = match(as.character(Var2), ord_park)
+  ) %>%
+  dplyr::filter(i > j) %>%   # keep one triangle only
+  dplyr::mutate(
+    Var1 = factor(Var1, levels = ord_park),
+    Var2 = factor(Var2, levels = rev(ord_park))
+  )
+  
+p2 <- ggplot(data = X_corr_park, aes(x=Var1, y=Var2, 
 								fill=value)) + 
     geom_tile(color = "white")+
     scale_fill_gradient2(low = "steelblue", high = "darkred", mid = "white", 
@@ -116,48 +228,26 @@ ggplot(data = X_corr_site, aes(x=Var1, y=Var2,
           axis.text.y = element_text(size = 14),
           plot.title   = element_text(
             hjust    = 0.5,      # horizontally centered
-            size     = 18,       
+            size     = 20,       
             margin   = margin(t = 10, b = 10),
             vjust    = -8         # just inside the plot area
     )) +
     geom_text(aes(Var1, Var2, label = value), 
         color = "black", 
             size = 4) +
-    scale_x_discrete(limits = rev(ord_site), labels = nice_labs_site, drop = FALSE) +
-    scale_y_discrete(limits = (ord_site), labels = nice_labs_site[rev(ord_site)], drop = FALSE) +
-    labs(title = "Stand")
-
-# PARK
-
-X_corr_park <- X_corr %>% 
-                  select(ends_with("_park")) %>% 
-                  cor(., use="complete.obs") %>% 
-                  round(.,2) %>% 
-                  melt()
-
-ggplot(data = X_corr_park, aes(x=Var1, y=Var2, 
-								fill=value)) + 
-    geom_tile(color = "white")+
-    scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
-      midpoint = 0, limit = c(-1,1), space = "Lab", 
-      name="Correlation \n") +
-      theme_minimal()+ 
-    theme(axis.text.x = element_text(vjust = 1, angle = 90),
-          axis.title.x = element_blank(),       # Change x axis title only
-          axis.title.y = element_blank() )+
-    geom_text(aes(Var1, Var2, label = value), 
-        color = "black", 
-            size = 4) 
+    scale_x_discrete(limits = rev(ord_park), labels = nice_labs_park, drop = FALSE) +
+    scale_y_discrete(limits = (ord_park), labels = nice_labs_park[rev(ord_park)], drop = FALSE) +
+    labs(title = "Park")
 
 #? COUNTY ------------------------------------------------------------------
-nice_labs <- c(
+nice_labs_coun <- c(
   aBA_m2ha_coun = "Basal area",
   bBA_m2ha_Conifer_coun = "Conifer basal area",
   cBA_m2ha_large_coun = "Late succes.\nbasal area",
   dshrub_cov_coun = "Shrub cover",
   etreeden_ha_coun = "Tree density"
 )
-ord <- names(nice_labs)
+ord_coun <- names(nice_labs_coun)
 
 # correlation matrix
 X_corr_coun_num <- X_corr %>%
@@ -186,27 +276,48 @@ X_corr_coun <- reshape2::melt(corr_coun_mat, na.rm = TRUE) %>%
     Var2 = factor(Var2, levels = rev(ord))
   )
   
-ggplot(data = X_corr_coun, aes(x=Var1, y=Var2, 
+p3 <- ggplot(data = X_corr_coun, aes(x=Var1, y=Var2, 
 								fill=value)) + 
     geom_tile(color = "white")+
     scale_fill_gradient2(low = "steelblue", high = "darkred", mid = "white", 
       midpoint = 0, limit = c(-1,1), space = "Lab", 
       name="Correlation \n") +
-    theme(axis.title.x     = element_blank(),       # Change x axis title only
+     theme(axis.title.x     = element_blank(),       # Change x axis title only
           axis.title.y     = element_blank(),
           panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(),
           panel.background = element_rect(fill = "white", color = NA),
           plot.background  = element_rect(fill = "white", color = NA),
           panel.border     = element_rect(color = "black", fill = NA, linewidth = 0.8),
-          axis.text.x = element_text(angle = 0, vjust = 0.5, hjust = 0.5)) +
+          axis.text.x = element_text(angle = 0, vjust = 0.5, hjust = 0.5, size = 14),
+          axis.text.y = element_text(size = 14),
+          plot.title   = element_text(
+            hjust    = 0.5,      # horizontally centered
+            size     = 20,       
+            margin   = margin(t = 10, b = 10),
+            vjust    = -8         # just inside the plot area
+    )) +
     geom_text(aes(Var1, Var2, label = value), 
         color = "black", 
             size = 4) +
-    scale_x_discrete(limits = rev(ord), labels = nice_labs, drop = FALSE) +
-    scale_y_discrete(limits = (ord), labels = nice_labs[rev(ord)], drop = FALSE)    
+    scale_x_discrete(limits = rev(ord_coun), labels = nice_labs_coun, drop = FALSE) +
+    scale_y_discrete(limits = (ord_coun), labels = nice_labs_coun[rev(ord_coun)], drop = FALSE) +
+    labs(title = "Regional")
+# put all figures together in one panel -------------------------------------------------------------------------
+# Hide legend on first two, keep on third
+p1_noleg <- p1 + theme(legend.position = "none")
+p2_noleg <- p2 + theme(legend.position = "none")
+p3_leg   <- p3  # Legend stays
 
-#-------------------------------------------------------------------------
+# Arrange: 1 row, 3 columns; collect guides (auto-handles shared legend)
+combined <- p1_noleg + p2_noleg + p3_leg + 
+  plot_layout(ncol = 3, guides = "collect")
+
+print(combined)
+
+ggsave("figures/correlation.svg", plot = combined, device = "svg", width = 30, height = 14)
+
+# END -------------------------------------------------------------------------
 
 X_corr2 <- X10 %>% 
             filter(interval_n == 1) %>% 
