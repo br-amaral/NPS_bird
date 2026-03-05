@@ -56,11 +56,11 @@ lenght <- length
 `%!in%` <- Negate(`%in%`)
 
 #! MCMC settings ---------------------------------------------------
-niterations <- 30000
-nburnin <- 15000
+niterations <- 60000
+nburnin <- 30000
 nchains <- 6
 nthin <- 3
-nadapt_min <- 5000
+nadapt_min <- 7000
 
 #! Source code and Import data -----------------------------------------
 ## read files
@@ -81,6 +81,9 @@ if(direc == "local"){
             distinct() %>% 
             filter(AOU_Code %in% c("REVI", "SCTA"))
     }
+
+master_tab <- master_tab %>% 
+    filter(AOU_Code == "HAWO")
 
 paste('\n ************************************* \n \n \n   Running Models:', '\n',
       '  Test?', test, '\n',
