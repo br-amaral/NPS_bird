@@ -107,6 +107,12 @@ geom_tile(color = "white")+
 
 # Correlation matrices for the different scales
 
+axis_labels_size <- 22
+title_size <- 36
+corr_labels_size <- 7
+legend_label_size <- 20
+legend_title_size <- 25
+
 #? Stand -------------------------------------------------------------------------------
 nice_labs_site <- c(
   aBA_m2ha_site= "Basal area",
@@ -157,18 +163,20 @@ p1 <- ggplot(data = X_corr_site, aes(x=Var1, y=Var2,
           panel.background = element_rect(fill = "white", color = NA),
           plot.background  = element_rect(fill = "white", color = NA),
           panel.border     = element_rect(color = "black", fill = NA, linewidth = 0.8),
-          axis.text.x = element_text(angle = 0, vjust = 0.5, hjust = 0.5, size = 14),
-          axis.text.y = element_text(size = 14),
-           legend.title.align = 0.5,
+          axis.text.x = element_text(angle = 0, vjust = 0.5, hjust = 0.5, size = axis_labels_size),
+          axis.text.y = element_text(size = axis_labels_size),
+          legend.title.align = 0.5,
+          legend.title = element_text(size = legend_title_size, face = "bold"),
+          legend.text  = element_text(size = legend_label_size),
           plot.title   = element_text(
             hjust    = 0.5,      # horizontally centered
-            size     = 20,       
+            size     = title_size,       
             margin   = margin(t = 10, b = 10),
             vjust    = -8         # just inside the plot area
     )) +
     geom_text(aes(Var1, Var2, label = value), 
-        color = "black", 
-            size = 4) +
+              color = "black", 
+              size = corr_labels_size) +
     scale_x_discrete(limits = rev(ord_site), labels = nice_labs_site, drop = FALSE) +
     scale_y_discrete(limits = (ord_site), labels = nice_labs_site[rev(ord_site)], drop = FALSE) +
     labs(title = "Stand") +
@@ -212,11 +220,11 @@ X_corr_park <- reshape2::melt(corr_park_mat, na.rm = TRUE) %>%
   )
   
 p2 <- ggplot(data = X_corr_park, aes(x=Var1, y=Var2, 
-								fill=value)) + 
+						 fill=value)) + 
     geom_tile(color = "white")+
     scale_fill_gradient2(low = "steelblue", high = "darkred", mid = "white", 
-      midpoint = 0, limit = c(-1,1), space = "Lab", 
-      name="Correlation \n") +
+                         midpoint = 0, limit = c(-1,1), space = "Lab", 
+                         name="Correlation\n(Pearson)\n") +
     theme(axis.title.x     = element_blank(),       # Change x axis title only
           axis.title.y     = element_blank(),
           panel.grid.major = element_blank(),
@@ -224,17 +232,20 @@ p2 <- ggplot(data = X_corr_park, aes(x=Var1, y=Var2,
           panel.background = element_rect(fill = "white", color = NA),
           plot.background  = element_rect(fill = "white", color = NA),
           panel.border     = element_rect(color = "black", fill = NA, linewidth = 0.8),
-          axis.text.x = element_text(angle = 0, vjust = 0.5, hjust = 0.5, size = 14),
-          axis.text.y = element_text(size = 14),
+          axis.text.x = element_text(angle = 0, vjust = 0.5, hjust = 0.5, size = axis_labels_size),
+          axis.text.y = element_text(size = axis_labels_size),
+          legend.title.align = 0.5,
+          legend.title = element_text(size = legend_title_size, face = "bold"),
+          legend.text  = element_text(size = legend_label_size),
           plot.title   = element_text(
-            hjust    = 0.5,      # horizontally centered
-            size     = 20,       
-            margin   = margin(t = 10, b = 10),
-            vjust    = -8         # just inside the plot area
+              hjust    = 0.5,      # horizontally centered
+              size     = title_size,       
+              margin   = margin(t = 10, b = 10),
+              vjust    = -8         # just inside the plot area
     )) +
     geom_text(aes(Var1, Var2, label = value), 
-        color = "black", 
-            size = 4) +
+              color = "black", 
+              size = corr_labels_size) +
     scale_x_discrete(limits = rev(ord_park), labels = nice_labs_park, drop = FALSE) +
     scale_y_discrete(limits = (ord_park), labels = nice_labs_park[rev(ord_park)], drop = FALSE) +
     labs(title = "Park")
@@ -242,7 +253,7 @@ p2 <- ggplot(data = X_corr_park, aes(x=Var1, y=Var2,
 #? COUNTY ------------------------------------------------------------------
 nice_labs_coun <- c(
   aBA_m2ha_coun = "Basal area",
-  bBA_m2ha_Conifer_coun = "Conifer basal area",
+  bBA_m2ha_Conifer_coun = "Conifer\nbasal area",
   cBA_m2ha_large_coun = "Late succes.\nbasal area",
   dshrub_cov_coun = "Shrub cover",
   etreeden_ha_coun = "Tree density"
@@ -280,34 +291,48 @@ p3 <- ggplot(data = X_corr_coun, aes(x=Var1, y=Var2,
 								fill=value)) + 
     geom_tile(color = "white")+
     scale_fill_gradient2(low = "steelblue", high = "darkred", mid = "white", 
-      midpoint = 0, limit = c(-1,1), space = "Lab", 
-      name="Correlation \n") +
-     theme(axis.title.x     = element_blank(),       # Change x axis title only
-          axis.title.y     = element_blank(),
-          panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(),
-          panel.background = element_rect(fill = "white", color = NA),
-          plot.background  = element_rect(fill = "white", color = NA),
-          panel.border     = element_rect(color = "black", fill = NA, linewidth = 0.8),
-          axis.text.x = element_text(angle = 0, vjust = 0.5, hjust = 0.5, size = 14),
-          axis.text.y = element_text(size = 14),
-          plot.title   = element_text(
-            hjust    = 0.5,      # horizontally centered
-            size     = 20,       
-            margin   = margin(t = 10, b = 10),
-            vjust    = -8         # just inside the plot area
-    )) +
+                         midpoint = 0, limit = c(-1,1), space = "Lab", 
+                         name = "Correlation\n(Pearson)\n") +
+    theme(axis.title.x       = element_blank(),       # Change x axis title only
+          axis.title.y       = element_blank(),
+          panel.grid.major   = element_blank(),
+          panel.grid.minor   = element_blank(),
+          panel.background   = element_rect(fill = "white", color = NA),
+          plot.background    = element_rect(fill = "white", color = NA),
+          panel.border       = element_rect(color = "black", fill = NA, linewidth = 0.8),
+          axis.text.x        = element_text(angle = 0, vjust = 0.5, hjust = 0.5, size = axis_labels_size),
+          axis.text.y        = element_text(size = axis_labels_size),
+          legend.title.align = 0.5,
+          legend.title       = element_text(size = legend_title_size, face = "bold"),
+          legend.text        = element_text(size = legend_label_size),
+          # legend.key.height = unit(3.2, "cm"),   # Makes colorbar longer (default ~1cm)
+          # legend.key.width  = unit(1, "cm"),  # Makes colorbar thicker (default ~0.5cm)
+          # legend.justification = "center",    # Centers entire legend block
+          # legend.box.just = "center",          # Centers legend box in space
+          plot.title         = element_text(
+              hjust          = 0.5,       # horizontally centered
+              size           = title_size,       
+              margin         = margin(t = 10, b = 10),
+              vjust          = -8         # just inside the plot area
+      )) +
     geom_text(aes(Var1, Var2, label = value), 
-        color = "black", 
-            size = 4) +
+              color = "black", 
+              size = corr_labels_size) +
     scale_x_discrete(limits = rev(ord_coun), labels = nice_labs_coun, drop = FALSE) +
     scale_y_discrete(limits = (ord_coun), labels = nice_labs_coun[rev(ord_coun)], drop = FALSE) +
-    labs(title = "Regional")
+    labs(title = "Regional") + 
+    guides(fill = guide_colorbar(
+           title.hjust = 0.5,              # Centers title exactly over bar
+           title.vjust = 1,                 # Pulls title closer to bar
+           barheight = unit(9, "cm"),       # Your larger size
+           barwidth  = unit(1.5, "cm")
+    ))
+
 # put all figures together in one panel -------------------------------------------------------------------------
 # Hide legend on first two, keep on third
 p1_noleg <- p1 + theme(legend.position = "none")
-p2_noleg <- p2 + theme(legend.position = "none")
-p3_leg   <- p3  # Legend stays
+p2_noleg <- p2 + theme(legend.position = "none", axis.text.y  = element_blank(), axis.ticks.y = element_blank())
+p3_leg   <- p3 + theme(axis.text.y  = element_blank(), axis.ticks.y = element_blank())
 
 # Arrange: 1 row, 3 columns; collect guides (auto-handles shared legend)
 combined <- p1_noleg + p2_noleg + p3_leg + 
@@ -315,7 +340,9 @@ combined <- p1_noleg + p2_noleg + p3_leg +
 
 print(combined)
 
-ggsave("figures/correlation.svg", plot = combined, device = "svg", width = 30, height = 14)
+ggsave("figures/correlation.pdf", plot = combined, device = "pdf", width = 34, height = 11)
+
+ggsave("figures/correlation.svg", plot = combined, device = "svg", width = 34, height = 11)
 
 # END -------------------------------------------------------------------------
 
