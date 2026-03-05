@@ -65,7 +65,7 @@ for(ii in 1:nrow(coef_path_file)) {
     loop_run <- substr(coef_path_file$result[ii], nchar(coef_path_file$result[ii]) - 11, nchar(coef_path_file$result[ii]) - 8)
 
     #quants <- ifelse((as.numeric(substr(loop_run, 4, 4)) %% 2 == 0) == TRUE, "25_75", "3_7")
-
+    print(loop_sps)
     samples_jags <- read_rds(glue("data/model_res/{coef_path_file$result[ii]}.rds"))
     beta_sca_names <- read_rds(glue("data/model_res/{coef_path_file$select[ii]}.rds")) %>% 
           #filter(overlap0 == "no") %>%
@@ -128,14 +128,21 @@ for(ii in 1:nrow(coef_path_file)) {
       print(ii)
 }
 
-    write_rds(coef_summary3, file = "data/out/coef_summary4_sep.rds")
- #  coef_summary3 <- read_rds(file = "data/out/coef_summary4_sep.rds")
+   write_rds(coef_summary3, file = "data/out/coef_summary4_sep.rds")
+#  coef_summary3 <- read_rds(file = "data/out/coef_summary4_sep.rds")
 
 table(coef_summary3$mod_res)
 
 coef_summary3 <- as_tibble(coef_summary3) %>% 
                       filter(betas != "beta6") %>% 
-                      mutate(overlap0 = ifelse(`10%` <= 0 & `90%` >= 0, "yes", "no"))
+                      mutate(overlap0 = 0 >= pmin(`10%`, `90%`) & 0 <= pmax(`10%`, `90%`))  
+
+phylo_order2 <- read_rds(file = "data/src/sps_phylo_order.rds")  %>% 
+                rename(sps = Aou_code) %>% 
+                mutate(sps_name = factor(sps_name, levels = sps_name))  # Use current order as levels
+
+dat_sca <- dat_sca %>% 
+              left_join(., phylo_order2, by = "sps")
 
 #! Figure: park size -------------------------------------------
 (park_sizeP <- 
