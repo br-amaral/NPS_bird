@@ -125,7 +125,7 @@ for(key_ite in 1:nrow(master_tab)){
                         #filter(scale50 == "no") %>% 
                         pull(betas)
         
-        # if(tib_loop$all_sca == F){ 
+        if(tib_loop$all_sca == F){ 
             if(interaction == FALSE){     
                 print("step 2 selected scales no interaction")                       
                 if(direc == "hpc"){
@@ -142,15 +142,15 @@ for(key_ite in 1:nrow(master_tab)){
                             source("/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne/NPS_bird_copy/code/fit_model/step2_analysis_interaction.R")
                         }
                 }  
-            # } else {
-            #     print("step 1 all scales with interaction")
-            #     # step 1 all scales with interaction
-            #         if(direc == "local"){
-            #                 source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/fit_model/back2d_covs_scales_2min_spscov_interact.R")
-            #             } else {
-            #                 source("code/fit_model/back2d_covs_scales_2min_spscov_interact.R")
-            #                 }
-            # }
+            } else {
+                print("step 1 all scales with interaction")
+                # step 1 all scales with interaction
+                    if(direc == "local"){
+                            source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/fit_model/back2d_covs_scales_2min_spscov_interact.R")
+                        } else {
+                            source("code/fit_model/back2d_covs_scales_2min_spscov_interact.R")
+                            }
+            }
         } else { 
             # step 1
                 print("step 1 selected scales no interaction")
