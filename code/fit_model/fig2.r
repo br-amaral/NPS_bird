@@ -150,7 +150,7 @@ for(ii in 1:nrow(coef_path_file)) {
 }
 
  write_rds(coef_summary3, file = "data/out/coefs_step2_2_fig2.rds")
-# coef_summary3<- read_rds(file = "data/out/coefs_step2_2_fig2.rds")
+# coef_summary3 <- read_rds(file = "data/out/coefs_step2_2_fig2.rds")
 
 #? Figure 2 --------------------------------------------------------------
 dat <- coef_summary3 %>% 
@@ -236,14 +236,12 @@ dat_sca <- dat1 %>%
                   
 dat1 %>% filter(is.na(sca_col)) %>% select(sps, coef, overlap0, sca1, sca2, sca3, sca_name, sca_col, select_sca, cov_sps, Covariate)
 
-SPS_ORDER_PATH <- "data/src/sps_order.csv"
-
-sps_order <- read_csv(SPS_ORDER_PATH) %>% 
+phylo_order2 <- read_rds(file = "data/src/sps_phylo_order.rds")  %>% 
                 rename(sps = Aou_code) %>% 
                 mutate(sps_name = factor(sps_name, levels = sps_name))  # Use current order as levels
 
 dat_sca <- dat_sca %>% 
-              left_join(., sps_order, by = "sps")
+              left_join(., phylo_order2, by = "sps")
 
 (sca_plot_selec_sca <- ggplot() +
   geom_point(data = dat_sca %>% filter(sca_select == 3), 
@@ -406,7 +404,7 @@ dat_sca <- dat_sca %>%
   theme_minimal() +
   theme(legend.position = "right",  # Changed from "bottom" to "right"
         legend.margin = margin(t = 0, r = 0, b = 0, l = 25),  # Adjusted margin (left margin for spacing)
-        axis.text.x = element_text(hjust = 1, size = 22, angle = 90, vjust = 0.5),  
+        axis.text.x = element_text(hjust = 1, size = 22, angle = 35, vjust = 1),  
         axis.text.y = element_text(hjust = 1, size = 26),    
         axis.title.x = element_text(size = 30),  
         axis.title.y = element_text(size = 25),  
@@ -450,14 +448,14 @@ dat_sca <- dat_sca %>%
   )
 )
 
-ggsave("figures/sca_plot_select_sca_noleg2long.png", plot = sca_plot_selec_sca2, device = "png", width = 24, height = 14, dpi = 800)
+ggsave("figures/sca_plot_select_sca_noleg2long_phylo.png", plot = sca_plot_selec_sca2, device = "png", width = 24, height = 14, dpi = 800)
 
-ggsave("figures/sca_plot_select_sca_noleg2long.svg", plot = sca_plot_selec_sca2, device = "svg", width = 24, height = 14)
+ggsave("figures/sca_plot_select_sca_noleg2long_phylo.svg", plot = sca_plot_selec_sca2, device = "svg", width = 24, height = 14)
 
 
-ggsave("figures/sca_plot_select_sca_noleg.png", plot = sca_plot_selec_sca, device = "png", width = 13, height = 17, dpi = 800)
+ggsave("figures/sca_plot_select_sca_noleg_phylo.png", plot = sca_plot_selec_sca, device = "png", width = 13, height = 17, dpi = 800)
 
-ggsave("figures/sca_plot_select_sca_noleg.svg", plot = sca_plot_selec_sca, 
+ggsave("figures/sca_plot_select_sca_noleg_phylo.svg", plot = sca_plot_selec_sca, 
        device = "svg", width = 13, height = 18)
 
 #? Figure 3 --------------------------------------------------------------
@@ -733,36 +731,36 @@ ggsave("figures/TESTcoef_circles_step1_1.png", plot = circles_coefs,
 ggsave("figures/coef_circles.svg", plot = circles_coefs, 
        device = "svg", width = 13, height = 18)
 
+# dat_sca3 %>% filter(overlap0med == "no")  %>% pull(sca_sel) %>% table()
 
-dat_sca3 %>% filter(overlap0med == "no")  %>% pull(sca_sel) %>% table()
-
-dat_sca3 <- dat_sca3 %>% filter(sps != "HETH")
+# dat_sca3 <- dat_sca3 %>% filter(sps != "HETH")
 
 write_rds(dat_sca3, file = "data/dat_sca3.rds")
 
+dat_scatest <- dat_sca3 %>% left_join(., phylo_order2, by = "sps")
 
 (circles_coefs <- ggplot() +
   geom_point(data = dat_sca3, #%>% filter(!is.na(Covariate)), 
              aes(x = sps_name, y = Covariate),  # Switched x and y to match sca_plot_selec_sca2
              size = 1, fill = "white", alpha = 0) +
   #only non overlating CIs
-  geom_point(data = dat_sca3 %>% filter(scale == 3, overlap0med == "no"), 
+  geom_point(data = dat_sca3 %>% filter(scale == 3, overlap0 == FALSE), 
              aes(x = sps_name, y = Covariate, fill = median),  # Switched x and y
              size = 31, shape = 21, stroke = 0.8, color = "#4A4A4A") +  # Match stroke color
-  geom_point(data = dat_sca3 %>% filter(scale == 2, overlap0med == "no"), 
+  geom_point(data = dat_sca3 %>% filter(scale == 2, overlap0 == FALSE), 
              aes(x = sps_name, y = Covariate, fill = median),  # Switched x and y
              size = 24, shape = 21, stroke = 0.8, color = "#4A4A4A") +  # Match stroke color
-  geom_point(data = dat_sca3 %>% filter(scale == 1, overlap0med == "no"), 
+  geom_point(data = dat_sca3 %>% filter(scale == 1, overlap0 == FALSE), 
              aes(x = sps_name, y = Covariate, fill = median),  # Switched x and y
              size = 18.5, shape = 21, stroke = 0.8, color = "#4A4A4A") +  # Match stroke color
   # no overlap
-  geom_text(data = dat_sca3 %>% filter(scale == 3, overlap0med == "no"), 
+  geom_text(data = dat_sca3 %>% filter(scale == 3, overlap0 == FALSE), 
            aes(x = sps_name, y = Covariate, label = glue("{round(median, 2)}")),  # Switched x and y
             size = 7, color = "black") +
-  geom_text(data = dat_sca3 %>% filter(scale == 2, overlap0med == "no"), 
+  geom_text(data = dat_sca3 %>% filter(scale == 2, overlap0 == FALSE), 
             aes(x = sps_name, y = Covariate, label = glue("{round(median, 2)}")),  # Switched x and y
             size = 7, color = "black") +
-  geom_text(data = dat_sca3 %>% filter(scale == 1, overlap0med == "no"), 
+  geom_text(data = dat_sca3 %>% filter(scale == 1, overlap0 == FALSE), 
             aes(x = sps_name, y = Covariate, label = glue("{round(median, 2)}")),  # Switched x and y
             size = 6, color = "black") +
   scale_color_identity() +  
@@ -773,7 +771,7 @@ write_rds(dat_sca3, file = "data/dat_sca3.rds")
   theme_minimal() +
   theme(legend.position = "right",  # Changed to match sca_plot_selec_sca2
         legend.margin = margin(t = 0, r = 0, b = 0, l = 25),  # Match margin
-        axis.text.x = element_text(hjust = 1, size = 22, angle = 90, vjust = 0.5),  # Match rotation and centering
+        axis.text.x = element_text(hjust = 1, size = 22, angle = 35, vjust = 0.5),  # Match rotation and centering
         axis.text.y = element_text(hjust = 1, size = 26),  # Match right alignment    
         axis.title.x = element_text(size = 30),  # Match sizes
         axis.title.y = element_text(size = 25),  # Match sizes

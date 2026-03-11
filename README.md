@@ -23,6 +23,10 @@ Assumptions/decisions:
 
 - forest covariates: average of all years with data because of the panel rotation design
 
+# PLOTS
+hg <- httpgd::hgd()
+httpgd::hgd_browse()
+
 # --------------------------------------------------------------------
 ## source:
 ### locally

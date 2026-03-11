@@ -136,7 +136,7 @@ X_corr_site_num <- X_corr %>%
 
 # full matrix (no lower/upper.tri masking)
 corr_site_mat <- X_corr_site_num %>%
-  cor(use = "pairwise.complete.obs", method = "pearson") %>%
+  cor(use = "pairwise.complete.obs", method = "spearman") %>%
   round(2)
 
 X_corr_site <- reshape2::melt(corr_site_mat, na.rm = TRUE) %>%
@@ -155,7 +155,7 @@ p1 <- ggplot(data = X_corr_site, aes(x=Var1, y=Var2,
     geom_tile(color = "white")+
     scale_fill_gradient2(low = "steelblue", high = "darkred", mid = "white", 
       midpoint = 0, limit = c(-1,1), space = "Lab", 
-      name="Correlation\n(Pearson)\n") +
+      name="Correlation\n(spearman)\n") +
     theme(axis.title.x     = element_blank(),       # Change x axis title only
           axis.title.y     = element_blank(),
           panel.grid.major = element_blank(),
@@ -180,7 +180,7 @@ p1 <- ggplot(data = X_corr_site, aes(x=Var1, y=Var2,
     scale_x_discrete(limits = rev(ord_site), labels = nice_labs_site, drop = FALSE) +
     scale_y_discrete(limits = (ord_site), labels = nice_labs_site[rev(ord_site)], drop = FALSE) +
     labs(title = "Stand") +
-    guides(color = guide_legend(title = "Correlation\n (Pearson)"))
+    guides(color = guide_legend(title = "Correlation\n (spearman)"))
 
 #? Park -------------------------------------------------------------------------------
 nice_labs_park <- c(
@@ -205,7 +205,7 @@ X_corr_park_num <- X_corr %>%
 
 # full matrix (no lower/upper.tri masking)
 corr_park_mat <- X_corr_park_num %>%
-  cor(use = "pairwise.complete.obs", method = "pearson") %>%
+  cor(use = "pairwise.complete.obs", method = "spearman") %>%
   round(2)
 
 X_corr_park <- reshape2::melt(corr_park_mat, na.rm = TRUE) %>%
@@ -224,7 +224,7 @@ p2 <- ggplot(data = X_corr_park, aes(x=Var1, y=Var2,
     geom_tile(color = "white")+
     scale_fill_gradient2(low = "steelblue", high = "darkred", mid = "white", 
                          midpoint = 0, limit = c(-1,1), space = "Lab", 
-                         name="Correlation\n(Pearson)\n") +
+                         name="Correlation\n(spearman)\n") +
     theme(axis.title.x     = element_blank(),       # Change x axis title only
           axis.title.y     = element_blank(),
           panel.grid.major = element_blank(),
@@ -250,7 +250,7 @@ p2 <- ggplot(data = X_corr_park, aes(x=Var1, y=Var2,
     scale_y_discrete(limits = (ord_park), labels = nice_labs_park[rev(ord_park)], drop = FALSE) +
     labs(title = "Park")
 
-#? COUNTY ------------------------------------------------------------------
+#? regional ------------------------------------------------------------------
 nice_labs_coun <- c(
   aBA_m2ha_coun = "Basal area",
   bBA_m2ha_Conifer_coun = "Conifer\nbasal area",
@@ -273,7 +273,7 @@ X_corr_coun_num <- X_corr %>%
 
 # full matrix (no lower/upper.tri masking)
 corr_coun_mat <- X_corr_coun_num %>%
-  cor(use = "pairwise.complete.obs", method = "pearson") %>%
+  cor(use = "pairwise.complete.obs", method = "spearman") %>%
   round(2)
 
 X_corr_coun <- reshape2::melt(corr_coun_mat, na.rm = TRUE) %>%
@@ -292,7 +292,7 @@ p3 <- ggplot(data = X_corr_coun, aes(x=Var1, y=Var2,
     geom_tile(color = "white")+
     scale_fill_gradient2(low = "steelblue", high = "darkred", mid = "white", 
                          midpoint = 0, limit = c(-1,1), space = "Lab", 
-                         name = "Correlation\n(Pearson)\n") +
+                         name = "Correlation\n(spearman)\n") +
     theme(axis.title.x       = element_blank(),       # Change x axis title only
           axis.title.y       = element_blank(),
           panel.grid.major   = element_blank(),
@@ -344,8 +344,359 @@ ggsave("figures/correlation.pdf", plot = combined, device = "pdf", width = 34, h
 
 ggsave("figures/correlation.svg", plot = combined, device = "svg", width = 34, height = 11)
 
-# END -------------------------------------------------------------------------
+# Same covs accross scales -------------------------------------------------------------------------
 
+axis_labels_size_covs <- 12
+title_size_covs <- 14
+corr_labels_size_covs <- 4
+legend_label_size_covs <- 10
+legend_title_size_covs <- 12
+
+#? BA -------------------------------------------------------------------------------
+nice_labs_BA <- c(
+  aBA_m2ha_site= "Stand",
+  bBA_m2ha_park = "Park",
+  cBA_m2ha_coun = "Regional"
+)
+ord_BA <- names(nice_labs_BA)
+
+# correlation matrix
+X_corr_BA_num <- X_corr %>%
+  dplyr::select(BA_m2ha_site, BA_m2ha_park, BA_m2ha_coun) %>%
+  dplyr::select(where(is.numeric)) %>%
+  distinct() %>%
+  rename(aBA_m2ha_site = BA_m2ha_site,
+         bBA_m2ha_park = BA_m2ha_park,
+         cBA_m2ha_coun = BA_m2ha_coun,) 
+
+# full matrix (no lower/upper.tri masking)
+corr_BA_mat <- X_corr_BA_num %>%
+  cor(use = "pairwise.complete.obs", method = "spearman") %>%
+  round(2)
+
+X_corr_BA <- reshape2::melt(corr_BA_mat, na.rm = TRUE) %>%
+  dplyr::mutate(
+    i = match(as.character(Var1), ord_BA),
+    j = match(as.character(Var2), ord_BA)
+  ) %>%
+  dplyr::filter(i < j) %>%   # keep one triangle only
+  dplyr::mutate(
+    Var1 = factor(Var1, levels = ord_BA),
+    Var2 = factor(Var2, levels = rev(ord_BA))
+  )
+  
+pBA <- ggplot(data = X_corr_BA, aes(x=Var1, y=Var2, 
+								fill=value)) + 
+    geom_tile(color = "white")+
+    scale_fill_gradient2(low = "steelblue", high = "darkred", mid = "white", 
+      midpoint = 0, limit = c(-1,1), space = "Lab", 
+      name="Correlation\n(spearman)\n") +
+    theme(axis.title.x     = element_blank(),       # Change x axis title only
+          axis.title.y     = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.background = element_rect(fill = "white", color = NA),
+          plot.background  = element_rect(fill = "white", color = NA),
+          panel.border     = element_rect(color = "black", fill = NA, linewidth = 0.8),
+          axis.text.x = element_text(angle = 0, vjust = 0.5, hjust = 0.5, size = axis_labels_size_covs),
+          axis.text.y = element_text(size = axis_labels_size_covs),
+          legend.title.align = 0.5,
+          legend.title = element_text(size = legend_title_size_covs, face = "bold"),
+          legend.text  = element_text(size = legend_label_size_covs),
+          plot.title   = element_text(
+            hjust    = 0.5,      # horizontally centered
+            size     = title_size_covs,       
+            margin   = margin(t = 10, b = 10),
+            vjust    = -13         # just inside the plot area
+    )) +
+    geom_text(aes(Var1, Var2, label = round(value,1)), 
+              color = "black", 
+              size = corr_labels_size_covs) +
+    scale_y_discrete(limits = rev(ord_BA), labels = nice_labs_BA, drop = FALSE) +
+    scale_x_discrete(limits = (ord_BA), labels = nice_labs_BA[rev(ord_BA)], drop = FALSE) +
+    labs(title = "Tree Basal\nArea") +
+    guides(color = guide_legend(title = "Correlation\n (spearman)"))
+
+#? CON -------------------------------------------------------------------------------
+nice_labs_CON <- c(
+  aBA_m2ha_Conifer_site= "Stand",
+  bBA_m2ha_Conifer_park = "Park",
+  cBA_m2ha_Conifer_coun = "Regional"
+)
+ord_CON <- names(nice_labs_CON)
+
+# correlation matrix
+X_corr_CON_num <- X_corr %>%
+  dplyr::select(BA_m2ha_Conifer_site, BA_m2ha_Conifer_park, BA_m2ha_Conifer_coun) %>%
+  dplyr::select(where(is.numeric)) %>%
+  distinct() %>%
+  rename(aBA_m2ha_Conifer_site = BA_m2ha_Conifer_site,
+         bBA_m2ha_Conifer_park = BA_m2ha_Conifer_park,
+         cBA_m2ha_Conifer_coun = BA_m2ha_Conifer_coun,) 
+
+# full matrix (no lower/upper.tri masking)
+corr_CON_mat <- X_corr_CON_num %>%
+  cor(use = "pairwise.complete.obs", method = "spearman") %>%
+  round(2)
+
+X_corr_CON <- reshape2::melt(corr_CON_mat, na.rm = TRUE) %>%
+  dplyr::mutate(
+    i = match(as.character(Var1), ord_CON),
+    j = match(as.character(Var2), ord_CON)
+  ) %>%
+  dplyr::filter(i < j) %>%   # keep one triangle only
+  dplyr::mutate(
+    Var1 = factor(Var1, levels = ord_CON),
+    Var2 = factor(Var2, levels = rev(ord_CON))
+  )
+  
+pCON <- ggplot(data = X_corr_CON, aes(x=Var1, y=Var2, 
+								fill=value)) + 
+    geom_tile(color = "white")+
+    scale_fill_gradient2(low = "steelblue", high = "darkred", mid = "white", 
+      midpoint = 0, limit = c(-1,1), space = "Lab", 
+      name="Correlation\n(spearman)\n") +
+    theme(axis.title.x     = element_blank(),       # Change x axis title only
+          axis.title.y     = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.background = element_rect(fill = "white", color = NA),
+          plot.background  = element_rect(fill = "white", color = NA),
+          panel.border     = element_rect(color = "black", fill = NA, linewidth = 0.8),
+          axis.text.x = element_text(angle = 0, vjust = 0.5, hjust = 0.5, size = axis_labels_size_covs),
+          axis.text.y = element_text(size = axis_labels_size_covs),
+          legend.title.align = 0.5,
+          legend.title = element_text(size = legend_title_size_covs, face = "bold"),
+          legend.text  = element_text(size = legend_label_size_covs),
+          plot.title   = element_text(
+            hjust    = 0.5,      # horizontally centered
+            size     = title_size_covs,       
+            margin   = margin(t = 10, b = 10),
+            vjust    = -13         # just inside the plot area
+    )) +
+    geom_text(aes(Var1, Var2, label = round(value,1)), 
+              color = "black", 
+              size = corr_labels_size_covs) +
+    scale_y_discrete(limits = rev(ord_CON), labels = nice_labs_CON, drop = FALSE) +
+    scale_x_discrete(limits = (ord_CON), labels = nice_labs_CON[rev(ord_CON)], drop = FALSE) +
+    labs(title = "Coniferous Tree\nBasal Area") +
+    guides(color = guide_legend(title = "Correlation\n (spearman)"))
+
+#? LAT -------------------------------------------------------------------------------
+nice_labs_LAT <- c(
+  aBA_m2ha_large_site= "Stand",
+  bBA_m2ha_large_park = "Park",
+  cBA_m2ha_large_coun = "Regional"
+)
+ord_LAT <- names(nice_labs_LAT)
+
+# correlation matrix
+X_corr_LAT_num <- X_corr %>%
+  dplyr::select(BA_m2ha_large_site, BA_m2ha_large_park, BA_m2ha_large_coun) %>%
+  dplyr::select(where(is.numeric)) %>%
+  distinct() %>%
+  rename(aBA_m2ha_large_site = BA_m2ha_large_site,
+         bBA_m2ha_large_park = BA_m2ha_large_park,
+         cBA_m2ha_large_coun = BA_m2ha_large_coun,) 
+
+# full matrix (no lower/upper.tri masking)
+corr_LAT_mat <- X_corr_LAT_num %>%
+  cor(use = "pairwise.complete.obs", method = "spearman") %>%
+  round(2)
+
+X_corr_LAT <- reshape2::melt(corr_LAT_mat, na.rm = TRUE) %>%
+  dplyr::mutate(
+    i = match(as.character(Var1), ord_LAT),
+    j = match(as.character(Var2), ord_LAT)
+  ) %>%
+  dplyr::filter(i < j) %>%   # keep one triangle only
+  dplyr::mutate(
+    Var1 = factor(Var1, levels = ord_LAT),
+    Var2 = factor(Var2, levels = rev(ord_LAT))
+  )
+  
+pLAT <- ggplot(data = X_corr_LAT, aes(x=Var1, y=Var2, 
+								fill=value)) + 
+    geom_tile(color = "white")+
+    scale_fill_gradient2(low = "steelblue", high = "darkred", mid = "white", 
+      midpoint = 0, limit = c(-1,1), space = "Lab", 
+      name="Correlation\n(spearman)\n") +
+    theme(axis.title.x     = element_blank(),       # Change x axis title only
+          axis.title.y     = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.background = element_rect(fill = "white", color = NA),
+          plot.background  = element_rect(fill = "white", color = NA),
+          panel.border     = element_rect(color = "black", fill = NA, linewidth = 0.8),
+          axis.text.x = element_text(angle = 0, vjust = 0.5, hjust = 0.5, size = axis_labels_size_covs),
+          axis.text.y = element_text(size = axis_labels_size_covs),
+          legend.title.align = 0.5,
+          legend.title = element_text(size = legend_title_size_covs, face = "bold"),
+          legend.text  = element_text(size = legend_label_size_covs),
+          plot.title   = element_text(
+            hjust    = 0.5,      # horizontally centered
+            size     = title_size_covs,       
+            margin   = margin(t = 10, b = 10),
+            vjust    = -13         # just inside the plot area
+    )) +
+    geom_text(aes(Var1, Var2, label = round(value,1)), 
+              color = "black", 
+              size = corr_labels_size_covs) +
+    scale_y_discrete(limits = rev(ord_LAT), labels = nice_labs_LAT, drop = FALSE) +
+    scale_x_discrete(limits = (ord_LAT), labels = nice_labs_LAT[rev(ord_LAT)], drop = FALSE) +
+    labs(title = "Late Success.\nTree Basal Area") +
+    guides(color = guide_legend(title = "Correlation\n (spearman)"))
+
+#? SHR -------------------------------------------------------------------------------
+nice_labs_SHR <- c(
+  ashrub_avg_cov_site = "Stand",
+  bshrub_avg_cov_park = "Park",
+  cshrub_cov_coun = "Regional"
+)
+ord_SHR <- names(nice_labs_SHR)
+
+# correlation matrix
+X_corr_SHR_num <- X_corr %>%
+  dplyr::select(shrub_avg_cov_site, shrub_avg_cov_park, shrub_cov_coun) %>%
+  dplyr::select(where(is.numeric)) %>%
+  distinct() %>%
+  rename(ashrub_avg_cov_site = shrub_avg_cov_site,
+         bshrub_avg_cov_park = shrub_avg_cov_park,
+         cshrub_cov_coun = shrub_cov_coun,) 
+
+# full matrix (no lower/upper.tri masking)
+corr_SHR_mat <- X_corr_SHR_num %>%
+  cor(use = "pairwise.complete.obs", method = "spearman") %>%
+  round(2)
+
+X_corr_SHR <- reshape2::melt(corr_SHR_mat, na.rm = TRUE) %>%
+  dplyr::mutate(
+    i = match(as.character(Var1), ord_SHR),
+    j = match(as.character(Var2), ord_SHR)
+  ) %>%
+  dplyr::filter(i < j) %>%   # keep one triangle only
+  dplyr::mutate(
+    Var1 = factor(Var1, levels = ord_SHR),
+    Var2 = factor(Var2, levels = rev(ord_SHR))
+  )
+  
+pSHR <- ggplot(data = X_corr_SHR, aes(x=Var1, y=Var2, 
+								fill=value)) + 
+    geom_tile(color = "white")+
+    scale_fill_gradient2(low = "steelblue", high = "darkred", mid = "white", 
+      midpoint = 0, limit = c(-1,1), space = "Lab", 
+      name="Correlation\n(spearman)\n") +
+    theme(axis.title.x     = element_blank(),       # Change x axis title only
+          axis.title.y     = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.background = element_rect(fill = "white", color = NA),
+          plot.background  = element_rect(fill = "white", color = NA),
+          panel.border     = element_rect(color = "black", fill = NA, linewidth = 0.8),
+          axis.text.x = element_text(angle = 0, vjust = 0.5, hjust = 0.5, size = axis_labels_size_covs),
+          axis.text.y = element_text(size = axis_labels_size_covs),
+          legend.title.align = 0.5,
+          legend.title = element_text(size = legend_title_size_covs, face = "bold"),
+          legend.text  = element_text(size = legend_label_size_covs),
+          plot.title   = element_text(
+            hjust    = 0.5,      # horizontally centered
+            size     = title_size_covs,       
+            margin   = margin(t = 10, b = 10),
+            vjust    = -1.5         # just inside the plot area
+    )) +
+    geom_text(aes(Var1, Var2, label = round(value,1)), 
+              color = "black", 
+              size = corr_labels_size_covs) +
+    scale_y_discrete(limits = rev(ord_SHR), labels = nice_labs_SHR, drop = FALSE) +
+    scale_x_discrete(limits = (ord_SHR), labels = nice_labs_SHR[rev(ord_SHR)], drop = FALSE) +
+    labs(title = "Shrub Cover") +
+    guides(color = guide_legend(title = "Correlation\n (spearman)"))
+
+#? LAT -------------------------------------------------------------------------------
+nice_labs_DEN <- c(
+  atreeden_ha_site = "Stand",
+  btreeden_ha_park = "Park",
+  ctreeden_ha_coun = "Regional"
+)
+ord_DEN <- names(nice_labs_DEN)
+
+# correlation matrix
+X_corr_DEN_num <- X_corr %>%
+  dplyr::select(treeden_ha_site, treeden_ha_park, treeden_ha_coun) %>%
+  dplyr::select(where(is.numeric)) %>%
+  distinct() %>%
+  rename(atreeden_ha_site = treeden_ha_site,
+         btreeden_ha_park = treeden_ha_park,
+         ctreeden_ha_coun = treeden_ha_coun,) 
+
+# full matrix (no lower/upper.tri masking)
+corr_DEN_mat <- X_corr_DEN_num %>%
+  cor(use = "pairwise.complete.obs", method = "spearman") %>%
+  round(2)
+
+X_corr_DEN <- reshape2::melt(corr_DEN_mat, na.rm = TRUE) %>%
+  dplyr::mutate(
+    i = match(as.character(Var1), ord_DEN),
+    j = match(as.character(Var2), ord_DEN)
+  ) %>%
+  dplyr::filter(i < j) %>%   # keep one triangle only
+  dplyr::mutate(
+    Var1 = factor(Var1, levels = ord_DEN),
+    Var2 = factor(Var2, levels = rev(ord_DEN))
+  )
+  
+pDEN <- ggplot(data = X_corr_DEN, aes(x=Var1, y=Var2, 
+								fill=value)) + 
+    geom_tile(color = "white")+
+    scale_fill_gradient2(low = "steelblue", high = "darkred", mid = "white", 
+      midpoint = 0, limit = c(-1,1), space = "Lab", 
+      name="Correlation\n(Spearman)\n") +
+    theme(axis.title.x     = element_blank(),       # Change x axis title only
+          axis.title.y     = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.background = element_rect(fill = "white", color = NA),
+          plot.background  = element_rect(fill = "white", color = NA),
+          panel.border     = element_rect(color = "black", fill = NA, linewidth = 0.8),
+          axis.text.x = element_text(angle = 0, vjust = 0.5, hjust = 0.5, size = axis_labels_size_covs),
+          axis.text.y = element_text(size = axis_labels_size_covs),
+          legend.title.align = 0.5,
+          legend.title = element_text(size = legend_title_size_covs, face = "bold"),
+          legend.text  = element_text(size = legend_label_size_covs),
+          plot.title   = element_text(
+            hjust    = 0.5,      # horizontally centered
+            size     = title_size_covs,       
+            margin   = margin(t = 10, b = 10),
+            vjust    = -8         # just inside the plot area
+    )) +
+    geom_text(aes(Var1, Var2, label = round(value,1)), 
+              color = "black", 
+              size = corr_labels_size_covs) +
+    scale_y_discrete(limits = rev(ord_DEN), labels = nice_labs_DEN, drop = FALSE) +
+    scale_x_discrete(limits = (ord_DEN), labels = nice_labs_DEN[rev(ord_DEN)], drop = FALSE) +
+    labs(title = "Tree Density") +
+    guides(color = guide_legend(title = "Correlation\n (Spearman)"))
+
+# put all figures together in one panel -------------------------------------------------------------------------
+# Hide legend on first two, keep on third
+p1_cov <- pBA + theme(legend.position = "none", axis.text.x = element_blank())
+p2_cov <- pCON + theme(legend.position = "none", axis.text.y = element_blank(),  axis.text.x = element_blank())
+p3_cov   <- pLAT + theme(axis.text.x = element_blank(), legend.position = "none")
+p4_cov <- pSHR + theme(legend.position = "none",  axis.text.y = element_blank())
+p5_cov <- pDEN 
+
+# Arrange: 1 row, 3 columns; collect guides (auto-handles shared legend)
+
+combined2 <- p1_cov + p2_cov + p3_cov + p4_cov + p5_cov +
+  plot_layout(
+    ncol   = 2,
+    guides = "collect")
+print(combined2)
+
+ggsave("figures/correlation2.pdf", plot = combined2, device = "pdf", width = 9, height = 11)
+ggsave("figures/correlation2.svg", plot = combined2, device = "svg", width = 9, height = 11)
+
+# END ---------
 X_corr2 <- X10 %>% 
             filter(interval_n == 1) %>% 
             dplyr::select(Point_Name,
@@ -518,12 +869,4 @@ X1000for <- read_rds(file = "data/X_1000nei.rds")
 # Load X_corr from saved file instead of recreating
 X_corr <- read_rds(file = "data/X_corr.rds")
 
-# Remove loaded files to free memory
-rm(X1000, X500, X1000for)
-gc()
-                area,
-                EventDate2, StartTime2) %>% 
-            rename(date_jul = EventDate2,
-                time_jul = StartTime2) %>% 
-            mutate(#AOU_code = sps_loop2,
-                    park = substr(Point_Name,1,4))
+
