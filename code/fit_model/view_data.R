@@ -411,3 +411,43 @@ p_covs <- ggplot(all_dat, aes(x = scale, y = value)) +
 
 ggsave("figures/covariates_multiscale.pdf", plot = p_covs,
        width = 12, height = 14, units = "in", dpi = 1000)
+
+####
+
+coef_summary3 <- read_rds(file = "data/out/coefs_step2_2_fig2.rds")
+
+coef_summary3 %>% 
+      filter(!is.na(sca_sel),
+              overlap0 == "no") %>% 
+      mutate(coef_abs = abs(mean)) %>% 
+      select(coef, mean, coef_abs, sca_sel) %>% 
+      group_by(sca_sel) %>% 
+      summarise(mag = mean(coef_abs),
+                dir = mean(mean))
+
+
+coef_summary3 %>% 
+      filter(!is.na(sca_sel),
+              overlap0 == "no") %>% 
+      mutate(coef_abs = abs(mean)) %>% 
+      select(coef, mean, coef_abs, sca_sel) %>% 
+      ggplot() +
+        geom_histogram(aes(mean)) + 
+        facet_wrap(~sca_sel,
+                   nrow = 1) +
+        theme_bw() +
+        geom_vline(xintercept = 0, color = "red", linetype = "dashed", linewidth = 0.8) 
+
+coef_summary3 %>% 
+  filter(!is.na(sca_sel), overlap0 == "no") %>% 
+  mutate(coef_abs = abs(mean)) %>% 
+  select(coef, mean, coef_abs, sca_sel) %>% 
+  ggplot(aes(x = mean, y = sca_sel, fill = sca_sel)) +
+    geom_boxplot(alpha = 0.8) + 
+    geom_jitter(aes(color = coef), height = 0.15, alpha = 0.5) +
+    geom_vline(xintercept = 0, color = "red", linetype = "dashed", linewidth = 0.8) +
+    theme_bw() +
+    scale_fill_manual(values = c("#74c476", "#238b45", "#00441b")) +
+    scale_y_discrete(labels = c("Stand", "Park", "Region")) +
+    labs(x = "Covariate effect size", y = NULL) 
+    #theme(legend.position = "none")
