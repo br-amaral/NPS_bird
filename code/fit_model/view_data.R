@@ -123,7 +123,7 @@ ggplot(jags_dat2 %>% select(pksize, parkey) %>% distinct() %>% arrange(parkey)) 
     geom_point(aes(y = pksize, x = as.character(parkey)))
 
 write_rds(jags_dat2, file = "data/out/all_sps_data.rds")
-
+# jags_dat2 <- read_rds("data/out/all_sps_data.rds")
 sps_order <- read_csv(file = "data/src/sps_order.csv") %>% 
                 pull(Aou_code)
 
@@ -241,14 +241,76 @@ p_sps <- jags_dat4 %>%
   ) +
   labs(x = NULL, y = NULL)
 
-p_sum <- p_sum + theme(plot.margin = margin(5, 2, 5, 5))
-p_sps <- p_sps + theme(plot.margin = margin(5, 5, 5, 2))
+p_sum <- p_sum + theme(plot.margin = margin(5, 2, 0, 5))
+p_sps <- p_sps + theme(plot.margin = margin(5, 5, 0, 2))
 
-(p_combined <- (p_sum | p_sps) +
-  plot_layout(widths = c(2.5, 17)) &
+tot_sum <- jags_dat4 %>%
+  summarise(
+    Richness   = sum(`Species Richness`, na.rm = TRUE),
+    Detections = sum(Detections, na.rm = TRUE)
+  ) %>%
+  mutate(parks = "Total") %>%
+  pivot_longer(-parks) %>%
+  mutate(name = factor(name, levels = c("Richness", "Detections")))
+
+tot_sps <- jags_dat4 %>%
+  select(all_of(sps_order)) %>%
+  summarise(across(everything(), sum, na.rm = TRUE)) %>%
+  pivot_longer(everything(), names_to = "sps", values_to = "det") %>%
+  left_join(phylo_order2, by = "sps") %>%
+  mutate(
+    sps_name = factor(sps_name, levels = levels(phylo_order2$sps_name)),
+    parks    = "Total"
+  )
+
+p_tot_sum <- tot_sum %>%
+  ggplot(aes(x = name, y = parks, fill = log1p(value))) +
+  geom_tile(color = "white", linewidth = 1.2) +
+  geom_rect(aes(xmin=-Inf, xmax=Inf, ymin=-Inf, ymax=Inf),
+            fill=NA, color="black", linewidth=0.7, inherit.aes=FALSE) +
+  geom_text(aes(label = value), size = 4.3, fontface = "bold") +
+  shared_scale() +
+  theme_minimal() +
+  theme(
+    panel.grid      = element_blank(),
+    axis.text.y     = element_text(hjust = 1, size = 12, face = "bold"),
+    axis.text.x     = element_blank(),
+    axis.ticks.x    = element_blank(),
+    legend.position = "none",
+    plot.margin     = margin(2, 2, 5, 5)
+  ) +
+  labs(x = NULL, y = NULL)
+
+p_tot_sps <- tot_sps %>%
+  ggplot(aes(x = sps_name, y = parks, fill = log1p(det))) +
+  geom_tile(color = "white") +
+  geom_text(aes(label = det), size = 4.3, fontface = "bold") +
+  shared_scale() +
+  geom_rect(aes(xmin=-Inf, xmax=Inf, ymin=-Inf, ymax=Inf),
+            fill=NA, color="black", linewidth=0.7, inherit.aes=FALSE) +
+  theme_minimal() +
+  theme(
+    panel.grid      = element_blank(),
+    axis.text.x     = element_blank(),
+    axis.ticks.x    = element_blank(),
+    axis.text.y     = element_blank(),
+    axis.title      = element_blank(),
+    legend.position = "none",
+    plot.margin     = margin(0, 5, 2, 2)
+  ) 
+
+# --- combine ---
+p_bot <- (p_sum | p_sps) + plot_layout(widths = c(2.5, 17))
+p_top <- (p_tot_sum | p_tot_sps) + plot_layout(widths = c(2.5, 17))
+
+(p_final <- (p_top / p_bot) +
+  plot_layout(heights = c(1, 8)) &  # 8 park rows : 1 total row
   theme(legend.title = element_blank()))
 
-ggsave("figures/heatmap_detecs.pdf", plot = p_combined,
+ggsave("figures/heatmap_detecs.pdf", plot = p_final,
+       width = 13, height = 6.8, units = "in", dpi = 1000)
+
+ggsave("figures/heatmap_detecs.svg", plot = p_final,
        width = 13, height = 6.8, units = "in", dpi = 1000)
 
 parkey <- key_site %>% 
