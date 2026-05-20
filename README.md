@@ -1,14 +1,20 @@
-## Protecting birds in protected areas: a multi-scale analysis of forest structure and species occurrence
+# Protecting birds in protected areas: a multi-scale analysis of forest structure and species occurrence
 
-##### Bruna R. Amaral, [Co-authors]
+### Bruna R. Amaral, Jeffrey W. Doser, Aaron Weed, Kate Miller, and Elise F. Zipkin
 
-Publication on *[Journal Name]* [![DOI]()] and [![PDF]()]
+Publication on *Landscape Ecology*: [![DOI]()], [![PDF]()]
 
-<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Zenodo_logo.svg/2560px-Zenodo_logo.svg.png" alt="Zenodo Icon" width="52"> Zenodo: [https://zenodo.org/records/20291426]
+Zipkin Lab Code Archive: [https://zipkinlab.github.io/](https://zipkinlab.github.io/)
 
-&nbsp;<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Octicons-mark-github.svg/2048px-Octicons-mark-github.svg.png" alt="GitHub Icon" width="17" height="17"> GitHub: [https://github.com/br-amaral/NPS_bird_copy](https://github.com/br-amaral/NPS_bird)
+Zenodo: [https://zenodo.org/records/20291426](https://zenodo.org/records/20291426)
 
-Abstract
+GitHub: [https://github.com/br-amaral/NPS_bird_copy](https://github.com/br-amaral/NPS_bird)
+
+### Citation
+
+
+
+### Abstract
 
 <b> Context. </b> Protected areas are cornerstones of avian conservation, yet forest-interior bird communities continue to decline even within protected lands. The capacity of a protected area to sustain bird populations depends on both internal habitat quality and the surrounding landscape context, yet the relative importance of these scales remains poorly understood.
 
@@ -22,16 +28,39 @@ Abstract
 
 <i> Keywords: </i> forest-interior birds; multi-scale habitat selection; protected areas; forest structure; landscape context; occupancy modeling
 
-This repository contains code to format bird survey and vegetation data, fit hierarchical occupancy/abundance models, and generate figures and predictions of bird population trends across northeastern national parks. All code (numbered in order of execution), data, and outputs are provided.
+--------------------------------------
 
-##### Folder structure:
-- <b>[code](#code)</b>: R scripts numbered in execution order, organized into subfolders by task (bird data formatting, vegetation data formatting, and model fitting).
-- <b>[data](#data)</b>: all data used in the analysis, including processed outputs. Divided in:
-    - <b>[src/original](#src)</b>: raw input data from NETN bird surveys and vegetation monitoring.
+This repository contains code to format bird survey and vegetation data collected by NETN NPS, format FIA vegetation data, fit multi-scale hierarchical occupancy models, and generate figures and predictions of bird occurrence across northeastern national parks. All code (numbered in order of execution), data, and outputs are provided.
+
+### Folder structure:
+- <b>[code](#code)</b>: R scripts numbered in execution order, organized into subfolders by task (bird data formatting, vegetation data formatting, and model fitting). Divided into:
+    - <b>[format_veg_data](#format_veg_data)</b>:
+    - <b>[format_bird_data](#format_bird_data)</b>: 
+    - <b>[fit_model](#format_bird_data)</b>: 
+
+- <b>[data](#data)</b>: all data used in the analysis, including processed outputs. Divided into:
+    - <b>[ana_file](#ana_file)</b>:
+    - <b>[park_raster](#park_raster)</b>: 
+    - <b>[veg_maps](#veg_maps)</b>: 
+    - <b>[NETN-forest](#NETN-forest)</b>: 
+        - <b>[forest_csvs](#forest_csvs)</b>: 
+        - <b>[src](#src)</b>: 
+    - <b>[src](#src)</b>: raw input data from NETN bird surveys and vegetation monitoring.
+        - <b>[original](#original)</b>: 
     - <b>[out](#out)</b>: processed intermediate and final data files used as model inputs.
     - <b>[model_res](#model_res)</b>: JAGS model output files per species and park.
     - <b>[FIA](#FIA)</b>: county-level forest inventory data.
+        - <b>[out](#out)</b>:
+        - <b>[processed](#processed)</b>: 
     - <b>[veg_kateaaron](#veg_kateaaron)</b>: forest plot-level vegetation data from NETN monitoring.
+
+- <b>[models](#models)</b>:
+
+- <b>[sbatch](#sbatch)</b>:
+
+- <b>[figures](#figures)</b>:
+
+### Files:
 
 ### code
 
