@@ -2,19 +2,19 @@
 
 ### Bruna R. Amaral, Jeffrey W. Doser, Aaron Weed, Kate Miller, and Elise F. Zipkin
 
-Publication on *Landscape Ecology*: [![DOI]()], [![PDF]()]
+&nbsp;&nbsp; Publication on *Landscape Ecology*: [![DOI]()], [![PDF]()]
 
-Zipkin Lab Code Archive: [https://zipkinlab.github.io/](https://zipkinlab.github.io/)
+&nbsp;&nbsp; Zipkin Lab Code Archive: [https://zipkinlab.github.io](https://zipkinlab.github.io/)
 
-Zenodo: [https://zenodo.org/records/20291426](https://zenodo.org/records/20291426)
+&nbsp;&nbsp; Zenodo: [https://zenodo.org/records/20291426](https://zenodo.org/records/20291426)
 
-GitHub: [https://github.com/br-amaral/NPS_bird_copy](https://github.com/br-amaral/NPS_bird)
+&nbsp;&nbsp; GitHub: [https://github.com/br-amaral/NPS_bird_copy](https://github.com/br-amaral/NPS_bird)
 
 ### Citation
 
+Amaral, B. R., Doser, J. W., Weed, A., Miller, K., & Zipkin, E. F. (2026). Protecting birds in protected areas: A multi-scale analysis of forest structure and species occurrence. *Landscape Ecology* xx(xx): xx - xx.
 
-
-### Abstract
+### <u> Abstract </u>
 
 <b> Context. </b> Protected areas are cornerstones of avian conservation, yet forest-interior bird communities continue to decline even within protected lands. The capacity of a protected area to sustain bird populations depends on both internal habitat quality and the surrounding landscape context, yet the relative importance of these scales remains poorly understood.
 
@@ -32,7 +32,7 @@ GitHub: [https://github.com/br-amaral/NPS_bird_copy](https://github.com/br-amara
 
 This repository contains code to format bird survey and vegetation data collected by NETN NPS, format FIA vegetation data, fit multi-scale hierarchical occupancy models, and generate figures and predictions of bird occurrence across northeastern national parks. All code (numbered in order of execution), data, and outputs are provided.
 
-### Folder structure:
+#### Folder structure:
 - <b>[code](#code)</b>: R scripts numbered in execution order, organized into subfolders by task (bird data formatting, vegetation data formatting, and model fitting). Divided into:
     - <b>[format_veg_data](#format_veg_data)</b>:
     - <b>[format_bird_data](#format_bird_data)</b>: 
@@ -60,7 +60,7 @@ This repository contains code to format bird survey and vegetation data collecte
 
 - <b>[figures](#figures)</b>:
 
-### Files:
+#### Files:
 
 ### code
 
