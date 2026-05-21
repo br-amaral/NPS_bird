@@ -34,37 +34,35 @@ This repository contains code to format bird survey and vegetation data collecte
 
 #### Folder structure:
 - <b>[code](#code)</b>: R scripts numbered in execution order, organized into subfolders by task (bird data formatting, vegetation data formatting, and model fitting). Divided into:
-    - <b>[format_veg_data](#format_veg_data)</b>:
-    - <b>[format_bird_data](#format_bird_data)</b>: 
-    - <b>[fit_model](#format_bird_data)</b>: 
-
+    - <b>[format_veg_data](#format_veg_data)</b>: code to extract and format the forest structure data for analysis.
+    - <b>[format_bird_data](#format_bird_data)</b>: code to format the bird data data for analysis.
+    - <b>[fit_model](#fit_model)</b>: code to merge forest and bird data, run analysis, and generate figures.
+&nbsp;
 - <b>[data](#data)</b>: all data used in the analysis, including processed outputs. Divided into:
-    - <b>[ana_file](#ana_file)</b>:
-    - <b>[park_raster](#park_raster)</b>: 
-    - <b>[veg_maps](#veg_maps)</b>: 
-    - <b>[NETN-forest](#NETN-forest)</b>: 
+    - <b>[ana_file](#ana_file)</b>: folder to save the processed spscies-specific bird data used in the model, the metadata about the model run (e.g. number of iterations and initial values).
+    - <b>[park_raster](#park_raster)</b>: raster files of all parks to obtain area and location.
+    - <b>[NETN-forest](#NETN-forest)</b>: forest data collected by the NPS within parks.
         - <b>[forest_csvs](#forest_csvs)</b>: 
         - <b>[src](#src)</b>: 
-    - <b>[src](#src)</b>: raw input data from NETN bird surveys and vegetation monitoring.
-        - <b>[original](#original)</b>: 
-    - <b>[out](#out)</b>: processed intermediate and final data files used as model inputs.
-    - <b>[model_res](#model_res)</b>: JAGS model output files per species and park.
-    - <b>[FIA](#FIA)</b>: county-level forest inventory data.
-        - <b>[out](#out)</b>:
-        - <b>[processed](#processed)</b>: 
-    - <b>[veg_kateaaron](#veg_kateaaron)</b>: forest plot-level vegetation data from NETN monitoring.
+    - <b>[src](#src)</b>: raw input data from NETN bird surveys and bird information (phylogeny, guild).
+        - <b>[original](#original)</b>: original data files that have not been opened, just exported.
+    - <b>[out](#out)</b>: placeholder folder for processed intermediate and final data files used as analysis inputs.
+    - <b>[model_res](#model_res)</b>: JAGS model output files per species for step 1 and 2.
+    - <b>[FIA](#FIA)</b>: county-level forest inventory data obtained with rFIA R package.
+        - <b>[out](#out)</b>: forest structure covariates calculated and used in the analysis.
+&nbsp;
+- <b>[models](#models)</b>: .txt model files with JAGS models for each species and step.
+&nbsp;
+- <b>[sbatch](#sbatch)</b>: .sb files to run analysis in the cluster
+&nbsp;
 
-- <b>[models](#models)</b>:
-
-- <b>[sbatch](#sbatch)</b>:
-
-- <b>[figures](#figures)</b>:
+- <b>[figures](#figures)</b>: folder to hold figures generated in the analysis.
 
 #### Files:
 
-### code
+#### code/
 
-##### format_bird_data
+##### format_bird_data/
 
 <b>[1_ImportData.R](code/format_bird_data/1_ImportData.R)</b>: imports and extracts NETN bird survey data.
 
@@ -91,7 +89,7 @@ This repository contains code to format bird survey and vegetation data collecte
 - [data/X.rds](data/X.rds)
 - [data/nsite_pk.csv](data/nsite_pk.csv)
 
-##### format_veg_data
+##### format_veg_data/
 
 <b>[NETN_forest_data_for_sites.R](code/format_veg_data/NETN_forest_data_for_sites.R)</b>: extracts forest plot-level covariates from NETN vegetation monitoring data.
 
@@ -138,7 +136,7 @@ This repository contains code to format bird survey and vegetation data collecte
 &nbsp;&nbsp;<u>Output:</u>
 - [data/out/coun_covs.rds](data/out/coun_covs.rds)
 
-##### fit_model
+##### fit_model/
 
 <b>[back2d_covs_scales_2min_spscov.R](code/fit_model/back2d_covs_scales_2min_spscov.R)</b>: fits hierarchical JAGS model for each species and park combination.
 
@@ -153,9 +151,17 @@ This repository contains code to format bird survey and vegetation data collecte
 
 <b>[run_step1_step2.R](code/fit_model/run_step1_step2.R)</b>: orchestrates sequential model fitting steps; submitted to HPC via `nps_source.sb`.
 
-### data
+#### data/
 
-##### data/out
+##### data (root-level)
+
+- [data/y_dat8.rds](data/y_dat8.rds): detection array (species × sites × years × occasions) used as model response
+- [data/X.rds](data/X.rds): covariate matrix used as model predictors
+- [data/nsite_pk.csv](data/nsite_pk.csv): number of sites per park (csv version)
+- [data/key_park.rds](data/key_park.rds): key linking park codes to park names and metadata
+- [data/tree_sps_harcon.csv](data/tree_sps_harcon.csv): lookup table classifying tree species as hardwood or conifer
+
+##### data/out/
 
 - [data/out/NETNtib.rds](data/out/NETNtib.rds): tibble with imported and extracted NETN bird survey data
 - [data/out/for_plot_covs.rds](data/out/for_plot_covs.rds): forest plot-level covariates from NETN vegetation monitoring
@@ -171,21 +177,8 @@ This repository contains code to format bird survey and vegetation data collecte
 - [data/out/updated_for_cats.csv](data/out/updated_for_cats.csv): updated forest category classifications for sites
 - [data/out/nsite_pk.rds](data/out/nsite_pk.rds): number of sites per park
 
-##### data (root-level)
-
-- [data/y_dat8.rds](data/y_dat8.rds): detection array (species × sites × years × occasions) used as model response
-- [data/X.rds](data/X.rds): covariate matrix used as model predictors
-- [data/nsite_pk.csv](data/nsite_pk.csv): number of sites per park (csv version)
-- [data/key_park.rds](data/key_park.rds): key linking park codes to park names and metadata
-- [data/tree_sps_harcon.csv](data/tree_sps_harcon.csv): lookup table classifying tree species as hardwood or conifer
 
 ##### data/model_res
 
 - [data/model_res/jags_res_{sps}_{park}_run{run_number}.rds](data/model_res/): JAGS posterior samples for each species–park model run
 
-### Assumptions and decisions
-
-- Forest covariates for sites with no nearby forest plots are imputed as zero
-- Parks removed from analysis: ACAD (too large), SAIR (open habitat, too different), ELRO (only one forest plot)
-- 400 m radius used to link bird survey sites to forest plots
-- Forest covariates averaged across all years with available data to account for panel rotation design in vegetation monitoring
