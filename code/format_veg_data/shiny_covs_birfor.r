@@ -30,7 +30,6 @@
 
 # detach packages and clear workspace
 freshr::freshr()
-
 #! Load packages ---------------------------------------
 library(tidyverse)
 library(conflicted)
@@ -48,17 +47,17 @@ conflicts_prefer(dplyr::filter)
 
 #! Source code -----------------------------------------
 # get park shape files with vegetation types and classify each as conifer, hardwood, mixed, or not forest
-source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_veg_data/veg_maps_park.R")
+source("/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne/NPS_bird_copy/code/format_veg_data/veg_maps_park.R")
 # keep only relevant files
 keep_objects <- c("for_plots_sf", "for_plots_sfm", "xy_sf", 
                   "mabi_vegmap2", "morr_vegmap2", "saga_vegmap2", "sara_vegmap2",
                   "wefa_vegmap2", "rova_vegmap2", "mima_vegmap2", "keep_objects")
 
-rm(list = setdiff(ls(), keep_objects))
+#rm(list = setdiff(ls(), keep_objects))
 
 radi_dist <- 350
 hard_con_mix2 <- FALSE 
-source('/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_veg_data/get_site_data_rad.R')
+source('/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne/NPS_bird_copy/code/format_veg_data/get_site_data_rad.R')
 
 keep_objects2 <- c(keep_objects, radi_dist, hard_con_mix)
 
@@ -190,12 +189,14 @@ ui <- fluidPage(
     position = "left",
     fluid = FALSE,
     sidebarPanel(
-      width = 2,  # Make sidebar narrower (default is 4, range is 1-11)
-      style = "position:fixed; width:16%; height:100vh; overflow-y:auto;",  # Fixed position
-      selectInput("park", "Choose a Park:", choices = names(park_list), selected = "MABI"),
+      width = 2,
+      style = "position:fixed; width:16%; height:100vh; overflow-y:auto;",
+      selectInput("park", "Choose a Park:", 
+                  choices = names(park_list), 
+                  selected = "MABI"),
       selectInput("variable", "Choose Variable:", 
                   choices = c("BA_m2ha", 
-                              "BA_m2ha_Conifer", "BA_m2ha_Hardwood","BA_m2ha_perc_con",
+                              "BA_m2ha_Conifer", "BA_m2ha_Hardwood", "BA_m2ha_perc_con",
                               "BA_m2ha_pole", "BA_m2ha_mature", "BA_m2ha_large",
                               "treeden_ha", 
                               "treeden_ha_Conifer", "treeden_ha_Hardwood",
@@ -203,56 +204,53 @@ ui <- fluidPage(
                               "shrub_cov_nat", "shrub_cov_nonat", 
                               "seed_den_m2", "sap_den_m2", "regen_den_m2", "cwd"), 
                   selected = "BA_m2ha")
-    ),
+    ), # end sidebarPanel
     mainPanel(
-      width = 10,  # Adjust main panel width to compensate (should sum to 12 with sidebar)
-      style = "margin-left:17%;",  # Add left margin to account for fixed sidebar
+      width = 10,
+      style = "margin-left:17%;",
       plotOutput("vegmap", height = "500px"),
       fluidRow(
         column(
           width = 6,
           plotlyOutput("for_variable_plot", height = "400px")
-        ),
+        ), # end column
         column(
           width = 6,
           plotlyOutput("bird_variable_plot", height = "400px")
-        )
-      ),
+        )  # end column
+      ), # end fluidRow
       fluidRow(
         column(
           width = 6,
           plotlyOutput("park_forest_plot", height = "400px")
-        ),
+        ), # end column
         column(
           width = 6,
           plotlyOutput("coun_forest_plot", height = "400px")
-        )
-      )
-    )
-  )
-)
+        )  # end column
+      )  # end fluidRow
+    )  # end mainPanel
+  )  # end sidebarLayout
+)  # end fluidPage
 
 server <- function(input, output, session) {
   
   # Create a reactive expression for combined_range so it's accessible everywhere
   combined_range <- reactive({
-    park_data <- park_list[[input$park]]
-    
-    # Prepare forest plot data
-    forest_points <- park_data$for_plots %>%
-      left_join(for_plots_covs, by = "for_sit") %>%
-      filter(park == input$park)
-    
-    # Prepare bird site data  
-    bird_points <- park_data$xy %>%
-      filter(park == input$park)
-    
-    # Get the combined range for shared scale
-    forest_values <- if(input$variable %in% colnames(forest_points)) forest_points[[input$variable]] else numeric(0)
-    bird_values <- if(input$variable %in% colnames(bird_points)) bird_points[[input$variable]] else numeric(0)
-    
-    range(c(forest_values, bird_values), na.rm = TRUE)
-  })
+  park_data <- park_list[[input$park]]
+
+  forest_points <- park_data$for_plots %>%
+    left_join(for_plots_covs, by = "for_sit") %>%
+    filter(ParkUnit == input$park)                  # ← ParkUnit, not park
+
+  bird_points <- park_data$xy %>%
+    filter(substr(Point_Name, 1, 4) == input$park)  # ← derive park from Point_Name
+
+  forest_values <- if(input$variable %in% colnames(forest_points)) forest_points[[input$variable]] else numeric(0)
+  bird_values   <- if(input$variable %in% colnames(bird_points))   bird_points[[input$variable]]   else numeric(0)
+
+  range(c(forest_values, bird_values), na.rm = TRUE)
+})
   
   # Create reactive for park-level data
   park_level_data <- reactive({
@@ -297,22 +295,23 @@ server <- function(input, output, session) {
           data_type = "Bird"
         )
       }
-    })
+    
     
     list(forest = all_forest_data, bird = all_bird_data)
   })
     
   output$vegmap <- renderPlot({
-    park_data <- park_list[[input$park]]
-    
-    # Prepare forest plot data
-    forest_points <- park_data$for_plots %>%
-      left_join(for_plots_covs, by = "for_sit") %>%
-      filter(park == input$park)
-    
-    # Prepare bird site data  
-    bird_points <- park_data$xy %>%
-      filter(park == input$park)
+  park_data <- park_list[[input$park]]
+
+  forest_points <- park_data$for_plots %>%
+    left_join(for_plots_covs, by = "for_sit") %>%
+    filter(ParkUnit == input$park)                  # ← ParkUnit
+
+  bird_points <- park_data$xy %>%
+    filter(substr(Point_Name, 1, 4) == input$park)  # ← substr filter
+
+  # ... rest of ggplot unchanged
+  })
     
     # Use the reactive combined_range
     range_values <- combined_range()
@@ -362,20 +361,19 @@ server <- function(input, output, session) {
       scale_y_continuous(limits = c(pull(park_data$park_lim[1,4])-150, pull(park_data$park_lim[1,5])+150))
     
     print(p)
-  })
+  })  
 
   # output$plot_title <- renderText({
   #   paste(input$variable, "by Forest Plot")
   # })
 
-  output$for_variable_plot <- renderPlotly({
-    # Handle all variables as single variables (no conifer/hardwood splitting)
-    park_data <- park_list[[input$park]]
+output$for_variable_plot <- renderPlotly({
+  park_data <- park_list[[input$park]]
 
-    df <- for_plots_covs %>% 
-      select(-ParkUnit) %>% 
-      left_join(., park_data$for_plots, by = "for_sit") %>%
-      filter(park == input$park) %>% 
+  df <- for_plots_covs %>%
+    select(-ParkUnit) %>%
+    left_join(., park_data$for_plots, by = "for_sit") %>%
+    filter(ParkUnit == input$park) %>%              # ← ParkUnit (re-added via for_plots join)
       filter(X >= (pull(park_data$park_lim[1, "xmin"])-200),
              X <= (pull(park_data$park_lim[1, "xmax"])+200),
              Y >= (pull(park_data$park_lim[1, "ymin"])-200),
