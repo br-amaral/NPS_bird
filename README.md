@@ -29,10 +29,11 @@ Amaral, B. R., Doser, J. W., Weed, A., Miller, K., & Zipkin, E. F. (2026). Prote
 <i> Keywords: </i> forest-interior birds; multi-scale habitat selection; protected areas; forest structure; landscape context; occupancy modeling
 
 --------------------------------------
+## Repository:
 
 This repository contains code to format bird survey and vegetation data collected by NETN NPS, format FIA vegetation data, fit multi-scale hierarchical occupancy models, and generate figures and predictions of bird occurrence across northeastern national parks. All code (numbered in order of execution), data, and outputs are provided.
 
-#### Folder structure:
+### Folder structure:
 - <b>[code](#code)</b>: R scripts numbered in execution order, organized into subfolders by task (bird data formatting, vegetation data formatting, and model fitting). Divided into:
     - <b>[format_veg_data](#format_veg_data)</b>: code to extract and format the forest structure data for analysis.
     - <b>[format_bird_data](#format_bird_data)</b>: code to format the bird data data for analysis.
@@ -58,12 +59,12 @@ This repository contains code to format bird survey and vegetation data collecte
 
 - <b>[figures](#figures)</b>: folder to hold figures generated in the analysis.
 
-#### Files within folders:
+### Files within folders:
 Each R script has a description of its goal, as well as the files needed to run (Input), other code used within (Source), and the files generated (Output)
 
-#### code/
+### code/
 
-##### format_bird_data/
+#### format_bird_data/
 
 <b>[1_ImportData.R](code/format_bird_data/1_ImportData.R)</b>: imports and extracts NETN bird survey data.
 
@@ -90,7 +91,7 @@ Each R script has a description of its goal, as well as the files needed to run 
 - [data/X.rds](data/X.rds)
 - [data/nsite_pk.csv](data/nsite_pk.csv)
 
-##### format_veg_data/
+#### format_veg_data/
 
 <b>[NETN_forest_data_for_sites.R](code/format_veg_data/NETN_forest_data_for_sites.R)</b>: extracts forest plot-level covariates from NETN vegetation monitoring data.
 
@@ -137,7 +138,7 @@ Each R script has a description of its goal, as well as the files needed to run 
 &nbsp;&nbsp;<u>Output:</u>
 - [data/out/coun_covs.rds](data/out/coun_covs.rds)
 
-##### fit_model/
+#### fit_model/
 
 <b>[back2d_covs_scales_2min_spscov.R](code/fit_model/back2d_covs_scales_2min_spscov.R)</b>: fits hierarchical JAGS model for each species and park combination.
 
@@ -152,9 +153,9 @@ Each R script has a description of its goal, as well as the files needed to run 
 
 <b>[run_step1_step2.R](code/fit_model/run_step1_step2.R)</b>: orchestrates sequential model fitting steps; submitted to HPC via `nps_source.sb`.
 
-#### data/
+### data/
 
-##### data (root-level)
+#### data (root-level)
 
 - [data/y_dat8.rds](data/y_dat8.rds): detection array (species × sites × years × occasions) used as model response
 - [data/X.rds](data/X.rds): covariate matrix used as model predictors
@@ -162,7 +163,7 @@ Each R script has a description of its goal, as well as the files needed to run 
 - [data/key_park.rds](data/key_park.rds): key linking park codes to park names and metadata
 - [data/tree_sps_harcon.csv](data/tree_sps_harcon.csv): lookup table classifying tree species as hardwood or conifer
 
-##### data/out/
+#### data/out/
 
 - [data/out/NETNtib.rds](data/out/NETNtib.rds): tibble with imported and extracted NETN bird survey data
 - [data/out/for_plot_covs.rds](data/out/for_plot_covs.rds): forest plot-level covariates from NETN vegetation monitoring
@@ -178,8 +179,7 @@ Each R script has a description of its goal, as well as the files needed to run 
 - [data/out/updated_for_cats.csv](data/out/updated_for_cats.csv): updated forest category classifications for sites
 - [data/out/nsite_pk.rds](data/out/nsite_pk.rds): number of sites per park
 
-
-##### data/model_res
+#### data/model_res
 
 - [data/model_res/jags_res_{sps}_{park}_run{run_number}.rds](data/model_res/): JAGS posterior samples for each species–park model run
 
