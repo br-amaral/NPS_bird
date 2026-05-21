@@ -59,6 +59,7 @@ This repository contains code to format bird survey and vegetation data collecte
 - <b>[figures](#figures)</b>: folder to hold figures generated in the analysis.
 
 #### Files within folders:
+Each R script has a description of its goal, as well as the files needed to run (Input), other code used within (Source), and the files generated (Output)
 
 #### code/
 
