@@ -43,7 +43,13 @@ lenght <- length
 
 #? Source code -----------------------------------------
 ## Create empty matrix with all parks, species, years, sites and intervals --------------------------
-source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_bird_data/format_data.R")
+if(substr(getwd(), 1, 3) == "/Us") {
+          direc <- "local"
+          source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_bird_data/format_data.R")
+      } else {
+        direc <- "hpc"
+        source("code/format_bird_data/format_data.R")
+  }
 
 yog <- y1 # reset safety ;)
 #? Define settings -------------------------------------

@@ -35,7 +35,6 @@ model {
   scales_beta3 ~ dcat(c(1/3, 1/3, 1/3))	
   scales_beta4 ~ dcat(c(1/3, 1/3, 1/3))	
   scales_beta5 ~ dcat(c(1/3, 1/3, 1/3))	
-  scales_beta6 ~ dcat(c(1/3, 1/3, 1/3))	
 
   ## Vector loops -------------------------------
   # short occupancy loop; only first interval
@@ -57,10 +56,8 @@ model {
       beta[4] * X4[b, scales_beta4] + 
       # BA (tree basal area)
       beta[5] * X5[b, scales_beta5] +  
-      # BA^2 (tree basal area squared)
-      beta[6] * pow(X5[b, scales_beta6], 2) +   
       # park size
-      beta[7] * Xp[b]                  
+      beta[6] * Xp[b]                  
   }
   
   # longer interval loop, all intervals of the removal sampling (not the first)

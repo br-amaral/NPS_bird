@@ -47,14 +47,14 @@ lenght <- length
 `%!in%` <- Negate(`%in%`)
 
 #! Settings --------------------------------------------
-sps_name <- "COYE"
+sps_name <- "BHVI"
 park_name <- "parks"
 
 #! Source code -----------------------------------------
 
 #! Import data -----------------------------------------
 ## file paths
-file_name <- "2024_09_11_data_COYE_parks"
+file_name <- "BLBW_step1_jagsdata_2025_09_15"
 SPS_ANA_DATA <- glue("data/ana_file/{file_name}.rds")
 
 ## read files
@@ -62,6 +62,44 @@ dat <- read_rds(SPS_ANA_DATA)
 
 glimpse(dat)
 names(dat)
+
+# park size
+## date
+dat2xb <- dat$Xp %>% 
+              mutate(year = as.factor(dat$y[,6]),
+                     intervalkey = as.factor(dat$y[,5]),
+                     park = as.factor(dat$y[,2])) %>% 
+                     filter(intervalkey == 1) %>% 
+              arrange(date_jul_s)
+              
+ggplot() + 
+       geom_point(aes(x = dat$Xp, 
+                      y = dat$y2[,1]),
+
+                  #alpha = 0.5,
+                  size = 0.4) +
+               theme_bw() +
+               theme(#legend.position = "none",
+               strip.text = element_blank()
+               ) 
+
+psize <- cbind(dat$Xp, dat$y2[,1], glue("{dat$y2[,2]}_{dat$y2[,3]}"))  %>% as_tibble()
+
+psize %>% filter(V2 == 1) %>% pull(V1) %>% table()
+psize %>% filter(V2 == 0) %>% pull(V1) %>% table()
+
+psize %>%
+  ggplot(aes(x = V1, y = V2, col = as.factor(V3))) +
+  geom_jitter(height = 0.1, alpha = 0.6, size = 0.8) +
+  labs(x = "Park Size (scaled)", y = "Detection (0/1)", 
+       title = "Detection vs Park Size") +
+  theme_bw()
+
+dat2xb %>% 
+    ggplot() + 
+       geom_histogram(aes(x = date_jul_s, fill = park)) +
+       facet_wrap(~ year, ncol = 4) +
+       theme_bw()
 
 # check detection variables
 ## date

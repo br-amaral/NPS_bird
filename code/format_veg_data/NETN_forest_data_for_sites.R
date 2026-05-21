@@ -61,8 +61,19 @@ tree_cat <- read_csv("data/tree_sps_harcon.csv")
 #? Unique Forest Plots
 plots <- joinLocEvent() %>%
   select(Plot_Name, ParkUnit, X = xCoordinate, Y = yCoordinate, UTMZone = ZoneCode) %>% 
-  distinct()
+  distinct()  %>% 
+  arrange(ParkUnit) %>% 
+  as_tibble() %>% 
+  mutate(years = case_when(
+    ParkUnit == "SAGA" ~ list(2007:2023),  # SAGA gets 2007-2023
+    TRUE ~ list(2006:2023)             # All other parks get 2006-2023
+  ))
 
+# Create a lookup table of valid Plot_Name and SampleYear combinations
+valid_combinations <- plots %>%
+  unnest(years) %>%  # Expand the years list column
+  rename(SampleYear = years) %>%
+  select(Plot_Name, ParkUnit, SampleYear)
 #? Density and Basal Area
 # by species
 table(table(joinTreeData(status = "live") %>% select(Plot_Name, SampleYear))>1)
@@ -71,7 +82,11 @@ tree_den_spp <- joinTreeData(status = "live") %>%
                     as_tibble() %>% 
                     filter(ParkUnit %!in% c("ACAD", "ELRO", "SAIR"),
                                   ScientificName != "None present",
-                                  DBHcm > 5 * 2.54) %>% 
+                                  DBHcm > 5 * 2.54,
+                                  case_when(
+                                          ParkUnit == "SAGA" ~ SampleYear %in% 2007:2023,
+                                          TRUE ~ SampleYear %in% 2006:2023
+                                          )) %>%  
                     group_by(Plot_Name, SampleYear, ScientificName) %>%
                     summarize(treeden_ha = sum(num_stems, na.rm = T)*25, # conversion to stems/ha = 10000/400
                               BA_m2ha = sum(BA_cm2, na.rm = T)/400) %>%  # cm2 to m2 cancels out, so just /400m2 plot.
@@ -98,7 +113,10 @@ tree_den %>%
 tree_den_sizeclass <- joinTreeData(status = "live") %>% 
                           as_tibble() %>% 
                           filter(ParkUnit %!in% c("ACAD", "ELRO", "SAIR"),
-                                  ScientificName != "None present"#,
+                                  ScientificName != "None present",
+                                  case_when(
+                                          ParkUnit == "SAGA" ~ SampleYear %in% 2007:2023,
+                                          TRUE ~ SampleYear %in% 2006:2023)
                                   #DBHcm > 5 * 2.54
                                   ) %>% 
                           mutate(size_class = case_when(
@@ -147,7 +165,10 @@ har_con <- joinTreeData(status = "live") %>%
                 as_tibble() %>% 
                 filter(ParkUnit %!in% c("ACAD", "ELRO", "SAIR"),
                        ScientificName != "None present",
-                       DBHcm > 5 * 2.54) %>%          # exclude saplings    
+                       DBHcm > 5 * 2.54,
+                       case_when(ParkUnit == "SAGA" ~ SampleYear %in% 2007:2023,
+                                 TRUE ~ SampleYear %in% 2006:2023
+                                          )) %>%          # exclude saplings    
                 mutate(genus = stringr::word(ScientificName, 1)) %>% 
                 left_join(., tree_cat, by = "genus") %>% 
                 select(ParkUnit, Plot_Name, type, SampleYear, ScientificName, num_stems, BA_cm2) %>% 
@@ -204,6 +225,8 @@ har_con %>%
 table(table(joinRegenData(units = "sq.m") %>% select(Plot_Name, SampleYear))>1)
 
 reg <- joinRegenData(units = "sq.m") %>% 
+          filter(case_when(ParkUnit == "SAGA" ~ SampleYear %in% 2007:2023,
+                                       TRUE ~ SampleYear %in% 2006:2023)) %>% 
           select(Plot_Name, SampleYear, seed_den, sap_den, regen_den) %>%
           group_by(Plot_Name, SampleYear) %>%
                     summarize(seed_den = sum(seed_den, na.rm = T), 
@@ -260,7 +283,10 @@ shrub <- VIEWS_NETN$StandPlantCoverStrata_NETN  %>%
             as_tibble() %>% 
             filter(StrataLabel %in% c("Ground", "Mid-understory"),
                    ParkUnit %!in% c("ACAD", "ELRO", "SAIR"),
-                   CoverClassLabel != "Permanently Missing") %>% 
+                   CoverClassLabel != "Permanently Missing",
+                   case_when(ParkUnit == "SAGA" ~ SampleYear %in% 2007:2023,
+                                          TRUE ~ SampleYear %in% 2006:2023
+                                          )) %>% 
             select(Plot_Name, SampleYear, CoverClassCode, CoverClassLabel) %>% 
             # get the mode for the intervals of forest percentage
             left_join(., shrub_cats, by = "CoverClassLabel") %>% 
@@ -276,7 +302,9 @@ shrub <- VIEWS_NETN$StandPlantCoverStrata_NETN  %>%
 cwd <- joinCWDData(park = 'all') %>% # coarse wood debris
           as_tibble() %>%        
           filter(ParkUnit %!in% c("ACAD", "ELRO", "SAIR"),
-                 ScientificName != "None present") %>%    
+                 ScientificName != "None present",
+                 case_when(ParkUnit == "SAGA" ~ SampleYear %in% 2007:2023,
+                                          TRUE ~ SampleYear %in% 2006:2023)) %>%    
           select(Plot_Name, SampleYear, ParkUnit, CWD_Vol) %>% 
           group_by(Plot_Name, SampleYear) %>% 
           summarize(deb_m = sum(CWD_Vol, na.rm = T)) %>% 
@@ -345,3 +373,4 @@ write_rds(comb, file = "data/out/for_plot_covs.rds")
 # summary(site.pca)
 
 # site.pca$rotation
+

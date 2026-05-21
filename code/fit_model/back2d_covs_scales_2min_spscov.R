@@ -26,6 +26,8 @@ library(rjags)
 library(AHMbook)
 library(fs)
 library(here)
+library(MCMCvis)
+#library(BayesPostEst)
 
 conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::filter)
@@ -81,7 +83,6 @@ y_sta %>% filter(bird_detec > 0) %>%  mutate(uniqueid = glue("{Point_Name}_{Even
 y_sta %>% filter(Interval_n == 1) %>%  select(park) %>% table() %>% sort()
 
 y_sta %>% filter(Interval_n == 1) %>%  select(Year, AOU_Code) %>% table() 
-
 
 y_sta %>% 
   filter(bird_detec > 0) %>% 
@@ -561,9 +562,9 @@ nrow(y2)
 length(Xp)
 dim(X1)
 # number of alphas and betas
-n_bs <- 7
-n_beta_int <- n_bs - 2
+n_bs <- 6
 n_as <- 3
+n_beta_int <- 5
 if(length(sps_loop) > 1) { sps_loop <- "commu"} else {sps_loop <- sps_loop}
 if(length((unique(y[,2]))) == 1) { park_name <- unique(y[,2])} else {park_name <- "parks"}
 
@@ -599,7 +600,8 @@ jags_data <- list(
     n_pkM = length(unique(y[, 2]))
 )
 
-if(model_file == "models/mod_all_covs2.txt") {jags_data$n_beta_int <- n_beta_int}
+if(substr(model_file, nchar(model_file) - 16, nchar(model_file)) == "mod_all_covs2.txt") {
+    jags_data$n_beta_int <- n_beta_int}
 
 # Print the structure of jags_data to verify
 str(jags_data)
@@ -628,12 +630,12 @@ if(test == FALSE){
 }
 
 # Define the model file and the output file name (on run_step1_step2.R)
-if(substr(model_file, nchar(model_file) - 15, nchar(model_file)) == "mod_all_covs2.txt") {
+if(substr(model_file, nchar(model_file) - 16, nchar(model_file)) == "mod_all_covs2.txt") {
   mod_name <- glue("data/ana_file/{sps_loop}_step{step_numb}_model_int_{date_step1}.txt") %>% as.character()} else {
   mod_name <- glue("data/ana_file/{sps_loop}_step{step_numb}_model_{date_step1}.txt") %>% as.character()}
 
 # source("code/check_data.R") 
-if(substr(model_file, nchar(model_file) - 15, nchar(model_file)) == "mod_all_covs2.txt") {
+if(substr(model_file, nchar(model_file) - 16, nchar(model_file)) == "mod_all_covs2.txt") {
   inits <- function() {
       list(
           Z = Zst2,
@@ -654,26 +656,30 @@ if(substr(model_file, nchar(model_file) - 15, nchar(model_file)) == "mod_all_cov
   } }
 
 if(test == TRUE){
-  nchains <- 1
-  niterations <- 6
-  nburnin <- 1
+  nchains <- 2
+  niterations <- 10
+  nburnin <- 2
   nthin <- 1
-  nadapt_min <- 1
-  print("test with 5 iterations")
+  nadapt_min <- 2
+  print("test with 10 iterations")
 }
 
 paste('\n ************************************* \n \n \n   Running JAGS for:', '\n',
-      '  Parks =', park_name, '\n',
       '  Species =', sps_loop, '\n',
+      '  Test =', test, '\n',      
+      '  Interaction =', interaction, '\n',
       '  Iterations =', niterations, '\n',
+      '  Chains =', nchains, '\n',
       '  Burn-in =', nburnin, '\n',
+      '  Adapt =', nadapt_min, '\n',
+      '  Thinning =', nthin, '\n',
       '  Data size =', nrow(y), '\n',
       '  Started running on =', Sys.time(),  '\n \n \n',
       '**************************************
       ') %>% cat()
 
-if(substr(model_file, nchar(model_file) - 15, nchar(model_file)) == "models/mod_all_covs2.txt") {
-    scales_beta <- glue("scales_beta{seq(1,n_bs-2,1)}")
+if(substr(model_file, nchar(model_file) - 16, nchar(model_file)) == "mod_all_covs2.txt") {
+    scales_beta <- glue("scales_beta{seq(1,n_bs-1,1)}")
 
     params <- c("beta0", "beta", "beta_int", "alpha0", "alpha", 
                 scales_beta,
@@ -745,12 +751,8 @@ file_name2 <- paste0(file_name, 'run',
                                         pattern = file_name,
                                         full.names = FALSE)) + 1)
 
-if(model_file == "models/mod_all_covs2.txt") {
-  file_name2 <- paste0(file_name, 'run',
-                      length(list.files(path = file.path(getwd(),"data/model_res/"),
-                                        pattern = glue("{file_name}_int"),
-                                        full.names = FALSE)) + 1)
-                                        }
+if(substr(model_file, nchar(model_file) - 16, nchar(model_file)) == "mod_all_covs2.txt") {
+  file_name2 <- paste0(file_name2, "_int") }
 
 folder_path <- "data/model_res"
 
@@ -787,7 +789,6 @@ if(as.numeric(system_time2 - system_time1) > 1440) {
 paste('\n ************************************** \n \n \n ---------------- DONE ----------------', '\n\n',
       'Output File Name = ', glue('{file_name2}.rds'), '\n', 
       'Script = ', script_name, '\n', 
-      'Parks =', park_name, '\n',
       'Species =', sps_loop, '\n',
       'Iterations =', niterations, '\n',
       'Run number =', str_split(file_name2, 'run', simplify = TRUE)[2], '\n',
@@ -797,8 +798,13 @@ paste('\n ************************************** \n \n \n ---------------- DONE 
       '**************************************  \n') %>% 
       cat()
 
-
 meta_name <- file(glue("data/ana_file/{sps_loop}_step{step_numb}_metadata_{date_step1}.txt"))
+
+if(model_file == "models/mod_all_covs2.txt") {
+  meta_name <- file(glue("data/ana_file/{sps_loop}_step{step_numb}_metadata_{date_step1}_int.txt"))
+ }
+
+
 if(test == FALSE){
     writeLines(paste(
 
@@ -814,6 +820,7 @@ if(test == FALSE){
 
                   'Script =', script_name, '\n',
                   'Iterations =', niterations, '\n',
+                  'Interaction =', interaction, '\n',
                   'Chains =', nchains, '\n',
                   'Burn-in =', nburnin, '\n',
                   'Thinning =', nthin, '\n',
@@ -856,4 +863,114 @@ if(test == TRUE){
 #          #params = params[c(2,4,5,7)],
 #          ref_ovl = TRUE)
 
+# get parameter names
+scales_names <- grep("^scales_", colnames(samples_jags[[1]]), value = TRUE)
+all_params <- c("mu.alpha0", "mu.beta0", "beta", "alpha", scales_names)
 
+#! get beta parameters and selected scales ----------------------------------------
+# beta parameters that the 50 percent CI does not include 0
+betas <- tidybayes::get_variables(samples_jags)
+n_betas1 <- sub("\\[.*", "", betas) 
+n_betas <- length(n_betas1[n_betas1 == "beta"]) - 1
+betas_name <- paste0(n_betas1[n_betas1 == "beta"][-1], seq(1:n_betas))
+n_beta_int <- 5
+
+quant_group <- c(0.25, 0.75)
+
+beta_key <- tibble(
+  betas = betas_name, 
+  overlap0 = as.character(NA), 
+  sca_sel = as.character(NA),
+  sca1 = as.numeric(NA),
+  sca2 = as.numeric(NA),
+  sca3 = as.numeric(NA),
+  qt_lo = quant_group[1],
+  qt_up = quant_group[2]
+)
+
+for(ii in 1:n_betas) {
+# betas
+  beta_loop1 <- MCMCchains(samples_jags, params = glue("beta"))
+  beta_loop2 <- beta_loop1[,ii]
+    
+  #quantiles <- quantile(beta_loop2, )
+  quantiles <- quantile(beta_loop2, quant_group)
+
+  lower_quantile <- quantiles[1]
+  upper_quantile <- quantiles[2]
+  
+  # Check if quantiles overlap zero
+  if (lower_quantile <= 0 && upper_quantile >= 0) {
+    beta_key$overlap0[ii] <- "yes"
+  } else {
+    beta_key$overlap0[ii] <- "no"
+  }
+
+  # scales
+  loop_sca <- glue("scales_beta{ii}")
+  sca_beta <- MCMCchains(samples_jags, params = loop_sca)
+
+  tb_mcmc_scales_i <- table(sca_beta)/sum(table(sca_beta))
+  selected_scales <- as.integer(names(which.max(tb_mcmc_scales_i)))
+
+  beta_key$sca_sel[ii] <- selected_scales
+  beta_key$sca1[ii] <- tb_mcmc_scales_i[1]
+  beta_key$sca2[ii] <- tb_mcmc_scales_i[2]
+  beta_key$sca3[ii] <- tb_mcmc_scales_i[3]
+
+}
+
+if(substr(model_file, nchar(model_file) - 16, nchar(model_file)) == "mod_all_covs2.txt") {
+  beta_int_key <- tibble(
+    betas = betas_name, 
+    overlap0 = as.character(NA), 
+    sca_sel = as.character(NA),
+    sca1 = as.numeric(NA),
+    sca2 = as.numeric(NA),
+    sca3 = as.numeric(NA),
+    qt_lo = quant_group[1],
+    qt_up = quant_group[2]
+  )
+
+  for(ii in 1:n_beta_int) {
+  # beta_ints
+    beta_int_loop1 <- MCMCchains(samples_jags, params = glue("beta_int"))
+    beta_int_loop2 <- beta_int_loop1[,ii]
+      
+    #quantiles <- quantile(beta_int_loop2, )
+    quantiles <- quantile(beta_int_loop2, quant_group)
+
+    lower_quantile <- quantiles[1]
+    upper_quantile <- quantiles[2]
+    
+    # Check if quantiles overlap zero
+    if (lower_quantile <= 0 && upper_quantile >= 0) {
+      beta_int_key$overlap0[ii] <- "yes"
+    } else {
+      beta_int_key$overlap0[ii] <- "no"
+    }
+
+    # scales
+    loop_sca <- glue("scales_beta{ii}")
+    sca_beta_int <- MCMCchains(samples_jags, params = loop_sca)
+
+    tb_mcmc_scales_i <- table(sca_beta_int)/sum(table(sca_beta_int))
+    selected_scales <- as.integer(names(which.max(tb_mcmc_scales_i)))
+
+    beta_int_key$sca_sel[ii] <- selected_scales
+    beta_int_key$sca1[ii] <- tb_mcmc_scales_i[1]
+    beta_int_key$sca2[ii] <- tb_mcmc_scales_i[2]
+    beta_int_key$sca3[ii] <- tb_mcmc_scales_i[3]
+
+  }
+  }
+
+quant_name <- glue("{substr(quant_group[1], 3, 4)}_{substr(quant_group[2], 3, 4)}")
+# save beta and scale selection values
+if(model_file == "models/mod_all_covs2.txt") {
+  write_rds(beta_key, file = glue("data/model_res/{file_name2}_{quant_name}_SCA_SEL_PARS_int_b.rds")) 
+  write_rds(beta_int_key, file = glue("data/model_res/{file_name2}_{quant_name}_SCA_SEL_PARS_int_bi.rds")) 
+
+  } else {
+    write_rds(beta_key, file = glue("data/model_res/{file_name2}_{quant_name}_SCA_SEL_PARS.rds"))
+  }

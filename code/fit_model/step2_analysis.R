@@ -59,7 +59,6 @@ z_mod <- read_rds(Z_DATA_PATH)$Zst2
 
 #! Get only parameters and scales that are relevant --------------------------------------------
 cov_key2_numb <- as.numeric(substr(cov_key2, 5, 5))
-
 # get X objects being used
 pars_sca_mod <- cbind(cov_key2, cov_key2_numb, scales_loop) %>% 
                   as_tibble() %>% 
@@ -73,9 +72,9 @@ pars_sca_mod <- cbind(cov_key2, cov_key2_numb, scales_loop) %>%
 n_bs_new <- nrow(pars_sca_mod) + 1
 # remove beta_numbs <- glue("beta[{seq(1,n_bs-1,1)}]")
 
-par_key <- as_tibble(cbind(c("X1", "X2", "X3", "X4", "X5", "X5"),
-                           c("beta1", "beta2", "beta3", "beta4", "beta5", "beta6"), 
-                           c("DEN", "BACON", "BALAT", "SHR", "BA", "BA2"))) %>% 
+par_key <- as_tibble(cbind(c("X1", "X2", "X3", "X4", "X5"),
+                           c("beta1", "beta2", "beta3", "beta4", "beta5"), 
+                           c("DEN", "BACON", "BALAT", "SHR", "BA"))) %>% 
                     rename(xobj = V1,
                           cov_name = V2,
                            X = V3)
@@ -94,9 +93,9 @@ model_file1 <- "models/mod_all_covs_hyper.txt"
 model_file3 <- "models/mod_all_covs_det.txt"
 
 if(direc == "local"){
-    model_file1 <- glue("/Users/bamaral/Documents/GitHub/NPS_bird_copy/{model_file1}")
-    model_file3 <- glue("/Users/bamaral/Documents/GitHub/NPS_bird_copy/{model_file3}")
-    mod_name <- glue("/Users/bamaral/Documents/GitHub/NPS_bird_copy/{mod_name}")
+    model_file1 <- glue("/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne/NPS_bird_copy/{model_file1}")
+    model_file3 <- glue("/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne/NPS_bird_copy/{model_file3}")
+    mod_name <- glue("/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne/NPS_bird_copy/{mod_name}")
     }
 
 covs_mod_code <- glue('')
@@ -136,16 +135,9 @@ if('beta5' %in% pars_mod$cov_name) {
     beta_numb <- beta_numb + 1
 }  
 
-if('beta6' %in% pars_mod$cov_name) {
-    covs_mod_code <- glue("{covs_mod_code} \n
-      # BA^2 (tree basal area squared) \n
-      beta[{beta_numb}] * pow(X5[b, {pull(pars_mod[which(pars_mod$cov_name == 'beta6'),3])}],2) + \n ")
-    beta_numb <- beta_numb + 1
-}  
-
 covs_mod_code <- glue("{covs_mod_code} \n
      # park size \n
-      beta[{beta_numb}] * Xp[b] }\n ")
+      beta[{beta_numb}] * Xp[b] \n ")
      
 if(beta_numb - 1 != nrow(pars_mod)) {stop("model file is incorrect")}
 
@@ -172,7 +164,8 @@ mod_string <- paste(
 
 params <- c("beta0", "beta", "alpha0", "alpha", 
             "mu.beta0", "tau.beta0", "mu.alpha0", "tau.alpha0",
-            "psi", "p") %>% # Z, psi
+            "psi", "p", "Z",
+            "mean.y", "mean.y.new", "fit.obs", "fit.sim", "bpvalue", "y.new", "Z.new") %>% 
           as.character()
 
 n_as <- 3
@@ -202,8 +195,12 @@ if(test == TRUE){
   niterations <- 50
   nburnin <- 5
   nthin <- 1
-  print("test with 5 iterations")
+  print(glue("test with {niterations} iterations"))
 }
+
+# if(sps_loop == "REVI"){
+#   nburnin <- 40000
+# }
 
 ## initialize JAGS
 cat("\n\n\n running jags \n\n\n\n")
@@ -213,16 +210,16 @@ samples_jags <- jags(data = jags_data2,
                       parameters.to.save = params,
                       model.file = mod_name,
                       n.chains = nchains,
-                      n.adapt = max(500, ceiling(.1 * niterations)),
+                      n.adapt = max(nadapt_min, ceiling(.1 * niterations)),
                       n.iter = niterations,
                       n.burnin = nburnin,
                       n.thin = nthin,
                       parallel = TRUE,
-                      n.cores = nchains/2)
+                      n.cores = 2)
 
 cat("\n\n\n model is done!!! \n\n\n\n")
 
-file_name <- glue("{sps}_step{step_numb}_output_{date_step2}")
+file_name <- glue("{sps}_step{step_numb}_output_{date_step2}_new")
 
 file_name2 <- paste0(file_name, 'run',
                       length(list.files(path = file.path(getwd(),"data/model_res/"),

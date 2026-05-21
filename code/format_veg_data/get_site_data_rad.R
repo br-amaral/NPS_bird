@@ -27,7 +27,7 @@
 #           - data/out/neighbor_hardcon_{radi_dist}m.rds  : who is whose neighbor with forest type
 #
 # detach packages and clear workspace
-freshr::freshr()
+#freshr::freshr()
 #
 #! Load packages ---------------------------------------
 #library(conflicted)
@@ -495,7 +495,7 @@ for_plt2 <- for_plt %>%
 bird_sit_covs <- left_join(close_points_f2, for_plt2, by = "for_plt") 
 
 dim(bird_sit_covs)
-dim(bird_sit_covs %>% filter(complete.cases(.)) %>% filter(if_all(where(is.numeric), is.finite)))
+#dim(bird_sit_covs %>% filter(complete.cases(.)) %>% filter(if_all(where(is.numeric), is.finite)))
 bird_sit_covs[,13:ncol(bird_sit_covs)] %>% 
   summarise(across(everything(), ~sum(is.na(.)))) %>% 
   t() %>% 

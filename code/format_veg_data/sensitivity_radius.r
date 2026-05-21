@@ -57,7 +57,7 @@ for(kk in 1:length(radi_dist_loop)){
 
     radi_dist <- radi_dist_loop[kk]
 
-    source("/Users/bamaral/Documents/GitHub/NPS_bird_copy/code/format_veg_data/get_site_data_rad.R")
+    source("/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne/NPS_bird_copy/code/format_veg_data/get_site_data_rad.R")
 
     assign(paste0('covs_sensi_', radi_dist), close_points_f2)
 }

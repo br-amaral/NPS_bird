@@ -4,3 +4,5 @@ if (interactive() && Sys.getenv("TERM_PROGRAM") == "vscode") {
   source(file.path(Sys.getenv("HOME"), ".vscode-R", "init.R"))
 }
 options(width = 160)
+
+options(vsc.use_httpgd = TRUE)

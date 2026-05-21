@@ -49,7 +49,7 @@ lenght <- length
 ##? file paths
 PATH_PARK_GDB   <- "data/veg_maps/"
 PARK_KEY_PATH   <- "data/src/key_park.rds"
-PARK_SITE_PATH  <- "data/out/park_site.rds"
+PARK_SITE_PATH  <- "data/out/park_site_UTM.rds"
 BIRD_SITE_COORD <- "data/out/bird_site_coords.rds"
 FOR_SITE_COORD  <- "data/out/for_sit_coord.rds"
 FOR_CATE_PATH   <- "data/out/updated_for_cats.csv"

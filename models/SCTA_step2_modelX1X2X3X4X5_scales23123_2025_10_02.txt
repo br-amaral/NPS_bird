@@ -1,0 +1,110 @@
+# three part model - occupancy at the three different levels - site, park, county
+
+model {	
+  # Priors
+  ## Sampling process
+  for(r in 1:n_pkM){	      # park r
+    for(t in 1:n_yrM) {       # year t
+      alpha0[r,t] ~ dnorm(mu.alpha0, tau.alpha0)	
+      beta0[r,t] ~ dnorm(mu.beta0, tau.beta0)	
+    }
+  }
+  
+  ## Ecological process
+  for(j in 1:n_bs){         # number of betas
+    beta[j] ~ dnorm(0, 0.36)
+  }
+     
+  for(j in 1:n_as){         # number of alphas
+    alpha[j] ~ dnorm(0, 0.36)
+  }
+  
+  # Hyperpriors for community hyperparameters	
+  ## Ecological process	
+  
+  mu.beta0 ~ dnorm(0, 0.36)
+  tau.beta0 ~ dgamma(0.1,0.1) 
+  
+  ## Sampling process	
+  mu.alpha0 ~ dnorm(0, 0.36)
+  tau.alpha0 ~ dgamma(0.1,0.1) 
+  ## Vector loops -------------------------------
+  # short occupancy loop; only first interval
+  for(b in 1:nrowy2){
+  # Occupancy	
+    # occupancy for a park, in a site, in year, 
+    Z[y2[b,2],y2[b,3],y2[b,4]] ~ dbern(psi[y2[b,2],y2[b,3],y2[b,4]])	 # parkey, site_n, year_n
+    
+    # Covariate effects on the ecological process
+    logit(psi[y2[b,2],y2[b,3],y2[b,4]]) <-       # parkey, site_n, year_n
+      beta0[y2[b,2],y2[b,4]] +                   # parkey, year_n
+ 
+
+     # DEN (tree density) 
+
+     beta[1] * X1[b, 2] +  
+
+     # CON PER (percent conifer basal area) 
+
+     beta[2] * X2[b, 3] +  
+
+     # LAR PER (percent large tree basal area) 
+
+     beta[3] * X3[b, 1] +  
+
+     # SHR (shrub basal area) 
+
+     beta[4] * X4[b, 2] +  
+
+     # BA (tree basal area) 
+
+     beta[5] * X5[b, 3] +  
+
+    # park size 
+
+     beta[6] * Xp[b] 
+    # Posterior predictive check - simulate new occupancy
+    Z.new[y2[b,2],y2[b,3],y2[b,4]] ~ dbern(psi[y2[b,2],y2[b,3],y2[b,4]])
+  }
+
+# longer interval loop, all intervals of the removal sampling (not the first)
+  for(a in 1:nrowy){
+    logit(p[y[a,2],y[a,3],y[a,4],y[a,5]]) <-      # parkey, site_n, year_n, interval_n
+      alpha0[y[a,2],y[a,4]] +                     # intercept - parkey, year_n
+      alpha[1] * Xa[a,1] +                        # time - spskey
+      alpha[2] * Xb[a,1] +                        # day - spskey
+      alpha[3] * (Xb[a,1])^2                      # day squared - spskey,
+      
+    y[a,1] ~ dbern(p[y[a,2],y[a,3],y[a,4],y[a,5]] * Z[y[a,2],y[a,3],y[a,4]])
+
+    # Posterior predictive check - simulate new detection data
+    y.new[a,1] ~ dbern(p[y[a,2],y[a,3],y[a,4],y[a,5]] * Z.new[y[a,2],y[a,3],y[a,4]])
+  }
+
+  # Test statistics for posterior predictive check
+  # Compare observed vs simulated data
+  mean.y <- mean(y[,1])
+  mean.y.new <- mean(y.new[,1])
+
+  # Freeman-Tukey statistic (common for occupancy models)
+  for(a in 1:nrowy){
+    # residual for observed and simulated data
+    ft.obs[a] <- pow(sqrt(y[a,1]) - sqrt(p[y[a,2],y[a,3],y[a,4],y[a,5]] * Z[y[a,2],y[a,3],y[a,4]]), 2)
+    ft.sim[a] <- pow(sqrt(y.new[a,1]) - sqrt(p[y[a,2],y[a,3],y[a,4],y[a,5]] * Z.new[y[a,2],y[a,3],y[a,4]]), 2)
+  }
+
+  fit.obs <- sum(ft.obs[])
+  fit.sim <- sum(ft.sim[])
+
+  # Bayesian p-value
+  bpvalue <- step(fit.sim - fit.obs)
+
+}
+
+
+
+
+
+
+
+

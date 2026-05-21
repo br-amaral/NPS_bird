@@ -9,20 +9,7 @@ X10 <- read_rds(file = XDAT_PATH)
 
 X_res <- X10 %>% 
             filter(interval_n == 1) %>% 
-            dplyr::select(park, Point_Name,
-                siteDEN, siteBA,
-                siteH_g, siteEh_g,
-                siteBA_pole, siteBA_mature, siteBA_large,
-                siteSHRUden,
-                parkDEN, parkBA, 
-                parkH_g, parkEh_g,
-                parkBA_pole, parkBA_mature, parkBA_large,   
-                parkSHRUden, 
-                counDEN, counBA, 
-                counH_g, counEh_g, ## https://rdrr.io/cran/rFIA/man/diversity.html
-                counPER_pole, counPER_matu, counPER_late,
-                counSHRUden,
-                area) %>% 
+            dplyr::select(-park, -Point_Name, -site_n, -Year, -interval_n, -EventDate2, -StartTime2) %>% 
             distinct()
 
 # write_rds(X_res, file = "data/X_res.rds")

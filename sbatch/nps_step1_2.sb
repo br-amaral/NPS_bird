@@ -4,20 +4,20 @@
 #SBATCH --time=168:00:00
 
 # how much memory?
-#SBATCH --mem=64G
+#SBATCH --mem=128G
 
 # specify nodes needed.
 #SBATCH --ntasks=1
 #SBATCH --nodes=1
 
 # specify CPUs (or cores per task)
-#SBATCH --cpus-per-task=10
+#SBATCH --cpus-per-task=2
 
 # specify which development nodes you want the job run on. Doesn't seem to work?
 # SBATCH --constraint="[intel16|intel18]"
 
 # email me
-# SBATCH --mail-type=FAIL,END
+#SBATCH --mail-type=FAIL,END
 #SBATCH --mail-user=bamaral@msu.edu
 
 # change to current directory
@@ -33,6 +33,8 @@ module load R-bundle-CRAN/2023.12-foss-2023a
 
 # run R commandline with the Rscript command
 export R_DISABLE_BYTECODE=1
+# Tell R to use all 8 CPUs for internal OpenMP (JAGS benefits from this):
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 
 # Rscript 
 Rscript code/fit_model/run_step1_step2.R
