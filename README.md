@@ -58,7 +58,7 @@ This repository contains code to format bird survey and vegetation data collecte
 
 - <b>[figures](#figures)</b>: folder to hold figures generated in the analysis.
 
-#### Files:
+#### Files within folders:
 
 #### code/
 
