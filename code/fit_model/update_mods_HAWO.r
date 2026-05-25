@@ -73,6 +73,16 @@ for (ii in 1:nrow(coef_update)) {
       write_rds(current_model, file = ckpt_path)
       cat(glue("  Checkpoint saved: {ckpt_path}\n"))
 
+      # ---- create a snapshot every 10 iterations that I can open before everything is done ----
+      if (batch %% 10 == 0) {
+        snap_path <- glue("{CHECKPOINT_DIR}/{sp_name}_batch{batch}_snap.rds")
+        write_rds(current_model, file = snap_path)
+        prev_snap <- glue("{CHECKPOINT_DIR}/{sp_name}_batch{batch - 10}_snap.rds")
+        if (file.exists(prev_snap)) file.remove(prev_snap)
+        cat(glue("  Snapshot saved: {snap_path}\n"))
+      }
+      # --------------------
+
       rm(rhat_summary)
       gc()
     }
