@@ -30,9 +30,9 @@ lenght <- length
 ## when loading the model results, get the most updated file?
 file_name <- "checkpoints/HAWO_step2_output_2025_11_25_newrun1_checkpoint"
 
-samples_jags <- read_rds(glue("data/model_res/{file_name}.rds"))
+samples_jags <- readRDS(glue("data/model_res/checkpoints/HAWO_step2_output_2025_11_25_newrun1_checkpoint.rds")) #{file_name}.rds"))
 
-# # get parameter names
+## get parameter names
 scales_names <- grep("^scales_", colnames(samples_jags[[1]]), value = TRUE)
 (all_params <- c("mu.alpha0", "mu.beta0", "beta", #"beta_int", 
                 "alpha", scales_names))
