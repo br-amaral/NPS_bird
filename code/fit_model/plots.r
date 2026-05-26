@@ -17,6 +17,7 @@ library(rjags)
 library(BayesPostEst)
 #
 conflicts_prefer(dplyr::select)
+
 conflicts_prefer(dplyr::filter)
 # conflicts_prefer(scales::alpha)
 #
