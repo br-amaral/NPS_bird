@@ -1,0 +1,46 @@
+#!/bin/bash --login
+
+# ---- Time & Resources ----
+#SBATCH --time=168:00:00
+#SBATCH --mem=128G
+#SBATCH --ntasks=1
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=8
+#SBATCH --job-name=nps_HAWO
+
+# ---- Notifications ----
+#SBATCH --mail-type=FAIL,END
+#SBATCH --mail-user=bamaral@msu.edu
+
+# ---- Output logs ----
+#SBATCH --output=logs/hawo_%j.out
+#SBATCH --error=logs/hawo_%j.err
+
+# ---- Setup ----
+cd ${SLURM_SUBMIT_DIR}
+mkdir -p logs
+
+export RLIBS_USER=/mnt/home/bamaral/R
+
+module purge
+module load JAGS/4.3.2-foss-2023a
+module load R/4.3.2-gfbf-2023a
+module load R-bundle-CRAN/2023.12-foss-2023a
+
+export R_DISABLE_BYTECODE=1
+
+# ---- Run ----
+echo "Job started: $(date)"
+echo "Running on node: $(hostname)"
+
+Rscript code/fit_model/update_mods_HAWO.r
+
+echo "R script finished: $(date)"
+
+# ---- Self-resubmit if HAWO not yet converged ----
+if ls data/model_res/checkpoints/*checkpoint.rds 1> /dev/null 2>&1; then
+  echo "Checkpoints found — resubmitting job..."
+  sbatch $0
+else
+  echo "No checkpoints — HAWO converged. Done."
+fi
