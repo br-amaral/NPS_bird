@@ -1,22 +1,15 @@
 #? *********************************************************************************
 #? ------------------------  NETN_forest_data_for_sites.R  -------------------------
 #? *********************************************************************************
-#! Code to ...
-#
-#
-#! Source ---------------------------------------------
-#           - :
-#           - :
+#! Code to import forest structure data from NETN (2024 version) and format it for each site
+#!    in all parks. This extract the forest site information but it does not link it to bird sites
 #
 #! Input ----------------------------------------------
 #           - NETN_Forest_20231106.zip : folder with all the forest data for the parks
-#           - :
+#           - data/tree_sps_harcon.csv : list with all tree genus recorded in the park classified as conifer or hardwood
 #
 #! Output ---------------------------------------------
-#           - data/veg_kateaaron/NETN_forest_data_2006-2023.rds : site forest covariates
-#           - data/veg_kateaaron/for_sites.rds : name of all the sites with they XY coordinates
-#           - data/veg_kateaaron/NETN_tree_dens_spp_2006-2023.rds : tree species abundance
-#           - data/veg_kateaaron/NETN_forest_metadata.csv : meta data with info of the columns of the forest variables
+#           - data/out/for_plot_covs.rds : forest covariates for all forest plots
 #
 # detach packages and clear workspace
 freshr::freshr()
@@ -46,12 +39,9 @@ Modes <- function(x) {
       ux[tab == max(tab)]}
 }
 
-#
-#? Source code -----------------------------------------
-#
 #? Import data -----------------------------------------
 ## file paths
-path <- glue("{getwd()}/data/veg_kateaaron") #"C:/NETN/collaborators/Bruna/"
+path <- glue("{getwd()}/data/veg_kateaaron") 
 
 ## read files
 importCSV(path, zip_name = "ForestNETN2024.zip")
@@ -353,24 +343,3 @@ write_rds(comb, file = "data/out/for_plot_covs.rds")
 #                                        "sapling density in stems/m2",
 #                                        "Average percent shrub cover. Note that we started collecting this in 2010, the start of cycle 2."
 #                                        ))
-
-# # Write to file
-# write_rds(comb, paste0(path, "/", "NETN_forest_data_2006-2023.rds"))
-# write_rds(comb_sites, paste0(path, "/", "for_sites.rds"))
-# write_rds(tree_den_spp, paste0(path, "/", "NETN_tree_dens_spp_2006-2023.rds"))
-# write.csv(metadata, paste0(path, "/", "NETN_forest_metadata.csv"), row.names = F)
-
-# site_data_full <- comb %>%
-#                       filter(complete.cases(.)) %>%
-#                       filter(if_all(where(is.numeric), is.finite))
-
-# site.pca <- prcomp(site_data_full %>% select(-Plot_Name, -ParkUnit, -X, -Y, -UTMZone), center = TRUE, scale. = TRUE)
-
-# ggbiplot::ggbiplot(site.pca, groups = site_data_full$ParkUnit, ellipse = TRUE) +
-#   scale_color_discrete(name = "ParkUnit") +
-#   theme_bw()
-  
-# summary(site.pca)
-
-# site.pca$rotation
-
