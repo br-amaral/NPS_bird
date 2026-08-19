@@ -36,5 +36,10 @@ export R_DISABLE_BYTECODE=1
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 
 # FIXED: Case-sensitive filename
-Rscript code/fit_model/update_mods.r
+Rscript code/fit_model/update_mods_HAWO.r
 
+# Re-queue if any checkpoints remain (model hasn't fully converged yet)
+if ls data/model_res/checkpoints/*_checkpoint.rds 1> /dev/null 2>&1; then
+  echo "Checkpoints found, resubmitting job..."
+  sbatch $0
+fi

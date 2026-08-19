@@ -135,7 +135,7 @@ for(ii in 1:nrow(coef_path_file)) {
       print(ii)
 }
 
-   write_rds(coef_summary3, file = "data/out/coef_summary4_sep.rds")
+   write_rds(coef_summary3, file = "data/out/coef_summary4_sep2.rds")
 #  coef_summary3 <- read_rds(file = "data/out/coef_summary4_sep.rds")
 
 coef_summary3 <- as_tibble(coef_summary3) %>% 
@@ -188,8 +188,8 @@ coef_summary3 <- coef_summary3 %>%
           scale_x_continuous(breaks = c(-2, -1, 0, 1, 2, 3)) + 
           scale_y_discrete(limits = rev))
 
-  ggsave("figures/park_size.svg", plot = park_sizeP, device = "svg", width = 11, height = 8, dpi = 1200)
-  ggsave("figures/park_size.pdf", plot = park_sizeP, device = "pdf", width = 11, height = 8, dpi = 1200)
+  ggsave("figures/park_size2.svg", plot = park_sizeP, device = "svg", width = 11, height = 8, dpi = 1200)
+  ggsave("figures/park_size2.pdf", plot = park_sizeP, device = "pdf", width = 11, height = 8, dpi = 1200)
 #  ggsave("figures/park_size.png", plot = park_sizeP, device = "png", width = 11, height = 9, dpi = 1200)
 
 #! Figure 2: scale selection circles -----------------------------------------
@@ -343,8 +343,8 @@ dat1 %>% filter(is.na(sca_col)) %>% select(sps, coef, overlap0, sca1, sca2, sca3
   )
 )
 
-ggsave("figures/sca_plot_select_sca_noleg2long_phylo.png", plot = sca_plot_selec_sca2, device = "png", width = 24, height = 14, dpi = 800)
-ggsave("figures/sca_plot_select_sca_noleg2long_phylo.svg", plot = sca_plot_selec_sca2, device = "svg", width = 24, height = 14)
+ggsave("figures/sca_plot_select_sca_noleg2long_phylo2.png", plot = sca_plot_selec_sca2, device = "png", width = 24, height = 14, dpi = 800)
+ggsave("figures/sca_plot_select_sca_noleg2long_phylo2.svg", plot = sca_plot_selec_sca2, device = "svg", width = 24, height = 14)
 
 dat_sca3 <- dat_sca %>%  filter(Rhat < 1.1)
 
@@ -413,9 +413,9 @@ dat_sca3 <- dat_sca %>%  filter(Rhat < 1.1)
     )))
 
 
-ggsave("figures/circles_coefs_long_phylo.pdf", plot = circles_coefs, device = "pdf", width = 23, height = 14, dpi = 800)
+ggsave("figures/circles_coefs_long_phylo2.pdf", plot = circles_coefs, device = "pdf", width = 23, height = 14, dpi = 800)
 
-ggsave("figures/circles_coefs_long_phylo.svg", plot = circles_coefs, device = "svg", width = 23, height = 14)
+ggsave("figures/circles_coefs_long_phylo2.svg", plot = circles_coefs, device = "svg", width = 23, height = 14)
 
 
 

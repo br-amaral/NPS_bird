@@ -17,6 +17,7 @@ library(rjags)
 library(BayesPostEst)
 #
 conflicts_prefer(dplyr::select)
+
 conflicts_prefer(dplyr::filter)
 # conflicts_prefer(scales::alpha)
 #
@@ -28,11 +29,11 @@ lenght <- length
 #! Import data --------------------------------------------------------------------
 ## file paths and read files
 ## when loading the model results, get the most updated file?
-file_name <- "HAWO_step2_output_2025_11_25_newrun1"
+file_name <- "checkpoints/HAWO_step2_output_2025_11_25_newrun1_checkpoint"
 
-samples_jags <- read_rds(glue("data/model_res/{file_name}.rds"))
+samples_jags <- read_rds(glue("data/model_res/checkpoints/HAWO_step2_output_2025_11_25_newrun1_checkpoint.rds")) #{file_name}.rds"))
 
-# # get parameter names
+## get parameter names
 scales_names <- grep("^scales_", colnames(samples_jags[[1]]), value = TRUE)
 (all_params <- c("mu.alpha0", "mu.beta0", "beta", #"beta_int", 
                 "alpha", scales_names))
@@ -61,6 +62,9 @@ MCMCsummary(samples_jags,
             params = all_params,
             probs = c(0.1, 0.5, 0.9),  # 80% credible intervals (10%, 50%, 90%)
             round = 2)
+
+# write_rds(samples_jags, file = "data/model_res/hawo_checkpoint_convergedish.rds")
+# test <- read_rds("data/model_res/hawo_checkpoint_convergedish.rds")
 
 # #! get beta parameters and selected scales ----------------------------------------
 # # beta parameters that the 50 percent CI does not include 0
