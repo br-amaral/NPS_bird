@@ -15,7 +15,6 @@
 Amaral, B. R.; Doser, J. W.; Weed, A.; Miller, K.; & Zipkin, E. F. (2026). Protecting birds in protected areas: A multi-scale analysis of forest structure and species occurrence. *Landscape Ecology* xx(xx): xx - xx.
 
 ### Abstract
-
 **Context.** Protected areas are cornerstones of avian conservation, yet forest-interior bird communities continue to decline even within protected lands. The capacity of a protected area to sustain bird populations depends on both internal habitat quality and the surrounding landscape context, yet the relative importance of these scales remains poorly understood.
 
 **Objectives.** We evaluate how forest structure at three nested spatial levels (stand, park, and region) influences the occurrence of forest-interior birds within protected areas. 
@@ -45,7 +44,7 @@ This repository contains code to format bird point count and forest survey data 
     - **[get_coun_data.R](./code/format_veg_data/get_coun_data.R)**: compiles county-level forest covariates from FIA data.
 
   - **[format_bird_data/](#format_bird_data)**: folder with code to format the bird data for analysis.
-    - **[1_ImportData.R](./code/format_bird_data/1_ImportData.R)**: imports and extracts NETN bird survey data.
+    - **[1_import_data.R](./code/format_bird_data/1_import_data.R)**: imports and extracts NETN bird survey data.
     - **[2_create_data_files.R](./code/format_bird_data/2_create_data_files.R)**: creates final data arrays with correct site, year, and occasion structure, and merges covariate values with bird data.
       - **[format_data.R](./code/format_bird_data/format_data.R)**: filters visits to auditory detections within 50 m, removes records with missing values in key columns.
 
@@ -131,7 +130,7 @@ Each R script includes a description of its goal, the files needed to run it (In
 
 ### code/format_bird_data/
 
-**[1_ImportData.R](./code/format_bird_data/1_ImportData.R)**: imports and extracts NETN bird survey data.
+**[1_import_data.R](./code/format_bird_data/1_import_data.R)**: imports and extracts NETN bird survey data.
 
 &nbsp;&nbsp;&nbsp;&nbsp;*Input:*
 - [data/src/original/NETN_2020](./data/src/original/NETN_2020)
