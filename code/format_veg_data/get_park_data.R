@@ -1,10 +1,13 @@
 #? *********************************************************************************
 #? ------------------------------   get_park_data.R   ------------------------------
 #? *********************************************************************************
-# Code to get the environmental variables at the park level
+#! Code to get the environmental variables at the park level
 #
 #! Input ----------------------------------------------
-#           - data/out/site_covs.rds :
+#           - data/out/for_plot_covs.rds : forest covariates for all forest plots created by NETN_forest_data_for_sites.R
+#           - data/ELRO_sites.rds :        file to get forest plot names for ELRO that are not named after ROVA
+#           - data/HOFR_sites.rds :        file to get forest plot names for HOFR that are not named after ROVA
+#           - data/VAMA_sites.rds :        file to get forest plot names for VAMA that are not named after ROVA
 #
 #! Output ----------------------------------------------
 #           - data/out/park_covs.rds : tibble with park level environmental variables

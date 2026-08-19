@@ -95,30 +95,34 @@ Each R script includes a description of its goal, the files needed to run it (In
 **[get_site_data_rad.R](./code/format_veg_data/get_site_data_rad.R)**: links forest plots to bird survey sites within a 400 m radius and calculates inverse-distance-weighted mean covariate values per bird site.
 
 &nbsp;&nbsp;&nbsp;&nbsp;*Input:*
-  - [data/out/NETNtib.rds](./data/out/NETNtib.rds)
-  - [data/key_park.rds](./data/key_park.rds)
-  - [data/out/updated_for_cats.csv](./data/out/updated_for_cats.csv)
+  - [data/out/NETNtib.rds](./data/out/NETNtib.rds): NETN bird data
+  - [data/out/updated_for_cats.csv](./data/out/updated_for_cats.csv): vegetation types/categories of the parks (to be classified in forest/not forest).
   - [data/out/for_plot_covs.rds](./data/out/for_plot_covs.rds): forest covariates for all forest plots created by NETN_forest_data_for_sites.R.
-  - [data/out/key_bsite.rds](./data/out/key_bsite.rds)
-  - [data/out/key_fsite.rds](./data/out/key_fsite.rds)
-  - [data/out/park_site_UTM.rds](./data/out/park_site_UTM.rds)
+  - [data/out/key_bsite.rds](./data/out/key_bsite.rds): forest type classification for each bird site.
+  - [data/out/key_fsite.rds](./data/out/key_fsite.rds): forest type classification for each forest site.
+  - [data/out/park_site_UTM.rds](./data/out/park_site_UTM.rds): UTM coordinates of sites within each park.
+  - [data/src/key_park.rds](./data/src/key_park.rds ): file with all park names.
+  - [data/ELRO_sites.rds](./ELRO_sites.rds): file to get forest plot names for ELRO that are not named after ROVA.
+  - [data/HOFR_sites.rds](./data/HOFR_sites.rds): file to get forest plot names for HOFR that are not named after ROVA.
+  - [data/VAMA_sites.rds](./data/VAMA_sites.rds): file to get forest plot names for VAMA that are not named after ROVA.
+
     
 &nbsp;&nbsp;&nbsp;&nbsp;*Output:*
-  - [data/out/site_covs_fornofor_{radi_dist}m.rds](./data/out/)
-  - [data/out/neighbor_fornofor_{radi_dist}m.rds](./data/out/)
-  - [data/out/site_covs_hardcon_{radi_dist}m.rds](./data/out/)
-  - [data/out/neighbor_hardcon_{radi_dist}m.rds](./data/out/)
+  - [data/out/site_covs_fornofor_400m.rds](./data/out/site_covs_fornofor_{radi_dist}m.rds): forest covariates for each bird site according to the weighted mean by distance of the closest 5 forest plots.
+  - [data/out/neighbor_fornofor_400m.rds](./data/out/neighbor_fornofor_{radi_dist}m.rds): who is whose neighbor.
+  - [data/out/site_covs_hardcon_400m.rds](./data/out/neighbor_fornofor_{radi_dist}m.rds): forest covariates for each bird site according forest type and to the weighted mean by distance of the closest 5 forest plots.
+  - [data/out/neighbor_hardcon_400m.rds](./data/out/neighbor_fornofor_{radi_dist}m.rds): who is whose neighbor with forest type.
 
 **[get_park_data.R](./code/format_veg_data/get_park_data.R)**: compiles park-level forest covariates.
 
 &nbsp;&nbsp;&nbsp;&nbsp;*Input:*
-- [data/out/for_plot_covs.rds](./data/out/for_plot_covs.rds)
-- [data/VAMA_sites.rds](./data/VAMA_sites.rds)
-- [data/HOFR_sites.rds](./data/HOFR_sites.rds)
-- [data/ELRO_sites.rds](./data/ELRO_sites.rds)
+  - [data/out/for_plot_covs.rds](./data/out/for_plot_covs.rds): forest covariates for all forest plots created by NETN_forest_data_for_sites.R.
+  - [data/ELRO_sites.rds](./ELRO_sites.rds): file to get forest plot names for ELRO that are not named after ROVA.
+  - [data/HOFR_sites.rds](./data/HOFR_sites.rds): file to get forest plot names for HOFR that are not named after ROVA.
+  - [data/VAMA_sites.rds](./data/VAMA_sites.rds): file to get forest plot names for VAMA that are not named after ROVA.
   
 &nbsp;&nbsp;&nbsp;&nbsp;*Output:*
-- [data/out/park_covs.rds](./data/out/park_covs.rds)
+- [data/out/park_covs.rds](./data/out/park_covs.rds): tibble with park level environmental variables.
 
 **[get_coun_data.R](./code/format_veg_data/get_coun_data.R)**: compiles county-level forest covariates from FIA data.
 
