@@ -31,20 +31,30 @@ Amaral, B. R.; Doser, J. W.; Weed, A.; Miller, K.; & Zipkin, E. F. (2026). Prote
 --------------------------------------
 ## Repository
 
-This repository contains code to format bird point count and forest survey data collected by the <a href="https://www.nps.gov/im/netn/index.htm" target="_blank" rel="noopener noreferrer">Northeast Temperate Network (NETN)</a> regional monitoring groups in the National Park Service (NPS) Inventory & Monitoring (I&M) program, format <a href="https://research.fs.usda.gov/programs/fia" target="_blank" rel="noopener noreferrer">U.S. Forest Service Forest Inventory and Analysis (FIA)</a>, fit multi-scale hierarchical occupancy models, and generate figures and predictions of bird occurrence across eight Northeastern National Parks. All R code files (numbered in order of execution), data, and outputs are provided.
+This repository contains code to format bird point count and forest survey data collected by the <a href="https://www.nps.gov/im/netn/index.htm" target="_blank" rel="noopener noreferrer">Northeast Temperate Network (NETN)</a> regional monitoring groups in the National Park Service (NPS) Inventory & Monitoring (I&M) program, format <a href="https://research.fs.usda.gov/programs/fia" target="_blank" rel="noopener noreferrer">U.S. Forest Service Forest Inventory and Analysis (FIA)</a>, fit multi-scale hierarchical occupancy models, and generate figures and predictions of bird occurrence across eight Northeastern National Parks. All R code files, data, and outputs are provided.
 
 ### Folder structure:
 
-- **[code](#code)**: R scripts numbered in execution order, organized into subfolders by task (forest data formatting, bird data formatting, and model fitting). Divided into:
+### [code/](#code)
+&nbsp;&nbsp;&nbsp;&nbsp;R scripts in execution order, organized into subfolders by task (forest data formatting, bird data formatting, and model fitting):
 
   - **[format_veg_data](#format_veg_data)**: folder with code to extract and format the forest structure data for analysis.
+    - **[NETN_forest_data_for_sites.R](./code/format_veg_data/NETN_forest_data_for_sites.R)**: extracts forest plot-level covariates from NETN vegetation monitoring data.
+    - **[get_site_data_rad.R](./code/format_veg_data/get_site_data_rad.R)**: links forest plots to bird survey sites within a 400 m radius and calculates inverse-distance-weighted mean covariate values per bird site.
+    - **[get_park_data.R](./code/format_veg_data/get_park_data.R)**: compiles park-level forest covariates.
+    - **[get_coun_data.R](./code/format_veg_data/get_coun_data.R)**: compiles county-level forest covariates from FIA data.
 
   - **[format_bird_data](#format_bird_data)**: folder with code to format the bird data for analysis.
+    - **[1_ImportData.R](./code/format_bird_data/1_ImportData.R)**: imports and extracts NETN bird survey data.
+    - **[2_create_data_files.R](./code/format_bird_data/2_create_data_files.R)**: creates final data arrays with correct site, year, and occasion structure, and merges covariate values with bird data.
+      - **[format_data.R](./code/format_bird_data/format_data.R)**: filters visits to auditory detections within 50 m, removes records with missing values in key columns.
 
   - **[fit_model](#fit_model)**: folder with code to merge forest and bird data, run analysis, and generate figures.
-&nbsp;
+    - **[back2d_covs_scales_2min_spscov.R](./code/fit_model/back2d_covs_scales_2min_spscov.R)**: fits hierarchical JAGS model for each species and park combination.
+    - **[run_step1_step2.R](./code/fit_model/run_step1_step2.R)**: orchestrates sequential model fitting steps; submitted to HPC via `nps_source.sb`.
 
-- **[data](#data)**: all data used in the analysis, including processed outputs. Divided into:
+### [data/](#data)
+&nbsp;&nbsp;&nbsp;&nbsp;all data used in the analysis, including processed outputs. Divided into:
   - **[ana_file](#ana_file)**: folder to save the processed species-specific bird data used in the model, the metadata about the model run (e.g. number of iterations and initial values).
   - **[park_raster](#park_raster)**: raster files of all parks to obtain area and location.
   - **[NETN-forest](#NETN-forest)**: forest data collected by the NPS within parks.
@@ -57,12 +67,14 @@ This repository contains code to format bird point count and forest survey data 
   - **[FIA](#FIA)**: county-level forest inventory data obtained with rFIA R package.
     - **[out](#out)**: forest structure covariates calculated and used in the analysis.
 &nbsp;
-- **[models](#models)**: .txt model files with JAGS models for each species and step.
+### [models/](#models)
+&nbsp;&nbsp;&nbsp;&nbsp;.txt model files with JAGS models for each species and step.
 &nbsp;
-- **[sbatch](#sbatch)**: .sb files to run analysis in the cluster
+### [sbatch/](#sbatch)
+&nbsp;&nbsp;&nbsp;&nbsp;.sb files to run analysis in the cluster
 &nbsp;
-
-- **[figures](#figures)**: folder to hold figures generated in the analysis.
+### [figures/](#figures)
+&nbsp;&nbsp;&nbsp;&nbsp;folder to hold figures generated in the analysis.
 
 ### Files within folders:
 Each R script includes a description of its goal, the files needed to run it (Input), the other code used within it (Source), and the files generated by it (Output). Scripts with numbers in their name (e.g., 1_xxxx.R) should be executed in numeric order, and without numbers do not have to be in a specific order.
@@ -73,29 +85,29 @@ Each R script includes a description of its goal, the files needed to run it (In
 
 **[NETN_forest_data_for_sites.R](./code/format_veg_data/NETN_forest_data_for_sites.R)**: extracts forest plot-level covariates from NETN vegetation monitoring data.
 
-&nbsp;&nbsp;<u>Input:</u>
-- [data/veg_kateaaron/ForestNETN2024.zip](./data/veg_kateaaron/ForestNETN2024.zip)
-- [data/tree_sps_harcon.csv](./data/tree_sps_harcon.csv)
-
-&nbsp;&nbsp;<u>Output:</u>
-- [data/out/for_plot_covs.rds](./data/out/for_plot_covs.rds)
+  &nbsp;&nbsp;<u>Input:</u>
+  - [data/veg_kateaaron/ForestNETN2024.zip](./data/veg_kateaaron/ForestNETN2024.zip)
+  - [data/tree_sps_harcon.csv](./data/tree_sps_harcon.csv)
+  
+  &nbsp;&nbsp;<u>Output:</u>
+  - [data/out/for_plot_covs.rds](./data/out/for_plot_covs.rds)
 
 **[get_site_data_rad.R](./code/format_veg_data/get_site_data_rad.R)**: links forest plots to bird survey sites within a 400 m radius and calculates inverse-distance-weighted mean covariate values per bird site.
 
-&nbsp;&nbsp;<u>Input:</u>
-- [data/out/NETNtib.rds](./data/out/NETNtib.rds)
-- [data/key_park.rds](./data/key_park.rds)
-- [data/out/updated_for_cats.csv](./data/out/updated_for_cats.csv)
-- [data/out/for_plot_covs.rds](./data/out/for_plot_covs.rds)
-- [data/out/key_bsite.rds](./data/out/key_bsite.rds)
-- [data/out/key_fsite.rds](./data/out/key_fsite.rds)
-- [data/out/park_site_UTM.rds](./data/out/park_site_UTM.rds)
+  &nbsp;&nbsp;<u>Input:</u>
+  - [data/out/NETNtib.rds](./data/out/NETNtib.rds)
+  - [data/key_park.rds](./data/key_park.rds)
+  - [data/out/updated_for_cats.csv](./data/out/updated_for_cats.csv)
+  - [data/out/for_plot_covs.rds](./data/out/for_plot_covs.rds)
+  - [data/out/key_bsite.rds](./data/out/key_bsite.rds)
+  - [data/out/key_fsite.rds](./data/out/key_fsite.rds)
+  - [data/out/park_site_UTM.rds](./data/out/park_site_UTM.rds)
 
-&nbsp;&nbsp;<u>Output:</u>
-- [data/out/site_covs_fornofor_{radi_dist}m.rds](./data/out/)
-- [data/out/neighbor_fornofor_{radi_dist}m.rds](./data/out/)
-- [data/out/site_covs_hardcon_{radi_dist}m.rds](./data/out/)
-- [data/out/neighbor_hardcon_{radi_dist}m.rds](./data/out/)
+  &nbsp;&nbsp;<u>Output:</u>
+  - [data/out/site_covs_fornofor_{radi_dist}m.rds](./data/out/)
+  - [data/out/neighbor_fornofor_{radi_dist}m.rds](./data/out/)
+  - [data/out/site_covs_hardcon_{radi_dist}m.rds](./data/out/)
+  - [data/out/neighbor_hardcon_{radi_dist}m.rds](./data/out/)
 
 **[get_park_data.R](./code/format_veg_data/get_park_data.R)**: compiles park-level forest covariates.
 
