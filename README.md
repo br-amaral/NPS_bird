@@ -71,7 +71,7 @@ Each R script includes a description of its goal, the files needed to run it (In
 
 #### format_veg_data/
 
-**[NETN_forest_data_for_sites.R](code/format_veg_data/NETN_forest_data_for_sites.R)**: extracts forest plot-level covariates from NETN vegetation monitoring data.
+**[NETN_forest_data_for_sites.R](./code/format_veg_data/NETN_forest_data_for_sites.R)**: extracts forest plot-level covariates from NETN vegetation monitoring data.
 
 &nbsp;&nbsp;<u>Input:</u>
 - [data/veg_kateaaron/ForestNETN2024.zip](data/veg_kateaaron/ForestNETN2024.zip)
