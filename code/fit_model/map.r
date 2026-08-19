@@ -7,11 +7,11 @@ library(modelr)
 library(forcats)
 library(ggmap)
 library(glue)
-library(rgeos) # For gCentroid
+#library(rgeos) # For gCentroid
 library(ggplot2)
- 
-httpgd::hgd()
- 
+library(sf)
+#  httpgd::hgd()
+
 states <- map_data("state")
 counties <- map_data("county")
  
@@ -39,9 +39,14 @@ counties_ne <- counties %>%
          (subregion == "sullivan" & region == "new hampshire") |
          (subregion == "saratoga" & region == "new york") |
          (subregion == "fairfield" & region == "connecticut"))
- 
-park_bound <- read_rds("data/out/park_bound.rds")
- 
+
+sf_use_s2(TRUE)  # keep S2 on (default, more accurate for geographic coords)
+
+
+park_bound <- read_rds("data/out/park_bound.rds") %>%
+  st_as_sf() %>%
+  st_make_valid()
+
 parks <- readRDS(file = "data/src/key_park.rds") %>%
   dplyr::select(parks) %>%
   distinct() %>%
@@ -59,18 +64,23 @@ for(i in 1:length(parks)){
  
 # Initialize an empty data frame to store centroids
 all_centroids <- data.frame(long = numeric(), lat = numeric(), park = character())
- 
+
 # Loop through each park to calculate centroids and store them
 for (i in 1:length(parks)) {
   # Subset the park boundary
   pb <- subset(park_bound, UNIT_CODE == parks[i])
  
   # Calculate the centroid
-  centroid <- rgeos::gCentroid(pb, byid = TRUE)
- 
-  # Convert the centroid to a data frame
-  centroid_df <- as.data.frame(centroid@coords)
+  #centroid <- rgeos::gCentroid(pb, byid = TRUE)
+  
+  pb_sf <- st_as_sf(pb)  # only needed if pb is still a Spatial* object, not already sf
+  centroid <- st_centroid(pb_sf)
+  centroid_df <- st_coordinates(centroid) %>% as.data.frame()
   colnames(centroid_df) <- c("long", "lat")
+
+  # # Convert the centroid to a data frame
+  # centroid_df <- as.data.frame(centroid@coords)
+  # colnames(centroid_df) <- c("long", "lat")
   centroid_df$park <- parks[i] # Add park name
  
   # Append to the main centroids data frame
@@ -110,19 +120,6 @@ ggplot(data = states, mapping = aes(x = long, y = lat, group = group)) +
   geom_polygon(data = northeast, mapping = aes(x = long, y = lat, group = group),
                color = "#D5D5DE", fill = "#D5D5DE")
  
-
-library(tidyverse)
-library(knitr)   
-library(broom)
-library(stringr)
-library(modelr)
-library(forcats)
-library(ggmap)
-library(glue)
-library(rgeos) # For gCentroid
-library(ggplot2)
- 
-httpgd::hgd()
  
 states <- map_data("state")
 counties <- map_data("county")
@@ -151,48 +148,7 @@ counties_ne <- counties %>%
          (subregion == "sullivan" & region == "new hampshire") |
          (subregion == "saratoga" & region == "new york") |
          (subregion == "fairfield" & region == "connecticut"))
- 
-park_bound <- read_rds("data/out/park_bound.rds")
- 
-parks <- readRDS(file = "data/src/key_park.rds") %>%
-  dplyr::select(parks) %>%
-  distinct() %>%
-  pull()
- 
-parks <- parks[parks != "ACAD"]
-parks <- parks[parks != "SAIR"]
-parks <- parks[parks != "ELRO"]
- 
-for(i in 1:length(parks)){
-  pb <- subset(park_bound, UNIT_CODE == parks[i])
-  name3 <- glue("{parks[i]}_pb")
-  assign(name3, pb)
-}
- 
-# Initialize an empty data frame to store centroids
-all_centroids <- data.frame(long = numeric(), lat = numeric(), park = character())
- 
-# Loop through each park to calculate centroids and store them
-for (i in 1:length(parks)) {
-  # Subset the park boundary
-  pb <- subset(park_bound, UNIT_CODE == parks[i])
- 
-  # Calculate the centroid
-  centroid <- rgeos::gCentroid(pb, byid = TRUE)
- 
-  # Convert the centroid to a data frame
-  centroid_df <- as.data.frame(centroid@coords)
-  colnames(centroid_df) <- c("long", "lat")
-  centroid_df$park <- parks[i] # Add park name
- 
-  # Append to the main centroids data frame
-  all_centroids <- rbind(all_centroids, centroid_df)
-}
- 
-all_centroids <- all_centroids %>%
-                    arrange(lat) %>%
-                    distinct()
- 
+
 # Plot all parks and their centroids
 ggplot(data = northeast, mapping = aes(x = long, y = lat, group = group)) +
   coord_fixed(1.3) +
@@ -202,7 +158,7 @@ ggplot(data = northeast, mapping = aes(x = long, y = lat, group = group)) +
                mapping = aes(x = long, y = lat, group = group),
                color = "black", fill = "#088A0F") + # Counties layer
 geom_point(data = all_centroids,
-           mapping = aes(x = long, y = lat, fill = park), # Use 'fill' for interior color
+           mapping = aes(x = long, y = lat, fill = parks), # Use 'fill' for interior color
            inherit.aes = FALSE, # Prevent inheriting 'group' from ggplot()
            size = 3, shape = 21, color = "black") + # Shape 21 allows for outline and fill
   labs(title = "Map with Park Centroids", x = "Longitude", y = "Latitude") +
@@ -215,3 +171,4 @@ ggplot(data = states, mapping = aes(x = long, y = lat, group = group)) +
   geom_polygon(data = northeast, mapping = aes(x = long, y = lat, group = group),
                color = "#D5D5DE", fill = "#D5D5DE")
  
+write_rds(all_centroids, file = "data/out/park_coord_points.rds")
