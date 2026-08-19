@@ -12,7 +12,7 @@
 
 ### Citation
 
-Amaral, B. R., Doser, J. W., Weed, A., Miller, K., & Zipkin, E. F. (2026). Protecting birds in protected areas: A multi-scale analysis of forest structure and species occurrence. *Landscape Ecology* xx(xx): xx - xx.
+Amaral, B. R.; Doser, J. W.; Weed, A.; Miller, K.; & Zipkin, E. F. (2026). Protecting birds in protected areas: A multi-scale analysis of forest structure and species occurrence. *Landscape Ecology* xx(xx): xx - xx.
 
 ### Abstract
 
@@ -31,7 +31,7 @@ Amaral, B. R., Doser, J. W., Weed, A., Miller, K., & Zipkin, E. F. (2026). Prote
 --------------------------------------
 ## Repository
 
-This repository contains code to format bird point count and forest survey data collected by NETN I&M NPS, format FIA vegetation data, fit multi-scale hierarchical occupancy models, and generate figures and predictions of bird occurrence across Northeastern National Parks. All code (numbered in order of execution), data, and outputs are provided.
+This repository contains code to format bird point count and forest survey data collected by the <a href="https://www.nps.gov/im/netn/index.htm" target="_blank" rel="noopener noreferrer">Northeast Temperate Network (NETN)</a> regional monitoring groups in the National Park Service (NPS) Inventory & Monitoring (I&M) program, format <a href="https://research.fs.usda.gov/programs/fia" target="_blank" rel="noopener noreferrer">U.S. Forest Service Forest Inventory and Analysis (FIA)</a>, fit multi-scale hierarchical occupancy models, and generate figures and predictions of bird occurrence across eight Northeastern National Parks. All R code files (numbered in order of execution), data, and outputs are provided.
 
 ### Folder structure:
 
@@ -39,7 +39,7 @@ This repository contains code to format bird point count and forest survey data 
 
   - **[format_veg_data](#format_veg_data)**: folder with code to extract and format the forest structure data for analysis.
 
-  - **[format_bird_data](#format_bird_data)**: folder with code to format the bird data data for analysis.
+  - **[format_bird_data](#format_bird_data)**: folder with code to format the bird data for analysis.
 
   - **[fit_model](#fit_model)**: folder with code to merge forest and bird data, run analysis, and generate figures.
 &nbsp;
