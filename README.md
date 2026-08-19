@@ -74,117 +74,116 @@ Each R script includes a description of its goal, the files needed to run it (In
 **[NETN_forest_data_for_sites.R](./code/format_veg_data/NETN_forest_data_for_sites.R)**: extracts forest plot-level covariates from NETN vegetation monitoring data.
 
 &nbsp;&nbsp;<u>Input:</u>
-- [data/veg_kateaaron/ForestNETN2024.zip](data/veg_kateaaron/ForestNETN2024.zip)
-- [data/tree_sps_harcon.csv](data/tree_sps_harcon.csv)
+- [data/veg_kateaaron/ForestNETN2024.zip](./data/veg_kateaaron/ForestNETN2024.zip)
+- [data/tree_sps_harcon.csv](./data/tree_sps_harcon.csv)
 
 &nbsp;&nbsp;<u>Output:</u>
-- [data/out/for_plot_covs.rds](data/out/for_plot_covs.rds)
+- [data/out/for_plot_covs.rds](./data/out/for_plot_covs.rds)
 
-**[get_site_data_rad.R](code/format_veg_data/get_site_data_rad.R)**: links forest plots to bird survey sites within a 400 m radius and calculates inverse-distance-weighted mean covariate values per bird site.
+**[get_site_data_rad.R](./code/format_veg_data/get_site_data_rad.R)**: links forest plots to bird survey sites within a 400 m radius and calculates inverse-distance-weighted mean covariate values per bird site.
 
 &nbsp;&nbsp;<u>Input:</u>
-- [data/out/NETNtib.rds](data/out/NETNtib.rds)
-- [data/key_park.rds](data/key_park.rds)
-- [data/out/updated_for_cats.csv](data/out/updated_for_cats.csv)
-- [data/out/for_plot_covs.rds](data/out/for_plot_covs.rds)
-- [data/out/key_bsite.rds](data/out/key_bsite.rds)
-- [data/out/key_fsite.rds](data/out/key_fsite.rds)
-- [data/out/park_site_UTM.rds](data/out/park_site_UTM.rds)
+- [data/out/NETNtib.rds](./data/out/NETNtib.rds)
+- [data/key_park.rds](./data/key_park.rds)
+- [data/out/updated_for_cats.csv](./data/out/updated_for_cats.csv)
+- [data/out/for_plot_covs.rds](./data/out/for_plot_covs.rds)
+- [data/out/key_bsite.rds](./data/out/key_bsite.rds)
+- [data/out/key_fsite.rds](./data/out/key_fsite.rds)
+- [data/out/park_site_UTM.rds](./data/out/park_site_UTM.rds)
 
 &nbsp;&nbsp;<u>Output:</u>
-- [data/out/site_covs_fornofor_{radi_dist}m.rds](data/out/)
-- [data/out/neighbor_fornofor_{radi_dist}m.rds](data/out/)
-- [data/out/site_covs_hardcon_{radi_dist}m.rds](data/out/)
-- [data/out/neighbor_hardcon_{radi_dist}m.rds](data/out/)
+- [data/out/site_covs_fornofor_{radi_dist}m.rds](./data/out/)
+- [data/out/neighbor_fornofor_{radi_dist}m.rds](./data/out/)
+- [data/out/site_covs_hardcon_{radi_dist}m.rds](./data/out/)
+- [data/out/neighbor_hardcon_{radi_dist}m.rds](./data/out/)
 
-**[get_park_data.R](code/format_veg_data/get_park_data.R)**: compiles park-level forest covariates.
+**[get_park_data.R](./code/format_veg_data/get_park_data.R)**: compiles park-level forest covariates.
 
 &nbsp;&nbsp;<u>Input:</u>
-- [data/out/for_plot_covs.rds](data/out/for_plot_covs.rds)
-- [data/VAMA_sites.rds](data/VAMA_sites.rds)
-- [data/HOFR_sites.rds](data/HOFR_sites.rds)
-- [data/ELRO_sites.rds](data/ELRO_sites.rds)
+- [data/out/for_plot_covs.rds](./data/out/for_plot_covs.rds)
+- [data/VAMA_sites.rds](./data/VAMA_sites.rds)
+- [data/HOFR_sites.rds](./data/HOFR_sites.rds)
+- [data/ELRO_sites.rds](./data/ELRO_sites.rds)
 
 &nbsp;&nbsp;<u>Output:</u>
-- [data/out/park_covs.rds](data/out/park_covs.rds)
+- [data/out/park_covs.rds](./data/out/park_covs.rds)
 
-**[get_coun_data.R](code/format_veg_data/get_coun_data.R)**: compiles county-level forest covariates from FIA data.
+**[get_coun_data.R](./code/format_veg_data/get_coun_data.R)**: compiles county-level forest covariates from FIA data.
 
 &nbsp;&nbsp;<u>Input:</u>
-- [data/FIA/](data/FIA/)
+- [data/FIA/](./data/FIA/)
 
 &nbsp;&nbsp;<u>Output:</u>
-- [data/out/coun_covs.rds](data/out/coun_covs.rds)
+- [data/out/coun_covs.rds](./data/out/coun_covs.rds)
 
 #### format_bird_data/
 
-**[1_ImportData.R](code/format_bird_data/1_ImportData.R)**: imports and extracts NETN bird survey data.
+**[1_ImportData.R](./code/format_bird_data/1_ImportData.R)**: imports and extracts NETN bird survey data.
 
 &nbsp;&nbsp;<u>Input:</u>
-- [data/src/original/NETN_2020](data/src/original/NETN_2020)
+- [data/src/original/NETN_2020](./data/src/original/NETN_2020)
 
 &nbsp;&nbsp;<u>Output:</u>
-- [data/out/NETNtib.rds](data/out/NETNtib.rds)
-- [data/key_park.rds](data/key_park.rds)
+- [data/out/NETNtib.rds](./data/out/NETNtib.rds)
+- [data/key_park.rds](./data/key_park.rds)
 
-**[2_create_data_files.R](code/format_bird_data/2_create_data_files.R)**: creates final data arrays with correct site, year, and occasion structure, and merges covariate values with bird data.
+**[2_create_data_files.R](./code/format_bird_data/2_create_data_files.R)**: creates final data arrays with correct site, year, and occasion structure, and merges covariate values with bird data.
 
 &nbsp;&nbsp;<u>Source:</u>
-- **[format_data.R](code/format_bird_data/format_data.R)**: filters visits to auditory detections within 50 m, removes records with missing values in key columns.
+- **[format_data.R](./code/format_bird_data/format_data.R)**: filters visits to auditory detections within 50 m, removes records with missing values in key columns.
 
 &nbsp;&nbsp;<u>Input:</u>
-- [data/out/NETNtib.rds](data/out/NETNtib.rds)
-- [data/out/coun_covs.rds](data/out/coun_covs.rds)
-- [data/out/park_covs.rds](data/out/park_covs.rds)
-- [data/out/site_covs_fornofor_{radi_dist}m.rds](data/out/) or [data/out/site_covs_hardcon_{radi_dist}m.rds](data/out/)
+- [data/out/NETNtib.rds](./data/out/NETNtib.rds)
+- [data/out/coun_covs.rds](./data/out/coun_covs.rds)
+- [data/out/park_covs.rds](./data/out/park_covs.rds)
+- [data/out/site_covs_fornofor_{radi_dist}m.rds](./data/out/) or [data/out/site_covs_hardcon_{radi_dist}m.rds](./data/out/)
 
 &nbsp;&nbsp;**Output:**
-- [data/y_dat8.rds](data/y_dat8.rds)
-- [data/X.rds](data/X.rds)
-- [data/nsite_pk.csv](data/nsite_pk.csv)
+- [data/y_dat8.rds](./data/y_dat8.rds)
+- [data/X.rds](./data/X.rds)
+- [data/nsite_pk.csv](./data/nsite_pk.csv)
 
 #### fit_model/
 
-**[back2d_covs_scales_2min_spscov.R](code/fit_model/back2d_covs_scales_2min_spscov.R)**: fits hierarchical JAGS model for each species and park combination.
+**[back2d_covs_scales_2min_spscov.R](./code/fit_model/back2d_covs_scales_2min_spscov.R)**: fits hierarchical JAGS model for each species and park combination.
 
 &nbsp;&nbsp;<u>Input:</u>
-- [data/y_dat8.rds](data/y_dat8.rds)
-- [data/X.rds](data/X.rds)
-- [data/out/nsite_pk.rds](data/out/nsite_pk.rds)
-- [data/key_park.rds](data/key_park.rds)
+- [data/y_dat8.rds](./data/y_dat8.rds)
+- [data/X.rds](./data/X.rds)
+- [data/out/nsite_pk.rds](./data/out/nsite_pk.rds)
+- [data/key_park.rds](./data/key_park.rds)
 
 &nbsp;&nbsp;<u>Output:</u>
-- [data/model_res/jags_res_{sps}_{park}_run{run_number}.rds](data/model_res/)
+- [data/model_res/jags_res_{sps}_{park}_run{run_number}.rds](./data/model_res/)
 
-**[run_step1_step2.R](code/fit_model/run_step1_step2.R)**: orchestrates sequential model fitting steps; submitted to HPC via `nps_source.sb`.
+**[run_step1_step2.R](./code/fit_model/run_step1_step2.R)**: orchestrates sequential model fitting steps; submitted to HPC via `nps_source.sb`.
 
 ### data/
 
 #### data (root-level)
 
-- [data/y_dat8.rds](data/y_dat8.rds): detection array (species × sites × years × occasions) used as model response
-- [data/X.rds](data/X.rds): covariate matrix used as model predictors
-- [data/nsite_pk.csv](data/nsite_pk.csv): number of sites per park (csv version)
-- [data/key_park.rds](data/key_park.rds): key linking park codes to park names and metadata
-- [data/tree_sps_harcon.csv](data/tree_sps_harcon.csv): lookup table classifying tree species as hardwood or conifer
+- [data/y_dat8.rds](./data/y_dat8.rds): detection array (species × sites × years × occasions) used as model response
+- [data/X.rds](./data/X.rds): covariate matrix used as model predictors
+- [data/nsite_pk.csv](./data/nsite_pk.csv): number of sites per park (csv version)
+- [data/key_park.rds](./data/key_park.rds): key linking park codes to park names and metadata
+- [data/tree_sps_harcon.csv](./data/tree_sps_harcon.csv): lookup table classifying tree species as hardwood or conifer
 
 #### data/out/
 
-- [data/out/NETNtib.rds](data/out/NETNtib.rds): tibble with imported and extracted NETN bird survey data
-- [data/out/for_plot_covs.rds](data/out/for_plot_covs.rds): forest plot-level covariates from NETN vegetation monitoring
-- [data/out/site_covs_fornofor_{radi_dist}m.rds](data/out/): site-level forest/non-forest covariate values averaged within a given radius
-- [data/out/site_covs_hardcon_{radi_dist}m.rds](data/out/): site-level hardwood/conifer covariate values averaged within a given radius
-- [data/out/neighbor_fornofor_{radi_dist}m.rds](data/out/): neighbor forest plot information for forest/non-forest classification
-- [data/out/neighbor_hardcon_{radi_dist}m.rds](data/out/): neighbor forest plot information for hardwood/conifer classification
-- [data/out/park_covs.rds](data/out/park_covs.rds): park-level forest covariates
-- [data/out/coun_covs.rds](data/out/coun_covs.rds): county-level forest covariates from FIA
-- [data/out/park_site_UTM.rds](data/out/park_site_UTM.rds): UTM coordinates for park bird survey sites
-- [data/out/key_bsite.rds](data/out/key_bsite.rds): key file linking bird site IDs to park and location info
-- [data/out/key_fsite.rds](data/out/key_fsite.rds): key file linking forest plot IDs to park and location info
-- [data/out/updated_for_cats.csv](data/out/updated_for_cats.csv): updated forest category classifications for sites
-- [data/out/nsite_pk.rds](data/out/nsite_pk.rds): number of sites per park
+- [data/out/NETNtib.rds](./data/out/NETNtib.rds): tibble with imported and extracted NETN bird survey data
+- [data/out/for_plot_covs.rds](./data/out/for_plot_covs.rds): forest plot-level covariates from NETN vegetation monitoring
+- [data/out/site_covs_fornofor_{radi_dist}m.rds](./data/out/): site-level forest/non-forest covariate values averaged within a given radius
+- [data/out/site_covs_hardcon_{radi_dist}m.rds](./data/out/): site-level hardwood/conifer covariate values averaged within a given radius
+- [data/out/neighbor_fornofor_{radi_dist}m.rds](./data/out/): neighbor forest plot information for forest/non-forest classification
+- [data/out/neighbor_hardcon_{radi_dist}m.rds](./data/out/): neighbor forest plot information for hardwood/conifer classification
+- [data/out/park_covs.rds](./data/out/park_covs.rds): park-level forest covariates
+- [data/out/coun_covs.rds](./data/out/coun_covs.rds): county-level forest covariates from FIA
+- [data/out/park_site_UTM.rds](./data/out/park_site_UTM.rds): UTM coordinates for park bird survey sites
+- [data/out/key_bsite.rds](./data/out/key_bsite.rds): key file linking bird site IDs to park and location info
+- [data/out/key_fsite.rds](./data/out/key_fsite.rds): key file linking forest plot IDs to park and location info
+- [data/out/updated_for_cats.csv](./data/out/updated_for_cats.csv): updated forest category classifications for sites
+- [data/out/nsite_pk.rds](./data/out/nsite_pk.rds): number of sites per park
 
 #### data/model_res
 
-- [data/model_res/jags_res_{sps}_{park}_run{run_number}.rds](data/model_res/): JAGS posterior samples for each species–park model run
-
+- [data/model_res/jags_res_{sps}_{park}_run{run_number}.rds](./data/model_res/): JAGS posterior samples for each species–park model run
