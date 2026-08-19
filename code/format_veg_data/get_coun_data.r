@@ -23,7 +23,7 @@ library(glue)
 library(rFIA)
 library(tigris)
 library(forestNETN)
-library(rFIA)
+
 #
 conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::filter)
@@ -108,6 +108,19 @@ for(ii in 1:nrow(park_county)){
   assign(name1, dbclip2)
 
 }
+
+# get county areas
+county_sp <- counties(park_county$state, cb = TRUE)
+county_sp2 <- county_sp %>% filter(NAMELSAD %in% park_county$county)
+
+library(sf)
+library(dplyr)
+
+county_area <- county_sp2 %>%
+  st_transform(5070) %>%                    # equal-area CRS
+  mutate(area_ha = round(as.numeric(st_area(geometry)) / 10000)) %>%
+  transmute(name = NAME, area_ha) %>% 
+  distinct() 
 
 # conifer area Estimate forest land area from FIADB
 ## or TPA by bySpecies
