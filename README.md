@@ -86,11 +86,11 @@ Each R script includes a description of its goal, the files needed to run it (In
   
 &nbsp;&nbsp;&nbsp;&nbsp;*Input:*
       
-  - [data/veg_kateaaron/ForestNETN2024.zip](./data/veg_kateaaron/ForestNETN2024.zip)
-  - [data/tree_sps_harcon.csv](./data/tree_sps_harcon.csv)
+  - [data/veg_kateaaron/ForestNETN2024.zip](./data/veg_kateaaron/ForestNETN2024.zip): folder with all the forest data for the parks.
+  - [data/tree_sps_harcon.csv](./data/tree_sps_harcon.csv): list with all tree genus recorded in the park classified as conifer or hardwood.
   
 &nbsp;&nbsp;&nbsp;&nbsp;*Output:*
-  - [data/out/for_plot_covs.rds](./data/out/for_plot_covs.rds)
+  - [data/out/for_plot_covs.rds](./data/out/for_plot_covs.rds) : forest covariates for all forest plots.
 
 **[get_site_data_rad.R](./code/format_veg_data/get_site_data_rad.R)**: links forest plots to bird survey sites within a 400 m radius and calculates inverse-distance-weighted mean covariate values per bird site.
 
@@ -98,7 +98,7 @@ Each R script includes a description of its goal, the files needed to run it (In
   - [data/out/NETNtib.rds](./data/out/NETNtib.rds)
   - [data/key_park.rds](./data/key_park.rds)
   - [data/out/updated_for_cats.csv](./data/out/updated_for_cats.csv)
-  - [data/out/for_plot_covs.rds](./data/out/for_plot_covs.rds)
+  - [data/out/for_plot_covs.rds](./data/out/for_plot_covs.rds): forest covariates for all forest plots created by NETN_forest_data_for_sites.R.
   - [data/out/key_bsite.rds](./data/out/key_bsite.rds)
   - [data/out/key_fsite.rds](./data/out/key_fsite.rds)
   - [data/out/park_site_UTM.rds](./data/out/park_site_UTM.rds)
