@@ -1,4 +1,4 @@
-# 1_ImportDara.R  ------------------------------------------------------------
+# 1_import_data.R  ------------------------------------------------------------
 # Script to import the NPS database using the NCRN package and the files on my computer
 
 # INPUT
