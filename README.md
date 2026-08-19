@@ -85,17 +85,17 @@ Each R script includes a description of its goal, the files needed to run it (In
 
 **[NETN_forest_data_for_sites.R](./code/format_veg_data/NETN_forest_data_for_sites.R)**: extracts forest plot-level covariates from NETN vegetation monitoring data.
   
-&nbsp;&nbsp;&nbsp;&nbsp;<i>Input:</i>
+&nbsp;&nbsp;&nbsp;&nbsp;*Input:*
       
   - [data/veg_kateaaron/ForestNETN2024.zip](./data/veg_kateaaron/ForestNETN2024.zip)
   - [data/tree_sps_harcon.csv](./data/tree_sps_harcon.csv)
   
-&nbsp;&nbsp;&nbsp;&nbsp;<i>Output:</i>
+&nbsp;&nbsp;&nbsp;&nbsp;*Output:*
   - [data/out/for_plot_covs.rds](./data/out/for_plot_covs.rds)
 
 **[get_site_data_rad.R](./code/format_veg_data/get_site_data_rad.R)**: links forest plots to bird survey sites within a 400 m radius and calculates inverse-distance-weighted mean covariate values per bird site.
 
-&nbsp;&nbsp;&nbsp;&nbsp;<i>Input:</i>
+&nbsp;&nbsp;&nbsp;&nbsp;*Input:*
   - [data/out/NETNtib.rds](./data/out/NETNtib.rds)
   - [data/key_park.rds](./data/key_park.rds)
   - [data/out/updated_for_cats.csv](./data/out/updated_for_cats.csv)
@@ -104,7 +104,7 @@ Each R script includes a description of its goal, the files needed to run it (In
   - [data/out/key_fsite.rds](./data/out/key_fsite.rds)
   - [data/out/park_site_UTM.rds](./data/out/park_site_UTM.rds)
     
-&nbsp;&nbsp;&nbsp;&nbsp;<i>Output:</i>
+&nbsp;&nbsp;&nbsp;&nbsp;*Output:*
   - [data/out/site_covs_fornofor_{radi_dist}m.rds](./data/out/)
   - [data/out/neighbor_fornofor_{radi_dist}m.rds](./data/out/)
   - [data/out/site_covs_hardcon_{radi_dist}m.rds](./data/out/)
@@ -112,46 +112,46 @@ Each R script includes a description of its goal, the files needed to run it (In
 
 **[get_park_data.R](./code/format_veg_data/get_park_data.R)**: compiles park-level forest covariates.
 
-&nbsp;&nbsp;&nbsp;&nbsp;<i>Input:</i>
+&nbsp;&nbsp;&nbsp;&nbsp;*Input:*
 - [data/out/for_plot_covs.rds](./data/out/for_plot_covs.rds)
 - [data/VAMA_sites.rds](./data/VAMA_sites.rds)
 - [data/HOFR_sites.rds](./data/HOFR_sites.rds)
 - [data/ELRO_sites.rds](./data/ELRO_sites.rds)
   
-&nbsp;&nbsp;&nbsp;&nbsp;<i>Output:</i>
+&nbsp;&nbsp;&nbsp;&nbsp;*Output:*
 - [data/out/park_covs.rds](./data/out/park_covs.rds)
 
 **[get_coun_data.R](./code/format_veg_data/get_coun_data.R)**: compiles county-level forest covariates from FIA data.
 
-&nbsp;&nbsp;&nbsp;&nbsp;<i>Input:</i>
+&nbsp;&nbsp;&nbsp;&nbsp;*Input:*
 - [data/FIA/](./data/FIA/)
   
-&nbsp;&nbsp;&nbsp;&nbsp;<i>Output:</i>
+&nbsp;&nbsp;&nbsp;&nbsp;*Output:*
 - [data/out/coun_covs.rds](./data/out/coun_covs.rds)
 
 ### code/format_bird_data/
 
 **[1_ImportData.R](./code/format_bird_data/1_ImportData.R)**: imports and extracts NETN bird survey data.
 
-&nbsp;&nbsp;&nbsp;&nbsp;<i>Input:</i>
+&nbsp;&nbsp;&nbsp;&nbsp;*Input:*
 - [data/src/original/NETN_2020](./data/src/original/NETN_2020)
   
-&nbsp;&nbsp;&nbsp;&nbsp;<i>Output:</i>
+&nbsp;&nbsp;&nbsp;&nbsp;*Output:*
 - [data/out/NETNtib.rds](./data/out/NETNtib.rds)
 - [data/key_park.rds](./data/key_park.rds)
 
 **[2_create_data_files.R](./code/format_bird_data/2_create_data_files.R)**: creates final data arrays with correct site, year, and occasion structure, and merges covariate values with bird data.
 
-&nbsp;&nbsp;&nbsp;&nbsp;<i>Source:</i>
+&nbsp;&nbsp;&nbsp;&nbsp;*Source:*
 - [format_data.R](./code/format_bird_data/format_data.R): filters visits to auditory detections within 50 m, removes records with missing values in key columns.
 
-&nbsp;&nbsp;&nbsp;&nbsp;<i>Input:</i>
+&nbsp;&nbsp;&nbsp;&nbsp;*Input:*
 - [data/out/NETNtib.rds](./data/out/NETNtib.rds)
 - [data/out/coun_covs.rds](./data/out/coun_covs.rds)
 - [data/out/park_covs.rds](./data/out/park_covs.rds)
 - [data/out/site_covs_fornofor_{radi_dist}m.rds](./data/out/) or [data/out/site_covs_hardcon_{radi_dist}m.rds](./data/out/)
   
-&nbsp;&nbsp;&nbsp;&nbsp;<i>Output:</i>
+&nbsp;&nbsp;&nbsp;&nbsp;*Output:*
 - [data/y_dat8.rds](./data/y_dat8.rds)
 - [data/X.rds](./data/X.rds)
 - [data/nsite_pk.csv](./data/nsite_pk.csv)
@@ -160,13 +160,13 @@ Each R script includes a description of its goal, the files needed to run it (In
 
 **[back2d_covs_scales_2min_spscov.R](./code/fit_model/back2d_covs_scales_2min_spscov.R)**: fits hierarchical JAGS model for each species and park combination.
 
-&nbsp;&nbsp;&nbsp;&nbsp;<i>Input:</i>
+&nbsp;&nbsp;&nbsp;&nbsp;*Input:*
 - [data/y_dat8.rds](./data/y_dat8.rds)
 - [data/X.rds](./data/X.rds)
 - [data/out/nsite_pk.rds](./data/out/nsite_pk.rds)
 - [data/key_park.rds](./data/key_park.rds)
   
-&nbsp;&nbsp;&nbsp;&nbsp;<i>Output:</i>
+&nbsp;&nbsp;&nbsp;&nbsp;*Output:*
 - [data/model_res/jags_res_{sps}_{park}_run{run_number}.rds](./data/model_res/)
 
 **[run_step1_step2.R](./code/fit_model/run_step1_step2.R)**: orchestrates sequential model fitting steps; submitted to HPC via `nps_source.sb`.
