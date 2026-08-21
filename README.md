@@ -15,15 +15,15 @@
 Amaral, B. R.; Doser, J. W.; Weed, A.; Miller, K.; & Zipkin, E. F. (2026). Protecting birds in protected areas: A multi-scale analysis of forest structure and species occurrence. *Landscape Ecology* xx(xx): xx - xx.
 
 ### Abstract
-**Context.** Protected areas are cornerstones of avian conservation, yet forest-interior bird communities continue to decline even within protected lands. The capacity of a protected area to sustain bird populations depends on both internal habitat quality and the surrounding landscape context, yet the relative importance of these scales remains poorly understood.
+**Context.** Protected areas are cornerstones of avian conservation, yet forest-associated bird communities continue to decline even within protected lands. The capacity of a protected area to sustain bird populations depends on both internal habitat quality and the surrounding landscape context, yet the relative importance of these scales remains poorly understood.
 
-**Objectives.** We evaluate how forest structure at three nested spatial levels (stand, park, and region) influences the occurrence of forest-interior birds within protected areas. 
+**Objectives.** We evaluate how forest structure at three nested spatial scales (local, park, and county) influences the occurrence of forest-associated birds within protected areas.
 
-**Methods.** We analyzed 17 years (2006-2023) of point count data for 16 forest-bird species across eight National Parks in the Northeastern United States to determine the relationships between species occurrences and five forest structure variables, including the dominant spatial level for each. Forest structure variables were derived at stand, park, and region spatial levels using long-term park monitoring and national forest inventory data.
+**Methods.** We analyzed 17 years (2006-2023) of point count data for 16 forest-bird species across eight National Parks in the Northeastern United States to determine the relationships between species occurrences and five forest-structure variables, including the dominant spatial scale for each. Forest-structure variables were derived at local, park, and county spatial scales using long-term park monitoring and national forest inventory data.
 
-**Results.** Region-level forest variables were selected most frequently as the dominant level of effect (19 species-covariate combinations), followed by stand (17) and park (5) levels, with at least one regional forest variable influencing 75% of species. Overall, all but two species showed significant associations with forest structure variables. Park size had weak and inconsistent effects on occurrence, likely because the parks included in our study are all small. While these parks contain quality avian habitat, regional forest availability and connectivity may constrain which species persist within them.
+**Results.** County-scale forest variables were selected most frequently as the dominant scale of effect (19 species-covariate combinations), followed by local (16) and park (5) scales, with at least one county-scale forest variable influencing 75% of species. Overall, all but two species showed significant associations with forest structure variables. Park size had weak and inconsistent effects on occurrence, likely because the parks included in our study are all small. While these parks contain quality avian habitat, county-scale forest availability and connectivity may constrain which species persist within them.
 
-**Conclusions.** Protected areas cannot conserve forest-interior birds in isolation; regional landscape context is an equally important determinant of species occurrences, especially for small protected areas. Management of the matrix habitat surrounding protected areas, such as restoring forest availability and improving connectivity, may yield greater conservation returns than management of protected areas alone. This can be a tractable strategy for practitioners in regions where expanding formal protection is constrained by competing land uses.
+**Conclusions.** Protected areas cannot conserve forest-associated birds in isolation; regional landscape context at the county-scale is an equally important determinant of species occurrences, especially for small, protected areas. Management of the matrix habitat surrounding protected areas, such as restoring forest availability and improving connectivity, may yield greater conservation returns than management of protected areas alone. This can be a tractable strategy for practitioners in regions where expanding formal protection is constrained by competing land uses.
 
 *Keywords:* forest-interior birds; multi-scale habitat selection; protected areas; forest structure; landscape context; occupancy modeling
 
@@ -100,13 +100,13 @@ Each R script includes a description of its goal, the files needed to run it (In
 - [data/out/coun_covs.rds](./data/out/coun_covs.rds): county-level forest covariates from FIA.
 - [data/out/park_covs.rds](./data/out/park_covs.rds): tibble with park-level forest variables.
 - [data/out/site_covs_fornofor_{radi_dist}m.rds](./data/out/site_covs_fornofor_{radi_dist}m.rds): site-level forest covariates data.
-- [data/park_raster/{park_size[park]}_pb.rds](./data/park_raster/{park_size[park]}_pb.rds): shape files of park area to calculate area.
+- [data/park_raster/{park_size[park]}_pb.rds](./data/park_raster/{park_size[park]}_pb.rds): shapefiles of park area to calculate area.
 
 &nbsp;&nbsp;&nbsp;&nbsp;*Output:*
 
-- [data/y_dat8.rds](./data/y_dat8.rds): birds data for each occasion, with park, species and site indexes.
+- [data/y_dat8.rds](./data/y_dat8.rds): birds data for each occasion, with park, species, and site indexes.
 - [data/X.rds](./data/X.rds): forest variables for all scales for each occasion, same dim() as y_dat8.rds.
-- [data/nsite_pk.csv](./data/nsite_pk.csv): number of sites per park (sourced from  from [format_data.R](./code/format_bird_data/format_data.R))
+- [data/nsite_pk.csv](./data/nsite_pk.csv): number of sites per park (sourced from [format_data.R](./code/format_bird_data/format_data.R))
 
 ### code/format_veg_data/
 
@@ -158,7 +158,7 @@ Each R script includes a description of its goal, the files needed to run it (In
 
 &nbsp;&nbsp;&nbsp;&nbsp;*Input:*
 
-- [data/FIA/](./data/FIA/): folder with FIA data downloaded with the code with the rFIA package
+- [data/FIA/](./data/FIA/): folder with FIA data downloaded with the code using the rFIA package
   
 &nbsp;&nbsp;&nbsp;&nbsp;*Output:*
 
@@ -178,7 +178,7 @@ Each R script includes a description of its goal, the files needed to run it (In
 
 &nbsp;&nbsp;&nbsp;&nbsp;*Input:*
 
-- [data/y_dat8.rds](./data/y_dat8.rds): birds data for each occasion, with park, species and site indexes.
+- [data/y_dat8.rds](./data/y_dat8.rds): birds data for each occasion, with park, species, and site indexes.
 - [data/X.rds](./data/X.rds): tibble with covariate data.
 - [data/out/nsite_pk.rds](./data/out/nsite_pk.rds): vector with number of sites in each park.
 - [data/key_park.rds](./data/key_park.rds): vector of all parks being analyzed.
@@ -189,7 +189,7 @@ Each R script includes a description of its goal, the files needed to run it (In
 - [data/ana_file/{sps}_step1_Z_{date_step1}.rds](./data/ana_file/{sps}_step1_Z_{date_step1}.rds): initial values for analysis.
 - [data/ana_file/{sps_loop}_step{step_numb}_model_{date_step1}.txt](./data/ana_file/{sps_loop}_step{step_numb}_model_{date_step1}.txt): model file for species.
 - [data/model_res/{sps_loop}_step{step_numb}_output_{date_step1}{index_run}.rds](data/model_res/{sps_loop}_step{step_numb}_output_{date_step1}{index_run}.rds): model results from jags model.
-- [data/ana_file/{sps_loop}_step{step_numb}_metadata_{date_step1}_int.txt](./data/ana_file/{sps_loop}_step{step_numb}_metadata_{date_step1}_int.txt): metadata for the analysis (species, covariates, iterations, step, date, etc).
+- [data/ana_file/{sps_loop}_step{step_numb}_metadata_{date_step1}_int.txt](./data/ana_file/{sps_loop}_step{step_numb}_metadata_{date_step1}_int.txt): metadata for the analysis (species, covariates, iterations, step, date, etc.).
 - [data/model_res/{file_name2}_{quant_name}_SCA_SEL_PARS.rds](./data/model_res/{file_name2}_{quant_name}_SCA_SEL_PARS.rds): file with which scales were selected as most influential.
 
 **[step2_analysis.R](step2_analysis.R)**:
@@ -205,7 +205,7 @@ Each R script includes a description of its goal, the files needed to run it (In
 
 - [models/{sps_loop}_step2_model{mod_nam_par}_scales{mod_nam_sca}_{date_step1}.txt](./models/{sps_loop}_step2_model{mod_nam_par}_scales{mod_nam_sca}_{date_step1}.txt): model for step 2 analysis containing only selected covariates and scales according to step 1.
 - [data/model_res/{sps}_step{step_numb}_output_{date_step2}_new.rds](./data/model_res/{sps}_step{step_numb}_output_{date_step2}_new.rds): step 2 results output file.
-- [data/ana_file/{sps}_step{step_numb}_metadata_{date_step2}.txt](./data/ana_file/{sps}_step{step_numb}_metadata_{date_step2}.txt): metada of step 2 model run for a species.
+- [data/ana_file/{sps}_step{step_numb}_metadata_{date_step2}.txt](./data/ana_file/{sps}_step{step_numb}_metadata_{date_step2}.txt): metadata of step 2 model run for a species.
 
 ### models/
         
