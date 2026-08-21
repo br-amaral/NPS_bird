@@ -212,11 +212,11 @@ Each R script includes a description of its goal, the files needed to run it (In
 ### figures/
 
 ## Software versions:
-JAGS:
-R:
-VSCODE:
+JAGS: 4.3.2-foss-2023a
+R: 4.3.2-gfbf-2023a
 R PACKAGES:
-
+module load 
+module load 
 # TO DO
 
 - These inputs are still never listed as an output of any script:
