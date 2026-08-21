@@ -105,7 +105,7 @@ Each R script includes a description of its goal, the files needed to run it (In
 
 ### code/format_veg_data/
 
-**[3_NETN_forest_data_for_sites.R](./code/format_veg_data/NETN_forest_data_for_sites.R)**:
+**[3_NETN_forest_data_for_sites.R](./code/format_veg_data/3_NETN_forest_data_for_sites.R)**:
 &nbsp;&nbsp;&nbsp;&nbsp;*Input:*
   - [data/veg_kateaaron/ForestNETN2024.zip](./data/veg_kateaaron/ForestNETN2024.zip): folder with all the forest data for the parks.
   - [data/tree_sps_harcon.csv](./data/tree_sps_harcon.csv): list with all tree genus recorded in the park classified as conifer or hardwood.
@@ -113,7 +113,7 @@ Each R script includes a description of its goal, the files needed to run it (In
 &nbsp;&nbsp;&nbsp;&nbsp;*Output:*
   - [data/out/for_plot_covs.rds](./data/out/for_plot_covs.rds): forest covariates for all forest plots.
 
-**[4_get_site_data_rad.R](./code/format_veg_data/get_site_data_rad.R)**:
+**[4_get_site_data_rad.R](./code/format_veg_data/4_get_site_data_rad.R)**:
 &nbsp;&nbsp;&nbsp;&nbsp;*Input:*
   - [data/out/NETNtib.rds](./data/out/NETNtib.rds): NETN bird data
   - [data/out/updated_for_cats.csv](./data/out/updated_for_cats.csv): vegetation types/categories of the parks (to be classified in forest/not forest).
@@ -132,7 +132,7 @@ Each R script includes a description of its goal, the files needed to run it (In
   - [data/out/site_covs_hardcon_400m.rds](./data/out/neighbor_fornofor_{radi_dist}m.rds): forest covariates for each bird site according forest type and to the weighted mean by distance of the closest 5 forest plots.
   - [data/out/neighbor_hardcon_400m.rds](./data/out/neighbor_fornofor_{radi_dist}m.rds): who is whose neighbor with forest type.
 
-**[5_get_park_data.R](./code/format_veg_data/get_park_data.R)**:
+**[5_get_park_data.R](./code/format_veg_data/5_get_park_data.R)**:
 
 &nbsp;&nbsp;&nbsp;&nbsp;*Input:*
   - [data/out/for_plot_covs.rds](./data/out/for_plot_covs.rds): forest covariates for all forest plots created by NETN_forest_data_for_sites.R.
@@ -143,7 +143,7 @@ Each R script includes a description of its goal, the files needed to run it (In
 &nbsp;&nbsp;&nbsp;&nbsp;*Output:*
 - [data/out/park_covs.rds](./data/out/park_covs.rds): tibble with park level environmental variables.
 
-**[6_get_coun_data.R](./code/format_veg_data/get_coun_data.R)**:
+**[6_get_coun_data.R](./code/format_veg_data/6_get_coun_data.R)**:
 
 &nbsp;&nbsp;&nbsp;&nbsp;*Input:*
 - [data/FIA/](./data/FIA/): folder with FIA data
@@ -153,7 +153,7 @@ Each R script includes a description of its goal, the files needed to run it (In
 
 ### code/fit_model/
 
-**[7_back2d_covs_scales_2min_spscov.R](./code/fit_model/back2d_covs_scales_2min_spscov.R)**:
+**[back2d_covs_scales_2min_spscov.R](./code/fit_model/back2d_covs_scales_2min_spscov.R)**:
 &nbsp;&nbsp;&nbsp;&nbsp;*Input:*
 - [data/y_dat8.rds](./data/y_dat8.rds)
 - [data/X.rds](./data/X.rds)
@@ -163,7 +163,7 @@ Each R script includes a description of its goal, the files needed to run it (In
 &nbsp;&nbsp;&nbsp;&nbsp;*Output:*
 - [data/model_res/jags_res_{sps}_{park}_run{run_number}.rds](./data/model_res/)
 
-**[8_run_step1_step2.R](./code/fit_model/run_step1_step2.R)**:
+**[7_run_step1_step2.R](./code/fit_model/7_run_step1_step2.R)**:
 
 
 
