@@ -1,9 +1,10 @@
 #? *********************************************************************************
 #? ----------------------------  back2d_covs_scales_3  -----------------------------
 #? *********************************************************************************
-# Code to run model to estimate the effect of different environmental
-#   covariates on bird occupancy in several national parks and on three
-#   different spatial scales
+# 
+#! Code to run model to estimate the effect of different environmental
+#!      covariates on bird occupancy in several national parks and on three
+#!      different spatial scales
 #
 #! Input ----------------------------------------------
 #           - data/y_dat8.rds: tibble with bird data (2_create_data_files.R)

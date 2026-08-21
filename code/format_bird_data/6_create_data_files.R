@@ -1,6 +1,7 @@
 #? *********************************************************************************
 #? ----------------------------- 6_create_bird_data.R ------------------------------
 #? *********************************************************************************
+#
 #! Code to create the y data file to run in the JAGS model (birds + forest)
 #!   can be run for 1, all or groups f species, in one or all parks
 #

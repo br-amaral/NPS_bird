@@ -1,20 +1,19 @@
-# *********************************************************************************
-# -----------------------------    Step 2 analysis   ------------------------------
-# *********************************************************************************
-# Code to get the results from the multi scale model (multiple_single_sps_spscovs.R)
-#   and analise the selected scales and covariates (multiple_single_sps_spscovsSTEP2.R)
+#? *********************************************************************************
+#? -----------------------------   step2_analysis.R   ------------------------------
+#? *********************************************************************************
 #
-# Source ---------------------------------------------
-#           - :
-#           - :
+#! Code to get the results from the multi scale model and analise the selected scales and covariates 
 #
-# Input ----------------------------------------------
-#           - data/model_res/{date_step1}_{fil_nam}_{park_name}_{niterations}its_2min_spscov_yr_run{x}.rds
-#           - :
+#! Input ----------------------------------------------
+#           - data/ana_file/{sps_loop}_step{step_numb}_jagsdata_{date_step1}.rds : jags data for species for analysis.
+#           - data/ana_file/{sps}_step1_Z_{date_step1}.rds : initial values for analysis.
+#           - models/mod_all_covs_hyper.txt : hyperparameter section of model for step 2
+#           - models/mod_all_covs_det.txt : detection section of model for step 2
 #
-# Output ----------------------------------------------
-#           - :
-#           - :
+#! Output ----------------------------------------------
+#           - models/{sps_loop}_step2_model{mod_nam_par}_scales{mod_nam_sca}_{date_step1}.txt: model for step 2 analysis containing only selected covariates and scales according to step 1.
+#           - data/model_res/{sps}_step{step_numb}_output_{date_step2}_new.rds: step 2 results output file.
+#           - data/ana_file/{sps}_step{step_numb}_metadata_{date_step2}.txt: metada of step 2 model run for a species.
 #
 # detach packages and clear workspace
 #freshr::freshr()
@@ -91,12 +90,6 @@ mod_name <- glue("models/{sps_loop}_step2_model{mod_nam_par}_scales{mod_nam_sca}
 # Read the content of the model file
 model_file1 <- "models/mod_all_covs_hyper.txt"
 model_file3 <- "models/mod_all_covs_det.txt"
-
-if(direc == "local"){
-    model_file1 <- glue("/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne/NPS_bird_copy/{model_file1}")
-    model_file3 <- glue("/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne/NPS_bird_copy/{model_file3}")
-    mod_name <- glue("/Users/bamaral/Library/CloudStorage/OneDrive-MichiganStateUniversity/GitHubOne/NPS_bird_copy/{mod_name}")
-    }
 
 covs_mod_code <- glue('')
 beta_numb <- 1
@@ -225,10 +218,6 @@ file_name2 <- paste0(file_name, 'run',
                       length(list.files(path = file.path(getwd(),"data/model_res/"),
                                         pattern = file_name,
                                         full.names = FALSE)) + 1)
-
-if(tib_loop$all_sca == T) {
-  file_name2 <- glue("{file_name2}_allsca{scales_loop[1]}")
-}
 
 folder_path <- "data/model_res"
 

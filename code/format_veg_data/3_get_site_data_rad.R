@@ -1,13 +1,13 @@
 #? *********************************************************************************
 #? ---------------------------   3_get_site_data_rad.R   ---------------------------
 #? *********************************************************************************
+#
 #! Code to get site values for forest covariates. First, it gets the locations and forest types
 #!    of each bird site and forest plot, and connect them. Bird sites are characterized with forest
 #!    structure variables for all the forest plots that are within the same forest type as all the
 #!    forest plots.
 #
 #! Input ----------------------------------------------
-
 #           - data/VAMA_sites.rds           : file to get forest plot names for VAMA that are not named after ROVA
 #           - data/HOFR_sites.rds           : file to get forest plot names for HOFR that are not named after ROVA
 #           - data/ELRO_sites.rds           : file to get forest plot names for ELRO that are not named after ROVA

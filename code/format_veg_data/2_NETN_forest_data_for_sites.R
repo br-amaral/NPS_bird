@@ -1,6 +1,7 @@
 #? *********************************************************************************
 #? -----------------------  2_NETN_forest_data_for_sites.R  ------------------------
 #? *********************************************************************************
+#
 #! Code to import forest structure data from NETN (2024 version) and format it for each site
 #!    in all parks. This extract the forest site information but it does not link it to bird sites
 #

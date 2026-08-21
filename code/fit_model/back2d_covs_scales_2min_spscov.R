@@ -1,22 +1,28 @@
 #? *********************************************************************************
-#? ----------------------------  back2d_covs_scales_3  -----------------------------
+#? ----------------------  back2d_covs_scales_2min_spscov.R  -----------------------
 #? *********************************************************************************
-# Code to run model to estimate the effect of different environmental
-#   covariates on bird occupancy in several national parks and on three
-#   different spatial scales. Code here filters and format the data for  
-#   single-species models
+# 
+#! Code to run model to estimate the effect of different environmental
+#!       covariates on bird occupancy in several national parks and on three
+#!       different spatial scales. Code here filters and format the data for  
+#!       single-species models
+#
 #! Input ----------------------------------------------
-#           - data/y_dat8.rds: tibble with bird data (2_create_data_files.R)
-#           - data/X.rds: tibble with covariate data (2_create_data_files.R)
+#           - data/y_dat8.rds: tibble with bird data (6_create_data_files.R)
+#           - data/X.rds: tibble with covariate data (6_create_data_files.R)
 #           - data/out/nsite_pk.rds: vector with number of sites in each park
 #           - data/src/key_park.rds: vector of all parks being analyzed
 #
 #! Output ---------------------------------------------
-#           - data/model_res/jags_res_{sps}_{park}_run{run_number}.rds: file with result of jags model
-#  freshr::freshr()
- #   test <- FALSE ; step_numb <- 1; sps_loop <- "BHVI"
+#           - data/ana_file/{sps_loop}_step{step_numb}_jagsdata_{date_step1}.rds: jags data for species for analysis.
+#           - data/ana_file/{sps_loop}_step{step_numb}_model_{date_step1}.txt: model file for species.
+#           - data/model_res/{sps_loop}_step{step_numb}_output_{date_step1}{index_run}.rds: model results from jags model.
+#           - data/ana_file/{sps_loop}_step{step_numb}_metadata_{date_step1}_int.txt: metadata for the analysis (species, covariates, iterations, step, date, etc).
+#           - data/model_res/{file_name2}_{quant_name}_SCA_SEL_PARS.rds: file with which scales where selected as most influential.
+#
+#   test <- FALSE ; step_numb <- 1; sps_loop <- "BHVI"
 
-# Load packages --------------------------------------
+# Load packages -------------------------------------
 library(conflicted)
 library(tidyverse)
 library(glue)
@@ -61,10 +67,10 @@ date_step1 <- as.character(date_step1)
 
 # Import data -----------------------------------------
 ## file paths
-YDAT_PATH <- "data/y_dat8.rds"
-XDAT_PATH <- "data/X.rds"
-SITE_PK_PATH <- "data/out/nsite_pk.rds" #! TODO: where is nsite_pk.rds created?
-PARK_PATH <- "data/key_park.rds"
+YDAT_PATH    <- "data/y_dat8.rds"
+XDAT_PATH    <- "data/X.rds"
+SITE_PK_PATH <- "data/out/nsite_pk.rds"
+PARK_PATH    <- "data/key_park.rds"
 
 ## read files
 y_dat4 <- read_rds(file = YDAT_PATH)
@@ -318,9 +324,9 @@ X_vals <- X_unstd  %>%
         select(ends_with("_mean"), ends_with("_sd"))  %>% 
         distinct()
 
-write_rds(X_sites, file = glue("data/out/X_sites_{sps_loop}.rds"))
+# write_rds(X_sites, file = glue("data/out/X_sites_{sps_loop}.rds"))
 
-write_rds(X_vals, file = glue("data/out/X_vals_{sps_loop}.rds"))
+# write_rds(X_vals, file = glue("data/out/X_vals_{sps_loop}.rds"))
 
 # Summary table for unique Point_Names have NAs for site variables
 # the ones with no shrub are expected, since that data is sparse
@@ -623,7 +629,6 @@ print(non_numeric_elements)
 # Xb: detection day of the year
 # n_yrM: number of years 
 # n_pkM: number of parks 
-
 
 if(test == FALSE){
   write_rds(jags_data, file = glue("data/ana_file/{sps_loop}_step{step_numb}_jagsdata_{date_step1}.rds"))
