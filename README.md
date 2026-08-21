@@ -67,8 +67,6 @@ This repository contains code to format bird point count and forest survey data 
     - **[out/](#out)**: forest structure covariates calculated and used in the analysis.
 ### [models/](#models)
 &nbsp;&nbsp;&nbsp;&nbsp;.txt model files with JAGS models for each species and step.
-### [sbatch/](#sbatch)
-&nbsp;&nbsp;&nbsp;&nbsp;.sb files to run analysis in the cluster
 ### [figures/](#figures)
 &nbsp;&nbsp;&nbsp;&nbsp;folder to hold figures generated in the analysis.
 
