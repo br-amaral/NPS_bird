@@ -9,7 +9,7 @@
 #           - data/out/NETNtib.rds : tibble with imported and extracted NETN bird survey data
 #
 #! Output ---------------------------------------------
-#           - data/nsite_pk.rds: number of sites per park
+#           - data/out/nsite_pk.rds: number of sites per park
 
 # Load libraries -------------------------------------------------------------------------------------
 library(stringr)
@@ -114,7 +114,7 @@ sites <- visits$Point_Name %>% unique() %>% sort()
 
 site_pk <- field_dat1 %>% dplyr::select(Admin_Unit_Code, Point_Name) %>% distinct()
 nsite_pk <- table(site_pk$Admin_Unit_Code) %>% as.vector()
-write_rds(as.data.frame(nsite_pk), file = "data/nsite_pk.rds")
+write_rds(as.data.frame(nsite_pk), file = "data/out/nsite_pk.rds")
 
 mxsite <- max(nsite_pk)
 site_vec <- seq(1, mxsite,1)
