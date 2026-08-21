@@ -1,32 +1,51 @@
-# 1_import_data.R  ------------------------------------------------------------
-# Script to import the NPS database using the NCRN package and the files on my computer
-
-# INPUT
-# data is in the data/source folder, and within that that is a folder with different spans
-#   of when the data was collected, i.e. 2020 is data from begining until 2020
-# NCRNbirds package requires the following data files to import your data:
-#   data/NETN/FieldData.csv: Raw bird detection data
-#   data/NETN/Visits.csv: List of unique surveys by date for each point count station (events)
-#   data/NETN/Points.csv: List of point count station names and locations
-#   data/NETN/XXXXbands.csv: List of distance bands used during point count surveys for a particular network. 
-#      ‘XXXX’ refers to the 4 letter network acronym.
-#   data/NETN/XXXXintervals.csv: List of time intervals used during point count surveys for a particular network. 
-#      ‘XXXX’ refers to the 4 letter network acronym.
-#   data/NETN/BirdSpecies.csv: Species taxonomy table
-#   data/NETN/BirdGuildAssignments.csv: Bird Guild Table
-
-# OUTPUT:
-#   data/NETNtib.rds: single master tibble with all data imported using the NCRN package
-#   data/key_park.rds: tibble with infor about park, netwrok and id
-
-## Load packages -------------------------------------------------------------------------------- 
+#? *********************************************************************************
+#? ------------------------------   get_park_data.R   ------------------------------
+#? *********************************************************************************
+#! Script to import the NPS database using the NCRN package and the files on my computer
+#
+#! Input ----------------------------------------------
+#    - data is in the data/source folder, and within that that is a folder with different spans
+#           of when the data was collected, i.e. 2020 is data from begining until 2020
+#    - NCRNbirds package requires the following data files to import your data:
+#           - data/NETN/FieldData.csv : Raw bird detection data
+#           - data/NETN/Visits.csv: List of unique surveys by date for each point count station (events)
+#           - data/NETN/Points.csv: List of point count station names and locations
+#           - data/NETN/XXXXbands.csv: List of distance bands used during point count surveys for a particular network. 
+#                 ‘XXXX’ refers to the 4 letter network acronym.
+#           - data/NETN/XXXXintervals.csv: List of time intervals used during point count surveys for a particular network. 
+#                 ‘XXXX’ refers to the 4 letter network acronym.
+#           - data/NETN/BirdSpecies.csv: Species taxonomy table
+#           - data/NETN/BirdGuildAssignments.csv: Bird Guild Table
+#! Output ----------------------------------------------
+#           - data/NETNtib.rds: single master tibble with all data imported using the NCRN package
+#           - data/key_park.rds: tibble with infor about park, netwrok and id
+#
+# detach packages and clear workspace
+freshr::freshr()
+#
+#! Load packages ---------------------------------------
 library(tidyverse)
 library(NCRNbirds)
 library(lubridate)
 library(glue)
 
-## import data ----------------------------------------------------------------------------------
-data_year <- "NETN_2020"
+#! Make functions --------------------------------------
+colanmes <- colnames
+lenght <- length
+`%!in%` <- Negate(`%in%`)
+
+Modes <- function(x) {
+  ux <- unique(x)
+  tab <- tabulate(match(x, ux))
+  if(length(ux[tab == max(tab)]) > 1) {
+    sample(ux[tab == max(tab)], 1)
+    } else {
+      ux[tab == max(tab)]}
+}
+
+#! Import data -----------------------------------------
+## file paths
+data_year <- "NETN_2023"
 NETN <- getAKNData(Dir =glue("data/src/original/{data_year}"), import= TRUE) 
 
 colnmaes <- colnames
