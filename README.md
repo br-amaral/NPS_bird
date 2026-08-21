@@ -115,7 +115,7 @@ Each R script includes a description of its goal, the files needed to run it (In
 &nbsp;&nbsp;&nbsp;&nbsp;*Input:*
 
 - [data/veg_kateaaron/ForestNETN2024.zip](./data/veg_kateaaron/ForestNETN2024.zip): folder with all the forest data for the parks.
-- [data/tree_sps_harcon.csv](./data/tree_sps_harcon.csv): list with all tree genus recorded in the park classified as conifer or hardwood.
+- [data/tree_sps_harcon.csv](./data/tree_sps_harcon.csv): list with all tree genera recorded in the park, classified as conifer or hardwood.
 
 &nbsp;&nbsp;&nbsp;&nbsp;*Output:*
 
@@ -130,7 +130,7 @@ Each R script includes a description of its goal, the files needed to run it (In
 - [data/HOFR_sites.rds](./data/HOFR_sites.rds): file to get forest plot names for HOFR that are not named after ROVA.
 - [data/VAMA_sites.rds](./data/VAMA_sites.rds): file to get forest plot names for VAMA that are not named after ROVA.
 - [data/out/NETNtib.rds](./data/out/NETNtib.rds): tibble with imported and extracted NETN bird survey data.
-- [data/out/updated_for_cats.csv](./data/out/updated_for_cats.csv): vegetation types/categories of the parks (to be classified in forest/not forest).
+- [data/out/updated_for_cats.csv](./data/out/updated_for_cats.csv): vegetation types/categories of the parks (to be classified as forest/not forest).
 - [data/out/for_plot_covs.rds](./data/out/for_plot_covs.rds): forest covariates for all forest plots created by NETN_forest_data_for_sites.R.
 - [data/out/key_bsite.rds](./data/out/key_bsite.rds): forest type classification for each bird site.
 - [data/out/key_fsite.rds](./data/out/key_fsite.rds): forest type classification for each forest site.
@@ -166,7 +166,16 @@ Each R script includes a description of its goal, the files needed to run it (In
 
 ### code/fit_model/
 
+**[6_run_step1_step2.R](./code/fit_model/6_run_step1_step2.R)**:
+
+&nbsp;&nbsp;&nbsp;&nbsp;*Input:*
+
+- [models/mod_all_covs.txt](./models/mod_all_covs.txt): model files with all covariates for step 1.
+- [code/fit_model/mod_key.csv](./code/fit_model/mod_key.csv): table with a key to run models that includes: species names, step, result file name from step 1 used in step 2 analysis, selected scales file name for step 2 analysis.
+- [data/model_res/{output_selected_scale}.rds](./data/model_res/{tib_loop$select}.rds): if step 2 of analysis, this will link to which covariates and scales were selected at step 1 ([data/model_res/{file_name2}_{quant_name}_SCA_SEL_PARS.rds](./data/model_res/{file_name2}_{quant_name}_SCA_SEL_PARS.rds)).
+  
 **[back2d_covs_scales_2min_spscov.R](./code/fit_model/back2d_covs_scales_2min_spscov.R)**:
+
 &nbsp;&nbsp;&nbsp;&nbsp;*Input:*
 
 - [data/y_dat8.rds](./data/y_dat8.rds): birds data for each occasion, with park, species and site indexes.
@@ -175,6 +184,7 @@ Each R script includes a description of its goal, the files needed to run it (In
 - [data/key_park.rds](./data/key_park.rds): vector of all parks being analyzed.
   
 &nbsp;&nbsp;&nbsp;&nbsp;*Output:*
+
 - [data/ana_file/{sps_loop}_step{step_numb}_jagsdata_{date_step1}.rds](./data/ana_file/{sps_loop}_step{step_numb}_jagsdata_{date_step1}.rds): jags data for species for analysis.
 - [data/ana_file/{sps}_step1_Z_{date_step1}.rds](./data/ana_file/{sps}_step1_Z_{date_step1}.rds): initial values for analysis.
 - [data/ana_file/{sps_loop}_step{step_numb}_model_{date_step1}.txt](./data/ana_file/{sps_loop}_step{step_numb}_model_{date_step1}.txt): model file for species.
@@ -197,40 +207,6 @@ Each R script includes a description of its goal, the files needed to run it (In
 - [data/model_res/{sps}_step{step_numb}_output_{date_step2}_new.rds](./data/model_res/{sps}_step{step_numb}_output_{date_step2}_new.rds): step 2 results output file.
 - [data/ana_file/{sps}_step{step_numb}_metadata_{date_step2}.txt](./data/ana_file/{sps}_step{step_numb}_metadata_{date_step2}.txt): metada of step 2 model run for a species.
 
-**[6_run_step1_step2.R](./code/fit_model/6_run_step1_step2.R)**:
-
-&nbsp;&nbsp;&nbsp;&nbsp;*Input:*
-
-- [models/mod_all_covs.txt](./models/mod_all_covs.txt): model files with all covariates for step 1.
-- [code/fit_model/mod_key.csv](./code/fit_model/mod_key.csv): table with a key to run models that includes: species names, step, result file name from step 1 used in step 2 analysis, selected scales file name for step 2 analysis.
-- [data/model_res/{output_selected_scale}.rds](./data/model_res/{tib_loop$select}.rds): if step 2 of analysis, this will link to which covariates and scales were selected at step 1 ([data/model_res/{file_name2}_{quant_name}_SCA_SEL_PARS.rds](./data/model_res/{file_name2}_{quant_name}_SCA_SEL_PARS.rds)).
-
-
-### data/ (root-level)
-
-- [data/tree_sps_harcon.csv](./data/tree_sps_harcon.csv): lookup table classifying tree species as hardwood or conifer
-
-### data/out/
-
-- [data/out/for_plot_covs.rds](./data/out/for_plot_covs.rds): forest plot-level covariates from NETN vegetation monitoring
-- [data/out/site_covs_fornofor_{radi_dist}m.rds](./data/out/): site-level forest/non-forest covariate values averaged within a given radius
-- [data/out/site_covs_hardcon_{radi_dist}m.rds](./data/out/): site-level hardwood/conifer covariate values averaged within a given radius
-- [data/out/neighbor_fornofor_{radi_dist}m.rds](./data/out/): neighbor forest plot information for forest/non-forest classification
-- [data/out/neighbor_hardcon_{radi_dist}m.rds](./data/out/): neighbor forest plot information for hardwood/conifer classification
-- [data/out/park_site_UTM.rds](./data/out/park_site_UTM.rds): UTM coordinates for park bird survey sites
-- [data/out/key_bsite.rds](./data/out/key_bsite.rds): key file linking bird site IDs to park and location info
-- [data/out/key_fsite.rds](./data/out/key_fsite.rds): key file linking forest plot IDs to park and location info
-- [data/out/updated_for_cats.csv](./data/out/updated_for_cats.csv): updated forest category classifications for sites
-- [data/out/nsite_pk.rds](./data/out/nsite_pk.rds): number of sites per park
-
-### data/model_res
-- [data/model_res/jags_res_{sps}_{park}_run{run_number}.rds](./data/model_res/): JAGS posterior samples for each species–park model run
-
-
 ### models/
-    
-
-### sbatch/
-    
-
+        
 ### figures/
