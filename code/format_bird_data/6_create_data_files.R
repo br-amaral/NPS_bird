@@ -21,7 +21,7 @@
 #           - data/y_dat8.rds: birds data for each occasion, with park, species and site indexes
 #           - data/X.rds: forest variables for all scales for each occasion, same dim() as y_dat8.rds
 #             from code/format_bird_data/format_data.R:
-#               -- data/nsite_pk.csv: number of sites per park
+#               -- data/nsite_pk.rds: number of sites per park
 
 ## detach packages and clear workspace
 freshr::freshr()
