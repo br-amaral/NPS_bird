@@ -48,10 +48,9 @@ This repository contains code to format bird point count and forest survey data 
     - **[6_get_coun_data.R](./code/format_veg_data/get_coun_data.R)**: compiles county-level forest covariates from FIA data.
 
   - **[fit_model/](#fit_model)**: folder with code to merge forest and bird data, run analysis, and generate figures.
-    - **[back2d_covs_scales_2min_spscov.R](./code/fit_model/back2d_covs_scales_2min_spscov.R)**: fits a hierarchical JAGS model for each species for step 1 analysis according to the [mod_key.csv](./code/fit_model/mod_key.csv) species key.
-    - **[step2_analysis.R](step2_analysis.R)**: fits a hierarchical JAGS model for each species for step 2 analysis, and it only works after running step 1 and entering the file names in the [mod_key.csv](./code/fit_model/mod_key.csv) species key.
-    - **[7_run_step1_step2.R](./code/fit_model/run_step1_step2.R)**: orchestrates model fitting of step 1 OR step 2 (step 2 depends on step 1 results)
-  
+    - **[7_run_step1_step2.R](./code/fit_model/run_step1_step2.R)**: orchestrates model fitting of step 1 OR step 2 (step 2 depends on step 1 results); sources:
+      - **[back2d_covs_scales_2min_spscov.R](./code/fit_model/back2d_covs_scales_2min_spscov.R)**: fits a hierarchical JAGS model for each species for step 1 analysis according to the [mod_key.csv](./code/fit_model/mod_key.csv) species key.
+      - **[step2_analysis.R](step2_analysis.R)**: fits a hierarchical JAGS model for each species for step 2 analysis, and it only works after running step 1 and entering the file names in the [mod_key.csv](./code/fit_model/mod_key.csv) species key.
 
 ### [data/](#data)
 &nbsp;&nbsp;&nbsp;&nbsp; All data used in the analysis, including processed outputs. Divided into:
