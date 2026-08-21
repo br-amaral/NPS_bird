@@ -1,25 +1,26 @@
-#! *********************************************************************************
-#! ----------------------------- 3_create_bird_data.R ------------------------------
-#! *********************************************************************************
-#? Code to create the y data file to run in the JAGS model 
-#?   can be run for 1, all or groups f species, in one or all parks
+#? *********************************************************************************
+#? ----------------------------- 6_create_bird_data.R ------------------------------
+#? *********************************************************************************
+#! Code to create the y data file to run in the JAGS model (birds + forest)
+#!   can be run for 1, all or groups f species, in one or all parks
 #
 #! Source ---------------------------------------------
-#?          - code/format_bird_data/2_format_data.R:
+#           - code/format_bird_data/2_format_data.R:
 #
 #! Input ----------------------------------------------
 #            from here: 
-#?           - data/out/coun_covs.rds
-#?           - data/out/park_covs.rds
-#?           - data/out/site_covs_fornofor_{radi_dist}m.rds or data/out/site_covs_hardcon_{radi_dist}m.rds
-#?           - data/park_raster/{park_size[i,1]}_pb.rds: shape files of park area to calculate area
-#
-#            from code/format_bird_data/format_data.R:
-#?             -- data/out/NETNtib.rds
+#           - data/out/coun_covs.rds : county-level forest covariates from FIA
+#           - data/out/park_covs.rds : tibble with park-level forest variables
+#           - data/out/site_covs_fornofor_{radi_dist}m.rds: site-level forest covariates data
+#           - data/park_raster/{park_size[i,1]}_pb.rds: shape files of park area to calculate area
+#             from code/format_bird_data/format_data.R:
+#               -- data/out/NETNtib.rds :  tibble with imported and extracted NETN bird survey data
 #
 #! Output ---------------------------------------------
-#?           - data/y_dat8.rds: birds data for each occasion, with park, species and site indexes
-#?           - data/X.rds: forest variables for all scales for each occasion, same dim() as y_dat6.rds
+#           - data/y_dat8.rds: birds data for each occasion, with park, species and site indexes
+#           - data/X.rds: forest variables for all scales for each occasion, same dim() as y_dat8.rds
+#             from code/format_bird_data/format_data.R:
+#               -- data/nsite_pk.csv: number of sites per park
 
 ## detach packages and clear workspace
 freshr::freshr()
@@ -54,7 +55,7 @@ if(substr(getwd(), 1, 3) == "/Us") {
 yog <- y1 # reset safety ;)
 #? Define settings -------------------------------------
 radi_dist <- 400
-hard_con_mix <- FALSE 
+# hard_con_mix <- FALSE 
 
 #? Import data -----------------------------------------
 ## file paths
@@ -62,13 +63,13 @@ PATH_COVS_COUN <- "data/out/coun_covs.rds"
 PATH_COVS_PARK <- "data/out/park_covs.rds"
 # kshape files with park area 
 
-if(hard_con_mix == FALSE) {
+# if(hard_con_mix == FALSE) {
   PATH_COVS_SITE <-glue("data/out/site_covs_fornofor_{radi_dist}m.rds")
-}
+# }
 
-if(hard_con_mix == TRUE) {
-  PATH_COVS_SITE <-glue("data/out/site_covs_hardcon_{radi_dist}m.rds")
-}
+# if(hard_con_mix == TRUE) {
+#   PATH_COVS_SITE <-glue("data/out/site_covs_hardcon_{radi_dist}m.rds")
+# }
 ## parks -------------------------------------------------------------------------------------------
 pk_list <- visits %>% 
     select(Admin_Unit_Code) %>% 
@@ -593,7 +594,7 @@ X4 <- left_join(X3, park_size, by = "park")
 dim(X4)
 nrow(X4) == nrow(X3)
 
-write_rds(X4, file = {"data/out/raw_x_covs.rds"})
+# write_rds(X4, file = {"data/out/raw_x_covs.rds"})
 
 cat("\n\n\n environmental covs saved!!! \n\n\n\n\n")
 
