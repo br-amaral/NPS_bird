@@ -213,7 +213,9 @@ Each R script includes a description of its goal, the files needed to run it (In
 
 ## Software versions:
 JAGS: 4.3.2-foss-2023a
+&nbsp;
 R: 4.3.2-gfbf-2023a
+&nbsp;
 R PACKAGES:
 - AHMbook
 - conflicted
