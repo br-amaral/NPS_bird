@@ -215,8 +215,36 @@ Each R script includes a description of its goal, the files needed to run it (In
 JAGS: 4.3.2-foss-2023a
 R: 4.3.2-gfbf-2023a
 R PACKAGES:
-module load 
-module load 
+- AHMbook
+- conflicted
+- dplyr
+- forestNETN
+- freshr
+- fs
+- ggh4x
+- ggplot2
+- glue
+- here
+- hms
+- jagsUI
+- lubridate
+- MCMCvis
+- NCRNbirds
+- raster
+- reshape2
+- rFIA
+- rjags
+- scales
+- sf
+- sp
+- splitstackshape
+- stringr
+- tibble
+- tidybayes
+- tidyr
+- tidyverse
+- tigris
+
 # TO DO
 
 - These inputs are still never listed as an output of any script:
