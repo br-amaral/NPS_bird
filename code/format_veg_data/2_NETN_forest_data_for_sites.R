@@ -3,11 +3,11 @@
 #? *********************************************************************************
 #
 #! Code to import forest structure data from NETN (2024 version) and format it for each site
-#!    in all parks. This extract the forest site information but it does not link it to bird sites
+#!    in all parks. This extracts the forest site information, but it does not link it to bird sites
 #
 #! Input ----------------------------------------------
 #           - NETN_Forest_20231106.zip : folder with all the forest data for the parks
-#           - data/tree_sps_harcon.csv : list with all tree genus recorded in the park classified as conifer or hardwood
+#           - data/tree_sps_harcon.csv : list with all tree genera recorded in the park classified as conifer or hardwood
 #
 #! Output ---------------------------------------------
 #           - data/out/for_plot_covs.rds : forest covariates for all forest plots
@@ -99,7 +99,7 @@ tree_den %>%
                  sum_ba  = sum(BA_m2ha),
                  sum_de  = sum(treeden_ha))
 
-# by size class: classify each tree accoding to DBH in BA and density of pole, mature, and large
+# by size class: classify each tree according to DBH in BA and density of pole, mature, and large
 # size classes are 10-25.9 cm DBH (pole), 26-45.9 cm DBH (mature) and ≥ 46 cm DBH (large).
 tree_den_sizeclass <- joinTreeData(status = "live") %>% 
                           as_tibble() %>% 
@@ -212,7 +212,7 @@ har_con %>%
 #                           pctBA_mature = mean(pctBA_mature), 
 #                           pctBA_large = mean(pctBA_large))
 
-#? density of sapling 
+#? density of saplings 
 table(table(joinRegenData(units = "sq.m") %>% select(Plot_Name, SampleYear))>1)
 
 reg <- joinRegenData(units = "sq.m") %>% 
@@ -314,7 +314,7 @@ comb <- full_join(plots , tree_den, by = "Plot_Name") %>%
               as_tibble() %>% 
               filter(ParkUnit %in% c("MABI", "MIMA", "MORR", "SAGA", "SARA", "ROVA", "WEFA"))
 
-comb %>% DT::datatable()
+# comb %>% DT::datatable()
 
 table(comb$ParkUnit)
 #table(comb %>% filter(!is.na(shrub_cov_nat)) %>% select(ParkUnit))  # SAGA has a lot of NAs here
@@ -342,5 +342,5 @@ write_rds(comb, file = "data/out/for_plot_covs.rds")
 #                                        "percent BA in mature size (>=26 and < 45.9cm)",
 #                                        "percent BA in large size (>=45.9cm DBH)",
 #                                        "sapling density in stems/m2",
-#                                        "Average percent shrub cover. Note that we started collecting this in 2010, the start of cycle 2."
+#                                        "Average percent shrub cover. Note that we started collecting this in 2010, the start of cycle 2"
 #                                        ))
