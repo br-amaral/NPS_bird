@@ -99,7 +99,7 @@ Each R script includes a description of its goal, the files needed to run it (In
 - [data/out/NETNtib.rds](./data/out/NETNtib.rds): tibble with imported and extracted NETN bird survey data (sourced from [format_data.R](./code/format_bird_data/format_data.R)).
 - [data/out/coun_covs.rds](./data/out/coun_covs.rds): county-level forest covariates from FIA.
 - [data/out/park_covs.rds](./data/out/park_covs.rds): tibble with park-level forest variables.
-- [data/out/site_covs_fornofor_{radi_dist}m.rds](./data/out/site_covs_fornofor_{radi_dist}m.rds): site-level forest covariates data.
+- [data/out/site_covs_fornofor_400m.rds](./data/out/site_covs_fornofor_400m.rds): site-level forest covariates data.
 - [data/park_raster/{park_size[park]}_pb.rds](./data/park_raster/{park_size[park]}_pb.rds): shapefiles of park area to calculate area.
 
 &nbsp;&nbsp;&nbsp;&nbsp;*Output:*
@@ -138,8 +138,8 @@ Each R script includes a description of its goal, the files needed to run it (In
   
 &nbsp;&nbsp;&nbsp;&nbsp;*Output:*
 
-- [data/out/site_covs_fornofor_400m.rds](./data/out/site_covs_fornofor_{radi_dist}m.rds): forest covariates for each bird site according to the weighted mean by distance of the closest 5 forest plots.
-- [data/out/neighbor_fornofor_400m.rds](./data/out/neighbor_fornofor_{radi_dist}m.rds): who is whose neighbor.
+- [data/out/site_covs_fornofor_400m.rds](./data/out/site_covs_fornofor_400m.rds): forest covariates for each bird site according to the weighted mean by distance of the closest 5 forest plots.
+- [data/out/neighbor_fornofor_400m.rds](./data/out/neighbor_fornofor_400m.rds): who is whose neighbor.
 
 **[4_get_park_data.R](./code/format_veg_data/4_get_park_data.R)**:
 
