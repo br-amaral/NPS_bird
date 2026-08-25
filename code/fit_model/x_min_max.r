@@ -1,10 +1,7 @@
 #? *********************************************************************************
-#? ----------------------------  back2d_covs_scales_3  -----------------------------
+#? --------------------------------  x_min_max.r  ----------------------------------
 #? *********************************************************************************
-# Code to run model to estimate the effect of different environmental
-#   covariates on bird occupancy in several national parks and on three
-#   different spatial scales. Code here filters and format the data for  
-#   single-species models
+# Code to get the covariate value range for each site and for sites where sps were present
 #! Input ----------------------------------------------
 #           - data/y_dat8.rds: tibble with bird data (2_create_data_files.R)
 #           - data/X.rds: tibble with covariate data (2_create_data_files.R)
@@ -12,9 +9,8 @@
 #           - data/src/key_park.rds: vector of all parks being analyzed
 #
 #! Output ---------------------------------------------
-#           - data/model_res/jags_res_{sps}_{park}_run{run_number}.rds: file with result of jags model
-#  freshr::freshr()
- #   test <- FALSE ; step_numb <- 1; sps_loop <- "BHVI"
+#           - data/out/X_sites_{sps_loop} : covariate values for each bird site
+#           - data/out/X_vals_{sps_loop} : covariate values for each bird site where a species were detected
 
 # Load packages --------------------------------------
 library(conflicted)
@@ -63,7 +59,7 @@ date_step1 <- as.character(date_step1)
 ## file paths
 YDAT_PATH <- "data/y_dat8.rds"
 XDAT_PATH <- "data/X.rds"
-SITE_PK_PATH <- "data/out/nsite_pk.rds" #! TODO: where is nsite_pk.rds created?
+SITE_PK_PATH <- "data/out/nsite_pk.rds" 
 PARK_PATH <- "data/key_park.rds"
 
 ## read files

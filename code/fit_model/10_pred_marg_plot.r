@@ -1,25 +1,15 @@
-#? *********************************************************************************
-#? ------------------------------   pred_marg_plot.r   -----------------------------
-#? *********************************************************************************
-#
-#! #TODO: get better color pallete
-#
-#! Code to ...
-#
-#! Source ---------------------------------------------
-#           - :
-#           - :
+#? ***********************************************************************************
+#? -------------------------------   10_pred_marg_plot.r   ---------------------------
+#? ***********************************************************************************
+#! Code to make species specific predictions for each covariate and generate figure 4
 #
 #! Input ----------------------------------------------
+#           - code/fit_model/mod_key.csv: table ith the path to all model results
 #           - data/out/coefs_sps_sca.rds : table with all the beta coefficient estimates with their scales
-#           - data/model_res/{sps}_step2_output_20{xx}_{xx}_{xx}run{x}.rds :
-#
-#! Output ----------------------------------------------
-#           - :
-#           - :
-#
+#           - data/model_res/{species}_step{step_number}output{date_step1}{index_run}.rds: model results from jags model from step 2
+#           - data/out/X_vals_{species}.rds : covariate prediction range for each species
+#           - data/X.rds : tibble with covariates values
 # detach packages and clear workspace
-#  setwd("/Volumes/zipkinlab/bamaral/NPS_bird_copy/")
 freshr::freshr()
 
 # hg <- httpgd::hgd()
@@ -377,7 +367,7 @@ beta5_preds <- process_beta_predictions(5, beta_covariates[["5"]])
 scale_covs <-  as_tibble(cbind(c(3, 2, 1), c("coun", "park", "site"))) %>% 
                   rename(scale = V1, scale_name = V2)
 
- save.image(file = "data/predictions_sps3_step2_2.RData")
+# save.image(file = "data/predictions_sps3_step2_2.RData")
 # load("data/predictions_sps3_step2_1.RData")
 
 #? TREE DENSITY -----------------------------------------------------------------

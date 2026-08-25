@@ -38,7 +38,7 @@ This repository contains code to format bird point count and forest survey data 
 
   - **[format_bird_data/](#format_bird_data)**: folder with code to format the bird data for analysis.
     - **[1_import_data.R](./code/format_bird_data/1_import_data.R)**: imports and extracts NETN bird survey data.
-    - **[6_create_data_files.R](./code/format_bird_data/6_create_data_files.R)**: creates final data arrays with correct site, year, and occasion structure, and merges covariate values with bird data.
+    - **[6_create_data_files.R](./code/format_bird_data/6_create_data_files.R)**: creates final data arrays with correct site, year, and occasion structure, and merges covariate values with bird data; sources:
       - **[format_data.R](./code/format_bird_data/format_data.R)**: filters visits to auditory detections within 50 m, removes records with missing values in key columns.
 
   - **[format_veg_data/](#format_veg_data)**: folder with code to extract and format the forest structure data for analysis.
@@ -51,6 +51,12 @@ This repository contains code to format bird point count and forest survey data 
     - **[7_run_step1_step2.R](./code/fit_model/7_run_step1_step2.R)**: orchestrates model fitting of step 1 OR step 2 (step 2 depends on step 1 results); sources:
       - **[back2d_covs_scales_2min_spscov.R](./code/fit_model/back2d_covs_scales_2min_spscov.R)**: fits a hierarchical JAGS model for each species for step 1 analysis according to the [mod_key.csv](./code/fit_model/mod_key.csv) species key.
       - **[step2_analysis.R](./code/fit_model/step2_analysis.R)**: fits a hierarchical JAGS model for each species for step 2 analysis, and it only works after running step 1 and entering the file names in the [mod_key.csv](./code/fit_model/mod_key.csv) species key.
+    - **[map.R](./code/fit_model/map.r)**: code to generate map of the study area displayed on figure 1.
+    - **[nlcd_map.R](./code/fit_model/nlcd_map.r)**: code to generate figure S4, which is the NLCD landcover map for the study region.
+    - **[8_coef_extract.R](./code/fit_model/8_coef_extract.r)**: code to get coefficients and make figures 2, 3, and 5.
+    - **[9_source_x_min_max.R](code/fit_model/9_source_x_min_max.r)**: source x_min_max.R for all species and parks:
+      - **[x_min_max.R](./code/fit_model/x_min_max.r)**: get covariate value range for each site and for sites where a sps was present.
+    - **[10_pred_marg_plot.R](./code/fit_model/10_pred_marg_plot.r)**: code to make occurrence predictions and figure 4.
 
 ### [data/](#data)
 &nbsp;&nbsp;&nbsp;&nbsp; All data used in the analysis, including processed outputs. Divided into:
@@ -81,7 +87,7 @@ Each R script includes a description of its goal, the files needed to run it (In
 
 &nbsp;&nbsp;&nbsp;&nbsp;*Input:*
 
-- [data/src/original/NETN_2020](./data/src/original/NETN_2020): tibble with imported and extracted NETN bird survey data.
+- [data/src/original/NETN_2023](./data/src/original/NETN_2023): tibble with imported and extracted NETN bird survey data.
 
 &nbsp;&nbsp;&nbsp;&nbsp;*Output:*
 
@@ -100,7 +106,7 @@ Each R script includes a description of its goal, the files needed to run it (In
 - [data/out/coun_covs.rds](./data/out/coun_covs.rds): county-level forest covariates from FIA.
 - [data/out/park_covs.rds](./data/out/park_covs.rds): tibble with park-level forest variables.
 - [data/out/site_covs_fornofor_400m.rds](./data/out/site_covs_fornofor_400m.rds): site-level forest covariates data.
-- [data/park_raster/{park_size[park]}_pb.rds](./data/park_raster/{park_size[park]}_pb.rds): shapefiles of park area to calculate area.
+- <u>data/park_raster/park_size{park}_pb.rds</u>: shapefiles of park area to calculate area.
 
 &nbsp;&nbsp;&nbsp;&nbsp;*Output:*
 
@@ -166,13 +172,13 @@ Each R script includes a description of its goal, the files needed to run it (In
 
 ### code/fit_model/
 
-**[6_run_step1_step2.R](./code/fit_model/6_run_step1_step2.R)**:
+**[7_run_step1_step2.R](./code/fit_model/7_run_step1_step2.R)**:
 
 &nbsp;&nbsp;&nbsp;&nbsp;*Input:*
 
 - [models/mod_all_covs.txt](./models/mod_all_covs.txt): model files with all covariates for step 1.
 - [code/fit_model/mod_key.csv](./code/fit_model/mod_key.csv): table with a key to run models that includes: species names, step, result file name from step 1 used in step 2 analysis, selected scales file name for step 2 analysis.
-- [data/model_res/{output_selected_scale}.rds](./data/model_res/{tib_loop$select}.rds): if step 2 of analysis, this will link to which covariates and scales were selected at step 1 ([data/model_res/{file_name2}_{quant_name}_SCA_SEL_PARS.rds](./data/model_res/{file_name2}_{quant_name}_SCA_SEL_PARS.rds)).
+- <u>data/model_res/{output_selected_scale}.rds</u>: if step 2 of analysis, this will link to which covariates and scales were selected at step 1 ([data/model_res/{file_name2}_{quantile_name}_SCA_SEL_PARS.rds](./data/model_res/{file_name2}_{quant_name}_SCA_SEL_PARS.rds)).
   
 **[back2d_covs_scales_2min_spscov.R](./code/fit_model/back2d_covs_scales_2min_spscov.R)**:
 
@@ -185,38 +191,82 @@ Each R script includes a description of its goal, the files needed to run it (In
   
 &nbsp;&nbsp;&nbsp;&nbsp;*Output:*
 
-- [data/ana_file/{sps_loop}_step{step_numb}_jagsdata_{date_step1}.rds](./data/ana_file/{sps_loop}_step{step_numb}_jagsdata_{date_step1}.rds): jags data for species for analysis.
-- [data/ana_file/{sps}_step1_Z_{date_step1}.rds](./data/ana_file/{sps}_step1_Z_{date_step1}.rds): initial values for analysis.
-- [data/ana_file/{sps_loop}_step{step_numb}_model_{date_step1}.txt](./data/ana_file/{sps_loop}_step{step_numb}_model_{date_step1}.txt): model file for species.
-- [data/model_res/{sps_loop}_step{step_numb}_output_{date_step1}{index_run}.rds](data/model_res/{sps_loop}_step{step_numb}_output_{date_step1}{index_run}.rds): model results from jags model.
-- [data/ana_file/{sps_loop}_step{step_numb}_metadata_{date_step1}_int.txt](./data/ana_file/{sps_loop}_step{step_numb}_metadata_{date_step1}_int.txt): metadata for the analysis (species, covariates, iterations, step, date, etc.).
-- [data/model_res/{file_name2}_{quant_name}_SCA_SEL_PARS.rds](./data/model_res/{file_name2}_{quant_name}_SCA_SEL_PARS.rds): file with which scales were selected as most influential.
+- <u>data/ana_file/{species}_step{step_number}_jagsdata_{date_step1}.rds</u>: jags data for species for analysis.
+- <u>data/ana_file/{species}_step1_Z_{date_step1}.rds</u>: initial values for analysis.
+- <u>data/ana_file/{species}_step{step_number}_model_{date_step1}.txt</u>: model file for species.
+- <u>data/model_res/{species}_step{step_number}_output_{date_step1}{index_run}.rds</u>: model results from jags model.
+- <u>data/ana_file/{species}_step{step_number}_metadata_{date_step1}_int.txt</u>: metadata for the analysis (species, covariates, iterations, step, date, etc.).
+- [data/model_res/{file_name2}_{quantile_name}_SCA_SEL_PARS.rds](./data/model_res/{file_name2}_{quant_name}_SCA_SEL_PARS.rds): file with which scales were selected as most influential.
 
 **[step2_analysis.R](./code/fit_model/step2_analysis.R)**:
 
 &nbsp;&nbsp;&nbsp;&nbsp;*Input:*
 
-- [data/ana_file/{sps_loop}_step{step_numb}_jagsdata_{date_step1}.rds](./data/ana_file/{sps_loop}_step{step_numb}_jagsdata_{date_step1}.rds): jags data for species for analysis.
-- [data/ana_file/{sps}_step1_Z_{date_step1}.rds](./data/ana_file/{sps}_step1_Z_{date_step1}.rds): initial values for analysis.
+- <u>data/ana_file/{species}_step{step_number}_jagsdata_{date_step1}.rds</u>: jags data for species for analysis.
+- <u>data/ana_file/{species}_step1_Z_{date_step1}.rds</u>: initial values for analysis.
 - [models/mod_all_covs_hyper.txt](./models/mod_all_covs_hyper.txt): hyperparameter section of model for step 2
 - [models/mod_all_covs_det.txt](./models/mod_all_covs_det.txt): detection section of model for step 2
 
 &nbsp;&nbsp;&nbsp;&nbsp;*Output:*
 
-- [models/{sps_loop}_step2_model{mod_nam_par}_scales{mod_nam_sca}_{date_step1}.txt](./models/{sps_loop}_step2_model{mod_nam_par}_scales{mod_nam_sca}_{date_step1}.txt): model for step 2 analysis containing only selected covariates and scales according to step 1.
-- [data/model_res/{sps}_step{step_numb}_output_{date_step2}_new.rds](./data/model_res/{sps}_step{step_numb}_output_{date_step2}_new.rds): step 2 results output file.
-- [data/ana_file/{sps}_step{step_numb}_metadata_{date_step2}.txt](./data/ana_file/{sps}_step{step_numb}_metadata_{date_step2}.txt): metadata of step 2 model run for a species.
+- <u>models/{species}_step2_model{model_parameters}_scales{model_name_scale}_{date_step1}.txt</u>: model for step 2 analysis containing only selected covariates and scales according to step 1.
+- <u>data/model_res/{sps}_step{step_number}_output_{date_step2}_new.rds</u>: step 2 results output file.
+- <u>data/ana_file/{sps}_step{step_number}_metadata_{date_step2}.txt</u>: metadata of step 2 model run for a species.
+
+**[8_coef_extract.R](./code/fit_model/8_coef_extract.r)**
+
+&nbsp;&nbsp;&nbsp;&nbsp;*Input:*
+
+- <u>code/fit_model/mod_key.csv</u>: table ith the path to all model results.
+- <u>{species}_step{step_number}_output_{date}run{run_number}</u>: mcmc samples for a species of step 1.
+- <u>{species}_step{step_number}_output_{date}run{run_number}_25_75_SCA_SEL_PARS</u>: mcmc samples for a species of step 2.
+
+&nbsp;&nbsp;&nbsp;&nbsp;*Output:*
+
+- <u>data/out/coefs_sps_sca.rds</u>: table with all the beta coefficient estimates with their scales.
+
+**[9_source_x_min_max.R](code/fit_model/9_source_x_min_max.r)**
+
+&nbsp;&nbsp;&nbsp;&nbsp;*Input:*
+
+- [models/mod_all_covs.txt](./models/mod_all_covs.txt): model files with all covariates for step 1.
+- [code/fit_model/mod_key.csv](./code/fit_model/mod_key.csv): table with a key to run models that includes: species names, step, result file name from step 1 used in step 2 analysis, selected scales file name for step 2 analysis.
+
+**[x_min_max.R](./code/fit_model/x_min_max.r)**:
+
+&nbsp;&nbsp;&nbsp;&nbsp;*Input:*
+
+- [data/y_dat8.rds](data/y_dat8.rds): tibble with bird data.
+- [data/X.rds](data/X.rds): tibble with covariate data.
+- [data/out/nsite_pk.rds](data/out/nsite_pk.rds): vector with number of sites in each park.
+- [data/src/key_park.rds](data/src/key_park.rds): vector of all parks being analyzed.
+
+&nbsp;&nbsp;&nbsp;&nbsp;*Output:*
+
+- <u>data/out/X_sites_{species}</u>: covariate values for each bird site.
+- <u>data/out/X_vals_{species}</u>: covariate values for each bird site where a species were detected.
+
+**[10_pred_marg_plot.R](./code/fit_model/10_pred_marg_plot.r)**
+
+&nbsp;&nbsp;&nbsp;&nbsp;*Input:*
+
+- <u>code/fit_model/mod_key.csv</u>: table ith the path to all model results.
+- <u>data/out/coefs_sps_sca.rds</u>: table with all the beta coefficient estimates with their scales.
+- <u>data/model_res/{species}_step{step_number}output{date_step1}{index_run}.rds</u>: model results from jags model from step 2.
+- <u>data/out/X_vals_{species}.rds</u>: covariate prediction range for each species
+- <u>data/X.rds</u>: tibble with covariates values.
 
 ### models/
         
 ### figures/
 
 ## Software versions:
-JAGS: 4.3.2-foss-2023a
-R: 4.3.2-gfbf-2023a
-R PACKAGES:
+**JAGS:** 4.3.2-foss-2023a
+**R:** 4.3.2-gfbf-2023a
+**R Packages:**
 module load 
 module load 
+&nbsp;
 # TO DO
 
 - These inputs are still never listed as an output of any script:

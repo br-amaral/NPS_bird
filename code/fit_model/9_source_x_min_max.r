@@ -1,20 +1,12 @@
 #? *********************************************************************************
-#? ----------------------------  back2d_covs_scales_3  -----------------------------
+#? ----------------------------  9_source_x_min_max.R  -----------------------------
 #? *********************************************************************************
-# Code to run model to estimate the effect of different environmental
-#   covariates on bird occupancy in several national parks and on three
-#   different spatial scales. Code here filters and format the data for  
-#   single-species models
+# Code to source x_min_max.R for all species and parks
 #! Input ----------------------------------------------
-#           - data/y_dat8.rds: tibble with bird data (2_create_data_files.R)
-#           - data/X.rds: tibble with covariate data (2_create_data_files.R)
-#           - data/out/nsite_pk.rds: vector with number of sites in each park
-#           - data/src/key_park.rds: vector of all parks being analyzed
+#           - models/mod_all_covs.txt : model files with all covariates for step 1
+#           - code/fit_model/mod_key.csv: table ith the path to all model results
 #
 #! Output ---------------------------------------------
-#           - data/model_res/jags_res_{sps}_{park}_run{run_number}.rds: file with result of jags model
-#  freshr::freshr()
- #   test <- FALSE ; step_numb <- 1; sps_loop <- "BHVI"
 
 # Load packages --------------------------------------
 library(conflicted)

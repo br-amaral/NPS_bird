@@ -2,17 +2,17 @@
 #? -------------------------------  coef_extract.r  --------------------------------
 #? *********************************************************************************
 #
-##! TODO: get beta interaction coefs
 #! Code to get coeficient estimates of all model results and create figures 2 and 3
-#!       of the manuscript, that repreent the scale selection and effect sizes
+#!       of the manuscript, that represent the scale selection and effect sizes, and 
+#!       figure 5, that has park size coefficients
 #
 #! Input ----------------------------------------------
-#           - data/mod_key2.csv : table ith the path to all model results
-#           - :
+#           - code/fit_model/mod_key.csv: table ith the path to all model results
+#           - {species}_step{step_number}_output_{date}run{run_number} : mcmc samples for a species of step 1
+#           - {species}_step{step_number}_output_{date}run{run_number}_25_75_SCA_SEL_PARS : mcmc samples for a species of step 2
 #
 #! Output ----------------------------------------------
 #           - data/out/coefs_sps_sca.rds : table with all the beta coefficient estimates with their scales
-#           - :
 #
 # detach packages and clear workspace
 #  setwd("/Volumes/zipkinlab/bamaral/NPS_bird_copy/")
@@ -135,8 +135,8 @@ for(ii in 1:nrow(coef_path_file)) {
       print(ii)
 }
 
-   write_rds(coef_summary3, file = "data/out/coef_summary4_sep2.rds")
-#  coef_summary3 <- read_rds(file = "data/out/coef_summary4_sep.rds")
+#   write_rds(coef_summary3, file = "data/out/coef_summary4_sep2.rds")
+#   coef_summary3 <- read_rds(file = "data/out/coef_summary4_sep.rds")
 
 coef_summary3 <- as_tibble(coef_summary3) %>% 
                       filter(betas != "beta6") %>% 
@@ -149,7 +149,7 @@ phylo_order2 <- read_rds(file = "data/src/sps_phylo_order.rds")  %>%
 coef_summary3 <- coef_summary3 %>% 
               left_join(., phylo_order2, by = "sps")
 
-#! Figure: park size -------------------------------------------
+#! Figure 5: park size -------------------------------------------
 (park_sizeP <- 
   coef_summary3 %>% 
         filter(sps != "BCCH") %>% 
@@ -345,6 +345,8 @@ dat1 %>% filter(is.na(sca_col)) %>% select(sps, coef, overlap0, sca1, sca2, sca3
 
 ggsave("figures/sca_plot_select_sca_noleg2long_phylo2.png", plot = sca_plot_selec_sca2, device = "png", width = 24, height = 14, dpi = 800)
 ggsave("figures/sca_plot_select_sca_noleg2long_phylo2.svg", plot = sca_plot_selec_sca2, device = "svg", width = 24, height = 14)
+
+#! Figure 3: size effect circles -----------------------------------------
 
 dat_sca3 <- dat_sca %>%  filter(Rhat < 1.1)
 
