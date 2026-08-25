@@ -45,7 +45,7 @@ This repository contains code to format bird point count and forest survey data 
     - **[2_NETN_forest_data_for_sites.R](./code/format_veg_data/2_NETN_forest_data_for_sites.R)**: extracts forest plot-level covariates from NETN vegetation monitoring data.
     - **[3_get_site_data_rad.R](./code/format_veg_data/3_get_site_data_rad.R)**: links forest plots to bird survey sites within a 400 m radius and calculates inverse-distance-weighted mean covariate values per bird site.
     - **[4_get_park_data.R](./code/format_veg_data/4_get_park_data.R)**: compiles park-level forest covariates.
-    - **[5_get_coun_data.R](./code/format_veg_data/5_get_coun_data.R)**: compiles county-level forest covariates from FIA data.
+    - **[5_get_coun_data.R](./code/format_veg_data/5_get_coun_data.r)**: compiles county-level forest covariates from FIA data.
 
   - **[fit_model/](#fit_model)**: folder with code to merge forest and bird data, run analysis, and generate figures.
     - **[7_run_step1_step2.R](./code/fit_model/7_run_step1_step2.R)**: orchestrates model fitting of step 1 OR step 2 (step 2 depends on step 1 results); sources:
