@@ -264,8 +264,35 @@ Each R script includes a description of its goal, the files needed to run it (In
 **JAGS:** 4.3.2-foss-2023a
 **R:** 4.3.2-gfbf-2023a
 **R Packages:**
-module load 
-module load 
+AHMbook 0.2.9
+BayesPostEst 0.4.0
+broom 1.0.7
+conflicted 1.2.0
+dplyr 1.1.4
+forcats 1.0.0
+freshr 1.0.2
+ggplot2 4.0.1
+glue 1.8.0
+hms 1.1.3
+jagsUI 1.6.2
+lubridate 1.9.4
+MCMCvis 0.16.3
+modelr 0.1.11
+rjags 4-16
+scales 1.4.0
+stringr 1.5.1
+tidyr 1.3.1
+tidyverse 2.0.0
+fs 1.6.3
+knitr 1.45
+tibble 3.2.1
+ggnewscale 0.5.2
+reshape2 1.4.5
+sf 1.1-2
+sp 2.2-3
+svglite 2.2.2
+terra 1.9-34
+tidyterra 1.2.0
 &nbsp;
 # TO DO
 
