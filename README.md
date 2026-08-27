@@ -319,7 +319,7 @@ Each R script includes a description of its goal, the files needed to run it (In
 - data/ELRO_sites.rds, data/HOFR_sites.rds, data/VAMA_sites.rds
 - data/out/key_bsite.rds, data/out/key_fsite.rds
 - data/out/park_site_UTM.rds
-- ata/out/updated_for_cats.csv
+- data/out/updated_for_cats.csv
 
 ## output + model 'secondary files'
 - data/metadata
