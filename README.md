@@ -30,11 +30,11 @@ Amaral, B. R.; Doser, J. W.; Weed, A.; Miller, K.; & Zipkin, E. F. (2026). Prote
 --------------------------------------
 ## Repository
 
-This repository contains code to format bird point count and forest survey data collected by the <a href="https://www.nps.gov/im/netn/index.htm" target="_blank" rel="noopener noreferrer">Northeast Temperate Network (NETN)</a> regional monitoring groups in the National Park Service (NPS) Inventory & Monitoring (I&M) program, format <a href="https://research.fs.usda.gov/programs/fia" target="_blank" rel="noopener noreferrer">U.S. Forest Service Forest Inventory and Analysis (FIA)</a>, fit multi-scale hierarchical occupancy models, and generate figures and predictions of bird occurrence across eight Northeastern National Parks. All R code files, data, and outputs are provided.
+This repository contains code to format bird point count and forest survey data collected by the <a href="https://www.nps.gov/im/netn/index.htm" target="_blank" rel="noopener noreferrer">Northeast Temperate Network (NETN)</a> regional monitoring groups in the National Park Service (NPS) Inventory & Monitoring (I&M) program, format <a href="https://research.fs.usda.gov/programs/fia" target="_blank" rel="noopener noreferrer">U.S. Forest Service Forest Inventory and Analysis (FIA)</a>, fit multi-scale hierarchical occupancy models, and generate figures and predictions of bird occurrence across eight Northeastern National Parks. All R code files, data, and outputs are provided. The data folder is present only in the <a href="https://" target="_blank" rel="noopener noreferrer">Zenodo Repository</a>.
 
 ### Folder structure:
 ### [code/](#code)
-&nbsp;&nbsp;&nbsp;&nbsp;R scripts in execution order, organized into subfolders by task (forest data formatting, bird data formatting, and model fitting):
+&nbsp;&nbsp;&nbsp;&nbsp; R scripts in execution order, organized into subfolders by task (forest data formatting, bird data formatting, and model fitting):
 
   - **[format_bird_data/](#format_bird_data)**: folder with code to format the bird data for analysis.
     - **[1_import_data.R](./code/format_bird_data/1_import_data.R)**: imports and extracts NETN bird survey data.
@@ -58,19 +58,19 @@ This repository contains code to format bird point count and forest survey data 
       - **[x_min_max.R](./code/fit_model/x_min_max.r)**: get covariate value range for each site and for sites where a sps was present.
     - **[10_pred_marg_plot.R](./code/fit_model/10_pred_marg_plot.r)**: code to make occurrence predictions and figure 4.
 
-### [data/](#data)
-&nbsp;&nbsp;&nbsp;&nbsp; All data used in the analysis, including processed outputs. Divided into:
-  - **[ana_file/](#ana_file)**: folder to save the processed species-specific bird data used in the model, the metadata about the model run (e.g., number of iterations and initial values).
-  - **[park_raster/](#park_raster)**: raster files of all parks to obtain area and location.
-  - **[NETN-forest/](#NETN-forest)**: forest data collected by the NPS within parks.
-    - **[forest_csvs/](#forest_csvs)**:
-    - **[src/](#src)**: 
-  - **[src/](#src)**: raw input data from NETN bird surveys and bird information (phylogeny, guild).
-    - **[original/](#original)**: original data files that have not been opened, just exported.
-  - **[out/](#out)**: placeholder folder for processed intermediate and final data files used as analysis inputs.
-  - **[model_res/](#model_res)**: JAGS model output files per species for steps 1 and 2.
-  - **[FIA/](#FIA)**: county-level forest inventory data obtained with rFIA R package.
-    - **[out/](#out)**: forest structure covariates calculated and used in the analysis.
+### data/
+&nbsp;&nbsp;&nbsp;&nbsp; All data used in the analysis, including processed outputs. The data folder is at the <a href="https://" target="_blank" rel="noopener noreferrer">Zenodo Repository</a>. Folder divided into:
+  - **ana_file/**: folder to save the processed species-specific bird data used in the model, and the metadata about the model run (e.g., number of iterations and initial values).
+  - **park_raster/**: raster files of all parks to obtain area and location.
+  - **NETN-forest/**: forest data collected by the NPS within parks.
+    - **forest_csvs/**:
+    - **src/**: 
+  - **src/**: raw input data from NETN bird surveys and bird information (phylogeny, guild).
+    - **original/**: original data files that have not been opened, just exported.
+  - **out/**: placeholder folder for processed intermediate and final data files used as analysis inputs.
+  - **model_res/**: JAGS model output files per species for steps 1 and 2.
+  - **FIA/**: county-level forest inventory data obtained with the rFIA R package.
+    - **out/**: forest structure covariates calculated and used in the analysis.
 ### [models/](#models)
 &nbsp;&nbsp;&nbsp;&nbsp;.txt model files with JAGS models for each species and step.
 ### [figures/](#figures)
@@ -87,12 +87,12 @@ Each R script includes a description of its goal, the files needed to run it (In
 
 &nbsp;&nbsp;&nbsp;&nbsp;*Input:*
 
-- [data/src/original/NETN_2023](./data/src/original/NETN_2023): tibble with imported and extracted NETN bird survey data.
+- <u>data/src/original/NETN_2023</u>: tibble with imported and extracted NETN bird survey data.
 
 &nbsp;&nbsp;&nbsp;&nbsp;*Output:*
 
-- [data/out/NETNtib.rds](./data/out/NETNtib.rds): tibble with imported and extracted NETN bird survey data.
-- [data/key_park.rds](./data/key_park.rds): file with all unique park names.
+- <u>data/out/NETNtib.rds</u>: tibble with imported and extracted NETN bird survey data.
+- <u>data/key_park.rds</u>: file with all unique park names.
 
 **[6_create_data_files.R](./code/format_bird_data/6_create_data_files.R)**:
 
@@ -102,17 +102,17 @@ Each R script includes a description of its goal, the files needed to run it (In
 
 &nbsp;&nbsp;&nbsp;&nbsp;*Input:*
 
-- [data/out/NETNtib.rds](./data/out/NETNtib.rds): tibble with imported and extracted NETN bird survey data (sourced from [format_data.R](./code/format_bird_data/format_data.R)).
-- [data/out/coun_covs.rds](./data/out/coun_covs.rds): county-level forest covariates from FIA.
-- [data/out/park_covs.rds](./data/out/park_covs.rds): tibble with park-level forest variables.
-- [data/out/site_covs_fornofor_400m.rds](./data/out/site_covs_fornofor_400m.rds): site-level forest covariates data.
+- <u>data/out/NETNtib.rds</u>: tibble with imported and extracted NETN bird survey data (sourced from [format_data.R](./code/format_bird_data/format_data.R)).
+- <u>data/out/coun_covs.rds</u>: county-level forest covariates from FIA.
+- <u>data/out/park_covs.rds</u>: tibble with park-level forest variables.
+- <u>data/out/site_covs_fornofor_400m.rds</u>: site-level forest covariates data.
 - <u>data/park_raster/park_size{park}_pb.rds</u>: shapefiles of park area to calculate area.
 
 &nbsp;&nbsp;&nbsp;&nbsp;*Output:*
 
-- [data/y_dat8.rds](./data/y_dat8.rds): birds data for each occasion, with park, species, and site indexes.
-- [data/X.rds](./data/X.rds): forest variables for all scales for each occasion, same dim() as y_dat8.rds.
-- [data/out/nsite_pk.rds](./data/out/nsite_pk.rds): number of sites per park (sourced from [format_data.R](./code/format_bird_data/format_data.R))
+- <u>data/y_dat8.rds</u>: bird data for each occasion, with park, species, and site indexes.
+- <u>data/X.rds</u>: forest variables for all scales for each occasion, same dim() as y_dat8.rds.
+- <u>data/out/nsite_pk.rds</u>: number of sites per park (sourced from [format_data.R](./code/format_bird_data/format_data.R))
 
 ### code/format_veg_data/
 
@@ -120,55 +120,55 @@ Each R script includes a description of its goal, the files needed to run it (In
 
 &nbsp;&nbsp;&nbsp;&nbsp;*Input:*
 
-- [data/veg_kateaaron/ForestNETN2024.zip](./data/veg_kateaaron/ForestNETN2024.zip): folder with all the forest data for the parks.
-- [data/tree_sps_harcon.csv](./data/tree_sps_harcon.csv): list with all tree genera recorded in the park, classified as conifer or hardwood.
+- <u>data/veg_kateaaron/ForestNETN2024.zip</u>: folder with all the forest data for the parks.
+- <u>data/tree_sps_harcon.csv</u>: list with all tree genera recorded in the park, classified as conifer or hardwood.
 
 &nbsp;&nbsp;&nbsp;&nbsp;*Output:*
 
-- [data/out/for_plot_covs.rds](./data/out/for_plot_covs.rds): forest covariates for all forest plots.
+- <u>data/out/for_plot_covs.rds</u>: forest covariates for all forest plots.
 
 **[3_get_site_data_rad.R](./code/format_veg_data/3_get_site_data_rad.R)**:
 
 &nbsp;&nbsp;&nbsp;&nbsp;*Input:*
 
-- [data/key_park.rds](./data/key_park.rds ): file with all park names.
-- [data/ELRO_sites.rds](./ELRO_sites.rds): file to get forest plot names for ELRO that are not named after ROVA.
-- [data/HOFR_sites.rds](./data/HOFR_sites.rds): file to get forest plot names for HOFR that are not named after ROVA.
-- [data/VAMA_sites.rds](./data/VAMA_sites.rds): file to get forest plot names for VAMA that are not named after ROVA.
-- [data/out/NETNtib.rds](./data/out/NETNtib.rds): tibble with imported and extracted NETN bird survey data.
-- [data/out/updated_for_cats.csv](./data/out/updated_for_cats.csv): vegetation types/categories of the parks (to be classified as forest/not forest).
-- [data/out/for_plot_covs.rds](./data/out/for_plot_covs.rds): forest covariates for all forest plots created by NETN_forest_data_for_sites.R.
-- [data/out/key_bsite.rds](./data/out/key_bsite.rds): forest type classification for each bird site.
-- [data/out/key_fsite.rds](./data/out/key_fsite.rds): forest type classification for each forest site.
-- [data/out/park_site_UTM.rds](./data/out/park_site_UTM.rds): UTM coordinates of sites within each park.
+- <u>data/key_park.rds</u>: file with all park names.
+- <u>data/ELRO_sites.rds</u>: file to get forest plot names for ELRO that are not named after ROVA.
+- <u>data/HOFR_sites.rds</u>: file to get forest plot names for HOFR that are not named after ROVA.
+- <u>data/VAMA_sites.rds</u>: file to get forest plot names for VAMA that are not named after ROVA.
+- <u>data/out/NETNtib.rds</u>: tibble with imported and extracted NETN bird survey data.
+- <u>data/out/updated_for_cats.csv</u>: vegetation types/categories of the parks (to be classified as forest/not forest).
+- <u>data/out/for_plot_covs.rds</u>: forest covariates for all forest plots created by NETN_forest_data_for_sites.R.
+- <u>data/out/key_bsite.rds</u>: forest type classification for each bird site.
+- <u>data/out/key_fsite.rds</u>: forest type classification for each forest site.
+- <u>data/out/park_site_UTM.rds</u>: UTM coordinates of sites within each park.
   
 &nbsp;&nbsp;&nbsp;&nbsp;*Output:*
 
-- [data/out/site_covs_fornofor_400m.rds](./data/out/site_covs_fornofor_400m.rds): forest covariates for each bird site according to the weighted mean by distance of the closest 5 forest plots.
-- [data/out/neighbor_fornofor_400m.rds](./data/out/neighbor_fornofor_400m.rds): who is whose neighbor.
+- <u>data/out/site_covs_fornofor_400m.rds</u>: forest covariates for each bird site according to the weighted mean by distance of the closest 5 forest plots.
+- <u>data/out/neighbor_fornofor_400m.rds</u>: who is whose neighbor.
 
 **[4_get_park_data.R](./code/format_veg_data/4_get_park_data.R)**:
 
 &nbsp;&nbsp;&nbsp;&nbsp;*Input:*
 
-- [data/out/for_plot_covs.rds](./data/out/for_plot_covs.rds): forest covariates for all forest plots created by NETN_forest_data_for_sites.R.
-- [data/ELRO_sites.rds](./ELRO_sites.rds): file to get forest plot names for ELRO that are not named after ROVA.
-- [data/HOFR_sites.rds](./data/HOFR_sites.rds): file to get forest plot names for HOFR that are not named after ROVA.
-- [data/VAMA_sites.rds](./data/VAMA_sites.rds): file to get forest plot names for VAMA that are not named after ROVA.
+- <u>data/out/for_plot_covs.rds</u>: forest covariates for all forest plots created by NETN_forest_data_for_sites.R.
+- <u>data/ELRO_sites.rds</u>: file to get forest plot names for ELRO that are not named after ROVA.
+- <u>data/HOFR_sites.rds</u>: file to get forest plot names for HOFR that are not named after ROVA.
+- <u>data/VAMA_sites.rds</u>: file to get forest plot names for VAMA that are not named after ROVA.
   
 &nbsp;&nbsp;&nbsp;&nbsp;*Output:*
 
-- [data/out/park_covs.rds](./data/out/park_covs.rds): tibble with park-level forest variables.
+- <u>data/out/park_covs.rds</u>: tibble with park-level forest variables.
 
 **[5_get_coun_data.R](./code/format_veg_data/5_get_coun_data.R)**:
 
 &nbsp;&nbsp;&nbsp;&nbsp;*Input:*
 
-- [data/FIA/](./data/FIA/): folder with FIA data downloaded with the code using the rFIA package
+- <u>data/FIA/</u>: folder with FIA data downloaded with the code using the rFIA package
   
 &nbsp;&nbsp;&nbsp;&nbsp;*Output:*
 
-- [data/out/coun_covs.rds](./data/out/coun_covs.rds): county-level forest covariates from FIA
+- <u>data/out/coun_covs.rds</u>: county-level forest covariates from FIA
 
 ### code/fit_model/
 
@@ -178,16 +178,16 @@ Each R script includes a description of its goal, the files needed to run it (In
 
 - [models/mod_all_covs.txt](./models/mod_all_covs.txt): model files with all covariates for step 1.
 - [code/fit_model/mod_key.csv](./code/fit_model/mod_key.csv): table with a key to run models that includes: species names, step, result file name from step 1 used in step 2 analysis, selected scales file name for step 2 analysis.
-- <u>data/model_res/{output_selected_scale}.rds</u>: if step 2 of analysis, this will link to which covariates and scales were selected at step 1 ([data/model_res/{file_name2}_{quantile_name}_SCA_SEL_PARS.rds](./data/model_res/{file_name2}_{quant_name}_SCA_SEL_PARS.rds)).
+- <u>data/model_res/{output_selected_scale}.rds</u>: if in step 2 of the analysis, this will link to which covariates and scales were selected at step 1 (<u>data/model_res/{file_name2}_{quantile_name}_SCA_SEL_PARS.rds</u>).
   
 **[back2d_covs_scales_2min_spscov.R](./code/fit_model/back2d_covs_scales_2min_spscov.R)**:
 
 &nbsp;&nbsp;&nbsp;&nbsp;*Input:*
 
-- [data/y_dat8.rds](./data/y_dat8.rds): birds data for each occasion, with park, species, and site indexes.
-- [data/X.rds](./data/X.rds): tibble with covariate data.
-- [data/out/nsite_pk.rds](./data/out/nsite_pk.rds): vector with number of sites in each park.
-- [data/key_park.rds](./data/key_park.rds): vector of all parks being analyzed.
+- <u>data/y_dat8.rds</u>: bird data for each occasion, with park, species, and site indexes.
+- <u>data/X.rds</u>: tibble with covariate data.
+- <u>data/out/nsite_pk.rds</u>: vector with number of sites in each park.
+- <u>data/key_park.rds</u>: vector of all parks being analyzed.
   
 &nbsp;&nbsp;&nbsp;&nbsp;*Output:*
 
@@ -196,7 +196,7 @@ Each R script includes a description of its goal, the files needed to run it (In
 - <u>data/ana_file/{species}_step{step_number}_model_{date_step1}.txt</u>: model file for species.
 - <u>data/model_res/{species}_step{step_number}_output_{date_step1}{index_run}.rds</u>: model results from jags model.
 - <u>data/ana_file/{species}_step{step_number}_metadata_{date_step1}_int.txt</u>: metadata for the analysis (species, covariates, iterations, step, date, etc.).
-- [data/model_res/{file_name2}_{quantile_name}_SCA_SEL_PARS.rds](./data/model_res/{file_name2}_{quant_name}_SCA_SEL_PARS.rds): file with which scales were selected as most influential.
+- <u>data/model_res/{file_name2}_{quantile_name}_SCA_SEL_PARS.rds</u>: file with which scales were selected as most influential.
 
 **[step2_analysis.R](./code/fit_model/step2_analysis.R)**:
 
@@ -217,9 +217,9 @@ Each R script includes a description of its goal, the files needed to run it (In
 
 &nbsp;&nbsp;&nbsp;&nbsp;*Input:*
 
-- <u>code/fit_model/mod_key.csv</u>: table ith the path to all model results.
-- <u>{species}_step{step_number}_output_{date}run{run_number}</u>: mcmc samples for a species of step 1.
-- <u>{species}_step{step_number}_output_{date}run{run_number}_25_75_SCA_SEL_PARS</u>: mcmc samples for a species of step 2.
+- [code/fit_model/mod_key.csv](./code/fit_model/mod_key.csv): table with the path to all model results.
+- <u>data/model_res/species}_step{step_number}_output_{date}run{run_number}</u>: mcmc samples for a species of step 1.
+- <u>data/model_res/{species}_step{step_number}_output_{date}run{run_number}_25_75_SCA_SEL_PARS</u>: mcmc samples for a species of step 2.
 
 &nbsp;&nbsp;&nbsp;&nbsp;*Output:*
 
@@ -236,21 +236,21 @@ Each R script includes a description of its goal, the files needed to run it (In
 
 &nbsp;&nbsp;&nbsp;&nbsp;*Input:*
 
-- [data/y_dat8.rds](data/y_dat8.rds): tibble with bird data.
-- [data/X.rds](data/X.rds): tibble with covariate data.
-- [data/out/nsite_pk.rds](data/out/nsite_pk.rds): vector with number of sites in each park.
-- [data/src/key_park.rds](data/src/key_park.rds): vector of all parks being analyzed.
+- <u>data/y_dat8.rds</u>: tibble with bird data.
+- <u>data/X.rds</u>: tibble with covariate data.
+- <u>data/out/nsite_pk.rds</u>: vector with number of sites in each park.
+- <u>data/src/key_park.rds</u>: vector of all parks being analyzed.
 
 &nbsp;&nbsp;&nbsp;&nbsp;*Output:*
 
 - <u>data/out/X_sites_{species}</u>: covariate values for each bird site.
-- <u>data/out/X_vals_{species}</u>: covariate values for each bird site where a species were detected.
+- <u>data/out/X_vals_{species}</u>: covariate values for each bird site where a species was detected.
 
 **[10_pred_marg_plot.R](./code/fit_model/10_pred_marg_plot.r)**
 
 &nbsp;&nbsp;&nbsp;&nbsp;*Input:*
 
-- <u>code/fit_model/mod_key.csv</u>: table ith the path to all model results.
+- [code/fit_model/mod_key.csv](./code/fit_model/mod_key.csv): table with a key to run models that includes: species names, step, result file name from step 1 used in step 2 analysis, selected scales file name for step 2 analysis.
 - <u>data/out/coefs_sps_sca.rds</u>: table with all the beta coefficient estimates with their scales.
 - <u>data/model_res/{species}_step{step_number}output{date_step1}{index_run}.rds</u>: model results from jags model from step 2.
 - <u>data/out/X_vals_{species}.rds</u>: covariate prediction range for each species
